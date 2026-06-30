@@ -1,0 +1,71 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "name": "proyecto-net-harness",
+  "default_agent": "leader",
+  "instructions": ["AGENTS.md"],
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+  "agent": {
+    "leader": {
+      "description": "Orquestador del flujo SDD. Crea ramas, lanza subagentes, gestiona progreso. Es el punto de entrada para toda feature.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "mode": "primary",
+      "permission": {
+        "edit": "allow",
+        "bash": { "git *": "allow", "dotnet *": "allow", "*": "ask" },
+        "task": "allow",
+        "question": "allow",
+        "read": "allow"
+      }
+    },
+    "spec-author": {
+      "description": "Redacta los 3 archivos del spec: requirements.md (EARS), design.md (ADRs) y tasks.md. No toca código ni tests.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "mode": "subagent",
+      "permission": {
+        "edit": { "specs/**": "allow", "*": "deny" },
+        "read": "allow",
+        "bash": "deny"
+      }
+    },
+    "implementer": {
+      "description": "Ejecuta las tasks del spec: escribe código en src/, tests en tests/, documenta trazabilidad. Corre build y tests.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "mode": "subagent",
+      "permission": {
+        "edit": { "src/**": "allow", "tests/**": "allow", "progress/**": "allow", "feature_list.json": "allow", "*": "deny" },
+        "read": "allow",
+        "bash": { "dotnet *": "allow", "*": "ask" }
+      }
+    },
+    "reviewer": {
+      "description": "Revisa la implementación: verifica trazabilidad R↔Tests, build, tests, alineación con docs/. No edita código.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "mode": "subagent",
+      "permission": {
+        "edit": "deny",
+        "read": "allow",
+        "bash": { "dotnet build *": "allow", "dotnet test *": "allow", "dotnet format *": "allow", "dotnet list *": "allow", "*": "deny" }
+      }
+    }
+  },
+  "command": {
+    "start-feature": {
+      "description": "Inicia el flujo completo SDD para la siguiente feature pendiente: leader prepara rama, spec_author escribe spec, pausa para humano, implementer codifica, reviewer aprueba.",
+      "agent": "leader"
+    },
+    "spec": {
+      "description": "Lanza spec_author para que escriba requirements.md, design.md y tasks.md de la feature activa.",
+      "agent": "spec-author"
+    },
+    "implement": {
+      "description": "Lanza implementer para ejecutar las tasks de la feature activa.",
+      "agent": "implementer"
+    },
+    "review": {
+      "description": "Lanza reviewer para verificar la feature activa.",
+      "agent": "reviewer"
+    }
+  }
+}
