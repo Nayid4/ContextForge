@@ -27,16 +27,65 @@ Code, GitHub Copilot) desarrolle features .NET en tu proyecto siguiendo:
 
 ## Cómo usar este arnés
 
-### 1. Clona / descarga el repositorio
+### 1. Trae los archivos a tu proyecto
+
+El harness **no debe clonarse como repositorio independiente** dentro de tu
+proyecto. Los archivos deben copiarse **sin el historial git** del harness
+para no interferir con el control de versiones de tu proyecto.
+
+Elige uno de estos métodos:
+
+<details>
+<summary>📦 Opción A — Descargar ZIP (recomendada, sin git)</summary>
 
 ```bash
-git clone <este-repo> mi-proyecto-net
-cd mi-proyecto-net
+# Desde la raíz de tu proyecto (el que ya tiene su propio .git):
+# 1. Descarga el ZIP y extráelo en una carpeta temporal
+curl -L https://github.com/AndresOsorio0710/harness_anginnering/archive/master.tar.gz \
+  | tar xz --strip=1 -C /tmp/harness-temp
+
+# 2. Copia los archivos del harness a tu proyecto (sin .git)
+cp -r /tmp/harness-temp/* /tmp/harness-temp/.* .
+
+# 3. Limpia
+rm -rf /tmp/harness-temp
 ```
+</details>
+
+<details>
+<summary>🔀 Opción B — Clone shallow + copia (si tienes git)</summary>
+
+```bash
+# En cualquier directorio:
+git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git /tmp/harness-temp
+
+# Copia a tu proyecto (sin .git — no se cruza con tu historial)
+cp -r /tmp/harness-temp/* /tmp/harness-temp/.* /ruta/de/tu/proyecto/
+
+# Limpia
+rm -rf /tmp/harness-temp
+```
+</details>
+
+<details>
+<summary>🔄 Opción C — Nuevo proyecto desde cero</summary>
+
+```bash
+git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git mi-proyecto-net
+cd mi-proyecto-net
+rm -rf .git   # ← importante: elimina el git del harness
+git init      # ← inicia tu propio repositorio
+git add -A && git commit -m "feat: initialize .NET project with harness"
+```
+</details>
 
 ### 2. Configura el proyecto
 
-Edita `kickstart.json` (no trackeado en git):
+```bash
+cp kickstart.json.example kickstart.json   # crea tu archivo local (no trackeado)
+```
+
+Edita `kickstart.json` con los parámetros de tu proyecto:
 
 ```json
 {
@@ -53,6 +102,9 @@ Edita `kickstart.json` (no trackeado en git):
   }
 }
 ```
+
+> `kickstart.json` está en `.gitignore` — no se trackea.
+> `kickstart.json.example` es la plantilla trackeada con valores de ejemplo.
 
 ### 3. Inicializa
 
@@ -109,8 +161,9 @@ El agente leader ejecutará el flujo completo automáticamente.
 ├── feature_list.json            # Features del proyecto (estado + prioridad)
 ├── init.sh                      # Verificación de entorno
 ├── kickstart.json               # ⚠️ Parámetros locales (NO trackeado en git)
+├── kickstart.json.example       # ✅ Plantilla trackeada con valores de ejemplo
 ├── CHECKPOINTS.md               # Criterios de "estado final correcto"
-├── .gitignore                   # kickstart.json excluido
+├── .gitignore                   # kickstart.json, bin/, obj/ excluidos
 │
 ├── docs/
 │   ├── architecture.md          # SOLID, Clean Architecture, patrones, DDD, CQRS
@@ -228,9 +281,12 @@ ajustar convenciones. El resto del harness es agnóstico al dominio.
 
 ### ¿Qué pasa si mi proyecto ya existe?
 
-Copia este harness en la raíz de tu proyecto existente. El `init.sh` detectará
-tu `.sln` y tus proyectos. Luego define features en `feature_list.json` para
-las nuevas funcionalidades que quieras que los agentes implementen.
+Copia los archivos del harness en la raíz de tu proyecto existente (ver paso 1
+— Opción A o B). El `init.sh` detectará tu `.sln` y tus proyectos.
+Luego define features en `feature_list.json` para las nuevas funcionalidades.
+
+> **Importante:** Usa ZIP o clone shallow + copia de archivos (sin `.git`).
+> No hagas `git clone` directo dentro de tu proyecto o mezclarás historiales.
 
 ### ¿Necesito opencode?
 
