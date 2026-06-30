@@ -1,0 +1,34 @@
+{
+  "_readme": "=== ARCHIVO DE EJEMPLO ===",
+  "_readme2": "Copia este archivo como 'kickstart.json' (sin .example) y rellena los valores de tu proyecto.",
+  "_readme3": "kickstart.json está en .gitignore — no se trackea. Este .example sí está trackeado.",
+  "_fieldGuide": {
+    "project.name": "Nombre del proyecto. Ej: 'MiSistemaFacturacion'",
+    "project.type": "Tipo de proyecto. Valores: WebApi | Worker | Library | Console",
+    "project.namespace": "Namespace raíz del proyecto. Ej: 'MiEmpresa.SistemaFacturacion'",
+    "project.targetFramework": "Target framework del proyecto. Ej: 'net10.0', 'net9.0', 'net8.0'",
+    "project.version": "Versión del proyecto (semver). Ej: '1.0.0'",
+    "repository.url": "URL del repositorio remoto (opcional). Se usa para sugerir PR en lugar de merge directo.",
+    "team.executorName": "Nombre del desarrollador/agente que ejecuta las features. Ej: 'Andres'",
+    "team.executorEmail": "Email del ejecutor para tracking en progress/"
+  },
+  "project": {
+    "name": "MiSistemaFacturacion",
+    "type": "WebApi",
+    "namespace": "MiEmpresa.SistemaFacturacion",
+    "targetFramework": "net10.0",
+    "version": "1.0.0"
+  },
+  "repository": {
+    "url": "https://github.com/mi-organizacion/mi-sistema-facturacion"
+  },
+  "team": {
+    "executorName": "Tu Nombre",
+    "executorEmail": "tu@email.com"
+  },
+  "_notes": {
+    "project.type": "WebApi → API REST con controllers/minimal APIs. Worker → Background service. Library → Librería de clases. Console → App de consola.",
+    "project.targetFramework": "Debe coincidir con el definido en Directory.Build.props de tu solución.",
+    "repository.url": "Si tiene valor, el agente sugerirá Pull Request en vez de merge directo al cerrar una feature."
+  }
+}
