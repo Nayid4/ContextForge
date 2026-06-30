@@ -1,0 +1,83 @@
+{
+  "project": "mi-proyecto-net",
+  "description": "=== PLANTILLA DE EJEMPLO === Reemplaza todo el contenido de este archivo con las features reales de tu proyecto de negocio. Las features incluidas abajo son solo ilustrativas del formato esperado.",
+  "version": "1.0.0",
+  "rules": {
+    "one_feature_at_a_time": true,
+    "require_tests_to_close": true,
+    "require_approved_spec_to_implement": true,
+    "feature_branch_pattern": "feature/{NNN}_{name}",
+    "spec_folder_pattern": "specs/{NNN}_{name}",
+    "feature_id_format": "3-digit-zero-padded",
+    "never_merge_feature_to_main": true,
+    "update_deliverables_index_on_completion": true,
+    "executor_tracking_required": true,
+    "valid_status": [
+      "pending",
+      "spec_ready",
+      "in_progress",
+      "done",
+      "blocked"
+    ],
+    "sdd_required_when": "feature has \"sdd\": true",
+    "main_branch": "main",
+    "deliverables_file": "ENGINES.md"
+  },
+  "features": [
+    {
+      "id": 1,
+      "name": "example_scaffold",
+      "title": "[EJEMPLO] Package Scaffold",
+      "description": "EJEMPLO — Reemplazar con features reales de negocio. Crear la estructura base del proyecto: solución .NET, proyectos por capa (Domain, Application, Infrastructure, Api), configuracion Directory.Build.props, .editorconfig, y que la solución compile sin errores.",
+      "branch": "feature/001_example_scaffold",
+      "spec_folder": "specs/001_example_scaffold",
+      "acceptance": [
+        "La solución compila con `dotnet build /warnaserror` sin errores ni warnings",
+        "Existen 4 proyectos: Domain, Application, Infrastructure y Api",
+        "Cada proyecto respeta las reglas de dependencia de Clean Architecture",
+        "Directory.Build.props y .editorconfig estan configurados",
+        "`dotnet test` descubre al menos un test de arquitectura que verifica dependencias",
+        "El proyecto Api responde HTTP 200 en /health"
+      ],
+      "sdd": false,
+      "status": "pending",
+      "priority": "high",
+      "executor": "",
+      "created_at": "",
+      "completed_at": "",
+      "note": "FEATURE DE EJEMPLO — Reemplazar con features reales del negocio"
+    },
+    {
+      "id": 2,
+      "name": "example_user_registration",
+      "title": "[EJEMPLO] Registro de usuarios",
+      "description": "EJEMPLO — Las features reales deben describir comportamiento de negocio, no infraestructura. Ejemplo de formato: Implementar el caso de uso de registro de usuarios incluyendo validación de email, creacion de entidad User, persistencia con EF Core y endpoint POST /api/users.",
+      "branch": "feature/002_example_user_registration",
+      "spec_folder": "specs/002_example_user_registration",
+      "acceptance": [
+        "POST /api/users con datos validos retorna HTTP 201 con id del usuario",
+        "Email duplicado retorna HTTP 409 Conflict",
+        "Email invalido retorna HTTP 400 Bad Request con ProblemDetails",
+        "Cobertura de tests >= 85% en Domain y Application",
+        "`dotnet test` pasa"
+      ],
+      "sdd": true,
+      "status": "pending",
+      "priority": "high",
+      "executor": "",
+      "created_at": "",
+      "completed_at": "",
+      "note": "FEATURE DE EJEMPLO — Reemplazar con features reales del negocio"
+    }
+  ],
+  "metadata": {
+    "total_features": 0,
+    "pending_count": 0,
+    "in_progress_count": 0,
+    "done_count": 0,
+    "blocked_count": 0,
+    "last_updated": "",
+    "updated_by": "",
+    "note": "Actualizar estos contadores manualmente o via script al modificar features"
+  }
+}
