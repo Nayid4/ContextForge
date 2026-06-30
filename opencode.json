@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "name": "proyecto-net-harness",
   "default_agent": "leader",
   "instructions": ["AGENTS.md"],
   "skills": {
@@ -52,20 +51,24 @@
   },
   "command": {
     "start-feature": {
-      "description": "Inicia el flujo completo SDD para la siguiente feature pendiente: leader prepara rama, spec_author escribe spec, pausa para humano, implementer codifica, reviewer aprueba.",
-      "agent": "leader"
+      "description": "Inicia el flujo SDD completo para la siguiente feature pendiente: leader prepara rama, spec_author escribe spec, pausa para humano, implementer codifica, reviewer aprueba.",
+      "agent": "leader",
+      "template": "Ejecuta el flujo SDD completo. Lee feature_list.json, identifica la primera feature pending, prepara la rama, lanza spec-author, espera aprobacion humana, luego implementer y reviewer. Sigue AGENTS.md paso a paso."
     },
     "spec": {
       "description": "Lanza spec_author para que escriba requirements.md, design.md y tasks.md de la feature activa.",
-      "agent": "spec-author"
+      "agent": "spec-author",
+      "template": "Ejecuta tu rol como spec_author. Lee la feature activa en feature_list.json y crea los 3 archivos en specs/{NNN}_{name}/: requirements.md (EARS), design.md (ADRs), tasks.md. Apoyate en docs/specs.md, docs/architecture.md y docs/conventions.md."
     },
     "implement": {
       "description": "Lanza implementer para ejecutar las tasks de la feature activa.",
-      "agent": "implementer"
+      "agent": "implementer",
+      "template": "Ejecuta tu rol como implementer. Lee tasks.md de la feature activa en specs/{NNN}_{name}/tasks.md y ejecuta cada task una a una marcandolas [x]. Escribe codigo en src/ y tests en tests/. Corre dotnet build /warnaserror y dotnet test. Documenta trazabilidad R<Tests en progress/impl_<name>.md."
     },
     "review": {
       "description": "Lanza reviewer para verificar la feature activa.",
-      "agent": "reviewer"
+      "agent": "reviewer",
+      "template": "Ejecuta tu rol como reviewer. Lee la feature activa en specs/{NNN}_{name}/, verifica trazabilidad R<Tests, corre dotnet build /warnaserror, dotnet test, dotnet format --verify-no-changes, dotnet list package --vulnerable. Documenta el resultado en progress/review_<name>.md. No edites codigo."
     }
   }
 }
