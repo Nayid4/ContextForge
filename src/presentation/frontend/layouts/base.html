@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-[#0a0b10] text-zinc-100 dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ContextForge | Sovereign Knowledge Library (Docs-as-Code){% endblock %}</title>
+  
+  <!-- Local Stylesheet -->
+  <link rel="stylesheet" href="/static/css/main.css">
+  
+  <!-- Tailwind CSS & Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            surface: {
+              base: '#0a0b10',
+              sidebar: '#11131a',
+              card: '#161922',
+              cardHover: '#1c202d',
+              border: '#232738',
+              borderLight: '#30364c'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'ui-monospace', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- HTMX 2.0 -->
+  <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+  <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+
+  <!-- Alpine.js 3 -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- Marked.js for Markdown parsing in Chat & Previews -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.min.js"></script>
+  <!-- Highlight.js for Syntax Highlighting in Chat & Previews -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    if (window.marked) {
+      marked.use({
+        gfm: true,
+        breaks: true,
+      });
+      window.renderMarkdown = function(md) {
+        if (!md) return '';
+        try {
+          return marked.parse(md);
+        } catch (e) {
+          console.error("Markdown parse error:", e);
+          return md;
+        }
+      };
+    }
+  </script>
+
+  <!-- Mammoth.js for Word preview -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <!-- SheetJS for Excel preview -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    /* Estilos Editoriales de Lectura (Blog + Claude UX) */
+    .prose-dark {
+      color: #d1d5db;
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+    .prose-dark h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #f9fafb;
+      margin-top: 1.75rem;
+      margin-bottom: 0.85rem;
+      border-bottom: 1px solid #232738;
+      padding-bottom: 0.6rem;
+    }
+    .prose-dark h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f3f4f6;
+      margin-top: 1.5rem;
+      margin-bottom: 0.65rem;
+    }
+    .prose-dark h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #e5e7eb;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .prose-dark p {
+      margin-top: 0.6rem;
+      margin-bottom: 0.9rem;
+      color: #cbd5e1;
+    }
+    .prose-dark ul {
+      list-style-type: disc;
+      margin-left: 1.6rem;
+      margin-bottom: 0.85rem;
+      color: #cbd5e1;
+    }
+    .prose-dark ol {
+      list-style-type: decimal;
+      margin-left: 1.6rem;
+      margin-bottom: 0.85rem;
+      color: #cbd5e1;
+    }
+    .prose-dark li {
+      margin-bottom: 0.35rem;
+    }
+    .prose-dark blockquote {
+      border-left: 3px solid #6366f1;
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 0 0.5rem 0.5rem 0;
+      padding: 0.75rem 1rem;
+      font-style: italic;
+      color: #a5b4fc;
+      margin: 1.25rem 0;
+    }
+    .prose-dark pre {
+      background-color: #0d0f15;
+      border: 1px solid #232738;
+      border-radius: 0.75rem;
+      padding: 1.15rem;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .prose-dark code {
+      background-color: #1a1e2b;
+      padding: 0.2rem 0.45rem;
+      border-radius: 0.35rem;
+      color: #c7d2fe;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+    
+    /* Scrollbar minimalista estilo Claude */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #262b3d; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b435e; }
+  </style>
+</head>
+<body class="h-full bg-[#0a0b10] text-zinc-100 flex overflow-hidden selection:bg-brand-500 selection:text-white" x-data="{ sidebarOpen: false }">
+
+  <!-- CLAUDE-STYLE COLLAPSIBLE SIDEBAR -->
+  <aside 
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+    class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-[#11131a] border-r border-[#1e2235] flex flex-col transition-transform duration-200 ease-in-out shrink-0"
+  >
+    <!-- Brand & Workspace Title -->
+    <div class="h-16 px-4 flex items-center justify-between border-b border-[#1e2235]">
+      <a href="/docs/browser" class="flex items-center space-x-2.5 group">
+        <span class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 group-hover:scale-105 transition">
+          <i class="fa-solid fa-layer-group text-sm"></i>
+        </span>
+        <div class="leading-none">
+          <span class="font-bold text-sm tracking-tight text-white block">ContextForge</span>
+          <span class="text-[10px] text-zinc-400 font-mono">Sovereign Library</span>
+        </div>
+      </a>
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" title="100% Soberano y Local">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
+        Local
+      </span>
+    </div>
+
+    <!-- Project / Library Selector (HTMX Component) -->
+    <div class="p-3 border-b border-[#1e2235] bg-[#0d0f15]/70">
+      <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 px-1">Librería Activa</div>
+      <div id="navbar-project-container" hx-get="/ui/projects/navbar-selector" hx-trigger="load" hx-swap="innerHTML">
+        <div class="h-8 bg-[#161922] rounded-lg animate-pulse flex items-center px-2 text-xs text-zinc-500 font-mono">
+          Cargando librería...
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Search Button (Ctrl+K) -->
+    <div class="px-3 pt-3">
+      <button 
+        onclick="window.toggleCommandPalette && window.toggleCommandPalette()"
+        class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-[#161922] hover:bg-[#1c202d] border border-[#232738] hover:border-indigo-500/40 text-xs text-zinc-400 hover:text-white transition shadow-sm"
+      >
+        <span class="flex items-center space-x-2">
+          <i class="fa-solid fa-magnifying-glass text-indigo-400 text-xs"></i>
+          <span>Buscar conocimiento...</span>
+        </span>
+        <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-[#0d0f15] border border-[#232738] rounded text-zinc-400">Ctrl K</kbd>
+      </button>
+    </div>
+
+    <!-- Navigation Menu (Claude AI Style) -->
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider px-2 py-1 mb-1">Conocimiento</div>
+      
+      <a href="/docs/browser" class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#1a1d29] transition group">
+        <i class="fa-solid fa-book-open text-indigo-400 w-4 text-center group-hover:scale-110 transition"></i>
+        <span>Artículos & Docs</span>
+      </a>
+
+      <a href="/books/editor" class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#1a1d29] transition group">
+        <i class="fa-solid fa-pen-to-square text-violet-400 w-4 text-center group-hover:scale-110 transition"></i>
+        <span>Editor Dual</span>
+      </a>
+
+      <a href="/chat" class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#1a1d29] transition group">
+        <i class="fa-solid fa-comments text-sky-400 w-4 text-center group-hover:scale-110 transition"></i>
+        <span>Chat RAG Soberano</span>
+      </a>
+
+      <div class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider px-2 py-1 pt-3 mb-1">Herramientas</div>
+
+      <a href="/bundles" class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#1a1d29] transition group">
+        <i class="fa-solid fa-box-archive text-amber-400 w-4 text-center group-hover:scale-110 transition"></i>
+        <span>Context Bundler</span>
+      </a>
+
+      <a href="/projects" class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#1a1d29] transition group">
+        <i class="fa-solid fa-layer-group text-emerald-400 w-4 text-center group-hover:scale-110 transition"></i>
+        <span>Librerías / Proyectos</span>
+      </a>
+
+      <a href="/settings" class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#1a1d29] transition group">
+        <i class="fa-solid fa-sliders text-zinc-400 w-4 text-center group-hover:scale-110 transition"></i>
+        <span>Configuración</span>
+      </a>
+    </nav>
+
+    <!-- Bottom Sidebar Status Badge -->
+    <div class="p-3 border-t border-[#1e2235] bg-[#0d0f15]/80">
+      <div class="flex items-center justify-between text-[11px] text-zinc-400">
+        <span class="flex items-center space-x-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+          <span>Zero-Leakage</span>
+        </span>
+        <span class="font-mono text-[10px] text-zinc-400">v2.1.0</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    
+    <!-- Top Bar with Breadcrumbs & Action Buttons -->
+    <header class="h-16 border-b border-[#1e2235] bg-[#0e1017]/90 backdrop-blur px-4 sm:px-6 flex items-center justify-between shrink-0">
+      <div class="flex items-center space-x-3">
+        <!-- Mobile Toggle -->
+        <button 
+          type="button" 
+          @click="sidebarOpen = !sidebarOpen" 
+          class="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-[#161922] transition"
+        >
+          <i class="fa-solid fa-bars text-sm"></i>
+        </button>
+
+        <div class="flex items-center space-x-2 text-xs text-zinc-400">
+          <span class="font-medium text-zinc-300">ContextForge</span>
+          <span class="text-zinc-600">/</span>
+          <span class="text-zinc-400 font-mono text-[11px]" id="topbar-project-slug">Librería</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2.5">
+        <a 
+          href="/books/editor" 
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-indigo-300 bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/30 transition shadow-sm"
+        >
+          <i class="fa-solid fa-pen-nib text-[10px]"></i>
+          <span>Editor Dual</span>
+        </a>
+        <a 
+          href="/docs/new" 
+          class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/25 transition"
+        >
+          <i class="fa-solid fa-plus text-[10px]"></i>
+          <span>Nuevo Documento</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Scrollable Content Canvas -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div class="max-w-6xl mx-auto w-full">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Command Palette Modal (Ctrl+K) -->
+  <div id="command-palette-modal" class="fixed inset-0 z-50 hidden bg-[#0a0b10]/80 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 p-4 transition-all">
+    <div class="bg-[#12151e] border border-[#232738] rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border-t-indigo-500/50">
+      
+      <!-- Input bar -->
+      <div class="flex items-center px-4 py-3.5 border-b border-[#1e2235] bg-[#0c0d13]">
+        <i class="fa-solid fa-magnifying-glass text-indigo-400 mr-3 text-sm"></i>
+        <input 
+          id="command-palette-input" 
+          type="text" 
+          placeholder="Buscar especificaciones, reglas de negocio o acciones... (ej. auth, retry, chat)" 
+          class="w-full bg-transparent text-white placeholder-zinc-500 text-sm focus:outline-none"
+          autocomplete="off"
+        >
+        <kbd class="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono bg-[#161922] text-zinc-400 border border-[#232738] rounded">ESC</kbd>
+      </div>
+
+      <!-- Results & Suggestions -->
+      <div id="command-palette-results" class="p-4 overflow-y-auto space-y-2 flex-1">
+        <div id="cp-default-links" class="space-y-1">
+          <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-2 py-1">Navegación Rápida</div>
+          <a href="/docs/browser" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#1a1d29] text-zinc-300 hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-book-open text-indigo-400 w-4"></i>
+              <span>Explorador de Documentos</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">/docs/browser</span>
+          </a>
+          <a href="/books/editor" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#1a1d29] text-zinc-300 hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-pen-to-square text-violet-400 w-4"></i>
+              <span>Editor Dual (Markdown & Bloques)</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">/books/editor</span>
+          </a>
+          <a href="/chat" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#1a1d29] text-zinc-300 hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-comments text-sky-400 w-4"></i>
+              <span>Chat RAG Soberano</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">/chat</span>
+          </a>
+          <a href="/bundles" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#1a1d29] text-zinc-300 hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-box-archive text-amber-400 w-4"></i>
+              <span>Context Bundler (.cursorrules)</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">/bundles</span>
+          </a>
+          <a href="/projects" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#1a1d29] text-zinc-300 hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-layer-group text-emerald-400 w-4"></i>
+              <span>Librerías / Proyectos</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">/projects</span>
+          </a>
+        </div>
+        <div id="cp-search-items" class="space-y-2 hidden"></div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="px-4 py-2 border-t border-[#1e2235] bg-[#0d0f15] text-[11px] text-zinc-400 flex items-center justify-between">
+        <span>Búsqueda Híbrida RRF (Dense ChromaDB + Lexical BM25)</span>
+        <span class="font-mono text-[10px] text-zinc-400">Esc para salir</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mermaid.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+      themeVariables: {
+        darkMode: true,
+        background: '#0d0f15',
+        primaryColor: '#6366f1',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#4f46e5',
+        lineColor: '#94a3b8',
+        secondaryColor: '#161922',
+        tertiaryColor: '#1e1b4b'
+      }
+    });
+
+    function renderMermaidDiagrams() {
+      const codeBlocks = document.querySelectorAll('pre code.language-mermaid, pre code.mermaid');
+      codeBlocks.forEach(function(el) {
+        const pre = el.parentElement;
+        const code = el.textContent;
+        const container = document.createElement('div');
+        container.className = 'mermaid my-6 flex justify-center bg-[#0d0f15] p-6 rounded-xl border border-[#232738] shadow-inner overflow-x-auto';
+        container.textContent = code;
+        if (pre && pre.parentNode) {
+          pre.parentNode.replaceChild(container, pre);
+        }
+      });
+      try {
+        mermaid.run();
+      } catch (err) {
+        console.warn('Mermaid rendering error:', err);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", renderMermaidDiagrams);
+    document.body.addEventListener('htmx:afterSwap', renderMermaidDiagrams);
+
+    // Command Palette Logic (Ctrl+K)
+    (function() {
+      const modal = document.getElementById('command-palette-modal');
+      const input = document.getElementById('command-palette-input');
+      const defaultLinks = document.getElementById('cp-default-links');
+      const searchItems = document.getElementById('cp-search-items');
+      let searchTimeout = null;
+
+      function openModal() {
+        modal.classList.remove('hidden');
+        input.value = '';
+        defaultLinks.classList.remove('hidden');
+        searchItems.classList.add('hidden');
+        searchItems.innerHTML = '';
+        input.focus();
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+      }
+
+      window.toggleCommandPalette = function() {
+        if (modal.classList.contains('hidden')) {
+          openModal();
+        } else {
+          closeModal();
+        }
+      };
+
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+          e.preventDefault();
+          window.toggleCommandPalette();
+        } else if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      function getActiveProjectSlug() {
+        const sel = document.getElementById('global-project-select');
+        if (sel && sel.value) return sel.value;
+        const match = document.cookie.match(/cf_active_project=([^;]+)/);
+        return match ? match[1] : 'default';
+      }
+
+      input.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = input.value.trim();
+        if (query.length < 2) {
+          defaultLinks.classList.remove('hidden');
+          searchItems.classList.add('hidden');
+          searchItems.innerHTML = '';
+          return;
+        }
+
+        searchTimeout = setTimeout(async function() {
+          const proj = getActiveProjectSlug();
+          try {
+            const resp = await fetch(`/api/v1/search/hybrid?q=${encodeURIComponent(query)}&top_k=5&project=${encodeURIComponent(proj)}`);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            
+            defaultLinks.classList.add('hidden');
+            searchItems.classList.remove('hidden');
+            searchItems.innerHTML = '';
+
+            if (data.length === 0) {
+              searchItems.innerHTML = `
+                <div class="p-4 text-center text-xs text-zinc-500 font-mono">
+                  No se encontraron resultados para "${query}" en la librería activa [${proj}].
+                </div>
+              `;
+              return;
+            }
+
+            data.forEach(function(item) {
+              const div = document.createElement('a');
+              div.href = `/docs/view/${item.file_path}`;
+              div.className = 'block p-3 rounded-xl bg-[#0c0e14] hover:bg-[#1a1d29] border border-[#232738] hover:border-indigo-500/50 transition group space-y-1';
+              
+              const header = (item.header_hierarchy && item.header_hierarchy.length > 0) 
+                ? item.header_hierarchy.join(' > ') 
+                : item.file_path;
+
+              div.innerHTML = `
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-semibold text-white group-hover:text-indigo-300 transition flex items-center space-x-1.5">
+                    <i class="fa-regular fa-file-code text-indigo-400"></i>
+                    <span>${header}</span>
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[#11131a] text-indigo-300 border border-[#232738]">
+                    [${item.file_path}]
+                  </span>
+                </div>
+                <p class="text-xs text-zinc-400 line-clamp-2">${item.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              `;
+              searchItems.appendChild(div);
+            });
+          } catch (err) {
+            console.error('Search error in command palette:', err);
+          }
+        }, 200);
+      });
+    })();
+  </script>
+
+  <!-- Multiformat File Preview Modal -->
+  {% include "modules/Catalog/templates/FilePreviewModal.html" %}
+
+  <!-- Scoped Document Chat Drawer -->
+  {% include "modules/Chat/templates/ScopedChatDrawer.html" %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

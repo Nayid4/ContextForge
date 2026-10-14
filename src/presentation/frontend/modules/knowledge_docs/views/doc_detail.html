@@ -1,0 +1,244 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ doc.title }} | ContextForge Docs{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-5xl mx-auto">
+
+  <!-- Breadcrumb Navigation -->
+  <div class="flex items-center space-x-2 text-xs text-zinc-400 pb-2">
+    <a href="/docs/browser" class="hover:text-white transition flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#141722] border border-[#232738] hover:bg-[#1c202d] text-zinc-300">
+      <i class="fa-solid fa-arrow-left text-[10px]"></i>
+      <span>Volver a Documentos</span>
+    </a>
+    <span class="text-zinc-600">/</span>
+    <span class="px-2 py-0.5 rounded-md bg-[#161922] border border-[#232738] text-indigo-300 font-mono text-[11px] flex items-center gap-1">
+      <i class="fa-solid fa-cube text-[10px] text-indigo-400"></i>
+      <span>{{ doc.project_slug }}</span>
+    </span>
+    <span class="text-zinc-600">/</span>
+    <span class="px-2 py-0.5 rounded-md bg-[#161922] border border-[#232738] text-zinc-300 font-medium text-[11px] capitalize flex items-center gap-1">
+      <i class="fa-regular fa-folder text-[10px] text-amber-400"></i>
+      <span>{{ doc.module }}</span>
+    </span>
+    <span class="text-zinc-600">/</span>
+    <span class="text-zinc-400 font-mono text-[11px] truncate max-w-[280px]">{{ doc.path.split('/')[-1] }}</span>
+  </div>
+
+  <!-- Dedicated Action Toolbar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#12151e] border border-[#232738] rounded-2xl shadow-sm">
+    <!-- File Path and Citation Pill -->
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#0c0e14] border border-[#232738] text-zinc-400 font-mono text-xs">
+        <i class="fa-regular fa-file-code text-indigo-400 text-xs"></i>
+        <span>docs/{{ doc.path }}</span>
+      </div>
+
+      <button 
+        type="button" 
+        onclick="copyCitation('{{ doc.path }}')"
+        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#141722] hover:bg-[#1c202d] border border-indigo-500/30 text-indigo-300 font-mono text-xs transition cursor-pointer group"
+        title="Copiar píldora de cita para prompts"
+      >
+        <i class="fa-solid fa-quote-right text-[10px] text-indigo-400"></i>
+        <span>[{{ doc.path }}]</span>
+        <i class="fa-regular fa-copy text-[10px] text-zinc-500 group-hover:text-indigo-300 ml-1"></i>
+      </button>
+    </div>
+
+    <!-- Primary Actions -->
+    <div class="flex items-center gap-2.5">
+      <!-- Scoped AI Copilot Button -->
+      <button 
+        type="button" 
+        id="btn-open-scoped-chat"
+        class="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/25 transition cursor-pointer"
+        title="Consultar y dialogar con la IA sobre este documento y sus anexos"
+      >
+        <span>🤖</span>
+        <span>Preguntar a este Documento</span>
+      </button>
+
+      <!-- Edit Document Button -->
+      <a 
+        href="/books/editor?path={{ doc.path }}&project={{ doc.project_slug }}"
+        class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-600/25 transition cursor-pointer"
+        title="Editar documento en Editor Dual"
+      >
+        <i class="fa-solid fa-pen-to-square text-xs"></i>
+        <span>Editar Documento</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Document Header -->
+  <div class="border-b border-slate-800 pb-6 space-y-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="px-2.5 py-1 rounded-md text-xs font-semibold capitalize bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        Módulo: {{ doc.module }}
+      </span>
+      {% for tag in doc.tags %}
+      <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800 text-slate-400 border border-slate-700/60">
+        #{{ tag }}
+      </span>
+      {% endfor %}
+    </div>
+
+    <h1 class="text-3xl font-extrabold tracking-tight text-white">{{ doc.title }}</h1>
+
+    <div class="flex flex-wrap items-center gap-6 text-xs text-slate-400 pt-2">
+      <div class="flex items-center space-x-1.5">
+        <i class="fa-regular fa-user text-slate-500"></i>
+        <span>Autor: <strong class="text-slate-300">{{ doc.author }}</strong></span>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <i class="fa-regular fa-clock text-slate-500"></i>
+        <span>Lectura estimada: <strong class="text-slate-300">{{ rendered.reading_time_minutes }} min</strong></span>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <i class="fa-solid fa-layer-group text-slate-500"></i>
+        <span>Segmentación: <strong class="text-slate-300">{{ doc.chunks|length }} chunks</strong> atómicos</span>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <i class="fa-regular fa-file-lines text-slate-500"></i>
+        <span>Palabras: <strong class="text-slate-300">{{ rendered.word_count }}</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rendered Markdown Content -->
+  <article class="prose-dark bg-slate-900/40 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-sm">
+    {{ rendered.html_content|safe }}
+  </article>
+
+  <!-- Developer Annotations & Comments Section -->
+  <div id="comments" class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
+          <i class="fa-regular fa-comments text-indigo-400"></i>
+          <span>Anotaciones y Comentarios del Equipo</span>
+        </h2>
+        <p class="text-xs text-slate-400">Discusiones técnicas asociadas a esta especificación (Persistidas en SQLite)</p>
+      </div>
+      <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+        {{ comments|length }} comentario(s)
+      </span>
+    </div>
+
+    <!-- Comments List -->
+    {% if comments %}
+    <div class="space-y-4">
+      {% for comment in comments %}
+      <div class="rounded-xl border border-slate-800/80 bg-slate-950/60 p-4 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full bg-indigo-600/30 text-indigo-300 font-bold flex items-center justify-center text-[10px]">
+              {{ comment.user_name[:1]|upper }}
+            </span>
+            <span class="font-semibold text-white">{{ comment.user_name }}</span>
+          </div>
+          <span class="text-slate-400 text-[11px]">
+            {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
+          </span>
+        </div>
+        <p class="text-sm text-slate-300 pl-8 whitespace-pre-line">{{ comment.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-500 italic">No hay anotaciones en esta documentación aún. Sé el primero en dejar una consulta o clarificación técnica.</p>
+    {% endif %}
+
+    <!-- Add Comment Form -->
+    <form action="/docs/view/{{ doc.path }}/comments" method="POST" class="pt-4 border-t border-slate-800/80 space-y-4">
+      <h3 class="text-sm font-semibold text-white">Agregar Comentario Técnico</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Nombre / Rol</label>
+          <input 
+            type="text" 
+            name="user_name" 
+            placeholder="ej. Carlos (Tech Lead)" 
+            required 
+            class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Comentario</label>
+        <textarea 
+          name="content" 
+          rows="3" 
+          placeholder="Escribe tu observación o duda sobre esta regla..." 
+          required 
+          class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        ></textarea>
+      </div>
+      <div class="flex justify-end">
+        <button 
+          type="submit" 
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow transition"
+        >
+          Publicar Comentario
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyCitation(path) {
+    const text = `[${path}]`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`Píldora de cita RAG copiada: ${text}`);
+      }).catch(() => {
+        prompt('Copia la píldora de cita:', text);
+      });
+    } else {
+      prompt('Copia la píldora de cita:', text);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Open Scoped Chat without breaking attribute quotes
+    const openChatBtn = document.getElementById('btn-open-scoped-chat');
+    if (openChatBtn) {
+      openChatBtn.addEventListener('click', function() {
+        if (typeof window.openScopedChat === 'function') {
+          window.openScopedChat(
+            {{ doc.title | tojson }},
+            {{ doc.project_slug | tojson }},
+            {{ doc.path | tojson }},
+            {{ doc.content_markdown | tojson }}
+          );
+        } else {
+          console.warn('openScopedChat is not available');
+        }
+      });
+    }
+
+    const links = document.querySelectorAll('article a');
+    links.forEach(function(link) {
+      const href = link.getAttribute('href');
+      if (href && (href.includes('assets/') || href.endsWith('.pdf') || href.endsWith('.docx') || href.endsWith('.xlsx') || href.endsWith('.csv') || href.endsWith('.png') || href.endsWith('.jpg') || href.endsWith('.jpeg'))) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          let targetUrl = href;
+          if (!href.startsWith('http') && !href.startsWith('/')) {
+            targetUrl = `/api/v1/assets/{{ doc.project_slug }}/${href}`;
+          }
+          const fileName = link.textContent.trim() || href.split('/').pop();
+          window.openFilePreview(fileName, targetUrl);
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+

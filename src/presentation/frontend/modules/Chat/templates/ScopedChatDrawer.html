@@ -1,0 +1,302 @@
+<!-- Backdrop Oscuro para el Drawer -->
+<div id="scoped-chat-backdrop" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-[2px] transition-opacity duration-300" onclick="window.closeScopedChat()"></div>
+
+<!-- Drawer Deslizable: Copiloto de Documentación y Scoped RAG -->
+<aside id="scoped-chat-drawer" 
+       class="fixed right-0 top-0 h-full w-[450px] max-w-[95vw] bg-[#0e1017] border-l border-[#232738] flex flex-col z-50 shadow-2xl transition-transform duration-300 translate-x-full"
+       x-data="scopedChatApp()">
+  
+  <!-- Header del Copiloto -->
+  <div class="p-4 border-b border-[#1e2235] bg-[#12151e] flex justify-between items-center shrink-0">
+    <div class="flex items-center space-x-2.5">
+      <span class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-sm">
+        <i class="fa-solid fa-robot"></i>
+      </span>
+      <div>
+        <h4 class="font-bold text-xs text-white flex items-center gap-1.5">
+          <span>Copiloto de Documentación</span>
+          <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-indigo-950 text-indigo-300 border border-indigo-500/30">IA</span>
+        </h4>
+        <p class="text-[11px] text-zinc-400 truncate max-w-[260px] font-mono" x-text="docTitle"></p>
+      </div>
+    </div>
+    <button type="button" @click="closeDrawer()" class="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-[#1a1d28] transition cursor-pointer" title="Cerrar Copiloto">
+      <i class="fa-solid fa-xmark text-sm"></i>
+    </button>
+  </div>
+
+  <!-- Barra de Acciones Rápidas del Copiloto (Chips) -->
+  <div class="p-2.5 bg-[#0a0c12] border-b border-[#1a1e2b] flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
+    <button 
+      type="button" 
+      @click="applyQuickPrompt('Genera un diagrama Mermaid (sequenceDiagram o graph TD) para ilustrar este flujo técnico.')"
+      class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-[#141722] hover:bg-indigo-950/60 hover:text-indigo-200 text-zinc-300 border border-[#232738] hover:border-indigo-500/40 transition cursor-pointer flex items-center gap-1"
+    >
+      <i class="fa-solid fa-diagram-project text-indigo-400 text-[10px]"></i>
+      <span>Diagrama Mermaid</span>
+    </button>
+    <button 
+      type="button" 
+      @click="applyQuickPrompt('Redacta un documento .md completo con especificación técnica, reglas de negocio y diagrama para este flujo.')"
+      class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-[#141722] hover:bg-indigo-950/60 hover:text-indigo-200 text-zinc-300 border border-[#232738] hover:border-indigo-500/40 transition cursor-pointer flex items-center gap-1"
+    >
+      <i class="fa-solid fa-file-lines text-emerald-400 text-[10px]"></i>
+      <span>Generar .md Completo</span>
+    </button>
+    <button 
+      type="button" 
+      @click="applyQuickPrompt('Propón políticas de reintentos exponenciales con jitter, idempotencia y manejo de fallos para este caso.')"
+      class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-[#141722] hover:bg-indigo-950/60 hover:text-indigo-200 text-zinc-300 border border-[#232738] hover:border-indigo-500/40 transition cursor-pointer flex items-center gap-1"
+    >
+      <i class="fa-solid fa-shield-halved text-amber-400 text-[10px]"></i>
+      <span>Reglas de Resiliencia</span>
+    </button>
+  </div>
+
+  <!-- Contenedor de Mensajes con Scroll -->
+  <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages-container">
+    <template x-for="msg in messages" :key="msg.id">
+      <div :class="msg.role === 'user' ? 'text-right' : 'text-left'">
+        <div :class="msg.role === 'user' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-[#141722] text-zinc-200 border border-[#232738] shadow-sm'"
+             class="inline-block p-4 rounded-2xl text-xs max-w-[95%] text-left">
+          
+          <template x-if="msg.role === 'user'">
+            <p class="whitespace-pre-wrap leading-relaxed" x-text="msg.content"></p>
+          </template>
+
+          <template x-if="msg.role !== 'user'">
+            <div class="space-y-3">
+              <div class="chat-markdown" x-html="window.renderMarkdown ? window.renderMarkdown(msg.content) : msg.content"></div>
+
+              <!-- Message Actions Toolbar: Insert in Editor, Download .md, Copy -->
+              <div class="pt-2 border-t border-[#1e2335] flex flex-wrap items-center gap-2">
+                <template x-if="canInsertIntoEditor()">
+                  <button 
+                    type="button" 
+                    @click="insertIntoDocument(msg.content)"
+                    class="px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold transition flex items-center gap-1 cursor-pointer"
+                    title="Insertar esta sección o código directamente en el editor de Markdown"
+                  >
+                    <i class="fa-solid fa-file-import text-[10px]"></i>
+                    <span>Insertar en Editor</span>
+                  </button>
+                </template>
+
+                <button 
+                  type="button" 
+                  @click="downloadAsMarkdown(msg.content)"
+                  class="px-2.5 py-1 rounded-lg bg-[#1a1e2b] hover:bg-[#252b3d] text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold transition flex items-center gap-1 cursor-pointer"
+                  title="Descargar este contenido como un archivo .md"
+                >
+                  <i class="fa-solid fa-download text-[10px]"></i>
+                  <span>Descargar .md</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  @click="copyMessage(msg.content)"
+                  class="px-2.5 py-1 rounded-lg bg-[#1a1e2b] hover:bg-[#252b3d] text-zinc-400 hover:text-white border border-[#232738] text-[10px] font-semibold transition flex items-center gap-1 cursor-pointer"
+                  title="Copiar contenido"
+                >
+                  <i class="fa-regular fa-copy text-[10px]"></i>
+                  <span>Copiar</span>
+                </button>
+              </div>
+            </div>
+          </template>
+          
+          <!-- Atribución de Fuentes del Documento y Anexos -->
+          <template x-if="msg.sources && msg.sources.length">
+            <div class="mt-3 pt-2.5 border-t border-[#1e2335] text-[10px] text-zinc-400 space-y-1">
+              <span class="font-bold text-indigo-400 block flex items-center gap-1">
+                <i class="fa-solid fa-book-bookmark text-[9px]"></i>
+                <span>Fuentes consultadas:</span>
+              </span>
+              <template x-for="(src, idx) in msg.sources" :key="idx">
+                <div class="flex items-start gap-1.5 text-zinc-300 bg-[#0c0e14] p-1.5 rounded-lg border border-[#1e2335]">
+                  <span class="text-indigo-400">📎</span>
+                  <div class="truncate">
+                    <span class="font-semibold text-zinc-200" x-text="src.attachment_name || src.document_path"></span>
+                    <span class="text-zinc-500 text-[9px] block font-mono" x-text="'(' + src.location + ')'"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+    
+    <!-- Loading Animation -->
+    <div x-show="loading" class="text-left">
+      <div class="inline-block p-3.5 bg-[#141722] text-zinc-300 border border-[#232738] rounded-2xl text-xs flex items-center gap-2.5 shadow-sm">
+        <div class="flex space-x-1">
+          <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></div>
+          <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+          <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+        </div>
+        <span class="text-[11px] text-zinc-400 font-medium">Copiloto procesando y estructurando respuesta...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Entrada y Envío -->
+  <div class="p-3.5 border-t border-[#1e2235] bg-[#12151e] shrink-0">
+    <div class="flex items-center gap-2">
+      <input 
+        type="text" 
+        x-model="query" 
+        @keyup.enter="sendMessage()" 
+        placeholder="Pídeme redactar una sección, un flujo o un .md..." 
+        :disabled="loading"
+        class="flex-1 bg-[#0c0e14] text-xs px-3.5 py-2.5 rounded-xl border border-[#232738] text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+      >
+      <button 
+        type="button" 
+        @click="sendMessage()" 
+        :disabled="loading || !query.trim()"
+        class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 px-3.5 py-2.5 rounded-xl text-xs font-bold text-white transition flex items-center justify-center cursor-pointer shadow-md shadow-indigo-600/20"
+      >
+        <i class="fa-solid fa-paper-plane text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+</aside>
+
+<script>
+// Global helpers safely registered on window
+window.openScopedChat = function(title, libId, bId, md = '') {
+  const drawer = document.getElementById('scoped-chat-drawer');
+  const backdrop = document.getElementById('scoped-chat-backdrop');
+  if (drawer) drawer.classList.remove('translate-x-full');
+  if (backdrop) backdrop.classList.remove('hidden');
+
+  window.dispatchEvent(new CustomEvent('cf-scoped-chat-init', {
+    detail: { title, libId, bId, md }
+  }));
+};
+
+window.closeScopedChat = function() {
+  const drawer = document.getElementById('scoped-chat-drawer');
+  const backdrop = document.getElementById('scoped-chat-backdrop');
+  if (drawer) drawer.classList.add('translate-x-full');
+  if (backdrop) backdrop.classList.add('hidden');
+};
+
+function downloadMarkdownFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename.endsWith('.md') ? filename : filename + '.md';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function scopedChatApp() {
+  return {
+    docTitle: 'Documento Activo',
+    libraryId: 'default',
+    bookId: 'doc',
+    rawMarkdown: '',
+    query: '',
+    loading: false,
+    messages: [
+      { 
+        id: 1, 
+        role: 'assistant', 
+        content: '**Copiloto Técnico de Documentación**\n\nPuedo responder dudas sobre este documento, diseñar flujos de integración con diagramas Mermaid o redactar especificaciones completas en formato `.md`.' 
+      }
+    ],
+    init() {
+      window.addEventListener('cf-scoped-chat-init', (e) => {
+        const detail = e.detail || {};
+        this.docTitle = detail.title || 'Documento';
+        this.libraryId = detail.libId || 'default';
+        this.bookId = detail.bId || 'doc';
+        this.rawMarkdown = detail.md || '';
+        this.messages = [
+          { 
+            id: Date.now(), 
+            role: 'assistant', 
+            content: `**Copiloto Técnico asignado a "${this.docTitle}"**\n\n¿Deseas que te ayude a redactar una sección técnica, generar un diagrama Mermaid o estructurar un archivo \`.md\` con las reglas del flujo?` 
+          }
+        ];
+      });
+    },
+    closeDrawer() {
+      window.closeScopedChat();
+    },
+    canInsertIntoEditor() {
+      return typeof window.insertMarkdownIntoEditor === 'function';
+    },
+    insertIntoDocument(content) {
+      if (typeof window.insertMarkdownIntoEditor === 'function') {
+        window.insertMarkdownIntoEditor(content);
+        alert('Contenido insertado en el editor de Markdown exitosamente.');
+      }
+    },
+    downloadAsMarkdown(content) {
+      const safeName = (this.docTitle || 'especificacion').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      downloadMarkdownFile(`${safeName}.md`, content);
+    },
+    copyMessage(content) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(content).then(() => {
+          alert('Contenido copiado al portapapeles.');
+        });
+      } else {
+        prompt('Copia el contenido:', content);
+      }
+    },
+    applyQuickPrompt(promptText) {
+      this.query = promptText;
+      this.sendMessage();
+    },
+    async sendMessage() {
+      if (!this.query.trim() || this.loading) return;
+      const userText = this.query.trim();
+      this.messages.push({ id: Date.now(), role: 'user', content: userText });
+      this.query = '';
+      this.loading = true;
+
+      try {
+        const res = await fetch('/api/v1/chat/scoped', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            library_id: this.libraryId,
+            book_id: this.bookId,
+            query: userText,
+            raw_markdown: this.rawMarkdown
+          })
+        });
+        const data = await res.json();
+        this.messages.push({
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: data.answer || 'Sin respuesta generada.',
+          sources: data.sources || []
+        });
+      } catch (err) {
+        this.messages.push({
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: 'Ocurrió un error consultando el asistente local. Verifica que Ollama esté iniciado.',
+          sources: []
+        });
+      } finally {
+        this.loading = false;
+        this.$nextTick(() => {
+          const container = document.getElementById('chat-messages-container');
+          if (container) container.scrollTop = container.scrollHeight;
+          if (window.renderMermaidDiagrams) window.renderMermaidDiagrams();
+        });
+      }
+    }
+  };
+}
+</script>

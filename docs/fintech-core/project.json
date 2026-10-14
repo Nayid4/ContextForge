@@ -1,0 +1,9 @@
+{
+  "slug": "fintech-core",
+  "name": "Proyecto Fintech",
+  "description": "Servicios financieros",
+  "path": "./docs/fintech-core",
+  "is_active": true,
+  "created_at": "2026-10-14T04:18:08.543487+00:00",
+  "updated_at": "2026-10-14T04:18:08.543487+00:00"
+}

@@ -1,0 +1,264 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Configuración & Modelos Ollama | ContextForge{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+    <div>
+      <div class="flex items-center space-x-3">
+        <span class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <i class="fa-solid fa-sliders text-lg"></i>
+        </span>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-white">Configuración del Motor RAG & Modelos</h1>
+          <p class="text-sm text-slate-400">Gestión de inferencia soberana con Ollama local y parámetros del sistema</p>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <button 
+        hx-post="/settings/refresh-models" 
+        hx-target="body" 
+        class="inline-flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition shadow-sm"
+      >
+        <i class="fa-solid fa-arrows-rotate text-indigo-400"></i>
+        <span>Detectar Modelos Ollama</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Success Notification -->
+  {% if success_message %}
+  <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300 flex items-center space-x-3">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span>{{ success_message }}</span>
+  </div>
+  {% endif %}
+
+  <!-- Ollama Daemon Status Banner -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center space-x-4">
+        {% if ollama_online %}
+          <div class="relative flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base font-semibold text-white">Servicio Ollama Operativo</h2>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Online</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Conectado a <code class="text-indigo-300">{{ settings.ollama_url }}</code> • {{ models|length }} modelos disponibles localmente</p>
+          </div>
+        {% else %}
+          <div class="h-4 w-4 rounded-full bg-rose-500"></div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base font-semibold text-rose-300">Servicio Ollama No Detectado</h2>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">Offline</span>
+            </div>
+            <p class="text-xs text-rose-400/80 mt-0.5">No se pudo conectar a {{ settings.ollama_url }}. Inicia el daemon con: <code class="text-rose-200">ollama serve</code></p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="flex items-center space-x-4 text-xs text-slate-400">
+        <div class="text-right">
+          <p class="text-slate-500">Modelo Activo de Inferencia</p>
+          <p class="text-sm font-semibold text-indigo-400">{{ settings.active_llm_model }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Form & Models Grid -->
+  <form action="/settings" method="POST" class="space-y-8">
+
+    <!-- Installed Models Selection -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
+            <i class="fa-solid fa-microchip text-indigo-400"></i>
+            <span>Modelos LLM Instalados en Local</span>
+          </h2>
+          <p class="text-xs text-slate-400">Selecciona el modelo que ContextForge utilizará para generar respuestas en el Chat RAG</p>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">
+          {{ models|length }} modelo(s) detectados
+        </span>
+      </div>
+
+      {% if models %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for m in models %}
+        <label class="relative flex flex-col p-5 rounded-xl border cursor-pointer transition select-none {% if m.is_active %}border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500{% else %}border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40{% endif %}">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center space-x-2">
+              <input 
+                type="radio" 
+                name="active_llm_model" 
+                value="{{ m.name }}" 
+                class="text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 h-4 w-4 border-slate-700 bg-slate-800"
+                {% if m.is_active %}checked{% endif %}
+              >
+              <span class="font-bold text-white text-base font-mono">{{ m.name }}</span>
+            </div>
+            {% if m.is_active %}
+            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              Activo
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs text-slate-300">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Tamaño en Disco:</span>
+              <span class="font-mono text-slate-200">{{ m.formatted_size }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Parámetros:</span>
+              <span class="font-mono text-slate-200">{{ m.parameter_size }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Cuantización:</span>
+              <span class="font-mono text-slate-200">{{ m.quantization_level }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Formato:</span>
+              <span class="font-mono text-slate-200">{{ m.format|upper }}</span>
+            </div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="rounded-xl border border-dashed border-slate-800 p-8 text-center bg-slate-900/20">
+        <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-400 mb-3"></i>
+        <p class="text-sm text-slate-300 font-medium">No se detectaron modelos instalados en Ollama</p>
+        <p class="text-xs text-slate-500 mt-1">Descarga uno en tu terminal ejecutando: <code class="text-indigo-400">ollama pull llama3.1:8b</code></p>
+        <div class="mt-4">
+          <input 
+            type="text" 
+            name="active_llm_model" 
+            value="{{ settings.active_llm_model }}" 
+            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white w-64 text-center font-mono"
+            placeholder="Nombre del modelo (ej. llama3.1:8b)"
+          >
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- System Parameters Section -->
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-6">
+      <h2 class="text-lg font-semibold text-white flex items-center space-x-2 border-b border-slate-800 pb-4">
+        <i class="fa-solid fa-gears text-indigo-400"></i>
+        <span>Parámetros del Sistema y RAG</span>
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Ollama Endpoint -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            URL del Servicio Ollama
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+              <i class="fa-solid fa-server text-xs"></i>
+            </span>
+            <input 
+              type="text" 
+              name="ollama_url" 
+              value="{{ settings.ollama_url }}" 
+              required
+              class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+            >
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">Dirección HTTP del daemon local de Ollama (por defecto: http://localhost:11434)</p>
+        </div>
+
+        <!-- Documentation Path -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            Ruta Base de Documentación
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+              <i class="fa-solid fa-folder-tree text-xs"></i>
+            </span>
+            <input 
+              type="text" 
+              name="docs_path" 
+              value="{{ settings.docs_path }}" 
+              required
+              class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+            >
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">Directorio de archivos Markdown para ingesta e indexación vectorial (por defecto: ./docs)</p>
+        </div>
+
+        <!-- Embedding Model -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            Modelo de Embeddings
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+              <i class="fa-solid fa-vector-square text-xs"></i>
+            </span>
+            <input 
+              type="text" 
+              name="embedding_model" 
+              value="{{ settings.embedding_model }}" 
+              required
+              class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+            >
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">Modelo para calcular vectores densos en ChromaDB (ej. nomic-embed-text o all-minilm)</p>
+        </div>
+
+        <!-- Temperature -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            Temperatura de Inferencia: <span id="temp-display" class="font-bold text-indigo-400 font-mono">{{ settings.temperature }}</span>
+          </label>
+          <div class="flex items-center space-x-3">
+            <input 
+              type="range" 
+              name="temperature" 
+              min="0.0" 
+              max="1.0" 
+              step="0.05"
+              value="{{ settings.temperature }}" 
+              oninput="document.getElementById('temp-display').innerText = this.value"
+              class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            >
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">0.0 = Máxima rigurosidad y precisión técnica (recomendado para RAG: 0.1 - 0.3)</p>
+        </div>
+
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex justify-end">
+        <button 
+          type="submit" 
+          class="inline-flex items-center space-x-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition"
+        >
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Guardar Configuración</span>
+        </button>
+      </div>
+
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
+

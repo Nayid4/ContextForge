@@ -1,0 +1,143 @@
+<!-- File Preview Modal with Multiformat Web Viewers -->
+<div id="file-preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+    
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">📄</span>
+        <div>
+          <h4 class="font-semibold text-sm text-zinc-100" id="preview-modal-title">Archivo</h4>
+          <span class="text-[10px] text-zinc-500 font-mono" id="preview-modal-subtitle"></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a id="preview-modal-download" href="#" download class="px-3 py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded border border-zinc-700 flex items-center gap-1.5 transition">
+          <span>⬇️</span> Descargar
+        </a>
+        <button type="button" onclick="closeFilePreviewModal()" class="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Dynamic Preview Container -->
+    <div class="flex-1 overflow-auto p-4 bg-zinc-950/50 flex items-center justify-center relative">
+      <!-- Loading Spinner -->
+      <div id="preview-loading" class="hidden absolute inset-0 bg-zinc-950/70 flex items-center justify-center z-10">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+
+      <!-- PDF Container -->
+      <iframe id="pdf-container" class="hidden w-full h-full border-0 rounded-lg bg-zinc-900"></iframe>
+      
+      <!-- Word (DOCX) Container -->
+      <div id="docx-container" class="hidden w-full h-full bg-white text-zinc-900 p-8 overflow-y-auto rounded-lg prose max-w-none shadow-inner"></div>
+      
+      <!-- Excel / CSV Container -->
+      <div id="xlsx-container" class="hidden w-full h-full overflow-auto bg-zinc-950 rounded-lg border border-zinc-800 p-4 font-mono text-xs text-zinc-200"></div>
+      
+      <!-- Image Container -->
+      <img id="img-container" class="hidden max-h-full max-w-full object-contain rounded-lg shadow-lg" src="" alt="Previsualización">
+      
+      <!-- Plain Text Container -->
+      <pre id="txt-container" class="hidden w-full h-full p-4 overflow-auto bg-zinc-950 border border-zinc-800 rounded-lg font-mono text-xs text-emerald-400 whitespace-pre-wrap"></pre>
+
+      <!-- Unsupported Fallback -->
+      <div id="unsupported-container" class="hidden text-center p-8">
+        <p class="text-zinc-400 text-sm mb-3">La previsualización en navegador no está soportada para este tipo de archivo.</p>
+        <a id="fallback-download" href="#" download class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg">
+          Descargar para ver localmente
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function closeFilePreviewModal() {
+  const modal = document.getElementById('file-preview-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function openFilePreview(fileName, fileUrl, mimeType = '') {
+  const modal = document.getElementById('file-preview-modal');
+  if (!modal) return;
+
+  const titleEl = document.getElementById('preview-modal-title');
+  const subEl = document.getElementById('preview-modal-subtitle');
+  const dlLink = document.getElementById('preview-modal-download');
+  const fbLink = document.getElementById('fallback-download');
+
+  titleEl.textContent = fileName || 'Anexo';
+  subEl.textContent = fileUrl || '';
+  dlLink.href = fileUrl;
+  if (fbLink) fbLink.href = fileUrl;
+
+  // Hide all containers
+  const containers = ['pdf-container', 'docx-container', 'xlsx-container', 'img-container', 'txt-container', 'unsupported-container'];
+  containers.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  const ext = (fileName || fileUrl).split('.').pop().toLowerCase();
+  const loading = document.getElementById('preview-loading');
+  if (loading) loading.classList.remove('hidden');
+
+  modal.classList.remove('hidden');
+
+  try {
+    if (ext === 'pdf' || mimeType === 'application/pdf') {
+      const pdfEl = document.getElementById('pdf-container');
+      pdfEl.src = fileUrl;
+      pdfEl.classList.remove('hidden');
+    } else if (['png', 'jpg', 'jpeg', 'svg', 'gif', 'webp'].includes(ext) || mimeType.startsWith('image/')) {
+      const imgEl = document.getElementById('img-container');
+      imgEl.src = fileUrl;
+      imgEl.classList.remove('hidden');
+    } else if (ext === 'docx') {
+      const resp = await fetch(fileUrl);
+      const arrayBuffer = await resp.arrayBuffer();
+      if (window.mammoth) {
+        const result = await window.mammoth.convertToHtml({ arrayBuffer });
+        const docxEl = document.getElementById('docx-container');
+        docxEl.innerHTML = result.value || '<p class="text-zinc-500 italic">Documento vacío.</p>';
+        docxEl.classList.remove('hidden');
+      } else {
+        throw new Error('Mammoth.js no está disponible');
+      }
+    } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+      const resp = await fetch(fileUrl);
+      const arrayBuffer = await resp.arrayBuffer();
+      if (window.XLSX) {
+        const workbook = window.XLSX.read(arrayBuffer, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const htmlTable = window.XLSX.utils.sheet_to_html(worksheet, { id: 'preview-table', editable: false });
+        
+        const xlsxEl = document.getElementById('xlsx-container');
+        xlsxEl.innerHTML = `<div class="mb-2 text-xs font-bold text-zinc-400">Hoja: ${firstSheetName}</div>` + htmlTable;
+        xlsxEl.classList.remove('hidden');
+      } else {
+        throw new Error('SheetJS no está disponible');
+      }
+    } else if (['txt', 'json', 'log', 'sql', 'md'].includes(ext)) {
+      const resp = await fetch(fileUrl);
+      const text = await resp.text();
+      const txtEl = document.getElementById('txt-container');
+      txtEl.textContent = text;
+      txtEl.classList.remove('hidden');
+    } else {
+      document.getElementById('unsupported-container').classList.remove('hidden');
+    }
+  } catch (err) {
+    console.warn('Error previsualizando archivo:', err);
+    document.getElementById('unsupported-container').classList.remove('hidden');
+  } finally {
+    if (loading) loading.classList.add('hidden');
+  }
+}
+</script>
+

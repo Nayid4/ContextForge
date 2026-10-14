@@ -1,0 +1,194 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Proyectos de Ingeniería | ContextForge{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header & Actions -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+    <div>
+      <div class="flex items-center space-x-3">
+        <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center space-x-3">
+          <i class="fa-solid fa-diagram-project text-indigo-400 text-2xl"></i>
+          <span>Proyectos de Ingeniería Multi-Tenant</span>
+        </h1>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          Aislamiento RAG Estricto
+        </span>
+      </div>
+      <p class="text-sm text-slate-400 mt-1">
+        Gestión soberana de repositorios de documentación aislados. Cada proyecto mantiene colecciones vectoriales y particiones BM25 independientes sin fuga de datos.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center space-x-3">
+      <button 
+        onclick="document.getElementById('new-project-modal').classList.remove('hidden')"
+        class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-md shadow-indigo-600/20 transition"
+      >
+        <i class="fa-solid fa-plus mr-2"></i>Nuevo Proyecto
+      </button>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for item in projects %}
+    {% set p = item.entity %}
+    <div class="rounded-2xl border {% if item.is_current %}border-indigo-500/50 bg-gradient-to-b from-indigo-950/20 to-slate-900/80 shadow-lg shadow-indigo-900/10{% else %}border-slate-800 bg-slate-900/40 hover:border-slate-700{% endif %} p-6 flex flex-col justify-between transition group">
+      
+      <div>
+        <!-- Top Status & Slug -->
+        <div class="flex items-center justify-between text-xs mb-4">
+          <span class="font-mono text-slate-400 px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+            slug: {{ p.slug.value }}
+          </span>
+          {% if item.is_current %}
+          <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Activo Global</span>
+          </span>
+          {% else %}
+          <span class="text-slate-400 text-xs">
+            Inactivo
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Project Title & Description -->
+        <h3 class="text-xl font-bold text-white group-hover:text-indigo-300 transition">
+          {{ p.name }}
+        </h3>
+        <p class="text-xs text-slate-400 mt-2 line-clamp-2">
+          {{ p.description or "Sin descripción registrada." }}
+        </p>
+
+        <!-- Stats Chips -->
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
+          <div class="flex items-center space-x-1.5">
+            <i class="fa-regular fa-file-lines text-indigo-400"></i>
+            <span><strong>{{ item.doc_count }}</strong> Documentos</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <i class="fa-solid fa-cubes text-indigo-400"></i>
+            <span><strong>{{ item.modules|length }}</strong> Módulos</span>
+          </div>
+        </div>
+
+        <!-- Directory Path -->
+        <div class="mt-3 text-[11px] font-mono text-slate-400 truncate">
+          <i class="fa-regular fa-folder text-slate-400 mr-1"></i>{{ p.path }}
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-6 pt-4 border-t border-slate-800/60 flex items-center space-x-2">
+        {% if not item.is_current %}
+        <form method="POST" action="/ui/projects/switch" class="flex-1 m-0">
+          <input type="hidden" name="project_slug" value="{{ p.slug.value }}">
+          <button 
+            type="submit" 
+            class="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 hover:border-indigo-500 transition"
+          >
+            <i class="fa-solid fa-arrow-right-arrow-left mr-1.5"></i>Activar
+          </button>
+        </form>
+        {% else %}
+        <span class="flex-1 py-2 px-3 text-center rounded-lg text-xs font-semibold bg-indigo-600/20 text-indigo-300 border border-indigo-500/30">
+          <i class="fa-solid fa-check mr-1.5"></i>Seleccionado
+        </span>
+        {% endif %}
+
+        <a 
+          href="/docs/browser?project={{ p.slug.value }}" 
+          class="py-2 px-3 rounded-lg text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+          title="Ver Documentos de este proyecto"
+        >
+          <i class="fa-regular fa-folder-open mr-1"></i>Ver Docs
+        </a>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- Modal: Crear Nuevo Proyecto -->
+<div id="new-project-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+    
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+        <i class="fa-solid fa-folder-plus text-indigo-400"></i>
+        <span>Registrar Nuevo Proyecto</span>
+      </h2>
+      <button 
+        onclick="document.getElementById('new-project-modal').classList.add('hidden')"
+        class="text-slate-400 hover:text-white text-sm"
+      >
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="/projects/new" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre del Proyecto *</label>
+        <input 
+          type="text" 
+          name="name" 
+          placeholder="ej. Core Billing Engine" 
+          required 
+          class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500"
+        >
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Slug / Identificador (opcional)</label>
+        <input 
+          type="text" 
+          name="slug" 
+          placeholder="ej. core-billing (se auto-genera si se omite)" 
+          class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500 font-mono"
+        >
+        <p class="text-[11px] text-slate-400 mt-1">Se usará como nombre de carpeta en <code>./docs/{slug}/</code> y prefijo de colección ChromaDB.</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Descripción</label>
+        <textarea 
+          name="description" 
+          rows="3" 
+          placeholder="Propósito, arquitectura y ámbito del proyecto..."
+          class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500"
+        ></textarea>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-2">
+        <input type="checkbox" id="make_active" name="make_active" value="true" checked class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500">
+        <label for="make_active" class="text-xs text-slate-300">Establecer como proyecto activo de inmediato</label>
+      </div>
+
+      <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
+        <button 
+          type="button" 
+          onclick="document.getElementById('new-project-modal').classList.add('hidden')"
+          class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+        >
+          Cancelar
+        </button>
+        <button 
+          type="submit" 
+          class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition"
+        >
+          Crear e Inicializar
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+

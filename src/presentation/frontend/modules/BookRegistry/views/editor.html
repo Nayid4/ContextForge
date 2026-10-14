@@ -1,0 +1,669 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Editor Dual de Documentos | ContextForge{% endblock %}
+
+{% block content %}
+<div class="space-y-6 pb-16" x-data="dualEditorApp()">
+
+  <!-- Top Action & Navigation Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1e2235]">
+    <div class="flex items-center space-x-3">
+      <a href="/docs/browser" class="text-xs text-zinc-400 hover:text-white transition flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#141722] border border-[#232738] hover:bg-[#1c202d]">
+        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+        <span>Volver a Documentos</span>
+      </a>
+      <span class="text-zinc-600">/</span>
+      <div>
+        <h1 class="text-lg font-bold text-white tracking-tight flex items-center space-x-2">
+          <i class="fa-solid fa-pen-nib text-indigo-400"></i>
+          <span>{% if existing_doc %}Editar Documento{% else %}Editor Dual de Documentos{% endif %}</span>
+          {% if existing_doc %}
+          <span class="ml-2 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+            <i class="fa-solid fa-file-pen text-[10px]"></i>
+            <span>{{ existing_doc.path }}</span>
+          </span>
+          {% endif %}
+        </h1>
+        <p class="text-xs text-zinc-400">
+          {% if existing_doc %}
+          Modificando archivo soberano en <span class="font-mono text-zinc-300">./docs/{{ existing_doc.path }}</span>
+          {% else %}
+          Escribe en Markdown plano o diseña visualmente con bloques estructurados
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Mode Selector & Save Actions -->
+    <div class="flex items-center gap-2.5">
+      <!-- Chat Scoped Trigger -->
+      <button 
+        type="button" 
+        @click="openScopedChatForDoc()"
+        class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-200 bg-[#141722] hover:bg-[#1c202d] border border-[#232738] transition shadow-sm"
+      >
+        <span>🤖</span>
+        <span>Chat con este Doc</span>
+      </button>
+
+      <!-- Dual Mode Switcher -->
+      <div class="inline-flex rounded-xl p-1 bg-[#0d0f15] border border-[#232738] shadow-inner">
+        <button 
+          type="button" 
+          @click="switchMode('markdown')"
+          :class="mode === 'markdown' ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30' : 'text-zinc-400 hover:text-zinc-200'"
+          class="px-3.5 py-1.5 rounded-lg text-xs transition flex items-center space-x-1.5"
+        >
+          <i class="fa-brands fa-markdown text-sm"></i>
+          <span>Markdown Pro</span>
+        </button>
+        <button 
+          type="button" 
+          @click="switchMode('blocks')"
+          :class="mode === 'blocks' ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30' : 'text-zinc-400 hover:text-zinc-200'"
+          class="px-3.5 py-1.5 rounded-lg text-xs transition flex items-center space-x-1.5"
+        >
+          <i class="fa-solid fa-cubes text-xs"></i>
+          <span>Constructor de Bloques</span>
+        </button>
+      </div>
+
+      <!-- Save Button -->
+      <button 
+        type="button" 
+        @click="saveDocument()" 
+        :disabled="saving"
+        class="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/25 transition cursor-pointer"
+      >
+        <i class="fa-solid fa-floppy-disk" :class="saving ? 'animate-spin' : ''"></i>
+        <span x-text="saving ? 'Guardando...' : 'Guardar e Indexar'"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Document Metadata Card (Claude Aesthetic) -->
+  <div class="bg-[#12151e] p-5 rounded-2xl border border-[#232738] shadow-sm space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      
+      <!-- Project Selection -->
+      <div>
+        <label class="block text-xs font-medium text-zinc-300 mb-1">Librería / Proyecto *</label>
+        <select 
+          x-model="doc.library_id" 
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+          {% for p in projects %}
+          <option value="{{ p.slug.value }}" {% if p.slug.value == active_slug %}selected{% endif %}>
+            {{ p.name }} ({{ p.slug.value }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Title Input -->
+      <div class="md:col-span-2">
+        <label class="block text-xs font-medium text-zinc-300 mb-1">Título del Documento *</label>
+        <input 
+          type="text" 
+          x-model="doc.title" 
+          placeholder="ej. Especificación de Pagos y Facturación" 
+          required 
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-white font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+      </div>
+
+      <!-- Module Input -->
+      <div>
+        <label class="block text-xs font-medium text-zinc-300 mb-1">Módulo o Categoría</label>
+        <input 
+          type="text" 
+          x-model="doc.module" 
+          placeholder="ej. architecture, backend, payments" 
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs font-mono text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+      </div>
+
+    </div>
+
+    <!-- Tags and Description -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+      <div>
+        <label class="block text-xs font-medium text-zinc-300 mb-1">Etiquetas (separadas por coma)</label>
+        <input 
+          type="text" 
+          x-model="tagsInput" 
+          @input="doc.tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean)"
+          placeholder="ej. adr, api, rest, cache" 
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+        >
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-xs font-medium text-zinc-300 mb-1">Resumen o descripción ejecutiva</label>
+        <input 
+          type="text" 
+          x-model="doc.description" 
+          placeholder="Breve resumen del propósito o las directivas técnicas de este documento..." 
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CANVAS: MODE 1 (MARKDOWN PRO) -->
+  <div x-show="mode === 'markdown'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[550px]">
+    
+    <!-- Left: Markdown Code Editor -->
+    <div class="flex flex-col space-y-2">
+      <div class="flex items-center justify-between text-xs text-zinc-400">
+        <span class="font-semibold text-zinc-300 flex items-center space-x-1.5">
+          <i class="fa-brands fa-markdown text-indigo-400"></i>
+          <span>Editor de Código Markdown Plano (.md)</span>
+        </span>
+        <span class="text-[11px] text-zinc-500 font-mono">Frontmatter YAML + Bloques</span>
+      </div>
+      <textarea 
+        x-model="doc.rawMarkdown" 
+        @input.debounce.250ms="onMarkdownInput()"
+        rows="24" 
+        placeholder="Escribe el contenido Markdown aquí..." 
+        class="w-full flex-1 p-4 bg-[#0d0f15] border border-[#232738] rounded-2xl font-mono text-xs text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-y leading-relaxed"
+      ></textarea>
+    </div>
+
+    <!-- Right: Reactive Live Preview (Blog Article Rendering) -->
+    <div class="flex flex-col space-y-2">
+      <div class="flex items-center justify-between text-xs text-zinc-400">
+        <span class="font-semibold text-zinc-300 flex items-center space-x-1.5">
+          <i class="fa-solid fa-eye text-emerald-400"></i>
+          <span>Previsualización Editorial (Formato Blog)</span>
+        </span>
+        <span class="text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          HTMX Reactivo
+        </span>
+      </div>
+      <div 
+        id="markdown-preview-box" 
+        class="prose-dark w-full flex-1 p-6 bg-[#0e1017] border border-[#232738] rounded-2xl overflow-y-auto max-h-[660px]"
+        x-html="renderedHtml"
+      ></div>
+    </div>
+
+  </div>
+
+  <!-- MAIN CANVAS: MODE 2 (CONSTRUCTOR DINÁMICO POR BLOQUES) -->
+  <div x-show="mode === 'blocks'" class="max-w-4xl mx-auto space-y-4">
+    
+    <!-- Info Banner -->
+    <div class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-300 flex items-center justify-between shadow-sm">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 text-sm"></i>
+        <span>Los bloques visuales se sincronizan bidireccionalmente y se compilan a Markdown estándar.</span>
+      </div>
+      <span class="font-mono text-[11px] text-indigo-300 font-semibold px-2 py-0.5 rounded bg-indigo-900/60" x-text="doc.blocks.length + ' bloques'"></span>
+    </div>
+
+    <!-- Empty state when no blocks -->
+    <template x-if="doc.blocks.length === 0">
+      <div class="p-12 text-center rounded-2xl border-2 border-dashed border-[#232738] bg-[#11131a]/60 space-y-3">
+        <i class="fa-solid fa-cubes text-3xl text-zinc-600"></i>
+        <h3 class="text-sm font-semibold text-zinc-300">No hay bloques definidos en este documento</h3>
+        <p class="text-xs text-zinc-500 max-w-sm mx-auto">Comienza agregando un título, un párrafo o pega código usando los botones inferiores.</p>
+      </div>
+    </template>
+
+    <!-- Blocks List Container -->
+    <template x-for="(block, index) in doc.blocks" :key="index">
+      <div class="bg-[#12151e] border border-[#232738] hover:border-[#323850] rounded-2xl p-5 shadow-sm transition space-y-3 relative group">
+        
+        <!-- Block Top Action Bar -->
+        <div class="flex items-center justify-between border-b border-[#1e2235] pb-2.5">
+          
+          <!-- Block Badge Indicator -->
+          <div class="flex items-center space-x-2">
+            <span class="text-zinc-500 font-mono text-xs font-semibold" x-text="'#' + (index + 1)"></span>
+            
+            <!-- Heading Badge -->
+            <template x-if="block.type === 'heading'">
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center space-x-1">
+                <i class="fa-solid fa-heading text-[10px]"></i>
+                <span x-text="'Encabezado H' + (block.level || 2)"></span>
+              </span>
+            </template>
+
+            <!-- Paragraph Badge -->
+            <template x-if="block.type === 'paragraph'">
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center space-x-1">
+                <i class="fa-solid fa-paragraph text-[10px]"></i>
+                <span>Texto / Párrafo</span>
+              </span>
+            </template>
+
+            <!-- Code Badge -->
+            <template x-if="block.type === 'code'">
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center space-x-1">
+                <i class="fa-solid fa-code text-[10px]"></i>
+                <span x-text="'Código (' + (block.language || 'text') + ')'"></span>
+              </span>
+            </template>
+
+            <!-- Mermaid Badge -->
+            <template x-if="block.type === 'mermaid'">
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center space-x-1">
+                <i class="fa-solid fa-diagram-project text-[10px]"></i>
+                <span>Diagrama Mermaid.js</span>
+              </span>
+            </template>
+
+            <!-- Attachment Badge -->
+            <template x-if="block.type === 'attachment'">
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center space-x-1">
+                <i class="fa-solid fa-paperclip text-[10px]"></i>
+                <span>Anexo Vinculado</span>
+              </span>
+            </template>
+          </div>
+
+          <!-- Move / Delete Actions -->
+          <div class="flex items-center space-x-1">
+            <button 
+              type="button" 
+              @click="moveBlockUp(index)" 
+              :disabled="index === 0"
+              class="p-1.5 text-zinc-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-[#1c202d] transition" 
+              title="Mover arriba"
+            >
+              <i class="fa-solid fa-arrow-up text-xs"></i>
+            </button>
+            <button 
+              type="button" 
+              @click="moveBlockDown(index)" 
+              :disabled="index === doc.blocks.length - 1"
+              class="p-1.5 text-zinc-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-[#1c202d] transition" 
+              title="Mover abajo"
+            >
+              <i class="fa-solid fa-arrow-down text-xs"></i>
+            </button>
+            <button 
+              type="button" 
+              @click="removeBlock(index)" 
+              class="p-1.5 text-zinc-400 hover:text-red-400 rounded-lg hover:bg-[#1c202d] transition ml-1" 
+              title="Eliminar bloque"
+            >
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- BLOCK BODY: HEADING -->
+        <template x-if="block.type === 'heading'">
+          <div class="flex items-center gap-3">
+            <select 
+              x-model.number="block.level" 
+              class="w-24 px-2.5 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs font-mono text-blue-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="1">H1 (#)</option>
+              <option value="2">H2 (##)</option>
+              <option value="3">H3 (###)</option>
+              <option value="4">H4 (####)</option>
+            </select>
+            <input 
+              type="text" 
+              x-model="block.text" 
+              placeholder="Título de la sección o acápite..." 
+              class="flex-1 px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+          </div>
+        </template>
+
+        <!-- BLOCK BODY: PARAGRAPH -->
+        <template x-if="block.type === 'paragraph'">
+          <div>
+            <textarea 
+              x-model="block.text" 
+              placeholder="Escribe la explicación técnica, reglas de negocio o directivas arquitectónicas..." 
+              rows="3" 
+              class="w-full p-3 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y leading-relaxed font-sans"
+            ></textarea>
+          </div>
+        </template>
+
+        <!-- BLOCK BODY: CODE -->
+        <template x-if="block.type === 'code'">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs text-zinc-400">Sintaxis:</span>
+                <select 
+                  x-model="block.language" 
+                  class="px-2.5 py-1 bg-[#0c0e14] border border-[#232738] rounded-lg text-xs font-mono text-amber-400 focus:outline-none"
+                >
+                  <option value="python">Python</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="sql">SQL</option>
+                  <option value="bash">Bash / Shell</option>
+                  <option value="json">JSON</option>
+                  <option value="yaml">YAML</option>
+                  <option value="dockerfile">Dockerfile</option>
+                  <option value="text">Texto Plano</option>
+                </select>
+              </div>
+            </div>
+            <textarea 
+              x-model="block.code" 
+              placeholder="# Código fuente..." 
+              rows="5" 
+              class="w-full p-3 bg-[#08090d] border border-[#1e2235] rounded-xl font-mono text-xs text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed"
+            ></textarea>
+          </div>
+        </template>
+
+        <!-- BLOCK BODY: MERMAID -->
+        <template x-if="block.type === 'mermaid'">
+          <div class="space-y-2">
+            <textarea 
+              x-model="block.code" 
+              placeholder="graph TD&#10;  A[Cliente] --> B[API Gateway]&#10;  B --> C[(Base de Datos)]" 
+              rows="4" 
+              class="w-full p-3 bg-[#08090d] border border-[#1e2235] rounded-xl font-mono text-xs text-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500 leading-relaxed"
+            ></textarea>
+            <div class="p-2.5 bg-[#0a0b10] border border-[#1e2235] rounded-xl text-center">
+              <span class="text-[11px] text-zinc-500 font-mono">El diagrama se renderizará automáticamente en la vista de lectura o previsualización.</span>
+            </div>
+          </div>
+        </template>
+
+        <!-- BLOCK BODY: ATTACHMENT -->
+        <template x-if="block.type === 'attachment'">
+          <div class="flex items-center justify-between p-3.5 bg-[#0c0e14] border border-[#232738] rounded-xl">
+            <div class="flex items-center space-x-3.5">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl text-indigo-400">
+                <i class="fa-regular fa-file-lines" x-show="!block.is_image"></i>
+                <i class="fa-regular fa-image" x-show="block.is_image"></i>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-white" x-text="block.file_name"></p>
+                <p class="text-[11px] text-zinc-500 font-mono" x-text="block.file_path"></p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button 
+                type="button" 
+                @click="openPreviewForBlock(block)"
+                class="px-3 py-1.5 text-xs font-medium text-indigo-300 bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 rounded-lg transition"
+              >
+                <i class="fa-regular fa-eye mr-1"></i> Previsualizar
+              </button>
+            </div>
+          </div>
+        </template>
+
+      </div>
+    </template>
+
+    <!-- Block Insertion Toolbar -->
+    <div class="p-5 border-2 border-dashed border-[#232738] hover:border-indigo-500/40 rounded-2xl bg-[#0e1017]/50 flex flex-wrap items-center justify-center gap-2.5 transition">
+      <button 
+        type="button" 
+        @click="addBlock('heading')" 
+        class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-[#141722] hover:bg-[#1e2235] text-zinc-200 border border-[#232738] transition shadow-sm cursor-pointer"
+      >
+        <i class="fa-solid fa-heading text-blue-400"></i>
+        <span>+ Título</span>
+      </button>
+
+      <button 
+        type="button" 
+        @click="addBlock('paragraph')" 
+        class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-[#141722] hover:bg-[#1e2235] text-zinc-200 border border-[#232738] transition shadow-sm cursor-pointer"
+      >
+        <i class="fa-solid fa-paragraph text-emerald-400"></i>
+        <span>+ Párrafo</span>
+      </button>
+
+      <button 
+        type="button" 
+        @click="addBlock('code')" 
+        class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-[#141722] hover:bg-[#1e2235] text-zinc-200 border border-[#232738] transition shadow-sm cursor-pointer"
+      >
+        <i class="fa-solid fa-code text-amber-400"></i>
+        <span>+ Código</span>
+      </button>
+
+      <button 
+        type="button" 
+        @click="addBlock('mermaid')" 
+        class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-[#141722] hover:bg-[#1e2235] text-zinc-200 border border-[#232738] transition shadow-sm cursor-pointer"
+      >
+        <i class="fa-solid fa-diagram-project text-purple-400"></i>
+        <span>+ Diagrama Mermaid</span>
+      </button>
+
+      <label class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer shadow-md shadow-indigo-600/20 transition">
+        <i class="fa-solid fa-paperclip"></i>
+        <span>📎 Adjuntar Archivo</span>
+        <input type="file" @change="uploadAttachmentFile($event)" class="hidden">
+      </label>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function dualEditorApp() {
+  return {
+    mode: 'markdown',
+    saving: false,
+    tagsInput: '{% if existing_doc and existing_doc.tags %}{{ existing_doc.tags | join(", ") }}{% else %}arquitectura, backend{% endif %}',
+    renderedHtml: '<p class="text-zinc-500 italic">Escribe en el editor para previsualizar...</p>',
+    doc: {
+      doc_path: '{{ existing_doc.path if existing_doc else "" }}',
+      title: {{ (existing_doc.title if existing_doc else "Especificación de Flujo y Reglas Técnicas") | tojson }},
+      library_id: '{{ existing_doc.project_slug if existing_doc else (project_slug | default("default")) }}',
+      module: '{{ existing_doc.module if existing_doc else (module | default("architecture")) }}',
+      tags: {{ (existing_doc.tags if existing_doc else ["arquitectura", "backend"]) | tojson }},
+      description: {{ (existing_doc.title if existing_doc else "Documento técnico con directivas de ingeniería.") | tojson }},
+      rawMarkdown: {{ (existing_doc.content_markdown if existing_doc else "# Especificación de Flujo y Reglas Técnicas\n\nEste documento describe las políticas operativas y los contratos de integración.\n\n## 1. Topología del Sistema\n```mermaid\ngraph TD\n  Cliente --> API[FastAPI Gateway]\n  API --> Worker[Cola Asíncrona]\n  Worker --> BD[(SQLite Soberano)]\n```\n\n## 2. Reglas de Negocio\n- Regla 1: Las transacciones deben ser idempotentes.\n- Regla 2: Todo anexo PDF o Excel se indexa automáticamente para RAG.\n\n```python\ndef process_event(event_id: str) -> bool:\n    # Lógica de validación con cero fugas\n    return True\n```\n") | tojson }},
+      blocks: [
+        { type: 'heading', level: 1, text: 'Especificación de Flujo y Reglas Técnicas' },
+        { type: 'paragraph', text: 'Este documento describe las políticas operativas y los contratos de integración.' },
+        { type: 'heading', level: 2, text: '1. Topología del Sistema' },
+        { type: 'mermaid', code: 'graph TD\n  Cliente --> API[FastAPI Gateway]\n  API --> Worker[Cola Asíncrona]\n  Worker --> BD[(SQLite Soberano)]' },
+        { type: 'heading', level: 2, text: '2. Reglas de Negocio' },
+        { type: 'paragraph', text: '- Regla 1: Las transacciones deben ser idempotentes.\n- Regla 2: Todo anexo PDF o Excel se indexa automáticamente para RAG.' },
+        { type: 'code', language: 'python', code: 'def process_event(event_id: str) -> bool:\n    # Lógica de validación con cero fugas\n    return True' }
+      ]
+    },
+    async init() {
+      this.onMarkdownInput();
+      if (this.doc.doc_path && this.doc.rawMarkdown) {
+        await this.syncMarkdownToBlocks();
+      }
+    },
+    async switchMode(newMode) {
+      if (newMode === this.mode) return;
+
+      if (newMode === 'blocks') {
+        // Parse current markdown into visual blocks via backend AST endpoint
+        await this.syncMarkdownToBlocks();
+      } else if (newMode === 'markdown') {
+        // Compile visual blocks to raw markdown via backend compiler endpoint
+        await this.syncBlocksToMarkdown();
+      }
+      this.mode = newMode;
+      this.$nextTick(() => {
+        if (window.renderMermaidDiagrams) {
+          window.renderMermaidDiagrams();
+        }
+      });
+    },
+    addBlock(type) {
+      if (type === 'heading') this.doc.blocks.push({ type: 'heading', level: 2, text: '' });
+      if (type === 'paragraph') this.doc.blocks.push({ type: 'paragraph', text: '' });
+      if (type === 'code') this.doc.blocks.push({ type: 'code', language: 'python', code: '' });
+      if (type === 'mermaid') this.doc.blocks.push({ type: 'mermaid', code: 'sequenceDiagram\n  A->>B: Petición\n  B-->>A: Respuesta 200' });
+    },
+    removeBlock(index) {
+      this.doc.blocks.splice(index, 1);
+    },
+    moveBlockUp(index) {
+      if (index <= 0) return;
+      const item = this.doc.blocks.splice(index, 1)[0];
+      this.doc.blocks.splice(index - 1, 0, item);
+    },
+    moveBlockDown(index) {
+      if (index >= this.doc.blocks.length - 1) return;
+      const item = this.doc.blocks.splice(index, 1)[0];
+      this.doc.blocks.splice(index + 1, 0, item);
+    },
+    async uploadAttachmentFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('library_id', this.doc.library_id);
+      const bookSlug = (this.doc.title || 'doc').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      formData.append('book_id', bookSlug);
+
+      try {
+        const res = await fetch('/api/v1/books/upload-attachment', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error('Error al subir anexo');
+        const data = await res.json();
+
+        // Add visual block
+        this.doc.blocks.push({
+          type: 'attachment',
+          file_name: data.file_name,
+          file_path: data.file_path,
+          mime_type: data.mime_type,
+          is_image: data.is_image
+        });
+
+        // Append markdown reference
+        const ref = data.is_image
+          ? `\n![${data.file_name}](${data.file_path})\n`
+          : `\n> 📎 **Anexo:** [${data.file_name}](${data.file_path})\n`;
+        this.doc.rawMarkdown += ref;
+        this.onMarkdownInput();
+      } catch (err) {
+        alert('No se pudo subir el archivo: ' + err.message);
+      }
+    },
+    openPreviewForBlock(block) {
+      const url = `/api/v1/assets/${this.doc.library_id}/${block.file_path}`;
+      window.openFilePreview(block.file_name, url, block.mime_type);
+    },
+    openScopedChatForDoc() {
+      const bookSlug = (this.doc.title || 'doc').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      window.openScopedChat(this.doc.title, this.doc.library_id, bookSlug, this.doc.rawMarkdown);
+    },
+    async onMarkdownInput() {
+      try {
+        const formData = new FormData();
+        formData.append('content_markdown', this.doc.rawMarkdown);
+        const res = await fetch('/docs/preview-htmx', { method: 'POST', body: formData });
+        if (res.ok) {
+          this.renderedHtml = await res.text();
+          this.$nextTick(() => {
+            if (window.renderMermaidDiagrams) window.renderMermaidDiagrams();
+          });
+        }
+      } catch (err) {
+        console.warn('Preview error:', err);
+      }
+    },
+    async syncMarkdownToBlocks() {
+      try {
+        const res = await fetch('/api/v1/books/parse-markdown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ raw_markdown: this.doc.rawMarkdown })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.blocks && data.blocks.length > 0) {
+            this.doc.blocks = data.blocks;
+          }
+          if (data.metadata) {
+            if (data.metadata.title) this.doc.title = data.metadata.title;
+            if (data.metadata.module) this.doc.module = data.metadata.module;
+            if (data.metadata.tags) {
+              this.doc.tags = Array.isArray(data.metadata.tags) ? data.metadata.tags : [data.metadata.tags];
+              this.tagsInput = this.doc.tags.join(', ');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Sync to blocks error:', err);
+      }
+    },
+    async syncBlocksToMarkdown() {
+      try {
+        const res = await fetch('/api/v1/books/compile-blocks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: this.doc.title,
+            module: this.doc.module,
+            library_id: this.doc.library_id,
+            tags: this.doc.tags,
+            description: this.doc.description,
+            blocks: this.doc.blocks
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.raw_markdown) {
+            this.doc.rawMarkdown = data.raw_markdown;
+            this.onMarkdownInput();
+          }
+        }
+      } catch (err) {
+        console.warn('Sync to markdown error:', err);
+      }
+    },
+    async saveDocument() {
+      this.saving = true;
+      try {
+        if (this.mode === 'blocks') {
+          await this.syncBlocksToMarkdown();
+        }
+
+        const res = await fetch('/api/v1/books/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: this.doc.title,
+            module: this.doc.module,
+            library_id: this.doc.library_id,
+            tags: this.doc.tags,
+            description: this.doc.description,
+            raw_markdown: this.doc.rawMarkdown,
+            blocks: this.doc.blocks,
+            doc_path: this.doc.doc_path || null
+          })
+        });
+
+        if (!res.ok) throw new Error('Error al guardar documento');
+        const data = await res.json();
+        alert(`Documento guardado e indexado con éxito en ${data.path}`);
+        window.location.href = `/docs/view/${data.path}`;
+      } catch (err) {
+        alert('Error guardando documento: ' + err.message);
+      } finally {
+        this.saving = false;
+      }
+    }
+  };
+}
+</script>
+{% endblock %}

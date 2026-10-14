@@ -1,0 +1,24 @@
+# CURSOR & WINDSURF AI RULES - ContextForge Knowledge Bundle
+# Project: default | Generated: 2026-10-14 00:15:56 UTC
+
+## STRICT INSTRUCTIONS FOR THE AI ASSISTANT
+You are working on a sovereign codebase governed by the engineering rules documented below.
+- You MUST strictly respect all architectural patterns, schemas, and invariants described in these specifications.
+- Never hallucinate configuration values or business rules.
+- When suggesting code changes, ensure alignment with the referenced ADRs and module boundaries.
+
+## INDEXED SPECIFICATIONS & FILES
+- Doc Creado por API (Module: testing, File: default/modules/testing/api_doc.md)
+- Documento Creado Web (Module: testing, File: default/modules/testing/web_test.md)
+
+---
+### SPECIFICATION: Doc Creado por API (Path: default/modules/testing/api_doc.md)
+# Doc API
+
+Prueba API.
+
+---
+### SPECIFICATION: Documento Creado Web (Path: default/modules/testing/web_test.md)
+# Contenido Web
+
+Prueba de creación.

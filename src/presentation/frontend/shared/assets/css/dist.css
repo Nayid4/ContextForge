@@ -1,0 +1,18 @@
+/* ContextForge TailwindCSS v4 compiled bundle */
+:root {
+  --color-brand-primary: #2563eb;
+  --color-brand-dark: #09090b;
+  --color-surface-card: #18181b;
+  --color-surface-border: #27272a;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+pre code.hljs {
+  background: transparent;
+}
+

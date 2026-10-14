@@ -1,0 +1,10 @@
+# CURSOR & WINDSURF AI RULES - ContextForge Knowledge Bundle
+# Project: fintech-core | Generated: 2026-10-14 00:17:38 UTC
+
+## STRICT INSTRUCTIONS FOR THE AI ASSISTANT
+You are working on a sovereign codebase governed by the engineering rules documented below.
+- You MUST strictly respect all architectural patterns, schemas, and invariants described in these specifications.
+- Never hallucinate configuration values or business rules.
+- When suggesting code changes, ensure alignment with the referenced ADRs and module boundaries.
+
+## INDEXED SPECIFICATIONS & FILES
