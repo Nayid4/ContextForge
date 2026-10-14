@@ -97,3 +97,67 @@ async def test_scoped_chat_empty_chunks_fallback() -> None:
     assert "no contiene esa información" in result["answer"]
     assert result["sources"] == []
 
+
+@pytest.mark.asyncio
+async def test_scoped_chat_copilot_multi_turn_history_and_md_generation() -> None:
+    mock_vector = AsyncMock()
+    mock_ollama = AsyncMock()
+    generated_md = """---
+title: "Flujo de Webhooks y Pagos"
+module: "payments"
+project_slug: "billing"
+tags: ["payments", "webhooks", "idempotency"]
+author: "Arquitecto IA"
+version: "1.0.0"
+---
+
+# Flujo de Webhooks y Pagos
+
+## 1. Topología del Sistema
+```mermaid
+sequenceDiagram
+    Stripe->>API Gateway: POST /webhooks/stripe
+    API Gateway->>Redis: Verificar Idempotency-Key
+    API Gateway->>Worker: Encolar Pago
+```
+
+## 2. Políticas de Resiliencia
+- Reintentos exponenciales con jitter (máx 5 intentos).
+- Timeout de 15 segundos.
+"""
+    mock_ollama.generate.return_value = generated_md
+
+    service = ScopedChatService(vector_store=mock_vector, ollama_client=mock_ollama)
+
+    history = [
+        {"role": "user", "content": "Tengo un servicio de checkout con Stripe y eventos de webhooks."},
+        {"role": "assistant", "content": "Entendido. ¿Qué política de reintentos necesitas?"},
+        {"role": "user", "content": "Reintentos exponenciales con jitter de hasta 5 intentos y timeout de 15s."},
+    ]
+
+    result = await service.answer_question(
+        library_id="billing",
+        book_id="doc",
+        raw_markdown="",
+        user_query="Ahora dame un .md con la información del contexto de este flujo",
+        history=history,
+    )
+
+    mock_ollama.generate.assert_awaited_once()
+    called_prompt = mock_ollama.generate.call_args.kwargs["prompt"]
+    called_system = mock_ollama.generate.call_args.kwargs["system"]
+
+    # Verify history was incorporated in prompt
+    assert "checkout con Stripe" in called_prompt
+    assert "jitter de hasta 5 intentos" in called_prompt
+    assert "Ahora dame un .md" in called_prompt
+
+    # Verify system prompt instructs .md generation
+    assert "GENERACIÓN DE ARCHIVOS .MD" in called_system
+
+    # Verify generated output
+    assert "sequenceDiagram" in result["answer"]
+    assert "Flujo de Webhooks y Pagos" in result["answer"]
+    assert len(result["sources"]) == 1
+
+

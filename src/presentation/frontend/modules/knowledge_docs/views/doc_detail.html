@@ -6,23 +6,27 @@
 <div class="space-y-8 max-w-5xl mx-auto">
 
   <!-- Breadcrumb Navigation -->
-  <div class="flex items-center space-x-2 text-xs text-zinc-400 pb-2">
+  <div class="flex items-center space-x-2 text-xs text-zinc-400 pb-2 flex-wrap gap-y-1">
     <a href="/docs/browser" class="hover:text-white transition flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#141722] border border-[#232738] hover:bg-[#1c202d] text-zinc-300">
       <i class="fa-solid fa-arrow-left text-[10px]"></i>
       <span>Volver a Documentos</span>
     </a>
+    {% if doc.project_slug and doc.project_slug != 'default' %}
     <span class="text-zinc-600">/</span>
     <span class="px-2 py-0.5 rounded-md bg-[#161922] border border-[#232738] text-indigo-300 font-mono text-[11px] flex items-center gap-1">
       <i class="fa-solid fa-cube text-[10px] text-indigo-400"></i>
       <span>{{ doc.project_slug }}</span>
     </span>
+    {% endif %}
+    {% if doc.module and doc.module != doc.project_slug %}
     <span class="text-zinc-600">/</span>
     <span class="px-2 py-0.5 rounded-md bg-[#161922] border border-[#232738] text-zinc-300 font-medium text-[11px] capitalize flex items-center gap-1">
       <i class="fa-regular fa-folder text-[10px] text-amber-400"></i>
       <span>{{ doc.module }}</span>
     </span>
+    {% endif %}
     <span class="text-zinc-600">/</span>
-    <span class="text-zinc-400 font-mono text-[11px] truncate max-w-[280px]">{{ doc.path.split('/')[-1] }}</span>
+    <span class="text-zinc-300 font-mono text-[11px] truncate max-w-[320px]">{{ doc.path.split('/')[-1] }}</span>
   </div>
 
   <!-- Dedicated Action Toolbar -->
@@ -52,6 +56,7 @@
       <button 
         type="button" 
         id="btn-open-scoped-chat"
+        onclick="handleOpenScopedChat()"
         class="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/25 transition cursor-pointer"
         title="Consultar y dialogar con la IA sobre este documento y sus anexos"
       >
@@ -105,6 +110,76 @@
       </div>
     </div>
   </div>
+
+  {% if attachments %}
+  <!-- Dedicated Attachments & File Previews Section -->
+  <div class="rounded-2xl border border-indigo-500/20 bg-[#121522] p-5 space-y-4 shadow-lg shadow-indigo-950/20">
+    <div class="flex items-center justify-between border-b border-[#232738] pb-3">
+      <div class="flex items-center space-x-2.5">
+        <span class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <i class="fa-solid fa-paperclip text-sm"></i>
+        </span>
+        <div>
+          <h3 class="text-sm font-semibold text-white">Archivos Adjuntos & Especificaciones Multiformato</h3>
+          <p class="text-[11px] text-zinc-400">Documentos complementarios indexados para consultas RAG y previsualización inmediata</p>
+        </div>
+      </div>
+      <span class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#181b28] text-indigo-300 border border-indigo-500/30">
+        {{ attachments|length }} archivo(s)
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      {% for att in attachments %}
+      <div class="p-3.5 rounded-xl bg-[#0d0f17] border border-[#232738] hover:border-indigo-500/40 transition group flex flex-col justify-between space-y-3">
+        <div class="flex items-start space-x-3">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 
+            {% if att.ext == 'pdf' %}bg-rose-500/10 text-rose-400 border border-rose-500/20
+            {% elif att.ext in ['xlsx', 'xls', 'csv'] %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+            {% elif att.ext in ['docx', 'doc'] %}bg-blue-500/10 text-blue-400 border border-blue-500/20
+            {% elif att.ext in ['png', 'jpg', 'jpeg', 'svg', 'webp'] %}bg-violet-500/10 text-violet-400 border border-violet-500/20
+            {% else %}bg-zinc-800 text-zinc-400 border border-zinc-700{% endif %}">
+            {% if att.ext == 'pdf' %}<i class="fa-solid fa-file-pdf text-base"></i>
+            {% elif att.ext in ['xlsx', 'xls', 'csv'] %}<i class="fa-solid fa-file-excel text-base"></i>
+            {% elif att.ext in ['docx', 'doc'] %}<i class="fa-solid fa-file-word text-base"></i>
+            {% elif att.ext in ['png', 'jpg', 'jpeg', 'svg', 'webp'] %}<i class="fa-solid fa-file-image text-base"></i>
+            {% else %}<i class="fa-solid fa-file-lines text-base"></i>{% endif %}
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="text-xs font-semibold text-zinc-200 truncate group-hover:text-white transition" title="{{ att.name }}">{{ att.name }}</h4>
+            <div class="flex items-center gap-1.5 mt-1">
+              <span class="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-[#161824] text-zinc-400 border border-[#232738]">{{ att.ext }}</span>
+              <span class="text-[10px] text-zinc-500">• {{ att.location }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action CTAs: Preview vs Download -->
+        <div class="flex items-center gap-2 pt-1 border-t border-[#1e2233]">
+          <button 
+            type="button" 
+            onclick="window.openFilePreview('{{ att.name }}', '{{ att.url }}', '{{ 'application/pdf' if att.ext == 'pdf' else '' }}')"
+            class="flex-1 py-1.5 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
+            title="Previsualizar archivo directamente en el navegador"
+          >
+            <i class="fa-regular fa-eye text-[11px]"></i>
+            <span>Previsualizar</span>
+          </button>
+          
+          <a 
+            href="{{ att.url }}" 
+            download="{{ att.name }}"
+            class="p-1.5 rounded-lg bg-[#181b28] hover:bg-[#202435] text-zinc-400 hover:text-zinc-200 border border-[#232738] text-xs flex items-center justify-center transition"
+            title="Descargar archivo a tu disco local"
+          >
+            <i class="fa-solid fa-download text-[11px]"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Rendered Markdown Content -->
   <article class="prose-dark bg-slate-900/40 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-sm">
@@ -195,45 +270,64 @@
     const text = `[${path}]`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => {
-        alert(`Píldora de cita RAG copiada: ${text}`);
+        window.$toast.success(`Píldora de cita RAG copiada: ${text}`, 'Cita Copiada');
       }).catch(() => {
-        prompt('Copia la píldora de cita:', text);
+        window.$toast.info(`Copia la píldora: ${text}`);
       });
     } else {
-      prompt('Copia la píldora de cita:', text);
+      window.$toast.info(`Copia la píldora: ${text}`);
+    }
+  }
+
+  const docMetadata = {
+    title: {{ doc.title | tojson }},
+    projectSlug: {{ doc.project_slug | tojson }},
+    path: {{ doc.path | tojson }},
+    contentMarkdown: {{ doc.content_markdown | tojson }}
+  };
+
+  function handleOpenScopedChat() {
+    if (typeof window.openScopedChat === 'function') {
+      window.openScopedChat(
+        docMetadata.title,
+        docMetadata.projectSlug,
+        docMetadata.path,
+        docMetadata.contentMarkdown
+      );
+    } else {
+      console.warn('openScopedChat is not available yet');
     }
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Open Scoped Chat without breaking attribute quotes
     const openChatBtn = document.getElementById('btn-open-scoped-chat');
     if (openChatBtn) {
-      openChatBtn.addEventListener('click', function() {
-        if (typeof window.openScopedChat === 'function') {
-          window.openScopedChat(
-            {{ doc.title | tojson }},
-            {{ doc.project_slug | tojson }},
-            {{ doc.path | tojson }},
-            {{ doc.content_markdown | tojson }}
-          );
-        } else {
-          console.warn('openScopedChat is not available');
-        }
-      });
+      openChatBtn.addEventListener('click', handleOpenScopedChat);
     }
 
     const links = document.querySelectorAll('article a');
     links.forEach(function(link) {
       const href = link.getAttribute('href');
       if (href && (href.includes('assets/') || href.endsWith('.pdf') || href.endsWith('.docx') || href.endsWith('.xlsx') || href.endsWith('.csv') || href.endsWith('.png') || href.endsWith('.jpg') || href.endsWith('.jpeg'))) {
+        link.classList.add('inline-flex', 'items-center', 'gap-1.5', 'text-indigo-400', 'hover:text-indigo-300', 'cursor-pointer', 'no-underline');
+        
+        // Add a visual preview indicator
+        const eyeChip = document.createElement('span');
+        eyeChip.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/40 transition inline-flex items-center gap-1 ml-1 cursor-pointer';
+        eyeChip.innerHTML = '<i class="fa-regular fa-eye text-[9px]"></i> Previsualizar';
+        link.appendChild(eyeChip);
+
         link.addEventListener('click', function(e) {
           e.preventDefault();
           let targetUrl = href;
           if (!href.startsWith('http') && !href.startsWith('/')) {
             targetUrl = `/api/v1/assets/{{ doc.project_slug }}/${href}`;
           }
-          const fileName = link.textContent.trim() || href.split('/').pop();
-          window.openFilePreview(fileName, targetUrl);
+          const rawText = link.textContent.replace('Previsualizar', '').trim();
+          const fileName = rawText || href.split('/').pop();
+          const ext = (fileName || href).split('.').pop().toLowerCase();
+          const mimeType = ext === 'pdf' ? 'application/pdf' : '';
+          window.openFilePreview(fileName, targetUrl, mimeType);
         });
       }
     });

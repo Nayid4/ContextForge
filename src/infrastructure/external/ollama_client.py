@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any, AsyncGenerator
 import httpx
 from domain.rag_engine.repositories import IOllamaClient
@@ -17,6 +18,21 @@ class OllamaHttpClient(IOllamaClient):
     def __init__(self, base_url: str = "http://localhost:11434", timeout_seconds: float = 60.0) -> None:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout_seconds
+
+    async def test_connection(self) -> tuple[bool, str, float]:
+        """Test local Ollama daemon connectivity and calculate latency."""
+        t0 = time.perf_counter()
+        try:
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                res = await client.get(f"{self._base_url}/api/version")
+                latency_ms = (time.perf_counter() - t0) * 1000.0
+                if res.status_code == 200:
+                    version_info = res.json().get("version", "desconocida")
+                    return True, f"Daemon Ollama operativo (v{version_info})", round(latency_ms, 1)
+                return False, f"Ollama HTTP {res.status_code}", round(latency_ms, 1)
+        except Exception as e:
+            latency_ms = (time.perf_counter() - t0) * 1000.0
+            return False, f"Ollama inaccesible en {self._base_url}: {str(e)}", round(latency_ms, 1)
 
     async def get_installed_models(self) -> list[dict[str, Any]]:
         """Fetch list of locally installed Ollama models via /api/tags."""
@@ -107,10 +123,11 @@ class OllamaHttpClient(IOllamaClient):
         self,
         prompt: str,
         system: str | None = None,
-        model: str = "llama3.1:8b",
+        model: str | None = None,
     ) -> str:
         """Convenience method to generate full completion using the active or default model."""
-        return await self.generate_completion(model=model, prompt=prompt, system_prompt=system)
+        target_model = model or "llama3.1:8b"
+        return await self.generate_completion(model=target_model, prompt=prompt, system_prompt=system)
 
 
     async def generate_embedding(self, model: str, text: str) -> list[float]:

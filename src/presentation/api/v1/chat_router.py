@@ -19,9 +19,11 @@ from application.chat.queries.get_chat_history import (
     GetChatHistoryQuery,
 )
 from application.chat.services import ScopedChatService
+from domain.knowledge_docs.repositories import IDocumentRepository
 from infrastructure.repositories.sql_chat_repo import SqlChatSessionRepository
 from presentation.api.dependencies import (
     get_chat_session_repo,
+    get_doc_repo,
     get_scoped_chat_service,
 )
 
@@ -33,6 +35,7 @@ class ScopedAskPayload(BaseModel):
     book_id: str = Field(..., description="Document path or ID")
     query: str = Field(..., description="Question directed to this document")
     raw_markdown: str = Field(default="", description="Full raw markdown if available for Zero-RAG")
+    history: list[dict[str, str]] = Field(default_factory=list, description="Conversational history turns")
 
 
 class SendMessagePayload(BaseModel):
@@ -47,15 +50,23 @@ class SendMessagePayload(BaseModel):
 async def ask_scoped_document(
     payload: ScopedAskPayload,
     chat_service: ScopedChatService = Depends(get_scoped_chat_service),
+    doc_repo: IDocumentRepository = Depends(get_doc_repo),
 ) -> dict[str, Any]:
     handler = AskScopedDocumentHandler(chat_service)
+    raw_md = payload.raw_markdown
+    if not raw_md:
+        doc = await doc_repo.get_by_path(payload.book_id, project_slug=payload.library_id)
+        if doc:
+            raw_md = doc.content_markdown
+
     try:
         res = await handler.handle(
             AskScopedDocumentQuery(
                 library_id=payload.library_id,
                 book_id=payload.book_id,
                 query=payload.query,
-                raw_markdown=payload.raw_markdown,
+                raw_markdown=raw_md,
+                history=payload.history,
             )
         )
         return {

@@ -26,6 +26,7 @@ from presentation.api.v1.registry_api import router as registry_api_router
 from presentation.api.v1.scaffold_api import router as scaffold_api_router
 from presentation.api.v1.search_api import router as search_api_router
 from presentation.api.v1.settings_api import router as settings_api_router
+from presentation.api.v1.llm_settings_api import router as llm_settings_api_router
 from presentation.api.v1.social_router import router as social_router
 from presentation.frontend.web_router import web_router
 from infrastructure.services.fs_watcher import BackgroundDocsWatcher
@@ -108,6 +109,7 @@ def create_app() -> FastAPI:
 
     # 5. Mount REST API v1 Routes
     app.include_router(settings_api_router, prefix="/api/v1")
+    app.include_router(llm_settings_api_router, prefix="/api/v1")
     app.include_router(docs_api_router, prefix="/api/v1")
     app.include_router(catalog_router, prefix="/api/v1")
     app.include_router(social_router, prefix="/api/v1")

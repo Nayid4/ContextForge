@@ -69,7 +69,6 @@
               <div class="chat-markdown" x-html="window.renderMarkdown ? window.renderMarkdown(msg.content) : msg.content"></div>
 
               <!-- Message Actions Toolbar: Insert in Editor, Download .md, Copy -->
-              <div class="pt-2 border-t border-[#1e2335] flex flex-wrap items-center gap-2">
                 <template x-if="canInsertIntoEditor()">
                   <button 
                     type="button" 
@@ -79,6 +78,18 @@
                   >
                     <i class="fa-solid fa-file-import text-[10px]"></i>
                     <span>Insertar en Editor</span>
+                  </button>
+                </template>
+
+                <template x-if="!canInsertIntoEditor()">
+                  <button 
+                    type="button" 
+                    @click="openInEditor(msg.content)"
+                    class="px-2.5 py-1 rounded-lg bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold transition flex items-center gap-1 cursor-pointer"
+                    title="Abrir este flujo o especificación en el Editor para modificarlo y guardarlo"
+                  >
+                    <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                    <span>Abrir en Editor</span>
                   </button>
                 </template>
 
@@ -167,6 +178,7 @@
 <script>
 // Global helpers safely registered on window
 window.openScopedChat = function(title, libId, bId, md = '') {
+  window.__lastScopedChatDetail = { title, libId, bId, md };
   const drawer = document.getElementById('scoped-chat-drawer');
   const backdrop = document.getElementById('scoped-chat-backdrop');
   if (drawer) drawer.classList.remove('translate-x-full');
@@ -212,8 +224,8 @@ function scopedChatApp() {
       }
     ],
     init() {
-      window.addEventListener('cf-scoped-chat-init', (e) => {
-        const detail = e.detail || {};
+      const applyDetail = (detail) => {
+        if (!detail) return;
         this.docTitle = detail.title || 'Documento';
         this.libraryId = detail.libId || 'default';
         this.bookId = detail.bId || 'doc';
@@ -225,6 +237,14 @@ function scopedChatApp() {
             content: `**Copiloto Técnico asignado a "${this.docTitle}"**\n\n¿Deseas que te ayude a redactar una sección técnica, generar un diagrama Mermaid o estructurar un archivo \`.md\` con las reglas del flujo?` 
           }
         ];
+      };
+
+      if (window.__lastScopedChatDetail) {
+        applyDetail(window.__lastScopedChatDetail);
+      }
+
+      window.addEventListener('cf-scoped-chat-init', (e) => {
+        applyDetail(e.detail || {});
       });
     },
     closeDrawer() {
@@ -236,20 +256,31 @@ function scopedChatApp() {
     insertIntoDocument(content) {
       if (typeof window.insertMarkdownIntoEditor === 'function') {
         window.insertMarkdownIntoEditor(content);
-        alert('Contenido insertado en el editor de Markdown exitosamente.');
+      } else {
+        window.$toast.warning('Abre el Editor de Documentos para insertar el contenido directamente.');
       }
+    },
+    openInEditor(content) {
+      let clean = content.trim();
+      const outerMatch = clean.match(/^```(?:markdown|md)\r?\n([\s\S]*?)\r?\n```$/i);
+      if (outerMatch) {
+        clean = outerMatch[1].trim();
+      }
+      sessionStorage.setItem('cf_draft_markdown', clean);
+      window.location.href = '/books/editor';
     },
     downloadAsMarkdown(content) {
       const safeName = (this.docTitle || 'especificacion').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
       downloadMarkdownFile(`${safeName}.md`, content);
+      window.$toast.success(`Archivo ${safeName}.md descargado exitosamente.`, 'Descarga');
     },
     copyMessage(content) {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(content).then(() => {
-          alert('Contenido copiado al portapapeles.');
+          window.$toast.success('Contenido Markdown copiado al portapapeles.', 'Copiado');
         });
       } else {
-        prompt('Copia el contenido:', content);
+        window.$toast.info('Selecciona y copia el texto del mensaje.');
       }
     },
     applyQuickPrompt(promptText) {
@@ -263,6 +294,11 @@ function scopedChatApp() {
       this.query = '';
       this.loading = true;
 
+      // Extract conversation history turns to provide multi-turn context
+      const historyPayload = this.messages
+        .filter(m => m.id !== 1 && m.content)
+        .map(m => ({ role: m.role, content: m.content }));
+
       try {
         const res = await fetch('/api/v1/chat/scoped', {
           method: 'POST',
@@ -271,7 +307,8 @@ function scopedChatApp() {
             library_id: this.libraryId,
             book_id: this.bookId,
             query: userText,
-            raw_markdown: this.rawMarkdown
+            raw_markdown: this.rawMarkdown,
+            history: historyPayload
           })
         });
         const data = await res.json();

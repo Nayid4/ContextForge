@@ -242,6 +242,42 @@ async def doc_detail_view(
     doc = await doc_handler.handle(GetDocumentDetailQuery(relative_path=path))
     rendered = parser.render(doc.content_markdown)
 
+    # Discover unique attachments for this document
+    unique_attachments: list[dict[str, str]] = []
+    seen_att_names: set[str] = set()
+
+    for chunk in doc.chunks:
+        if chunk.source_type == "attachment" and chunk.attachment_name and chunk.attachment_name not in seen_att_names:
+            seen_att_names.add(chunk.attachment_name)
+            doc_stem = Path(doc.path).stem
+            rel_asset = f"{doc.project_slug}/assets/{doc_stem}/{chunk.attachment_name}"
+            ext = chunk.attachment_name.split(".")[-1].lower() if "." in chunk.attachment_name else ""
+            unique_attachments.append({
+                "name": chunk.attachment_name,
+                "url": f"/api/v1/assets/{rel_asset}",
+                "location": chunk.location or "Anexo",
+                "ext": ext,
+            })
+
+    doc_stem = Path(doc.path).stem
+    possible_asset_dirs = [
+        Path("./docs") / doc.project_slug / "assets" / doc_stem,
+        Path("./docs") / "assets" / doc_stem,
+    ]
+    for adir in possible_asset_dirs:
+        if adir.exists() and adir.is_dir():
+            for f in adir.iterdir():
+                if f.is_file() and f.name not in seen_att_names:
+                    seen_att_names.add(f.name)
+                    rel_asset = f"{doc.project_slug}/assets/{doc_stem}/{f.name}"
+                    ext = f.suffix.lstrip(".").lower()
+                    unique_attachments.append({
+                        "name": f.name,
+                        "url": f"/api/v1/assets/{rel_asset}",
+                        "location": "Disco Local",
+                        "ext": ext,
+                    })
+
     # Fetch comments from SQLite
     query = (
         select(DocumentCommentModel)
@@ -258,6 +294,7 @@ async def doc_detail_view(
             "doc": doc,
             "rendered": rendered,
             "comments": comments,
+            "attachments": unique_attachments,
         },
     )
 
@@ -285,4 +322,14 @@ async def add_doc_comment_view(
     await session.commit()
 
     return RedirectResponse(url=f"/docs/view/{doc.path}#comments", status_code=status.HTTP_302_FOUND)
+
+
+@router.get("/docs/integration-guide", response_class=HTMLResponse)
+async def integration_guide_view(request: Request) -> HTMLResponse:
+    """Render external API documentation and integration guide for ContextForge."""
+    return templates.TemplateResponse(
+        request=request,
+        name="modules/knowledge_docs/views/integration_guide.html",
+        context={},
+    )
 

@@ -1,0 +1,333 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}API Docs & Guía de Integración Externa | ContextForge{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-5xl mx-auto" x-data="integrationDocsApp()">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+    <div>
+      <div class="flex items-center space-x-3">
+        <span class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+          <i class="fa-solid fa-plug text-lg"></i>
+        </span>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-white">Guía de Integración Externa & API REST / SSE</h1>
+          <p class="text-sm text-slate-400">Conecta chatbots, asistentes de Slack/Discord y microservicios a la base de conocimiento soberana</p>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <a 
+        href="/api/docs" 
+        target="_blank" 
+        class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm"
+      >
+        <i class="fa-solid fa-book text-indigo-400"></i>
+        <span>Swagger / OpenAPI UI</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Architecture Flow Diagram -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+        <i class="fa-solid fa-network-wired text-teal-400"></i>
+        <span>Topología de Consumo Externo (Zero-Leakage & Aislamiento por Proyecto)</span>
+      </h3>
+      <span class="text-[11px] font-mono text-zinc-500">Streaming SSE + REST JSON</span>
+    </div>
+    
+    <div class="p-4 bg-[#0c0e14] border border-[#1e2235] rounded-xl flex justify-center">
+      <pre class="mermaid text-xs">
+flowchart LR
+    ExternalApp["🚀 App Externa / Chatbot"] -->|"SSE /api/v1/rag/stream"| CFGateway["ContextForge Gateway"]
+    ExternalApp -->|"POST /api/v1/chat/scoped"| CFGateway
+    CFGateway -->|"Aislamiento project_slug"| VectorStore[("ChromaDB Vectorial")]
+    CFGateway -->|"Aislamiento léxico"| LexicalStore[("BM25Plus Index")]
+    CFGateway -->|"RRF k=60 Fusión"| PromptBuilder["Prompt Builder"]
+    PromptBuilder -->|"Inferencia"| LLMActive["LLM Activo\n(Ollama / Claude / GPT / Gemini)"]
+    LLMActive -->|"Tokens + Citas .md"| ExternalApp
+      </pre>
+    </div>
+  </div>
+
+  <!-- Language Switcher Tabs for Snippets -->
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-code text-indigo-400"></i>
+          <span>Ejemplos de Consumo en Código</span>
+        </h2>
+        <p class="text-xs text-slate-400">Selecciona tu stack tecnológico para ver cómo invocar el motor de conocimiento en tiempo real</p>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex items-center p-1 bg-slate-800/80 border border-slate-700 rounded-xl">
+        <button 
+          type="button" 
+          @click="activeLang = 'python'"
+          :class="activeLang === 'python' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1 rounded-lg text-xs font-semibold transition"
+        >
+          Python
+        </button>
+        <button 
+          type="button" 
+          @click="activeLang = 'js'"
+          :class="activeLang === 'js' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1 rounded-lg text-xs font-semibold transition"
+        >
+          TypeScript / JS
+        </button>
+        <button 
+          type="button" 
+          @click="activeLang = 'curl'"
+          :class="activeLang === 'curl' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1 rounded-lg text-xs font-semibold transition"
+        >
+          cURL
+        </button>
+      </div>
+    </div>
+
+    <!-- Python Code Example -->
+    <div x-show="activeLang === 'python'" class="relative">
+      <div class="p-5 rounded-2xl bg-[#0c0e14] border border-[#232738] text-xs font-mono text-indigo-200 overflow-x-auto shadow-inner leading-relaxed">
+<pre><code><span class="text-zinc-500"># 1. Streaming en tiempo real con SSE (Server-Sent Events) en Python</span>
+<span class="text-purple-400">import</span> httpx
+<span class="text-purple-400">import</span> json
+
+<span class="text-purple-400">async def</span> <span class="text-yellow-400">ask_contextforge</span>(query: <span class="text-sky-300">str</span>, project: <span class="text-sky-300">str</span> = <span class="text-emerald-300">"default"</span>):
+    url = <span class="text-emerald-300">f"http://localhost:8000/api/v1/rag/stream?q={query}&project={project}"</span>
+    
+    <span class="text-purple-400">async with</span> httpx.AsyncClient(timeout=<span class="text-orange-400">60.0</span>) <span class="text-purple-400">as</span> client:
+        <span class="text-purple-400">async with</span> client.stream(<span class="text-emerald-300">"GET"</span>, url) <span class="text-purple-400">as</span> response:
+            <span class="text-purple-400">async for</span> line <span class="text-purple-400">in</span> response.aiter_lines():
+                <span class="text-purple-400">if</span> line.startswith(<span class="text-emerald-300">"data:"</span>):
+                    data_str = line[<span class="text-orange-400">5</span>:].strip()
+                    <span class="text-purple-400">if</span> data_str == <span class="text-emerald-300">"[DONE]"</span>:
+                        <span class="text-purple-400">break</span>
+                    payload = json.loads(data_str)
+                    token = payload.get(<span class="text-emerald-300">"token"</span>, <span class="text-emerald-300">""</span>)
+                    sources = payload.get(<span class="text-emerald-300">"sources"</span>, [])
+                    <span class="text-purple-400">if</span> token:
+                        <span class="text-sky-400">print</span>(token, end=<span class="text-emerald-300">""</span>, flush=<span class="text-orange-400">True</span>)
+                    <span class="text-purple-400">if</span> sources:
+                        <span class="text-sky-400">print</span>(<span class="text-emerald-300">f"\n\nFuentes consultadas: {sources}"</span>)</code></pre>
+      </div>
+      <button 
+        type="button" 
+        @click="copySnippet('python')" 
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700"
+      >
+        <i class="fa-regular fa-copy"></i>
+        <span>Copiar</span>
+      </button>
+    </div>
+
+    <!-- TypeScript / JS Code Example -->
+    <div x-show="activeLang === 'js'" class="relative">
+      <div class="p-5 rounded-2xl bg-[#0c0e14] border border-[#232738] text-xs font-mono text-indigo-200 overflow-x-auto shadow-inner leading-relaxed">
+<pre><code><span class="text-zinc-500">// Consumo reactivo en Frontend con EventSource de HTML5</span>
+<span class="text-purple-400">function</span> <span class="text-yellow-400">connectContextForgeChat</span>(userQuestion, projectSlug = <span class="text-emerald-300">'default'</span>, onToken, onDone) {
+  <span class="text-purple-400">const</span> params = <span class="text-purple-400">new</span> <span class="text-sky-300">URLSearchParams</span>({ q: userQuestion, project: projectSlug });
+  <span class="text-purple-400">const</span> sse = <span class="text-purple-400">new</span> <span class="text-sky-300">EventSource</span>(<span class="text-emerald-300">`/api/v1/rag/stream?${params.toString()}`</span>);
+
+  sse.onmessage = (event) => {
+    <span class="text-purple-400">if</span> (event.data === <span class="text-emerald-300">'[DONE]'</span>) {
+      sse.close();
+      <span class="text-purple-400">if</span> (onDone) onDone();
+      <span class="text-purple-400">return</span>;
+    }
+    <span class="text-purple-400">try</span> {
+      <span class="text-purple-400">const</span> payload = JSON.parse(event.data);
+      <span class="text-purple-400">if</span> (payload.token) onToken(payload.token);
+    } <span class="text-purple-400">catch</span> (e) {
+      console.warn(<span class="text-emerald-300">'Error parsing chunk'</span>, e);
+    }
+  };
+
+  sse.onerror = (err) => {
+    console.error(<span class="text-emerald-300">'SSE Connection error'</span>, err);
+    sse.close();
+  };
+}</code></pre>
+      </div>
+      <button 
+        type="button" 
+        @click="copySnippet('js')" 
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700"
+      >
+        <i class="fa-regular fa-copy"></i>
+        <span>Copiar</span>
+      </button>
+    </div>
+
+    <!-- cURL Code Example -->
+    <div x-show="activeLang === 'curl'" class="relative">
+      <div class="p-5 rounded-2xl bg-[#0c0e14] border border-[#232738] text-xs font-mono text-emerald-300 overflow-x-auto shadow-inner leading-relaxed">
+<pre><code><span class="text-zinc-500"># 1. Consulta RAG Sincrónica (Respuesta JSON completa con citas)</span>
+curl -X POST http://localhost:8000/api/v1/rag/ask \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "¿Cuál es la política de reintentos para pagos?",
+    "project_slug": "default",
+    "top_k": 5
+  }'
+
+<span class="text-zinc-500"># 2. Consulta SSE Streaming en Terminal</span>
+curl -N "http://localhost:8000/api/v1/rag/stream?q=Explica+la+arquitectura&project=default"
+
+<span class="text-zinc-500"># 3. Chat Focalizado en un Documento y sus anexos</span>
+curl -X POST http://localhost:8000/api/v1/chat/scoped \
+  -H "Content-Type: application/json" \
+  -d '{
+    "library_id": "default",
+    "book_id": "adrs/001_event_driven_payments.md",
+    "query": "¿Qué eventos Kafka se disparan al completar una transacción?"
+  }'</code></pre>
+      </div>
+      <button 
+        type="button" 
+        @click="copySnippet('curl')" 
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700"
+      >
+        <i class="fa-regular fa-copy"></i>
+        <span>Copiar</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Endpoints Reference Cards -->
+  <div class="space-y-4">
+    <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+      <i class="fa-solid fa-list-check text-emerald-400"></i>
+      <span>Catálogo de Endpoints REST Principales</span>
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <!-- Endpoint 1 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">POST</span>
+          <span class="text-xs font-mono text-zinc-400">/api/v1/rag/ask</span>
+        </div>
+        <h4 class="text-sm font-semibold text-white">RAG Global Sincrónico</h4>
+        <p class="text-xs text-zinc-400">Ejecuta recuperación híbrida (ChromaDB + BM25) y genera una respuesta completa con citas a archivos Markdown.</p>
+        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
+          Body: { query, project_slug, top_k, model? }
+        </div>
+      </div>
+
+      <!-- Endpoint 2 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">GET</span>
+          <span class="text-xs font-mono text-zinc-400">/api/v1/rag/stream</span>
+        </div>
+        <h4 class="text-sm font-semibold text-white">RAG Streaming en Tiempo Real (SSE)</h4>
+        <p class="text-xs text-zinc-400">Emite tokens token-a-token usando Server-Sent Events con baja latencia y citas únicas al finalizar la respuesta.</p>
+        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
+          Query: ?q={pregunta}&project={slug}&top_k={k}
+        </div>
+      </div>
+
+      <!-- Endpoint 3 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">POST</span>
+          <span class="text-xs font-mono text-zinc-400">/api/v1/chat/scoped</span>
+        </div>
+        <h4 class="text-sm font-semibold text-white">Chat Focalizado (Scoped RAG)</h4>
+        <p class="text-xs text-zinc-400">Dialoga con un documento individual y sus anexos multiformato (PDF, Word, Excel) manteniendo historial conversacional.</p>
+        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
+          Body: { library_id, book_id, query, raw_markdown?, history? }
+        </div>
+      </div>
+
+      <!-- Endpoint 4 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">GET</span>
+          <span class="text-xs font-mono text-zinc-400">/api/v1/search/hybrid</span>
+        </div>
+        <h4 class="text-sm font-semibold text-white">Búsqueda Híbrida Pura</h4>
+        <p class="text-xs text-zinc-400">Retorna los fragmentos atómicos más relevantes combinando similitud de coseno y BM25 sin invocar LLM.</p>
+        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
+          Query: ?q={query}&project={slug}&top_k=5
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Drop-in Floating Chatbot Widget Blueprint -->
+  <div class="rounded-2xl border border-teal-500/30 bg-[#0d1617]/80 p-6 backdrop-blur space-y-4">
+    <div class="flex items-center justify-between border-b border-teal-500/20 pb-3">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-xl">🤖</span>
+        <div>
+          <h3 class="text-sm font-bold text-white">Blueprint: Widget Flotante de Chatbot para Aplicaciones Externas</h3>
+          <p class="text-xs text-teal-300/80">Copia este fragmento HTML/JS en cualquier aplicación web para incrustar un asistente inteligente conectado a ContextForge</p>
+        </div>
+      </div>
+      <button 
+        type="button" 
+        @click="copySnippet('widget')" 
+        class="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow"
+      >
+        <i class="fa-regular fa-copy"></i>
+        <span>Copiar Widget</span>
+      </button>
+    </div>
+
+    <div class="p-4 rounded-xl bg-[#080d0e] border border-teal-500/20 text-xs font-mono text-teal-200 overflow-x-auto">
+<pre><code>&lt;!-- ContextForge Sovereign Knowledge Assistant Widget --&gt;
+&lt;div id="cf-chat-bubble" onclick="toggleCFChat()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 25px rgba(79,70,229,0.4);z-index:9999;"&gt;
+  🤖
+&lt;/div&gt;
+
+&lt;script&gt;
+function toggleCFChat() {
+  window.open('http://localhost:8000/chat', '_blank', 'width=500,height=700');
+}
+&lt;/script&gt;</code></pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function integrationDocsApp() {
+  return {
+    activeLang: 'python',
+    copySnippet(lang) {
+      let code = '';
+      if (lang === 'python') {
+        code = `import httpx\nimport json\n\nasync def ask_contextforge(query: str, project: str = "default"):\n    url = f"http://localhost:8000/api/v1/rag/stream?q={query}&project={project}"\n    async with httpx.AsyncClient(timeout=60.0) as client:\n        async with client.stream("GET", url) as response:\n            async for line in response.aiter_lines():\n                if line.startswith("data:"):\n                    data_str = line[5:].strip()\n                    if data_str == "[DONE]":\n                        break\n                    payload = json.loads(data_str)\n                    print(payload.get("token", ""), end="", flush=True)`;
+      } else if (lang === 'js') {
+        code = `function connectContextForgeChat(userQuestion, projectSlug = 'default', onToken, onDone) {\n  const params = new URLSearchParams({ q: userQuestion, project: projectSlug });\n  const sse = new EventSource(\`/api/v1/rag/stream?\${params.toString()}\`);\n  sse.onmessage = (event) => {\n    if (event.data === '[DONE]') { sse.close(); if (onDone) onDone(); return; }\n    const payload = JSON.parse(event.data);\n    if (payload.token) onToken(payload.token);\n  };\n}`;
+      } else if (lang === 'curl') {
+        code = `curl -X POST http://localhost:8000/api/v1/rag/ask \\\n  -H "Content-Type: application/json" \\\n  -d '{"query": "¿Cuál es la política de reintentos?", "project_slug": "default", "top_k": 5}'`;
+      } else if (lang === 'widget') {
+        code = `<div id="cf-chat-bubble" onclick="window.open('http://localhost:8000/chat', '_blank', 'width=500,height=700')" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 25px rgba(79,70,229,0.4);z-index:9999;">🤖</div>`;
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          window.$toast.success('Código copiado al portapapeles exitosamente.', 'Snippet Copiado');
+        });
+      } else {
+        window.$toast.info('Selecciona y copia el texto del código.');
+      }
+    }
+  };
+}
+</script>
+{% endblock %}
+

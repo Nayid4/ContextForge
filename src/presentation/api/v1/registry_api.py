@@ -33,6 +33,7 @@ class ScopedChatRequest(BaseModel):
     book_id: str = Field(..., description="Document slug or relative path")
     query: str = Field(..., description="User question directed to this document")
     raw_markdown: str = Field(default="", description="Optional full raw markdown content")
+    history: list[dict[str, str]] = Field(default_factory=list, description="Conversational history turns")
 
 
 class SaveBookRequest(BaseModel):
@@ -116,6 +117,7 @@ async def serve_asset(path: str) -> FileResponse:
     return FileResponse(
         path=str(target),
         media_type=mime_type or "application/octet-stream",
+        content_disposition_type="inline",
         filename=target.name,
     )
 
@@ -140,6 +142,7 @@ async def scoped_chat_endpoint(
         book_id=payload.book_id,
         raw_markdown=raw_md,
         user_query=payload.query,
+        history=payload.history,
     )
     return result
 

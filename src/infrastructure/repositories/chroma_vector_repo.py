@@ -72,10 +72,14 @@ class ChromaVectorRepository(IVectorRepository):
                     metadatas=metadatas,
                 )
         except Exception as e:
-            if "dimension" in str(e).lower():
-                # Recreate project collection if dimension mismatch with stale data
+            err_msg = str(e).lower()
+            if "dimension" in err_msg or "not found" in err_msg or "does not exist" in err_msg:
+                # Recreate project collection if dimension mismatch or stale collection UUID
                 col_name = self._get_collection_name(target_slug)
-                self._client.delete_collection(col_name)
+                try:
+                    self._client.delete_collection(col_name)
+                except Exception:
+                    pass
                 coll_recreated: Any = self._client.get_or_create_collection(
                     name=col_name,
                     metadata={"hnsw:space": "cosine"},
@@ -165,15 +169,23 @@ class ChromaVectorRepository(IVectorRepository):
             return 0
 
     async def clear_project(self, project_slug: str = "default") -> None:
-        """Clear all chunks from project's collection without dropping the collection itself."""
+        """Clear all chunks from project's collection cleanly."""
         col_name = self._get_collection_name(project_slug)
         try:
             collection = self._client.get_collection(col_name)
-            existing = collection.get()
-            if existing and existing["ids"]:
-                collection.delete(ids=existing["ids"])
+            count = collection.count()
+            if count > 0:
+                existing = collection.get()
+                if existing and existing.get("ids"):
+                    collection.delete(ids=existing["ids"])
         except Exception:
-            pass
+            try:
+                self._client.get_or_create_collection(
+                    name=col_name,
+                    metadata={"hnsw:space": "cosine"},
+                )
+            except Exception:
+                pass
 
     async def delete_project(self, project_slug: str) -> None:
         """Drop collection for given project."""

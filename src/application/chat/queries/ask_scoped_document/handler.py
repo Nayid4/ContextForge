@@ -28,6 +28,7 @@ class AskScopedDocumentHandler:
             book_id=query.book_id,
             raw_markdown=query.raw_markdown,
             user_query=query.query,
+            history=query.history,
         )
         return AskScopedDocumentResponse(
             answer=str(result.get("answer", "")),

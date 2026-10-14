@@ -14,6 +14,7 @@ from infrastructure.persistence.models.comment_model import (
     ThreadORM,
 )
 from infrastructure.persistence.models.library_model import LibraryORM, ProjectORM
+from infrastructure.persistence.models.llm_config_model import LLMConfigORM
 from infrastructure.persistence.models.settings_model import SettingsModel
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "ChatSessionORM",
     "ChatMessageORM",
     "SettingsModel",
+    "LLMConfigORM",
 ]

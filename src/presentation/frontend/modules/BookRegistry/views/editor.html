@@ -481,22 +481,40 @@ function dualEditorApp() {
       ]
     },
     async init() {
+      // Check if there is an AI-generated draft transferred from Copilot or Chat
+      const draftFromChat = sessionStorage.getItem('cf_draft_markdown');
+      if (draftFromChat && !this.doc.doc_path) {
+        this.doc.rawMarkdown = draftFromChat;
+        sessionStorage.removeItem('cf_draft_markdown');
+        // Extract title if present
+        const titleMatch = draftFromChat.match(/^#\s+(.+)$/m) || draftFromChat.match(/title:\s*["']?([^"'\n]+)["']?/);
+        if (titleMatch) {
+          this.doc.title = titleMatch[1].trim();
+        }
+      }
+
       this.onMarkdownInput();
-      if (this.doc.doc_path && this.doc.rawMarkdown) {
+      if ((this.doc.doc_path || draftFromChat) && this.doc.rawMarkdown) {
         await this.syncMarkdownToBlocks();
       }
 
       window.insertMarkdownIntoEditor = (content) => {
-        let clean = content;
-        const match = content.match(/```(?:markdown|md)?\s*([\s\S]*?)```/);
-        if (match) {
-          clean = match[1].trim();
+        if (!content) return;
+        let clean = content.trim();
+
+        // If the entire message is wrapped in an outer ```markdown or ```md container, unwrap ONLY that outer container
+        const outerMatch = clean.match(/^```(?:markdown|md)\r?\n([\s\S]*?)\r?\n```$/i);
+        if (outerMatch) {
+          clean = outerMatch[1].trim();
         }
-        this.doc.rawMarkdown += '\n\n' + clean;
+
+        // Append valid Markdown preserving all inner ```mermaid and code blocks intact
+        this.doc.rawMarkdown = (this.doc.rawMarkdown ? this.doc.rawMarkdown.trimEnd() + '\n\n' : '') + clean + '\n';
         this.onMarkdownInput();
         if (this.mode === 'blocks') {
           this.syncMarkdownToBlocks();
         }
+        window.$toast.success('Contenido Markdown insertado en el editor exitosamente.', 'Editor Actualizado');
       };
     },
     async switchMode(newMode) {
@@ -569,7 +587,7 @@ function dualEditorApp() {
         this.doc.rawMarkdown += ref;
         this.onMarkdownInput();
       } catch (err) {
-        alert('No se pudo subir el archivo: ' + err.message);
+        window.$toast.error('No se pudo subir el archivo: ' + err.message);
       }
     },
     openPreviewForBlock(block) {
@@ -669,10 +687,12 @@ function dualEditorApp() {
 
         if (!res.ok) throw new Error('Error al guardar documento');
         const data = await res.json();
-        alert(`Documento guardado e indexado con éxito en ${data.path}`);
-        window.location.href = `/docs/view/${data.path}`;
+        window.$toast.success(`Documento guardado e indexado con éxito en ${data.path}`, 'Guardado Exitoso');
+        setTimeout(() => {
+          window.location.href = `/docs/view/${data.path}`;
+        }, 500);
       } catch (err) {
-        alert('Error guardando documento: ' + err.message);
+        window.$toast.error('Error guardando documento: ' + err.message, 'Fallo al Guardar');
       } finally {
         this.saving = false;
       }

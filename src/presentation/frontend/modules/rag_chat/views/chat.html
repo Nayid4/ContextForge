@@ -144,6 +144,8 @@
           <div id="${assistantId}" class="p-5 rounded-2xl rounded-tl-none bg-[#12151e] border border-[#232738] text-sm text-slate-200 leading-relaxed chat-markdown shadow-sm">
             <span class="inline-block animate-pulse text-indigo-400"><i class="fa-solid fa-circle text-[8px] mr-1.5"></i>Buscando en documentación y generando respuesta...</span>
           </div>
+          <!-- Action toolbar container -->
+          <div id="actions-${assistantId}" class="hidden pt-1 flex flex-wrap items-center gap-2 text-xs"></div>
         </div>
       </div>
     `;
@@ -214,6 +216,44 @@
           hljs.highlightElement(block);
         });
       }
+
+      // Render Actions Toolbar for Assistant Message
+      const actionsElem = document.getElementById(`actions-${assistantId}`);
+      if (actionsElem) {
+        actionsElem.classList.remove('hidden');
+        actionsElem.innerHTML = `
+          <button 
+            type="button" 
+            onclick="downloadChatAsMarkdown(${JSON.stringify(query)}, ${JSON.stringify(fullText)})"
+            class="px-2.5 py-1 rounded-lg bg-[#141722] hover:bg-indigo-950/70 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Descargar esta especificación o respuesta como archivo Markdown (.md)"
+          >
+            <i class="fa-solid fa-download text-[10px]"></i>
+            <span>Descargar .md</span>
+          </button>
+
+          <button 
+            type="button" 
+            onclick="openChatInEditor(${JSON.stringify(fullText)})"
+            class="px-2.5 py-1 rounded-lg bg-[#141722] hover:bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Abrir este flujo o especificación en el Editor para editar y guardar"
+          >
+            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+            <span>Abrir en Editor</span>
+          </button>
+
+          <button 
+            type="button" 
+            onclick="copyChatResponse(${JSON.stringify(fullText)})"
+            class="px-2.5 py-1 rounded-lg bg-[#141722] hover:bg-slate-800 text-zinc-400 hover:text-white border border-[#232738] text-[11px] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Copiar respuesta al portapapeles"
+          >
+            <i class="fa-regular fa-copy text-[10px]"></i>
+            <span>Copiar</span>
+          </button>
+        `;
+      }
+
       promptInput.disabled = false;
       sendButton.disabled = false;
       promptInput.focus();
@@ -232,6 +272,44 @@
       sendButton.disabled = false;
       scrollToBottom();
     };
+  }
+
+  function downloadChatAsMarkdown(queryTitle, content) {
+    let clean = content;
+    const match = content.match(/```(?:markdown|md)?\s*([\s\S]*?)```/);
+    if (match) {
+      clean = match[1].trim();
+    }
+    const safeName = (queryTitle || 'especificacion').toLowerCase().replace(/[^a-z0-9_-]+/g, '_').substring(0, 40);
+    const blob = new Blob([clean], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeName}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function openChatInEditor(content) {
+    let clean = content;
+    const match = content.match(/```(?:markdown|md)?\s*([\s\S]*?)```/);
+    if (match) {
+      clean = match[1].trim();
+    }
+    sessionStorage.setItem('cf_draft_markdown', clean);
+    window.location.href = '/books/editor';
+  }
+
+  function copyChatResponse(content) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(content).then(() => {
+        window.$toast.success('Respuesta Markdown copiada al portapapeles.', 'Copia Exitosa');
+      });
+    } else {
+      window.$toast.info('Selecciona y copia el texto del mensaje.');
+    }
   }
 </script>
 {% endblock %}

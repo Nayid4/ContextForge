@@ -61,3 +61,8 @@ async def init_db(engine: AsyncEngine, seed: bool = True) -> None:
         # Seed default project if empty
         from infrastructure.persistence.migrations import seed_initial_project
         await seed_initial_project(session)
+
+        # Seed default LLM configurations
+        from infrastructure.repositories.sql_llm_config_repo import SqlLLMConfigRepository
+        llm_repo = SqlLLMConfigRepository(session)
+        await llm_repo.get_all()

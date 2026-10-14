@@ -48,6 +48,10 @@ from infrastructure.repositories.sql_book_registry_repo import (
     InMemoryDraftBookRepository,
     SqlAttachmentRepository,
 )
+from domain.llm.interfaces import ILLMClient
+from domain.llm.repositories import ILLMConfigRepository
+from infrastructure.external.llm.llm_factory import LLMFactory
+from infrastructure.repositories.sql_llm_config_repo import SqlLLMConfigRepository
 from infrastructure.repositories.sql_social_repo import SqlSocialRepository
 from infrastructure.repositories.sql_chat_repo import SqlChatSessionRepository
 
@@ -99,6 +103,17 @@ def get_lexical_repo() -> ILexicalIndexRepository:
     return _lexical_repo
 
 
+def get_llm_config_repo(session: AsyncSession = Depends(get_db_session)) -> ILLMConfigRepository:
+    return SqlLLMConfigRepository(session)
+
+
+async def get_active_llm_client(
+    repo: ILLMConfigRepository = Depends(get_llm_config_repo),
+) -> ILLMClient:
+    active_cfg = await repo.get_active()
+    return LLMFactory.create_client(active_cfg)
+
+
 def get_ollama_client() -> IOllamaClient:
     return _ollama_client
 
@@ -148,7 +163,7 @@ def get_search_hybrid_handler(
 
 def get_ask_rag_handler(
     searcher: HybridSearchService = Depends(get_hybrid_searcher),
-    ollama_client: IOllamaClient = Depends(get_ollama_client),
+    ollama_client: ILLMClient = Depends(get_active_llm_client),
     settings_repo: ISettingsRepository = Depends(get_settings_repo),
 ) -> AskRagQueryHandler:
     return AskRagQueryHandler(searcher, _prompt_builder, ollama_client, settings_repo)
@@ -191,7 +206,7 @@ def get_scaffold_doc_use_case(
     doc_repo: IDocumentRepository = Depends(get_doc_repo),
     vector_repo: IVectorRepository = Depends(get_vector_repo),
     lexical_repo: ILexicalIndexRepository = Depends(get_lexical_repo),
-    ollama_client: IOllamaClient = Depends(get_ollama_client),
+    ollama_client: ILLMClient = Depends(get_active_llm_client),
     settings_repo: ISettingsRepository = Depends(get_settings_repo),
 ) -> ScaffoldDocUseCase:
     return ScaffoldDocUseCase(
@@ -211,7 +226,7 @@ def get_project_repo(
 
 def get_scoped_chat_service(
     vector_repo: IVectorRepository = Depends(get_vector_repo),
-    ollama_client: IOllamaClient = Depends(get_ollama_client),
+    ollama_client: ILLMClient = Depends(get_active_llm_client),
 ) -> ScopedChatService:
     return ScopedChatService(vector_store=vector_repo, ollama_client=ollama_client)
 
