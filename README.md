@@ -1,39 +1,30 @@
-# .NET Harness Engineering — Spec Driven Development con Agentes de IA
+# Harness Engineering — Spec Driven Development con Agentes de IA
 
-> **Esto no es un proyecto de software, es un arnés de control para desarrollo .NET.**
+> **Esto no es un proyecto de software, es un arnés de control para desarrollo dirigido por specs.**
 >
-> Un repositorio plantilla que cualquier equipo puede descargar y usar para
-> desarrollar features .NET con agentes de IA de forma **autónoma, verificable
-> y trazable**. Todo el código generado sigue Clean Architecture, SOLID, DDD,
-> CQRS y las convenciones del equipo.
+> Un repositorio plantilla que cualquier proyecto puede adoptar para desarrollar
+> features con agentes de IA (opencode, Claude Code, GitHub Copilot) de forma
+> **autónoma, verificable y trazable**. Es agnóstico al stack: funciona con
+> Node, .NET, Python, Go o cualquier tecnología.
 
 ---
 
 ## ¿Para qué sirve este repositorio?
 
-Descargas este repositorio cuando quieras que un agente de IA (opencode, Claude
-Code, GitHub Copilot) desarrolle features .NET en tu proyecto siguiendo:
+Descárgalo cuando quieras que un agente de IA desarrolle features de tu proyecto siguiendo:
 
-- **Spec Driven Development** — primero se escribe el qué (requirements), el
-  cómo (design) y los pasos (tasks). Luego se codifica. Todo aprobado por un humano.
-- **Clean Architecture** — Domain, Application, Infrastructure, Api separados
-  por capas con reglas de dependencia estrictas.
-- **Calidad verificable** — 10 niveles de verificación: build, unit tests,
-  integración, cobertura, seguridad, performance, arquitectura, trazabilidad.
-- **Multi-agente** — leader orquesta, spec_author escribe, implementer codifica,
-  reviewer verifica. Ningún agente hace el trabajo de otro.
+- **Spec Driven Development** — primero se escribe el qué (spec), los pasos (tasks) y las decisiones; luego se codifica. Todo aprobado por un humano.
+- **Flujo completo por skills** — `requirements-analysis` → `generate-spec` → técnica (`implement-tdd`/`implement-sdd`/`implement-ftd`) → `verify-spec`.
+- **Verificación real** — `technical-audit` genera `project-spec.yaml` y `generate-verify` crea `verify.sh` con los comandos reales del proyecto (test, build, lint).
+- **Agnóstico al proyecto** — el stack, puertos y servicios los defines tú; el arnés solo aporta el proceso.
 
 ---
 
-## Cómo usar este arnés
-
-### 1. Trae los archivos a tu proyecto
+## Cómo instalar este arnés
 
 El harness **no debe clonarse como repositorio independiente** dentro de tu
 proyecto. Los archivos deben copiarse **sin el historial git** del harness
 para no interferir con el control de versiones de tu proyecto.
-
-Elige uno de estos métodos:
 
 <details>
 <summary>📦 Opción A — Descargar ZIP (recomendada, sin git)</summary>
@@ -56,13 +47,11 @@ rm -rf /tmp/harness-temp
 <summary>🔀 Opción B — Clone shallow + copia (si tienes git)</summary>
 
 ```bash
-# En cualquier directorio:
 git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git /tmp/harness-temp
 
 # Copia a tu proyecto (sin .git — no se cruza con tu historial)
 cp -r /tmp/harness-temp/* /tmp/harness-temp/.* /ruta/de/tu/proyecto/
 
-# Limpia
 rm -rf /tmp/harness-temp
 ```
 </details>
@@ -71,236 +60,137 @@ rm -rf /tmp/harness-temp
 <summary>🔄 Opción C — Nuevo proyecto desde cero</summary>
 
 ```bash
-git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git mi-proyecto-net
-cd mi-proyecto-net
+git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git mi-proyecto
+cd mi-proyecto
 rm -rf .git   # ← importante: elimina el git del harness
 git init      # ← inicia tu propio repositorio
-git add -A && git commit -m "feat: initialize .NET project with harness"
+git add -A && git commit -m "feat: initialize project with harness"
 ```
 </details>
 
-### 2. Configura el proyecto
+---
 
-```bash
-cp kickstart.json.example kickstart.json   # crea tu archivo local (no trackeado)
-```
+## Puesta en marcha
 
-Edita `kickstart.json` con los parámetros de tu proyecto:
+1. **Audita el proyecto** — skill `technical-audit` → genera `project-spec.yaml` (runtime, dependencias, servicios).
+2. **Genera la verificación** — skill `generate-verify` → crea `verify.sh` con los comandos reales.
+3. **Define las features** — skill `requirements-analysis` → genera `project-docs/feature_list.json`.
+4. **Abre con tu agente de IA:**
 
-```json
-{
-  "project": {
-    "name": "MiSistemaFacturacion",
-    "type": "WebApi",
-    "namespace": "MiEmpresa.SistemaFacturacion",
-    "targetFramework": "net10.0",
-    "version": "1.0.0"
-  },
-  "team": {
-    "executorName": "Tu Nombre",
-    "executorEmail": "tu@email.com"
-  }
-}
-```
+   | Herramienta | Comando |
+   |-------------|---------|
+   | **opencode** | `opencode` (usa `opencode.json`) |
+   | **GitHub Copilot** | `code .` (usa `.github/instructions/`) |
+   | **Claude Code / Cursor** | usan `AGENTS.md` |
 
-> `kickstart.json` está en `.gitignore` — no se trackea.
-> `kickstart.json.example` es la plantilla trackeada con valores de ejemplo.
+5. **Pide una feature:**
 
-### 3. Inicializa
+   ```
+   genera el spec de la feature 1
+   ```
 
-```bash
-chmod +x init.sh
-./init.sh
-```
-
-Debe terminar con `[OK] Entorno listo`.
-
-### 4. Define las features del negocio
-
-Edita `feature_list.json` y reemplaza las features de ejemplo por las tuyas:
-
-```json
-{
-  "id": 1,
-  "name": "crear_factura",
-  "title": "Creación de facturas",
-  "description": "Endpoint para crear facturas con líneas, impuestos y descuentos.",
-  "sdd": true,
-  "status": "pending",
-  "priority": "high"
-}
-```
-
-### 5. Abre con tu agente de IA
-
-| Herramienta | Comando |
-|-------------|---------|
-| **opencode** | `opencode` (usa `opencode.json`) |
-| **Claude Code** | `claude` (usa `AGENTS.md`) |
-| **GitHub Copilot** | `code .` (usa `.github/copilot/instructions/`) |
-
-### 6. Pide implementar
-
-```
-implementa la siguiente feature pendiente
-```
-
-El agente leader ejecutará el flujo completo automáticamente.
+   El flujo completo queda a cargo de las skills: `generate-spec` (spec aprobado por ti) → `implement-tdd`/`implement-sdd`/`implement-ftd` → `verify-spec` (cierre con tests y `verify.sh`).
 
 ---
 
 ## Arquitectura del arnés
 
-### Directorios
-
 ```
 .
 ├── AGENTS.md                    # Punto de entrada para cualquier agente
-├── opencode.json                # Configuración para opencode (4 agentes)
-├── ENGINES.md                   # Registro de features completadas
-├── feature_list.json            # Features del proyecto (estado + prioridad)
-├── init.sh                      # Verificación de entorno
-├── kickstart.json               # ⚠️ Parámetros locales (NO trackeado en git)
-├── kickstart.json.example       # ✅ Plantilla trackeada con valores de ejemplo
-├── CHECKPOINTS.md               # Criterios de "estado final correcto"
-├── .gitignore                   # kickstart.json, bin/, obj/ excluidos
+├── README.md                    # Este archivo
+├── opencode.json                # Configuración para opencode (instrucciones + skills)
+├── .gitignore                   # Exclusiones del arnés
 │
-├── docs/
-│   ├── architecture.md          # SOLID, Clean Architecture, patrones, DDD, CQRS
-│   ├── conventions.md           # Estilo C#, nombres, async, nullables, tests
-│   ├── specs.md                 # Proceso SDD completo (EARS, ADRs, tasks)
-│   └── verification.md          # 10 niveles de verificación
+├── project-docs/                # Documentación y estado del proyecto
+│   ├── feature_list.json        # Features (status, prioridad, aceptación)
+│   ├── progres/
+│   │   ├── current.json         # Spec activo ({} = ninguno)
+│   │   └── history.json         # Historial de specs cerrados
+│   └── <module>/specs/          # Specs por feature (spec.md, tasks.md, decisions.md)
 │
-├── progress/
-│   ├── current.md               # Sesión activa (estado vivo)
-│   └── history.md               # Bitácora append-only de sesiones
+├── .opencode/                   # Configuración de opencode
+│   ├── rules/                   # Reglas: commits, skills-sync, project-status
+│   └── skills/                  # 13 skills (FUENTE DE VERDAD)
 │
-├── specs/{NNN}_{name}/          # Specs de cada feature
-│   ├── requirements.md          # QUÉ en EARS notation
-│   ├── design.md                # CÓMO con ADRs
-│   └── tasks.md                 # PASOS atómicos
-│
-├── src/                         # Código fuente (lo genera el implementer)
-│   ├── {Project}.Domain/
-│   ├── {Project}.Application/
-│   ├── {Project}.Infrastructure/
-│   └── {Project}.Api/
-│
-├── tests/                       # Tests (los genera el implementer)
-│   ├── {Project}.Domain.Tests/
-│   ├── {Project}.Application.Tests/
-│   ├── {Project}.Infrastructure.Tests/
-│   └── {Project}.Api.Tests/
-│
-└── .opencode/                   # Configuración de agentes opencode
-    ├── agents/
-    │   ├── leader.md            # Orquestador
-    │   ├── spec-author.md       # Redactor de specs
-    │   ├── implementer.md       # Implementador
-    │   └── reviewer.md          # Revisor
-    └── skills/
-        └── sdd-workflow/        # Skill del flujo SDD
+└── .github/                     # Homologación para GitHub Copilot
+    ├── instructions/            # Reglas (espejo de .opencode/rules/)
+    └── skills/                  # Skills (espejo de .opencode/skills/)
 ```
-
-### Stack .NET
-
-| Elemento | Estándar |
-|----------|----------|
-| Target framework | `net10.0` (configurable) |
-| Lenguaje | C# 13+ |
-| Arquitectura | Clean Architecture (4 capas) |
-| CQRS | MediatR |
-| Validación | FluentValidation |
-| Testing | xUnit + FluentAssertions + NSubstitute |
-| DB | EF Core (provider según proyecto) |
-| Logging | Serilog + OpenTelemetry |
-| API | Minimal APIs / Controllers |
 
 ---
 
 ## Flujo de trabajo (SDD)
 
-Una feature completa el siguiente ciclo, siempre en su propia rama:
+Una feature completa el siguiente ciclo, siempre en su propia rama `feature/{NNN}_{name}`:
 
-```
-┌──────────┐    ┌──────────┐     ⏸     ┌──────────────┐    ┌──────────┐    ┌────────┐
-│  leader  │───→│spec_author│───→│HUMANO│───→│implementer│───→│ reviewer │───→│ CIERRE │
-│(prepara) │    │(3 archivos)    │aprueba│   │(código + tests)│(verifica)│    │commit + │
-│          │    │               │rechaza│   │               │          │    │ENGINES  │
-└──────────┘    └──────────┘     └──────┘   └──────────────┘    └──────────┘    └────────┘
-```
+| Paso | Skill | Produce |
+|------|-------|---------|
+| 1. Auditoría | `technical-audit` | `project-spec.yaml` |
+| 2. Verificación | `generate-verify` | `verify.sh` |
+| 3. Requerimientos | `requirements-analysis` | `project-docs/feature_list.json` |
+| 4. Spec | `generate-spec` | `spec.md`, `tasks.md`, `decisions.md` (+ `current.json`) |
+| 5. ⏸ Aprobación | **Humano** | Aprueba o rechaza el spec en el chat |
+| 6. Implementación | `implement-tdd` / `implement-sdd` / `implement-ftd` | Código + tests |
+| 7. Pruebas API (opcional) | `api-test-plan` → `execute-api-test-plan` | Plan `.http` + hallazgos |
+| 8. Tests unitarios | `write-unit-tests` | Cobertura de tests del spec |
+| 9. Cierre | `verify-spec` | AC ✓, tasks ✓, tests ✓, `verify.sh` ✓ → cierra metadata |
 
-| Fase | Quién | Qué produce |
-|------|-------|-------------|
-| **Preparación** | Leader | Rama `feature/{NNN}_{name}`, verificación de estado |
-| **Spec** | spec_author | `requirements.md` (EARS), `design.md` (ADRs), `tasks.md` |
-| **⏸ Aprobación** | Humano | Aprueba 100% o pide cambios |
-| **Implementación** | implementer | Código en `src/`, tests en `tests/`, trazabilidad |
-| **Revisión** | reviewer | Verificación de calidad, arquitectura, tests |
-| **Cierre** | Leader | Commit, `ENGINES.md`, preguntar integración |
+### Técnicas de implementación
 
-### Agentes para opencode
+| Técnica | Skill | Cuándo |
+|---------|-------|--------|
+| **TDD** | `implement-tdd` | Lógica con ramas y rutas de error |
+| **SDD** | `implement-sdd` | Multi-módulo, migraciones, integraciones |
+| **FTD** | `implement-ftd` | Cambios sin lógica nueva (constantes, estilos, config) |
 
-| Agente | Rol | Permisos |
-|--------|-----|----------|
-| `leader` | Orquestador (agente por defecto) | Full acceso |
-| `spec-author` | Escribe solo en `specs/` | Lectura + specs/ |
-| `implementer` | Escribe en `src/` y `tests/` | Lectura + src/ + tests/ + progress/ |
-| `reviewer` | Verifica sin editar | Solo lectura + dotnet comandos |
-
-Comandos rápidos en opencode: `/start-feature`, `/spec`, `/implement`, `/review`
+`generate-spec` recomienda la técnica al generar el spec. Las tres terminan en tests; el **cierre de metadata solo lo hace `verify-spec`**.
 
 ---
 
-## Verificación
+## Skills
 
-Cada feature se verifica contra 10 niveles antes de cerrar:
+| Skill | Descripción |
+|-------|-------------|
+| `technical-audit` | Auditoría técnica → `project-spec.yaml` |
+| `generate-verify` | Genera `verify.sh` desde `project-spec.yaml` |
+| `verification` | Cómo ejecutar la verificación |
+| `requirements-analysis` | Análisis de docs → `feature_list.json` |
+| `generate-spec` | Spec técnico por feature |
+| `implement-tdd` | Implementación con TDD |
+| `implement-sdd` | Implementación dirigida por spec |
+| `implement-ftd` | Cambios pequeños sin lógica nueva |
+| `write-unit-tests` | Tests unitarios (agnóstico al lenguaje) |
+| `verify-spec` | Cierre completo de un spec |
+| `api-test-plan` | Plan de pruebas API REST |
+| `execute-api-test-plan` | Ejecución de pruebas API con curl |
+| `sync-skills` | Sincroniza `.opencode/skills/` → `.github/skills/` |
 
-| Nivel | Área | Comando |
-|-------|------|---------|
-| 0 | Build + análisis estático | `dotnet build /warnaserror` |
-| 1 | Tests unitarios | `dotnet test tests/*.Domain.Tests/` |
-| 2 | Tests de integración | `dotnet test tests/*.Infrastructure.Tests/` |
-| 3 | Tests de API | `dotnet test tests/*.Api.Tests/` |
-| 4 | Tests E2E | `dotnet test tests/E2E/` |
-| 5 | Cobertura + calidad | Coverlet + Stryker mutation testing |
-| 6 | Seguridad | `dotnet list package --vulnerable` |
-| 7 | Performance | BenchmarkDotNet + k6 |
-| 8 | Trazabilidad | Mapa R↔Tests documentado |
-| 9 | Arquitectura | NetArchTest |
-| 10 | Pack NuGet | `dotnet pack` + validación |
+---
+
+## Reglas
+
+- **Commits semánticos** en inglés: `feat(scope): description` → `.opencode/rules/commits.md`
+- **Skills sincronizadas**: fuente `.opencode/skills/`, espejo `.github/skills/` → `.opencode/rules/skills-sync.md`
+- **Estado del proyecto**: al pedir "estado del proyecto", el agente lee `project-docs/` → `.opencode/rules/project-status.md`
+- **Sin push** sin confirmación explícita del usuario.
 
 ---
 
 ## Preguntas frecuentes
 
-### ¿Puedo reutilizar este arnés para cualquier proyecto .NET?
+### ¿Puedo usar este arnés en un proyecto existente?
 
-Sí. Solo cambia `kickstart.json`, `feature_list.json` y los docs/ si necesitas
-ajustar convenciones. El resto del harness es agnóstico al dominio.
-
-### ¿Qué pasa si mi proyecto ya existe?
-
-Copia los archivos del harness en la raíz de tu proyecto existente (ver paso 1
-— Opción A o B). El `init.sh` detectará tu `.sln` y tus proyectos.
-Luego define features en `feature_list.json` para las nuevas funcionalidades.
-
-> **Importante:** Usa ZIP o clone shallow + copia de archivos (sin `.git`).
-> No hagas `git clone` directo dentro de tu proyecto o mezclarás historiales.
+Sí. Copia los archivos (Opción A o B) en la raíz de tu proyecto. El `project-docs/` plantilla convive con tu documentación existente.
 
 ### ¿Necesito opencode?
 
-No. El harness funciona con cualquier agente de IA (Claude Code, GitHub Copilot,
-Cursor, etc.). `AGENTS.md` es el punto de entrada universal. La configuración
-de `opencode.json` es adicional para integración más profunda con opencode.
+No. `AGENTS.md` es el punto de entrada universal (Claude Code, Cursor, Copilot). `opencode.json` agrega integración profunda con opencode.
 
-### ¿Las features implementadas se fusionan a main?
+### ¿Dónde cambia el stack de mi proyecto?
 
-No automáticamente. El agente siempre pregunta al humano si requiere integración.
-- Proyecto local → merge directo
-- Proyecto en nube → se sugiere Pull Request
+En `project-spec.yaml` (lo genera `technical-audit`) y en la sección de convenciones de `AGENTS.md`. El arnés no asume lenguaje, puertos ni servicios.
 
-### ¿Dónde vive el registro de features completadas?
+### ¿Cómo agrego una skill nueva?
 
-En `ENGINES.md` dentro de la rama `feature/*`. Esto permite saber qué features
-están completadas incluso antes de integrar a main.
+Crea `.opencode/skills/<name>/SKILL.md` (fuente de verdad) y propágala a `.github/skills/<name>/SKILL.md` — o ejecuta la skill `sync-skills`. Detalle en `.opencode/rules/skills-sync.md`.

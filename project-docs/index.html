@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature List</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+    .container { max-width: 1600px; margin: 0 auto; padding: 2rem; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    h1 { font-size: 1.5rem; font-weight: 600; }
+    .stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .stat { padding: 0.75rem 1rem; border-radius: 8px; background: white; border: 1px solid #e2e8f0; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; }
+    .controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    input, select { padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; background: white; }
+    input { flex: 1; min-width: 200px; }
+    select { min-width: 150px; }
+    .table-wrapper { background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; }
+    tr { cursor: pointer; transition: background 0.15s; }
+    tr:hover { background: #f8fafc; }
+    tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+    .badge-pending { background: #f1f5f9; color: #64748b; }
+    .badge-in_progress { background: #dbeafe; color: #2563eb; }
+    .badge-done { background: #dcfce7; color: #16a34a; }
+    .badge-blocked { background: #fee2e2; color: #dc2626; }
+    .badge-alta { background: #fee2e2; color: #dc2626; }
+    .badge-media { background: #fef3c7; color: #d97706; }
+    .badge-baja { background: #dcfce7; color: #16a34a; }
+    .badge-backend { background: #dbeafe; color: #2563eb; }
+    .badge-frontend { background: #f3e8ff; color: #9333ea; }
+    .badge-infra { background: #e0e7ff; color: #4f46e5; }
+    .badge-ready { background: #dcfce7; color: #16a34a; border: 1px solid #16a34a; }
+    .badge-blocked-dep { background: #fee2e2; color: #dc2626; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem; }
+    .pagination button { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem; }
+    .pagination button:hover { background: #f8fafc; }
+    .pagination button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 12px; width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .modal-header h2 { font-size: 1.125rem; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1; }
+    .modal-body { padding: 1.5rem; }
+    .modal-section { margin-bottom: 1.25rem; }
+    .modal-section h3 { font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.5rem; }
+    .modal-section p { font-size: 0.875rem; }
+    .modal-list { list-style: none; }
+    .modal-list li { padding: 0.4rem 0; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; }
+    .modal-list li:last-child { border-bottom: none; }
+    .modal-list li::before { content: "✓ "; color: #16a34a; }
+    .modal-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .dep-chain { background: #f8fafc; border-radius: 6px; padding: 1rem; margin-top: 0.5rem; }
+    .dep-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; }
+    .dep-item:last-child { border-bottom: none; }
+    .dep-arrow { color: #94a3b8; }
+    .empty { text-align: center; padding: 3rem; color: #64748b; }
+    .hint { font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem; }
+    .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .tab { padding: 0.75rem 1.25rem; cursor: pointer; font-size: 0.875rem; color: #64748b; border-bottom: 2px solid transparent; }
+    .tab:hover { color: #1e293b; }
+    .tab.active { color: #3b82f6; border-bottom-color: #3b82f6; font-weight: 500; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .graph-container { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 1.5rem; overflow-x: auto; }
+    .graph-row { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; }
+    .graph-row:last-child { border-bottom: none; }
+    .graph-node { padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
+    .graph-node-done { background: #dcfce7; color: #16a34a; }
+    .graph-node-pending { background: #f1f5f9; color: #64748b; }
+    .graph-node-in_progress { background: #dbeafe; color: #2563eb; }
+    .graph-node-blocked { background: #fee2e2; color: #dc2626; }
+    .graph-deps { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+    .graph-dep { background: #e2e8f0; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.7rem; }
+    .graph-dep.done { background: #dcfce7; color: #16a34a; }
+    .graph-dep.pending { background: #f1f5f9; color: #64748b; }
+    .graph-dep.in_progress { background: #dbeafe; color: #2563eb; }
+    .tree-container { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 1.5rem; overflow: auto; min-height: 500px; position: relative; cursor: grab; }
+    .tree-container.panning { cursor: grabbing; }
+    .tree-canvas { position: relative; }
+    .tree-svg { position: absolute; top: 0; left: 0; pointer-events: none; }
+    .tree-svg path { fill: none; stroke: #cbd5e1; stroke-width: 2; transition: stroke 0.3s, stroke-width 0.3s; }
+    .tree-svg path.highlight { stroke: #94a3b8; stroke-width: 2.5; }
+    .tree-svg path.highlight-done { stroke: #16a34a; stroke-width: 2.5; }
+    .tree-node { position: absolute; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; z-index: 1; border: 2px solid transparent; }
+    .tree-node:hover { transform: scale(1.15); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .tree-node-done { background: #dcfce7; color: #16a34a; border-color: #16a34a; }
+    .tree-node-pending { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .tree-node-in_progress { background: #dbeafe; color: #2563eb; border-color: #2563eb; }
+    .tree-node-blocked { background: #fee2e2; color: #dc2626; border-color: #dc2626; }
+    .tree-node.node-highlight { box-shadow: 0 0 0 3px rgba(148,163,184,0.6); transform: scale(1.1); }
+    .tree-node.node-highlight-done { box-shadow: 0 0 0 3px rgba(22,163,74,0.6); transform: scale(1.1); }
+    .tree-node-card { position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .tree-node-card.visible { opacity: 1; }
+    .tree-node-card-title { font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 0.25rem; }
+    .tree-node-card-name { font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; font-family: monospace; }
+    .tree-node-card-desc { font-size: 0.75rem; color: #475569; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .tree-node-card-meta { display: flex; gap: 0.35rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+    .tree-node-card-hint { font-size: 0.65rem; color: #94a3b8; margin-top: 0.4rem; border-top: 1px solid #f1f5f9; padding-top: 0.35rem; }
+    .tree-progress { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .tree-progress-bar { flex: 1; height: 24px; background: #e2e8f0; border-radius: 12px; overflow: hidden; }
+    .tree-progress-fill { height: 100%; background: linear-gradient(90deg, #16a34a, #22c55e); border-radius: 12px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600; }
+    .tree-progress-text { font-size: 1.25rem; font-weight: 700; color: #16a34a; min-width: 60px; text-align: right; }
+    .current-card { background: white; border: 2px solid #3b82f6; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; position: relative; }
+    .current-card:hover { box-shadow: 0 4px 16px rgba(59,130,246,0.15); transform: translateY(-1px); }
+    .current-card.empty { border-color: #e2e8f0; background: #f8fafc; cursor: default; }
+    .current-card.empty:hover { box-shadow: none; transform: none; }
+    .current-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+    .current-card-label { font-size: 0.7rem; text-transform: uppercase; color: #3b82f6; font-weight: 600; letter-spacing: 0.05em; }
+    .current-card-empty-label { font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em; }
+    .current-card-title { font-size: 1.1rem; font-weight: 600; color: #1e293b; }
+    .current-card-empty-msg { font-size: 0.875rem; color: #94a3b8; }
+    .current-card-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .current-card-info { display: flex; gap: 1.5rem; font-size: 0.8rem; color: #64748b; }
+    .current-card-tasks { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e2e8f0; }
+    .current-card-tasks-title { font-size: 0.7rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem; }
+    .current-task { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; padding: 0.2rem 0; }
+    .current-task-check { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; font-size: 0.6rem; flex-shrink: 0; }
+    .current-task-check.done { background: #16a34a; border-color: #16a34a; color: white; }
+    .current-card-hint { position: absolute; bottom: 0.5rem; right: 1rem; font-size: 0.65rem; color: #cbd5e1; }
+    .history-timeline { position: relative; padding-left: 2rem; }
+    .history-timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+    .history-item { position: relative; margin-bottom: 1.5rem; padding: 1rem 1.25rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .history-item::before { content: ''; position: absolute; left: -1.65rem; top: 1.25rem; width: 12px; height: 12px; border-radius: 50%; background: #16a34a; border: 2px solid white; box-shadow: 0 0 0 2px #dcfce7; z-index: 1; }
+    .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .history-item-title { font-size: 0.9rem; font-weight: 600; color: #1e293b; }
+    .history-item-date { font-size: 0.75rem; color: #94a3b8; }
+    .history-item-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+    .history-item-desc { font-size: 0.8rem; color: #64748b; line-height: 1.4; }
+    .history-empty { text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.875rem; }
+    .history-section-title { font-size: 0.8rem; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 1rem; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 id="project-name">Feature List</h1>
+      <span class="hint">Doble clic para ver detalle</span>
+    </header>
+    <div class="stats" id="stats"></div>
+    <div class="tabs">
+      <div class="tab active" data-tab="list">Lista</div>
+      <div class="tab" data-tab="graph">Dependencias</div>
+      <div class="tab" data-tab="tree">Árbol</div>
+      <div class="tab" data-tab="three">3D</div>
+      <div class="tab" data-tab="history">Historial</div>
+    </div>
+    <div class="tab-content active" id="tab-list">
+      <div id="current-card-container"></div>
+      <div class="controls">
+        <input type="text" id="search" placeholder="Buscar...">
+        <select id="filter-status"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="in_progress">En Progreso</option><option value="done">Completado</option><option value="blocked">Bloqueado</option></select>
+        <select id="filter-module"><option value="">Todos los módulos</option><option value="backend">Backend</option><option value="frontend">Frontend</option><option value="infra">Infra</option></select>
+        <select id="filter-priority"><option value="">Todas las prioridades</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select>
+        <select id="filter-ready"><option value="">Todas</option><option value="ready">Listas para empezar</option><option value="blocked">Bloqueadas por deps</option></select>
+      </div>
+      <div class="table-wrapper">
+        <table><thead><tr><th>#</th><th>Nombre</th><th>Módulo</th><th>Prioridad</th><th>Estado</th><th>Dependencias</th></tr></thead><tbody id="tbody"></tbody></table>
+        <div class="empty" id="empty" style="display:none;">No se encontraron features</div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+    <div class="tab-content" id="tab-graph">
+      <div class="controls">
+        <select id="graph-filter-status"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="in_progress">En Progreso</option><option value="done">Completado</option><option value="blocked">Bloqueado</option></select>
+        <select id="graph-filter-module"><option value="">Todos los módulos</option><option value="backend">Backend</option><option value="frontend">Frontend</option><option value="infra">Infra</option></select>
+        <select id="graph-filter-priority"><option value="">Todas las prioridades</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select>
+        <button id="graph-reset" style="padding:0.5rem 1rem;border:1px solid #e2e8f0;border-radius:6px;background:white;cursor:pointer;font-size:0.875rem;">Reiniciar</button>
+      </div>
+      <div class="graph-container" id="graph"></div>
+    </div>
+    <div class="tab-content" id="tab-tree">
+      <div class="tree-progress" id="tree-progress"></div>
+      <div class="tree-container" id="tree-container">
+        <div class="tree-canvas" id="tree-canvas">
+          <svg class="tree-svg" id="tree-svg"></svg>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-three">
+      <div id="three-container" style="width:100%;height:70vh;position:relative;background:#0f172a;border-radius:8px;overflow:hidden;">
+        <div id="three-hover-card" style="display:none;position:absolute;pointer-events:none;background:white;border-radius:8px;padding:10px 14px;box-shadow:0 4px 20px rgba(0,0,0,0.3);font-size:13px;z-index:10;max-width:280px;"></div>
+        <div id="three-tooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,23,42,0.92);color:#e2e8f0;border-radius:6px;padding:6px 10px;font-size:12px;z-index:10;white-space:nowrap;"></div>
+        <div id="three-controls" style="position:absolute;top:12px;right:12px;z-index:5;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+          <select id="three-filter-status" style="padding:5px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;"><option value="">Estado</option><option value="pending">Pendiente</option><option value="in_progress">En Progreso</option><option value="done">Completado</option><option value="blocked">Bloqueado</option></select>
+          <select id="three-filter-module" style="padding:5px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;"><option value="">Módulo</option><option value="backend">Backend</option><option value="frontend">Frontend</option><option value="infra">Infra</option></select>
+          <select id="three-filter-priority" style="padding:5px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;"><option value="">Prioridad</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select>
+          <button id="three-reset" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;cursor:pointer;">Reiniciar</button>
+          <button id="btn-theme-3d" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;cursor:pointer;">Tema</button>
+        </div>
+        <div style="position:absolute;bottom:12px;left:12px;color:#94a3b8;font-size:11px;z-index:5;">Scroll: zoom | Click: nombre | Doble clic: enfocar | Arrastrar: rotar</div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-history">
+      <div class="history-section-title">Historial de Features Completadas</div>
+      <div id="history-timeline-container"></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" id="modal-close">&times;</button></div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    var data = {features: []};
+    var currentSpec = {};
+    var historyData = {records: []};
+    var filtered = [];
+    var page = 1;
+    var perPage = 10;
+
+    var SL = {pending: 'Pendiente', in_progress: 'En Progreso', done: 'Completado', blocked: 'Bloqueado'};
+    var TL = {feature: 'Feature', 'user-story': 'User Story', 'use-case': 'Use Case'};
+
+    function isReady(f) {
+      if (f.status === 'done' || f.status === 'in_progress') return false;
+      if (!f.dependencies || !f.dependencies.length) return true;
+      return f.dependencies.every(function(d) {
+        var x = data.features.find(function(y) { return y.id === d; });
+        return x && x.status === 'done';
+      });
+    }
+
+    function getBlockedBy(f) {
+      if (!f.dependencies || !f.dependencies.length) return [];
+      return f.dependencies.filter(function(d) {
+        var x = data.features.find(function(y) { return y.id === d; });
+        return x && x.status !== 'done';
+      }).map(function(d) {
+        return data.features.find(function(y) { return y.id === d; });
+      }).filter(Boolean);
+    }
+
+    function getDepChain(f, v) {
+      v = v || new Set();
+      if (v.has(f.id)) return [];
+      v.add(f.id);
+      var c = [f];
+      if (f.dependencies) {
+        f.dependencies.forEach(function(d) {
+          var x = data.features.find(function(y) { return y.id === d; });
+          if (x) {
+            var chain = getDepChain(x, v);
+            for (var i = 0; i < chain.length; i++) c.push(chain[i]);
+          }
+        });
+      }
+      return c;
+    }
+
+    async function init() {
+      try {
+        var r = await fetch('feature_list.json');
+        data = await r.json();
+        document.getElementById('project-name').textContent = data.project || 'Feature List';
+        try {
+          var rc = await fetch('progres/current.json');
+          currentSpec = await rc.json();
+        } catch(e) { currentSpec = {}; }
+        try {
+          var rh = await fetch('progres/history.json');
+          historyData = await rh.json();
+        } catch(e) { historyData = {records: []}; }
+        renderStats();
+        renderCurrentCard();
+        applyFilters();
+        renderGraph();
+        renderTree();
+        renderHistoryTimeline();
+      } catch (e) {
+        document.getElementById('empty').style.display = 'block';
+        document.getElementById('empty').textContent = 'Error al cargar feature_list.json';
+      }
+    }
+
+    function renderCurrentCard() {
+      var c = document.getElementById('current-card-container');
+      var hasSpec = currentSpec && currentSpec.feature && currentSpec.feature.name;
+      if (!hasSpec) {
+        c.innerHTML = '<div class="current-card empty"><div class="current-card-empty-label">Spec en Proceso</div><div class="current-card-empty-msg">No hay ningun spec en proceso actualmente.</div></div>';
+        return;
+      }
+      var f = data.features.find(function(x) { return x.id === currentSpec.feature.id; }) || currentSpec.feature;
+      c.innerHTML = '<div class="current-card" id="current-card" title="Doble clic para ver detalle">' +
+        '<div class="current-card-header"><div class="current-card-label">Spec en Proceso</div><span class="badge badge-in_progress">En Progreso</span></div>' +
+        '<div class="current-card-title">' + (currentSpec.feature.title || f.title || currentSpec.feature.name) + '</div>' +
+        '<div class="current-card-meta">' +
+          '<span class="badge badge-' + (currentSpec.feature.module || f.module) + '">' + (currentSpec.feature.module || f.module) + '</span>' +
+          '<span class="badge badge-' + (currentSpec.feature.priority || f.priority) + '">' + (currentSpec.feature.priority || f.priority) + '</span>' +
+        '</div>' +
+        '<div class="current-card-hint">doble clic para detalle</div></div>';
+      document.getElementById('current-card').addEventListener('dblclick', function() { showModalCurrent(); });
+    }
+
+    function showModalCurrent() {
+      var hasSpec = currentSpec && currentSpec.feature && currentSpec.feature.name;
+      if (!hasSpec) return;
+      var f = data.features.find(function(x) { return x.id === currentSpec.feature.id; }) || {};
+      var tasks = currentSpec.tasks || [];
+      document.getElementById('modal-title').textContent = currentSpec.feature.title || f.title || currentSpec.feature.name;
+      document.getElementById('modal-body').innerHTML =
+        '<div class="modal-section"><h3>ID</h3><p>' + (currentSpec.feature.id || f.id || '-') + '</p></div>' +
+        '<div class="modal-section"><h3>Nombre</h3><p>' + (currentSpec.feature.name || f.name || '-') + '</p></div>' +
+        '<div class="modal-section"><h3>Tipo</h3><p>' + (TL[f.type] || f.type || '-') + '</p></div>' +
+        '<div class="modal-section"><h3>Descripci\u00f3n</h3><p>' + (f.description || '-') + '</p></div>' +
+        '<div class="modal-tags">' +
+          '<span class="badge badge-' + (currentSpec.feature.module || f.module) + '">' + (currentSpec.feature.module || f.module) + '</span>' +
+          '<span class="badge badge-' + (currentSpec.feature.priority || f.priority) + '">' + (currentSpec.feature.priority || f.priority) + '</span>' +
+          '<span class="badge badge-in_progress">En Progreso</span>' +
+        '</div>' +
+        '<div class="modal-section" style="margin-top:1.25rem"><h3>Responsable</h3><p>' + (currentSpec.responsable || '-') + '</p></div>' +
+        '<div class="modal-section"><h3>Directorio</h3><p style="font-family:monospace;font-size:0.8rem">' + (currentSpec.directory || '-') + '</p></div>' +
+        '<div class="modal-section"><h3>Fecha de Creaci\u00f3n</h3><p>' + (currentSpec.created || '-') + '</p></div>' +
+        (f.acceptance && f.acceptance.length ? '<div class="modal-section"><h3>Criterios de Aceptaci\u00f3n (' + f.acceptance.length + ')</h3><ul class="modal-list">' + f.acceptance.map(function(a) { return '<li>' + a + '</li>'; }).join('') + '</ul></div>' : '') +
+        (tasks.length ? '<div class="modal-section"><h3>Tareas (' + tasks.filter(function(t){return t.done;}).length + '/' + tasks.length + ')</h3><ul class="modal-list">' + tasks.map(function(t) { return '<li style="' + (t.done ? 'color:#16a34a' : '') + '">' + (t.done ? '\u2713 ' : '\u25CB ') + t.title + '</li>'; }).join('') + '</ul></div>' : '') +
+        '<div class="modal-section"><h3>Documentaci\u00f3n</h3><ul class="modal-list">' + (f.documentation || []).map(function(d) { return '<li>' + d + '</li>'; }).join('') + '</ul></div>';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function renderHistoryTimeline() {
+      var c = document.getElementById('history-timeline-container');
+      var records = historyData.records || [];
+      if (!records.length) {
+        c.innerHTML = '<div class="history-empty">No hay features completadas en el historial.</div>';
+        return;
+      }
+      var sorted = records.slice().sort(function(a, b) { return b.featureId - a.featureId; });
+      c.innerHTML = '<div class="history-timeline">' + sorted.map(function(r) {
+        var f = data.features.find(function(x) { return x.id === r.featureId; });
+        var title = f ? f.title : r.featureName;
+        var desc = f ? f.description : '';
+        var taskCount = r.tasks ? r.tasks.length : 0;
+        var taskDone = r.tasks ? r.tasks.filter(function(t) { return t.done; }).length : 0;
+        return '<div class="history-item" data-feature-id="' + r.featureId + '" style="cursor:pointer" title="Doble clic para ver detalle">' +
+          '<div class="history-item-header"><div class="history-item-title">' + title + '</div><div class="history-item-date">' + r.date + '</div></div>' +
+          '<div class="history-item-meta">' +
+            '<span class="badge badge-' + r.module + '">' + r.module + '</span>' +
+            '<span class="badge badge-done">done</span>' +
+            (r.specDir ? '<span class="badge" style="background:#f1f5f9;color:#64748b">' + r.specDir + '</span>' : '<span class="badge" style="background:#f1f5f9;color:#94a3b8">sin spec</span>') +
+            (taskCount > 0 ? '<span class="badge" style="background:#dcfce7;color:#16a34a">' + taskDone + '/' + taskCount + ' tareas</span>' : '') +
+          '</div>' +
+          (desc ? '<div class="history-item-desc">' + desc + '</div>' : '') +
+        '</div>';
+      }).join('') + '</div>';
+      c.querySelectorAll('.history-item').forEach(function(item) {
+        item.addEventListener('dblclick', function() {
+          showHistoryModal(parseInt(item.dataset.featureId));
+        });
+      });
+    }
+
+    function showHistoryModal(featureId) {
+      var f = data.features.find(function(x) { return x.id === featureId; });
+      var r = historyData.records.find(function(x) { return x.featureId === featureId; });
+      if (!f && !r) return;
+      var title = f ? f.title : (r ? r.featureName : '');
+      var name = f ? f.name : (r ? r.featureName : '');
+      var desc = f ? f.description : '';
+      var module = f ? f.module : (r ? r.module : '');
+      var priority = f ? f.priority : '';
+      var type = f ? f.type : '';
+      var complexity = f ? f.estimatedComplexity : '';
+      var acceptance = f ? f.acceptance || [] : [];
+      var tasks = r ? r.tasks || [] : [];
+      var docLinks = f ? f.documentation || [] : [];
+      var html = '<div class="modal-section"><h3>ID</h3><p>' + featureId + '</p></div>' +
+        '<div class="modal-section"><h3>Nombre</h3><p>' + name + '</p></div>' +
+        '<div class="modal-section"><h3>Titulo</h3><p>' + title + '</p></div>' +
+        (type ? '<div class="modal-section"><h3>Tipo</h3><p>' + (TL[type] || type) + '</p></div>' : '') +
+        (desc ? '<div class="modal-section"><h3>Descripcion</h3><p>' + desc + '</p></div>' : '') +
+        '<div class="modal-tags">' +
+          (module ? '<span class="badge badge-' + module + '">' + module + '</span>' : '') +
+          (priority ? '<span class="badge badge-' + priority + '">' + priority + '</span>' : '') +
+          '<span class="badge badge-done">done</span>' +
+        '</div>';
+      if (r) {
+        html += '<div class="modal-section" style="margin-top:1.25rem"><h3>Ejecucion</h3>' +
+          '<p><strong>Responsable:</strong> ' + (r.responsable || '-') + '</p>' +
+          '<p><strong>Fecha de cierre:</strong> ' + (r.date || '-') + '</p>' +
+          '<p><strong>Spec:</strong> ' + (r.specDir || 'Sin spec') + '</p></div>';
+      }
+      if (complexity) {
+        html += '<div class="modal-section"><h3>Complejidad</h3><p>' + complexity + '</p></div>';
+      }
+      if (acceptance.length) {
+        html += '<div class="modal-section"><h3>Criterios de Aceptacion (' + acceptance.length + ')</h3>' +
+          '<ul class="modal-list">' + acceptance.map(function(a) { return '<li>' + a + '</li>'; }).join('') + '</ul></div>';
+      }
+      if (tasks.length) {
+        var doneCount = tasks.filter(function(t) { return t.done; }).length;
+        html += '<div class="modal-section"><h3>Tareas (' + doneCount + '/' + tasks.length + ' completadas)</h3>' +
+          '<ul class="modal-list">' + tasks.map(function(t) {
+            return '<li style="' + (t.done ? 'color:#16a34a' : 'color:#dc2626') + '">' +
+              (t.done ? '&#10003; ' : '&#9675; ') + t.title + '</li>';
+          }).join('') + '</ul></div>';
+      }
+      if (docLinks.length) {
+        html += '<div class="modal-section"><h3>Documentacion</h3><ul class="modal-list">' +
+          docLinks.map(function(d) { return '<li>' + d + '</li>'; }).join('') + '</ul></div>';
+      }
+      if (f && f.openedAt) {
+        html += '<div class="modal-section"><h3>Fechas</h3><p>Abierto: ' + f.openedAt + '<br>Cerrado: ' + (f.closedAt || r.date || 'Pendiente') + '</p></div>';
+      }
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerHTML = html;
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function renderStats() {
+      var t = data.features.length;
+      var d = data.features.filter(function(f) { return f.status === 'done'; }).length;
+      var p = data.features.filter(function(f) { return f.status === 'pending'; }).length;
+      var ip = data.features.filter(function(f) { return f.status === 'in_progress'; }).length;
+      var r = data.features.filter(function(f) { return isReady(f); }).length;
+      document.getElementById('stats').innerHTML =
+        '<div class="stat"><div class="stat-value">' + t + '</div><div class="stat-label">Total</div></div>' +
+        '<div class="stat"><div class="stat-value" style="color:#16a34a">' + d + '</div><div class="stat-label">Completados</div></div>' +
+        '<div class="stat"><div class="stat-value" style="color:#2563eb">' + ip + '</div><div class="stat-label">En Progreso</div></div>' +
+        '<div class="stat"><div class="stat-value" style="color:#64748b">' + p + '</div><div class="stat-label">Pendientes</div></div>' +
+        '<div class="stat"><div class="stat-value" style="color:#16a34a;border:2px solid #16a34a;border-radius:6px;padding:0 0.5rem">' + r + '</div><div class="stat-label">Listas para empezar</div></div>';
+    }
+
+    function applyFilters() {
+      var s = document.getElementById('search').value.toLowerCase();
+      var st = document.getElementById('filter-status').value;
+      var m = document.getElementById('filter-module').value;
+      var p = document.getElementById('filter-priority').value;
+      var r = document.getElementById('filter-ready').value;
+      filtered = data.features.filter(function(f) {
+        if (st && f.status !== st) return false;
+        if (m && f.module !== m) return false;
+        if (p && f.priority !== p) return false;
+        if (r === 'ready' && !isReady(f)) return false;
+        if (r === 'blocked' && !getBlockedBy(f).length) return false;
+        if (s) {
+          var t = (f.id + ' ' + f.name + ' ' + f.title + ' ' + f.description).toLowerCase();
+          if (!t.includes(s)) return false;
+        }
+        return true;
+      });
+      filtered.sort(function(a, b) {
+        var aDone = a.status === 'done' ? 1 : 0;
+        var bDone = b.status === 'done' ? 1 : 0;
+        if (aDone !== bDone) return aDone - bDone;
+        var aReady = a.dependencies && a.dependencies.length
+          ? a.dependencies.filter(function(d) {
+              var x = data.features.find(function(y) { return y.id === d; });
+              return x && x.status === 'done';
+            }).length : 0;
+        var bReady = b.dependencies && b.dependencies.length
+          ? b.dependencies.filter(function(d) {
+              var x = data.features.find(function(y) { return y.id === d; });
+              return x && x.status === 'done';
+            }).length : 0;
+        if (aReady !== bReady) return bReady - aReady;
+        var aTotal = a.dependencies ? a.dependencies.length : 0;
+        var bTotal = b.dependencies ? b.dependencies.length : 0;
+        if (aTotal !== bTotal) return bTotal - aTotal;
+        return a.id - b.id;
+      });
+      page = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function renderTable() {
+      var tb = document.getElementById('tbody');
+      var e = document.getElementById('empty');
+      var st = (page - 1) * perPage;
+      var items = filtered.slice(st, st + perPage);
+      if (!items.length) {
+        tb.innerHTML = '';
+        e.style.display = 'block';
+        return;
+      }
+      e.style.display = 'none';
+      tb.innerHTML = items.map(function(f) {
+        var r = isReady(f);
+        var ds = f.dependencies && f.dependencies.length
+          ? f.dependencies.filter(function(d) {
+              var x = data.features.find(function(y) { return y.id === d; });
+              return x && x.status === 'done';
+            }).length + '/' + f.dependencies.length
+          : '-';
+        var depBadge = f.dependencies && f.dependencies.length
+          ? '<span class="badge ' + (r ? 'badge-ready' : 'badge-blocked-dep') + '">' + ds + ' ' + (r ? '✓' : '⏸') + '</span>'
+          : '<span class="badge badge-ready">✓</span>';
+        return '<tr data-id="' + f.id + '">' +
+          '<td>' + f.id + '</td>' +
+          '<td><strong>' + f.title + '</strong><br><span style="color:#64748b;font-size:0.75rem">' + f.name + '</span></td>' +
+          '<td><span class="badge badge-' + f.module + '">' + f.module + '</span></td>' +
+          '<td><span class="badge badge-' + f.priority + '">' + f.priority + '</span></td>' +
+          '<td><span class="badge badge-' + f.status + '">' + (SL[f.status] || f.status) + '</span></td>' +
+          '<td>' + depBadge + '</td>' +
+          '</tr>';
+      }).join('');
+      tb.querySelectorAll('tr').forEach(function(tr) {
+        tr.addEventListener('dblclick', function() { showModal(parseInt(tr.dataset.id)); });
+      });
+    }
+
+    function renderPagination() {
+      var pg = Math.ceil(filtered.length / perPage);
+      var d = document.getElementById('pagination');
+      if (pg <= 1) { d.innerHTML = ''; return; }
+      var h = '<button ' + (page === 1 ? 'disabled' : '') + ' onclick="goPage(' + (page - 1) + ')">←</button>';
+      for (var i = 1; i <= pg; i++) {
+        h += '<button class="' + (i === page ? 'active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+      }
+      h += '<button ' + (page === pg ? 'disabled' : '') + ' onclick="goPage(' + (page + 1) + ')">→</button>';
+      d.innerHTML = h;
+    }
+
+    function goPage(p) {
+      page = p;
+      renderTable();
+      renderPagination();
+    }
+
+    var graphFilters = { status: '', module: '', priority: '' };
+
+    function renderGraph() {
+      var g = document.getElementById('graph');
+      var filtered = data.features.filter(function(f) {
+        if (graphFilters.status && f.status !== graphFilters.status) return false;
+        if (graphFilters.module && f.module !== graphFilters.module) return false;
+        if (graphFilters.priority && f.priority !== graphFilters.priority) return false;
+        return true;
+      });
+      var sorted = filtered.sort(function(a, b) {
+        var ar = isReady(a) ? 0 : 1;
+        var br = isReady(b) ? 0 : 1;
+        return ar - br || a.id - b.id;
+      });
+      var legend = '<div style="margin-bottom:1rem;font-size:0.875rem;color:#64748b">' +
+        '<strong>Flujo de dependencias:</strong> Features listas para empezar aparecen primero.<br>' +
+        '<span style="color:#16a34a">●</span> Completada &nbsp;' +
+        '<span style="color:#2563eb">●</span> En progreso &nbsp;' +
+        '<span style="color:#64748b">●</span> Pendiente &nbsp;' +
+        '<span style="color:#dc2626">●</span> Bloqueada</div>';
+      var rows = sorted.map(function(f) {
+        var r = isReady(f);
+        var title = f.title.length > 35 ? f.title.substring(0, 35) + '...' : f.title;
+        var rowStyle = r && f.status === 'pending' ? ' style="background:#f0fdf4"' : '';
+        var depArrow = '';
+        if (f.dependencies && f.dependencies.length) {
+          var depSpans = f.dependencies.map(function(d) {
+            var x = data.features.find(function(y) { return y.id === d; });
+            return x
+              ? '<span class="graph-dep ' + x.status + '">#' + d + '</span>'
+              : '<span class="graph-dep">#' + d + '?</span>';
+          }).join('');
+          depArrow = '<span class="dep-arrow">←</span><div class="graph-deps">' + depSpans + '</div>';
+        } else {
+          depArrow = '<span style="color:#16a34a;font-size:0.75rem;font-weight:500">✓ Sin dependencias</span>';
+        }
+        return '<div class="graph-row"' + rowStyle + '>' +
+          '<span class="graph-node graph-node-' + f.status + '">#' + f.id + ' ' + title + '</span>' +
+          '<span class="badge badge-' + f.status + '" style="font-size:0.65rem">' + SL[f.status] + '</span>' +
+          depArrow + '</div>';
+      }).join('');
+      g.innerHTML = legend + (rows || '<div style="color:#64748b;text-align:center;padding:2rem;">No se encontraron features</div>');
+    }
+
+    function getLevel(f, cache) {
+      cache = cache || {};
+      if (cache[f.id] !== undefined) return cache[f.id];
+      if (!f.dependencies || !f.dependencies.length) {
+        cache[f.id] = 0;
+        return 0;
+      }
+      var maxDep = Math.max.apply(null, f.dependencies.map(function(d) {
+        var x = data.features.find(function(y) { return y.id === d; });
+        return x ? getLevel(x, cache) : 0;
+      }));
+      cache[f.id] = maxDep + 1;
+      return maxDep + 1;
+    }
+
+    function renderTree() {
+      var container = document.getElementById('tree-container');
+      var canvas = document.getElementById('tree-canvas');
+      var svg = document.getElementById('tree-svg');
+      var progressDiv = document.getElementById('tree-progress');
+      var t = data.features.length;
+      var d = data.features.filter(function(f) { return f.status === 'done'; }).length;
+      var pct = t > 0 ? Math.round(d / t * 100) : 0;
+      var phaseList = (data.phases && data.phases.length) ? data.phases.slice() : [];
+      if (!phaseList.length) {
+        var seen = [];
+        data.features.forEach(function(f) {
+          if (f.phase != null && seen.indexOf(f.phase) === -1) seen.push(f.phase);
+        });
+        seen.sort(function(a, b) { return a - b; }).forEach(function(p) {
+          phaseList.push({phase: p, name: 'Fase ' + p, color: '#64748b', light: '#94a3b8'});
+        });
+      }
+      var phaseBlocks = phaseList.map(function(p) {
+        var phaseFeats = data.features.filter(function(f) { return f.phase === p.phase; });
+        var phaseDone = phaseFeats.filter(function(f) { return f.status === 'done'; }).length;
+        var phasePct = phaseFeats.length > 0 ? Math.round(phaseDone / phaseFeats.length * 100) : 0;
+        var color = p.color || '#3b82f6';
+        var light = p.light || '#60a5fa';
+        return '<div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:0.3rem"><span style="font-size:0.8rem;color:' + color + ';font-weight:600">Fase ' + p.phase + ' - ' + p.name + '</span><span style="font-size:0.8rem;color:#64748b">' + phaseDone + '/' + phaseFeats.length + ' (' + phasePct + '%)</span></div>' +
+          '<div class="tree-progress-bar"><div class="tree-progress-fill" style="width:' + phasePct + '%;background:linear-gradient(90deg,' + color + ',' + light + ')">' + phasePct + '%</div></div>' +
+        '</div>';
+      });
+      progressDiv.innerHTML = '<div style="font-size:0.875rem;color:#64748b;cursor:pointer" title="Doble clic para ver progreso por fases"><strong>Progreso del proyecto</strong><br>' + d + ' de ' + t + ' features completadas</div>' +
+        '<div class="tree-progress-bar" id="tree-progress-bar" style="cursor:pointer" title="Doble clic para ver progreso por fases"><div class="tree-progress-fill" style="width:' + pct + '%">' + pct + '%</div></div>' +
+        '<div class="tree-progress-text">' + pct + '%</div>' +
+        '<div id="phase-detail" style="display:none;margin-top:1rem;width:100%">' +
+          '<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.75rem;border-top:1px solid #e2e8f0;padding-top:0.75rem"><strong>Progreso por Fases</strong></div>' +
+          '<div style="display:flex;flex-direction:column;gap:0.75rem">' +
+            phaseBlocks.join('') +
+          '</div>' +
+        '</div>';
+      var phaseDetail = document.getElementById('phase-detail');
+      var progressBar = document.getElementById('tree-progress-bar');
+      var showPhaseDetail = function() {
+        phaseDetail.style.display = phaseDetail.style.display === 'none' ? 'block' : 'none';
+      };
+      progressBar.addEventListener('dblclick', showPhaseDetail);
+      progressDiv.querySelector('div').addEventListener('dblclick', showPhaseDetail);
+      var cache = {};
+      var levels = {};
+      data.features.forEach(function(f) {
+        var l = getLevel(f, cache);
+        if (!levels[l]) levels[l] = [];
+        levels[l].push(f);
+      });
+      var levelKeys = Object.keys(levels).sort(function(a, b) { return a - b; });
+      var nodeR = 22, gapX = 140, gapY = 70, startX = 60, startY = 60;
+      var maxPerLevel = Math.max.apply(null, levelKeys.map(function(l) { return levels[l].length; }));
+      var svgW = startX + levelKeys.length * (nodeR * 2 + gapX) + 80;
+      var svgH = startY + maxPerLevel * (nodeR * 2 + gapY) + 80;
+      svg.setAttribute('width', svgW);
+      svg.setAttribute('height', svgH);
+      svg.innerHTML = '';
+      canvas.style.width = svgW + 'px';
+      canvas.style.height = svgH + 'px';
+      canvas.querySelectorAll('.tree-node, .tree-node-card').forEach(function(n) { n.remove(); });
+      var nodePositions = {};
+      levelKeys.forEach(function(l, li) {
+        var items = levels[l];
+        var totalH = items.length * (nodeR * 2 + gapY) - gapY;
+        var offsetY = startY + (maxPerLevel * (nodeR * 2 + gapY) - totalH) / 2;
+        items.forEach(function(f, fi) {
+          var cx = startX + li * (nodeR * 2 + gapX) + nodeR;
+          var cy = offsetY + fi * (nodeR * 2 + gapY) + nodeR;
+          nodePositions[f.id] = {x: cx, y: cy};
+          var node = document.createElement('div');
+          node.className = 'tree-node tree-node-' + f.status;
+          node.style.left = (cx - nodeR) + 'px';
+          node.style.top = (cy - nodeR) + 'px';
+          node.dataset.id = f.id;
+          node.innerHTML = f.id;
+          node.addEventListener('dblclick', function() { showModal(f.id); });
+          node.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (e.detail === 1) {
+              var featureName = f.name || '';
+              navigator.clipboard.writeText(featureName).then(function() {
+                var toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:0.5rem 1rem;border-radius:6px;font-size:0.8rem;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+                toast.textContent = 'Copiado: ' + featureName;
+                document.body.appendChild(toast);
+                setTimeout(function() { toast.remove(); }, 1500);
+              });
+            }
+            window.highlightDeps(f.id);
+          });
+          var card = document.createElement('div');
+          card.className = 'tree-node-card';
+          card.id = 'tree-card-' + f.id;
+          var moduleLabel = {backend: 'Backend', frontend: 'Frontend', infra: 'Infra'}[f.module] || f.module;
+          card.innerHTML = '<div class="tree-node-card-title">' + f.title + '</div>' +
+            '<div class="tree-node-card-name">' + f.name + '</div>' +
+            '<div class="tree-node-card-meta">' +
+              '<span class="badge badge-' + f.module + '">' + moduleLabel + '</span>' +
+              '<span class="badge badge-' + f.status + '">' + (SL[f.status] || f.status) + '</span>' +
+            '</div>' +
+            '<div class="tree-node-card-desc">' + (f.description || 'Sin descripcion') + '</div>' +
+            '<div class="tree-node-card-hint">Click: copiar nombre | Doble clic: detalle</div>';
+          canvas.appendChild(card);
+          node.addEventListener('mouseenter', function() {
+            var cardEl = document.getElementById('tree-card-' + f.id);
+            if (!cardEl) return;
+            var cardX = cx + nodeR + 8;
+            var cardY = cy - 30;
+            var containerRect = container.getBoundingClientRect();
+            if (cardX + 260 > container.scrollWidth) {
+              cardX = cx - nodeR - 268;
+            }
+            cardEl.style.left = cardX + 'px';
+            cardEl.style.top = cardY + 'px';
+            cardEl.classList.add('visible');
+          });
+          node.addEventListener('mouseleave', function() {
+            var cardEl = document.getElementById('tree-card-' + f.id);
+            if (cardEl) cardEl.classList.remove('visible');
+          });
+          canvas.appendChild(node);
+        });
+      });
+      data.features.forEach(function(f) {
+        if (!f.dependencies || !f.dependencies.length) return;
+        var toPos = nodePositions[f.id];
+        if (!toPos) return;
+        f.dependencies.forEach(function(dId) {
+          var fromPos = nodePositions[dId];
+          if (!fromPos) return;
+          var dep = data.features.find(function(y) { return y.id === dId; });
+          var done = dep && dep.status === 'done';
+          var dx = toPos.x - fromPos.x;
+          var dy = toPos.y - fromPos.y;
+          var cx1 = fromPos.x + dx * 0.4;
+          var cy1 = fromPos.y;
+          var cx2 = toPos.x - dx * 0.4;
+          var cy2 = toPos.y;
+          var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'M' + fromPos.x + ',' + fromPos.y + ' C' + cx1 + ',' + cy1 + ' ' + cx2 + ',' + cy2 + ' ' + toPos.x + ',' + toPos.y);
+          path.dataset.from = dId;
+          path.dataset.to = f.id;
+          path.dataset.done = done;
+          svg.appendChild(path);
+        });
+      });
+      window.highlightDeps = function(id) {
+        svg.querySelectorAll('path').forEach(function(p) {
+          p.classList.remove('highlight', 'highlight-done');
+        });
+        container.querySelectorAll('.tree-node').forEach(function(n) {
+          n.classList.remove('node-highlight', 'node-highlight-done');
+        });
+        var f = data.features.find(function(x) { return x.id === id; });
+        if (!f) return;
+        if (f.dependencies) {
+          f.dependencies.forEach(function(dId) {
+            var p = svg.querySelector('path[data-from="' + dId + '"][data-to="' + id + '"]');
+            if (p) {
+              var dep = data.features.find(function(y) { return y.id === dId; });
+              p.classList.add(dep && dep.status === 'done' ? 'highlight-done' : 'highlight');
+            }
+            var depNode = container.querySelector('.tree-node[data-id="' + dId + '"]');
+            if (depNode) {
+              var dep = data.features.find(function(y) { return y.id === dId; });
+              depNode.classList.add(dep && dep.status === 'done' ? 'node-highlight-done' : 'node-highlight');
+            }
+          });
+        }
+        data.features.forEach(function(other) {
+          if (other.dependencies && other.dependencies.indexOf(id) !== -1) {
+            var p = svg.querySelector('path[data-from="' + id + '"][data-to="' + other.id + '"]');
+            if (p) {
+              p.classList.add(other.status === 'done' ? 'highlight-done' : 'highlight');
+            }
+            var otherNode = container.querySelector('.tree-node[data-id="' + other.id + '"]');
+            if (otherNode) {
+              otherNode.classList.add(other.status === 'done' ? 'node-highlight-done' : 'node-highlight');
+            }
+          }
+        });
+      };
+    }
+
+    function showModal(id) {
+      var f = data.features.find(function(x) { return x.id === id; });
+      if (!f) return;
+      var r = isReady(f);
+      var bl = getBlockedBy(f);
+      var ch = getDepChain(f);
+      document.getElementById('modal-title').textContent = f.title;
+      document.getElementById('modal-body').innerHTML =
+        '<div class="modal-section"><h3>ID</h3><p>' + f.id + '</p></div>' +
+        '<div class="modal-section"><h3>Nombre</h3><p>' + f.name + '</p></div>' +
+        '<div class="modal-section"><h3>Tipo</h3><p>' + (TL[f.type] || f.type) + '</p></div>' +
+        '<div class="modal-section"><h3>Descripci\u00f3n</h3><p>' + f.description + '</p></div>' +
+        '<div class="modal-tags"><span class="badge badge-' + f.module + '">' + f.module + '</span>' +
+        '<span class="badge badge-' + f.priority + '">' + f.priority + '</span>' +
+        '<span class="badge badge-' + f.status + '">' + (SL[f.status] || f.status) + '</span>' +
+        (r && f.status === 'pending' ? '<span class="badge badge-ready">✓ LISTA PARA EMPEZAR</span>' : '') + '</div>' +
+        '<div class="modal-section" style="margin-top:1.25rem"><h3>Complejidad</h3><p>' + (f.estimatedComplexity || 'No estimada') + '</p></div>' +
+        '<div class="modal-section"><h3>Criterios de Aceptaci\u00f3n (' + (f.acceptance || []).length + ')</h3>' +
+        '<ul class="modal-list">' + (f.acceptance || []).map(function(a) { return '<li>' + a + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="modal-section"><h3>An\u00e1lisis de Dependencias</h3><div class="dep-chain">' +
+        (f.dependencies && f.dependencies.length
+          ? f.dependencies.map(function(d) {
+              var x = data.features.find(function(y) { return y.id === d; });
+              return x
+                ? '<div class="dep-item"><span class="badge badge-' + x.status + '" style="font-size:0.7rem">#' + x.id + '</span><span>' + x.title + '</span><span style="margin-left:auto;color:' + (x.status === 'done' ? '#16a34a' : '#dc2626') + ';font-size:0.75rem">' + SL[x.status] + '</span></div>'
+                : '<div class="dep-item">#' + d + ' (no encontrada)</div>';
+            }).join('')
+          : '<p style="color:#16a34a">Sin dependencias - Puede empezar inmediatamente</p>') +
+        (bl.length
+          ? '<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #e2e8f0"><strong style="color:#dc2626;font-size:0.75rem">BLOQUEADA POR:</strong><div style="margin-top:0.5rem">' +
+            bl.map(function(b) { return '<span class="badge badge-' + b.status + '" style="margin-right:0.25rem">#' + b.id + ' ' + b.title + '</span>'; }).join(' ') +
+            '</div></div>'
+          : '') +
+        '</div></div>' +
+        '<div class="modal-section"><h3>Documentaci\u00f3n</h3><ul class="modal-list">' +
+        (f.documentation || []).map(function(d) { return '<li>' + d + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="modal-section"><h3>Fechas</h3><p>Abierto: ' + (f.openedAt || 'Pendiente') + '<br>Cerrado: ' + (f.closedAt || 'Pendiente') + '</p></div>';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    document.getElementById('modal-close').addEventListener('click', function() {
+      document.getElementById('modal-overlay').classList.remove('active');
+    });
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target === e.currentTarget) e.target.classList.remove('active');
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') document.getElementById('modal-overlay').classList.remove('active');
+    });
+    document.querySelectorAll('.tab').forEach(function(t) {
+      t.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+        document.querySelectorAll('.tab-content').forEach(function(x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+        if (t.dataset.tab === 'tree') { renderTree(); }
+        if (t.dataset.tab === 'history') { renderHistoryTimeline(); }
+        if (t.dataset.tab === 'three') { init3D(); }
+      });
+    });
+    (function setupTreePan() {
+      var el = document.getElementById('tree-container');
+      var isDown = false, dragged = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+      el.addEventListener('mousedown', function(e) {
+        isDown = true;
+        dragged = false;
+        el.classList.add('panning');
+        startX = e.pageX;
+        startY = e.pageY;
+        scrollLeft = el.scrollLeft;
+        scrollTop = el.scrollTop;
+      });
+      window.addEventListener('mouseup', function() {
+        isDown = false;
+        el.classList.remove('panning');
+      });
+      window.addEventListener('mousemove', function(e) {
+        if (!isDown) return;
+        var dx = e.pageX - startX;
+        var dy = e.pageY - startY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragged = true;
+        if (dragged) e.preventDefault();
+        el.scrollLeft = scrollLeft - dx;
+        el.scrollTop = scrollTop - dy;
+      });
+      // Evita que un arrastre dispare el click de copiar/resaltar de un tree-node
+      el.addEventListener('click', function(e) {
+        if (dragged) { e.stopPropagation(); dragged = false; }
+      }, true);
+    })();
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    document.getElementById('filter-module').addEventListener('change', applyFilters);
+    document.getElementById('filter-priority').addEventListener('change', applyFilters);
+    document.getElementById('filter-ready').addEventListener('change', applyFilters);
+
+    // Graph filters
+    document.getElementById('graph-filter-status').addEventListener('change', function() {
+      graphFilters.status = this.value;
+      renderGraph();
+    });
+    document.getElementById('graph-filter-module').addEventListener('change', function() {
+      graphFilters.module = this.value;
+      renderGraph();
+    });
+    document.getElementById('graph-filter-priority').addEventListener('change', function() {
+      graphFilters.priority = this.value;
+      renderGraph();
+    });
+    document.getElementById('graph-reset').addEventListener('click', function() {
+      document.getElementById('graph-filter-status').value = '';
+      document.getElementById('graph-filter-module').value = '';
+      document.getElementById('graph-filter-priority').value = '';
+      graphFilters = { status: '', module: '', priority: '' };
+      renderGraph();
+    });
+
+    // ========== 3D VIEW ==========
+    var threeInited = false;
+    var threeScene, threeCamera, threeRenderer, threeControls;
+    var sphereMap = {};
+    var labelSpriteMap = {};
+    var cableLines = [];
+    var raycaster, mouse;
+    var hoveredObj = null;
+    var threeTheme = 'dark';
+    var labelSprites = [];
+    var threeFilters = { status: '', module: '', priority: '' };
+    var focusedFeatureId = null;
+
+    var STATUS_COLORS = {
+      done: 0x22c55e,
+      in_progress: 0x3b82f6,
+      pending: 0x94a3b8,
+      blocked: 0xef4444
+    };
+
+    var THEME = {
+      dark: { bg: 0x0f172a, fog: 0x0f172a, grid: 0x1e293b, labelColor: '#ffffff' },
+      light: { bg: 0xf8fafc, fog: 0xf8fafc, grid: 0xe2e8f0, labelColor: '#1e293b' }
+    };
+
+    function createTextTexture(text, color, bgColor) {
+      var canvas = document.createElement('canvas');
+      var size = 128;
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = bgColor || 'rgba(15,23,42,0.7)';
+      ctx.beginPath();
+      ctx.arc(size/2, size/2, size/2 - 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = color || '#ffffff';
+      ctx.font = 'bold 48px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, size/2, size/2);
+      var tex = new THREE.CanvasTexture(canvas);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    function clear3DScene() {
+      var toRemove = [];
+      threeScene.children.forEach(function(child) {
+        if (child.isMesh || child.isLine || child.isSprite) toRemove.push(child);
+      });
+      toRemove.forEach(function(child) {
+        threeScene.remove(child);
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (child.material.map) child.material.map.dispose();
+          child.material.dispose();
+        }
+      });
+      sphereMap = {};
+      labelSpriteMap = {};
+      cableLines = [];
+      labelSprites = [];
+    }
+
+    function getFilteredFeatures() {
+      return data.features.filter(function(f) {
+        if (threeFilters.status && f.status !== threeFilters.status) return false;
+        if (threeFilters.module && f.module !== threeFilters.module) return false;
+        if (threeFilters.priority && f.priority !== threeFilters.priority) return false;
+        return true;
+      });
+    }
+
+    function getRelatedIds(featureId) {
+      var f = data.features.find(function(x) { return x.id === featureId; });
+      if (!f) return [];
+      var related = [featureId];
+      (f.dependencies || []).forEach(function(d) { if (related.indexOf(d) < 0) related.push(d); });
+      data.features.forEach(function(other) {
+        if (other.dependencies && other.dependencies.indexOf(featureId) >= 0 && related.indexOf(other.id) < 0) {
+          related.push(other.id);
+        }
+      });
+      return related;
+    }
+
+    function init3D() {
+      if (threeInited) return;
+      threeInited = true;
+      var container = document.getElementById('three-container');
+      var w = container.clientWidth, h = container.clientHeight;
+
+      threeScene = new THREE.Scene();
+      threeScene.background = new THREE.Color(THEME.dark.bg);
+      threeScene.fog = new THREE.FogExp2(THEME.dark.fog, 0.012);
+
+      threeCamera = new THREE.PerspectiveCamera(55, w / h, 0.1, 500);
+      threeCamera.position.set(0, 15, 40);
+
+      threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+      threeRenderer.setSize(w, h);
+      threeRenderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(threeRenderer.domElement);
+
+      // Lights
+      var amb = new THREE.AmbientLight(0xffffff, 0.5);
+      threeScene.add(amb);
+      var dir = new THREE.DirectionalLight(0xffffff, 0.8);
+      dir.position.set(20, 30, 20);
+      threeScene.add(dir);
+      var p1 = new THREE.PointLight(0x3b82f6, 0.6, 80);
+      p1.position.set(-15, 10, -15);
+      threeScene.add(p1);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      setupOrbitControls(container);
+      build3DScene();
+
+      // Theme toggle
+      document.getElementById('btn-theme-3d').addEventListener('click', function() {
+        threeTheme = threeTheme === 'dark' ? 'light' : 'dark';
+        var t = THEME[threeTheme];
+        threeScene.background = new THREE.Color(t.bg);
+        threeScene.fog = new THREE.FogExp2(t.fog, 0.012);
+        labelSprites.forEach(function(s) {
+          var fid = s.userData.featureId;
+          var f = data.features.find(function(x) { return x.id === fid; });
+          if (f) {
+            s.material.map = createTextTexture(String(f.id), t.labelColor, threeTheme === 'dark' ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.8)');
+            s.material.map.needsUpdate = true;
+            s.material.needsUpdate = true;
+          }
+        });
+      });
+
+      // Filters
+      ['three-filter-status', 'three-filter-module', 'three-filter-priority'].forEach(function(id) {
+        document.getElementById(id).addEventListener('change', function() {
+          threeFilters.status = document.getElementById('three-filter-status').value;
+          threeFilters.module = document.getElementById('three-filter-module').value;
+          threeFilters.priority = document.getElementById('three-filter-priority').value;
+          focusedFeatureId = null;
+          clear3DScene();
+          build3DScene();
+        });
+      });
+
+      // Reset
+      document.getElementById('three-reset').addEventListener('click', function() {
+        document.getElementById('three-filter-status').value = '';
+        document.getElementById('three-filter-module').value = '';
+        document.getElementById('three-filter-priority').value = '';
+        threeFilters = { status: '', module: '', priority: '' };
+        focusedFeatureId = null;
+        clear3DScene();
+        build3DScene();
+        orbitState.dist = 45;
+        orbitState.target.set(0, 0, 0);
+      });
+
+      // Events
+      container.addEventListener('mousemove', on3DMouseMove);
+      container.addEventListener('click', on3DClick);
+      container.addEventListener('dblclick', on3DDblClick);
+      window.addEventListener('resize', function() {
+        if (!document.getElementById('tab-three').classList.contains('active')) return;
+        var w2 = container.clientWidth, h2 = container.clientHeight;
+        threeCamera.aspect = w2 / h2;
+        threeCamera.updateProjectionMatrix();
+        threeRenderer.setSize(w2, h2);
+      });
+
+      animate3D();
+    }
+
+    // Minimal orbit controls
+    var orbitState = { isDragging: false, prevX: 0, prevY: 0, theta: 0.6, phi: 1.0, dist: 45, target: new THREE.Vector3(0,0,0) };
+
+    function setupOrbitControls(el) {
+      el.addEventListener('mousedown', function(e) {
+        orbitState.isDragging = true;
+        orbitState.prevX = e.clientX;
+        orbitState.prevY = e.clientY;
+      });
+      el.addEventListener('mousemove', function(e) {
+        if (!orbitState.isDragging) return;
+        var dx = e.clientX - orbitState.prevX;
+        var dy = e.clientY - orbitState.prevY;
+        orbitState.theta -= dx * 0.005;
+        orbitState.phi = Math.max(0.1, Math.min(Math.PI - 0.1, orbitState.phi - dy * 0.005));
+        orbitState.prevX = e.clientX;
+        orbitState.prevY = e.clientY;
+      });
+      el.addEventListener('mouseup', function() { orbitState.isDragging = false; });
+      el.addEventListener('mouseleave', function() { orbitState.isDragging = false; });
+      el.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        orbitState.dist = Math.max(10, Math.min(120, orbitState.dist + e.deltaY * 0.05));
+      }, { passive: false });
+    }
+
+    function updateCameraOrbit() {
+      threeCamera.position.x = orbitState.target.x + orbitState.dist * Math.sin(orbitState.phi) * Math.cos(orbitState.theta);
+      threeCamera.position.y = orbitState.target.y + orbitState.dist * Math.cos(orbitState.phi);
+      threeCamera.position.z = orbitState.target.z + orbitState.dist * Math.sin(orbitState.phi) * Math.sin(orbitState.theta);
+      threeCamera.lookAt(orbitState.target);
+    }
+
+    function build3DScene() {
+      var features = getFilteredFeatures();
+
+      var depCount = {};
+      features.forEach(function(f) {
+        if (!depCount[f.id]) depCount[f.id] = 0;
+        (f.dependencies || []).forEach(function(d) {
+          if (depCount[d] !== undefined) depCount[d] = depCount[d] + 1;
+        });
+      });
+
+      var depthCache = {};
+      function getDepth(f) {
+        if (depthCache[f.id] !== undefined) return depthCache[f.id];
+        if (!f.dependencies || !f.dependencies.length) { depthCache[f.id] = 0; return 0; }
+        var maxD = 0;
+        f.dependencies.forEach(function(d) {
+          var df = features.find(function(x) { return x.id === d; });
+          if (df) maxD = Math.max(maxD, getDepth(df) + 1);
+        });
+        depthCache[f.id] = maxD;
+        return maxD;
+      }
+      features.forEach(function(f) { getDepth(f); });
+
+      var depthGroups = {};
+      features.forEach(function(f) {
+        var d = depthCache[f.id] || 0;
+        if (!depthGroups[d]) depthGroups[d] = [];
+        depthGroups[d].push(f);
+      });
+
+      var maxDepth = Math.max.apply(null, Object.keys(depthGroups).map(Number).length ? Object.keys(depthGroups).map(Number) : [0]);
+      var minSphereR = 0.6;
+      var ringGap = 5;
+      var minAngularGap = 0.35;
+
+      var positions = {};
+
+      Object.keys(depthGroups).sort(function(a, b) { return Number(a) - Number(b); }).forEach(function(d) {
+        var group = depthGroups[d];
+        var ringRadius = (maxDepth - Number(d) + 1) * ringGap;
+        var n = group.length;
+
+        var radii = group.map(function(f) {
+          var rc = depCount[f.id] || 0;
+          return minSphereR + rc * 0.28;
+        });
+
+        var totalArc = 0;
+        var arcs = radii.map(function(r) {
+          var arc = Math.max(minAngularGap, 2 * Math.asin(r / Math.max(ringRadius, 1)));
+          totalArc += arc;
+          return arc;
+        });
+
+        var availableAngle = Math.PI * 2;
+        var gapAngle = n > 1 ? Math.max(0.2, (availableAngle - totalArc) / n) : 0;
+        var startAngle = (Number(d) * 0.7) % (Math.PI * 2);
+
+        var currentAngle = startAngle;
+        group.forEach(function(f, i) {
+          var rc = depCount[f.id] || 0;
+          var sphereR = minSphereR + rc * 0.28;
+          var x = ringRadius * Math.cos(currentAngle);
+          var z = ringRadius * Math.sin(currentAngle);
+          var y = (Number(d) - maxDepth / 2) * 3.0;
+          positions[f.id] = { x: x, y: y, z: z, r: sphereR };
+          currentAngle += arcs[i] + gapAngle;
+        });
+      });
+
+      // Determine related IDs if focused
+      var relatedIds = focusedFeatureId ? getRelatedIds(focusedFeatureId) : null;
+
+      // Create spheres and labels
+      features.forEach(function(f) {
+        var pos = positions[f.id];
+        if (!pos) return;
+
+        var isHidden = relatedIds && relatedIds.indexOf(f.id) < 0;
+
+        var color = STATUS_COLORS[f.status] || 0x94a3b8;
+        var geo = new THREE.SphereGeometry(pos.r, 24, 24);
+        var mat = new THREE.MeshPhongMaterial({
+          color: color,
+          emissive: color,
+          emissiveIntensity: 0.15,
+          shininess: 80,
+          transparent: true,
+          opacity: isHidden ? 0.05 : 0.92
+        });
+        var mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(pos.x, pos.y, pos.z);
+        mesh.userData = { feature: f, baseColor: color, radius: pos.r, reverseDeps: depCount[f.id] || 0 };
+        threeScene.add(mesh);
+        sphereMap[f.id] = mesh;
+
+        // Text label
+        var labelBg = threeTheme === 'dark' ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.8)';
+        var labelColor = THEME[threeTheme].labelColor;
+        var labelTex = createTextTexture(String(f.id), labelColor, labelBg);
+        var spriteMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true, depthTest: false });
+        var sprite = new THREE.Sprite(spriteMat);
+        var labelScale = pos.r * 1.4;
+        sprite.scale.set(labelScale, labelScale, 1);
+        sprite.position.set(pos.x, pos.y + pos.r + 0.6, pos.z);
+        sprite.userData = { featureId: f.id };
+        if (isHidden) sprite.material.opacity = 0.05;
+        threeScene.add(sprite);
+        labelSprites.push(sprite);
+        labelSpriteMap[f.id] = sprite;
+
+        // Glow ring
+        if ((depCount[f.id] || 0) > 0 && !isHidden) {
+          var ringGeo = new THREE.RingGeometry(pos.r + 0.15, pos.r + 0.3, 32);
+          var ringMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+          var ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.position.copy(mesh.position);
+          ring.lookAt(threeCamera.position);
+          ring.userData.isRing = true;
+          threeScene.add(ring);
+        }
+      });
+
+      // Cables (curved)
+      features.forEach(function(f) {
+        (f.dependencies || []).forEach(function(d) {
+          var from = sphereMap[d];
+          var to = sphereMap[f.id];
+          if (!from || !to) return;
+
+          var mid = new THREE.Vector3().addVectors(from.position, to.position).multiplyScalar(0.5);
+          var dir = new THREE.Vector3().subVectors(to.position, from.position);
+          var perp = new THREE.Vector3(-dir.z, dir.y * 0.3, dir.x).normalize().multiplyScalar(dir.length() * 0.12);
+          mid.add(perp);
+
+          var curve = new THREE.CatmullRomCurve3([
+            from.position.clone(),
+            mid,
+            to.position.clone()
+          ]);
+          var points = curve.getPoints(32);
+          var geo2 = new THREE.BufferGeometry().setFromPoints(points);
+
+          var isDepDone = from.userData.feature.status === 'done' && to.userData.feature.status === 'done';
+          var cableColor = isDepDone ? 0x22c55e : (from.userData.feature.status === 'done' ? 0xf59e0b : 0x475569);
+          var isCableHidden = relatedIds && (relatedIds.indexOf(d) < 0 || relatedIds.indexOf(f.id) < 0);
+          var mat2 = new THREE.LineBasicMaterial({ color: cableColor, transparent: true, opacity: isCableHidden ? 0.02 : 0.5, linewidth: 1 });
+          var line = new THREE.Line(geo2, mat2);
+          line.userData = { fromId: d, toId: f.id, baseColor: cableColor, fromFeature: from.userData.feature, toFeature: to.userData.feature };
+          threeScene.add(line);
+          cableLines.push(line);
+        });
+      });
+
+      // Center camera on focused feature
+      if (focusedFeatureId && positions[focusedFeatureId]) {
+        var pos = positions[focusedFeatureId];
+        orbitState.target.set(pos.x, pos.y, pos.z);
+        orbitState.dist = 20;
+      }
+    }
+
+    function on3DMouseMove(e) {
+      var container = document.getElementById('three-container');
+      var rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, threeCamera);
+      var meshes = Object.values(sphereMap);
+      var intersects = raycaster.intersectObjects(meshes);
+
+      var hoverCard = document.getElementById('three-hover-card');
+      var tooltip = document.getElementById('three-tooltip');
+
+      if (hoveredObj && (!intersects.length || intersects[0].object !== hoveredObj)) {
+        hoveredObj.material.emissiveIntensity = 0.15;
+        hoveredObj = null;
+        tooltip.style.display = 'none';
+      }
+
+      if (intersects.length > 0 && !orbitState.isDragging) {
+        var obj = intersects[0].object;
+        hoveredObj = obj;
+        obj.material.emissiveIntensity = 0.5;
+
+        var f = obj.userData.feature;
+        tooltip.innerHTML = '<b>' + f.name + '</b> — ' + (f.title || f.description || '');
+        tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+        tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+        tooltip.style.display = 'block';
+
+        hoverCard.innerHTML =
+          '<div style="font-weight:600;color:#0f172a;">' + f.name + '</div>' +
+          '<div style="color:#64748b;font-size:12px;margin-top:2px;">' + (f.title || f.description || '') + '</div>' +
+          '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;">' +
+            '<span class="badge badge-' + f.status + '">' + SL[f.status] + '</span>' +
+            '<span class="badge badge-' + f.module + '">' + f.module + '</span>' +
+            (obj.userData.reverseDeps > 0 ? '<span style="font-size:11px;color:#64748b;">' + obj.userData.reverseDeps + ' deps</span>' : '') +
+          '</div>';
+        hoverCard.style.display = 'block';
+        hoverCard.style.left = (e.clientX - rect.left + 20) + 'px';
+        hoverCard.style.top = (e.clientY - rect.top + 40) + 'px';
+        container.style.cursor = 'pointer';
+      } else if (!intersects.length) {
+        hoverCard.style.display = 'none';
+        container.style.cursor = 'grab';
+      }
+    }
+
+    function on3DClick(e) {
+      raycaster.setFromCamera(mouse, threeCamera);
+      var intersects = raycaster.intersectObjects(Object.values(sphereMap));
+      if (intersects.length > 0) {
+        var f = intersects[0].object.userData.feature;
+        navigator.clipboard.writeText(f.name).then(function() {
+          showToast('Copiado: ' + f.name);
+        });
+      }
+    }
+
+    function on3DDblClick(e) {
+      raycaster.setFromCamera(mouse, threeCamera);
+      var intersects = raycaster.intersectObjects(Object.values(sphereMap));
+      if (intersects.length > 0) {
+        var f = intersects[0].object.userData.feature;
+        // Toggle focus: if already focused on this feature, unfocus
+        if (focusedFeatureId === f.id) {
+          focusedFeatureId = null;
+          clear3DScene();
+          build3DScene();
+          return;
+        }
+        focusedFeatureId = f.id;
+        clear3DScene();
+        build3DScene();
+        showFeatureModal(f.id);
+      }
+    }
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      if (document.getElementById('tab-three').classList.contains('active')) {
+        updateCameraOrbit();
+        threeScene.children.forEach(function(child) {
+          if (child.userData && child.userData.isRing) {
+            child.lookAt(threeCamera.position);
+          }
+        });
+        threeRenderer.render(threeScene, threeCamera);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "project": "mi-proyecto",
+  "description": "=== PLANTILLA DE EJEMPLO === Reemplaza todo el contenido de este archivo con las features reales de tu proyecto, o ejecuta la skill `requirements-analysis` para generarlo desde la documentación del proyecto. Las features incluidas abajo son solo ilustrativas del formato esperado.",
+  "version": "1.0.0",
+  "rules": {
+    "one_feature_at_a_time": true,
+    "require_tests_to_close": true,
+    "require_approved_spec_to_implement": false,
+    "valid_status": [
+      "pending",
+      "in_progress",
+      "done",
+      "blocked"
+    ],
+    "update_on_completion": true
+  },
+  "features": [
+    {
+      "id": 1,
+      "name": "example_feature",
+      "title": "[EJEMPLO] Feature de ejemplo",
+      "type": "feature",
+      "description": "EJEMPLO — Reemplazar con features reales de negocio. Describe el comportamiento que se espera implementar, no la infraestructura.",
+      "module": "backend",
+      "priority": "alta",
+      "status": "pending",
+      "acceptance": [
+        "Criterio de aceptación 1 verificable",
+        "Criterio de aceptación 2 verificable",
+        "Los tests unitarios pasan"
+      ],
+      "documentation": [
+        "project-docs/README.md"
+      ],
+      "dependencies": [],
+      "estimatedComplexity": "medium"
+    }
+  ],
+  "metadata": {
+    "total_features": 1,
+    "pending_count": 1,
+    "in_progress_count": 0,
+    "done_count": 0,
+    "blocked_count": 0,
+    "last_updated": "",
+    "updated_by": "",
+    "note": "Actualizar estos contadores al modificar features"
+  }
+}
