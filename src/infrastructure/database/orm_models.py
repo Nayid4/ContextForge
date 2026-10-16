@@ -16,6 +16,8 @@ from infrastructure.persistence.models import (
     RatingORM,
     SettingsModel,
     LLMConfigORM,
+    ModuleORM,
+    TagORM,
     ThreadORM,
     TimestampedModel,
 )
@@ -36,4 +38,6 @@ __all__ = [
     "ChatMessageORM",
     "SettingsModel",
     "LLMConfigORM",
+    "ModuleORM",
+    "TagORM",
 ]

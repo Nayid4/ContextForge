@@ -5,7 +5,7 @@ project_slug: "iuristrack"
 author: "Tech Lead"
 tags: [adr, arquitectura, decision]
 status: "Propuesto"
-date: "2026-10-14"
+date: "2026-10-16"
 ---
 
 # ADR: Adopción de Arquitectura Hexagonal

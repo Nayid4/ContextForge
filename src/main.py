@@ -28,6 +28,8 @@ from presentation.api.v1.search_api import router as search_api_router
 from presentation.api.v1.settings_api import router as settings_api_router
 from presentation.api.v1.llm_settings_api import router as llm_settings_api_router
 from presentation.api.v1.social_router import router as social_router
+from presentation.api.v1.taxonomy_api import router as taxonomy_api_router
+from presentation.api.v1.integrations_api import router as integrations_api_router
 from presentation.frontend.web_router import web_router
 from infrastructure.services.fs_watcher import BackgroundDocsWatcher
 
@@ -119,8 +121,15 @@ def create_app() -> FastAPI:
     app.include_router(rag_api_router, prefix="/api/v1")
     app.include_router(bundles_api_router, prefix="/api/v1")
     app.include_router(search_api_router, prefix="/api/v1")
+    app.include_router(taxonomy_api_router, prefix="/api/v1")
+    app.include_router(integrations_api_router)
 
-    # 6. Mount Screaming Frontend Routes
+    # 6. Mount Universal MCP Server (SSE & JSON-RPC for Cursor, Claude Code, Antigravity)
+    from presentation.mcp.server import mcp_server
+
+    app.mount("/mcp", mcp_server.sse_app())
+
+    # 7. Mount Screaming Frontend Routes
     app.include_router(web_router)
 
 

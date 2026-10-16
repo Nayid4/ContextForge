@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
-from fastapi import APIRouter, Cookie, Depends, Form, Header, Request, status
+import math
+from fastapi import APIRouter, Cookie, Depends, Form, Header, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from core.domain.project import IProjectRepository, Project
@@ -25,17 +26,20 @@ router = APIRouter(tags=["Frontend: Projects"])
 @router.get("/projects", response_class=HTMLResponse)
 async def list_projects_view(
     request: Request,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(6, ge=1, le=100),
+    q: str | None = Query(None),
     project_repo: IProjectRepository = Depends(get_project_repo),
     doc_repo: IDocumentRepository = Depends(get_doc_repo),
     cf_active_project: str | None = Cookie(default=None),
 ) -> HTMLResponse:
-    """Projects management dashboard showing all registered multi-project repositories."""
-    projects = await project_repo.list_all()
+    """Projects management dashboard showing all registered multi-project repositories with pagination and debounced search."""
+    all_projects = await project_repo.list_all()
     active_slug = cf_active_project or "default"
 
-    # Gather stats for each project
+    # Gather stats and build cards
     project_cards: list[dict[str, Any]] = []
-    for p in projects:
+    for p in all_projects:
         docs = await doc_repo.list_all(project_slug=p.slug.value)
         modules = sorted(list({d.module for d in docs if d.module}))
         project_cards.append({
@@ -45,11 +49,37 @@ async def list_projects_view(
             "is_current": (p.slug.value == active_slug or (p.is_active and not cf_active_project)),
         })
 
+    # Filter by search keyword
+    filtered_cards = project_cards
+    if q and q.strip():
+        term = q.strip().lower()
+        filtered_cards = [
+            c for c in project_cards
+            if term in c["entity"].name.lower()
+            or term in c["entity"].slug.value.lower()
+            or (c["entity"].description and term in c["entity"].description.lower())
+            or any(term in m.lower() for m in c["modules"])
+        ]
+
+    total_projects = len(filtered_cards)
+    safe_per_page = max(1, per_page)
+    total_pages = max(1, math.ceil(total_projects / safe_per_page))
+    safe_page = min(max(1, page), total_pages) if total_projects > 0 else 1
+    start = (safe_page - 1) * safe_per_page
+    paged_projects = filtered_cards[start : start + safe_per_page]
+
     return templates.TemplateResponse(
         request=request,
         name="modules/projects/views/projects_list.html",
         context={
-            "projects": project_cards,
+            "projects": paged_projects,
+            "total_projects": total_projects,
+            "current_page": safe_page,
+            "per_page": safe_per_page,
+            "total_pages": total_pages,
+            "has_prev": safe_page > 1,
+            "has_next": safe_page < total_pages,
+            "search_query": q or "",
             "active_slug": active_slug,
         },
     )

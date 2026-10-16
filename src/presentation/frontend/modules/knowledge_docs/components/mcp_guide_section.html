@@ -1,0 +1,226 @@
+{# Reusable MCP & CLI Agents Integration Guide Section #}
+<div class="space-y-6">
+
+  <!-- MCP Protocol Overview & Tools Table -->
+  <div class="rounded-2xl border border-indigo-500/30 bg-slate-900/70 p-6 backdrop-blur space-y-5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div class="flex items-center space-x-3">
+        <span class="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+          <i class="fa-solid fa-Plug-circle-bolt text-lg"></i>
+        </span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-lg font-bold text-white">Servidor MCP Oficial (Model Context Protocol)</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">SSE & STDIO</span>
+          </div>
+          <p class="text-xs text-slate-400">Conecta Cursor, Claude Code CLI, Antigravity y OpenAI/Codex directamente al conocimiento vivo del proyecto</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-mono">
+        <span class="px-3 py-1.5 rounded-xl bg-[#0c0e14] border border-[#232738] text-emerald-300">
+          SSE: http://localhost:8000/mcp/sse
+        </span>
+      </div>
+    </div>
+
+    <!-- Exposed MCP Tools Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+        <div class="flex items-center justify-between">
+          <code class="text-xs font-bold text-indigo-400">search_project_context</code>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300">MCP Tool</span>
+        </div>
+        <p class="text-xs text-slate-400">Busca semántica (ChromaDB) y léxicamente (BM25) en toda la documentación Markdown y anexos del proyecto.</p>
+        <p class="text-[10px] font-mono text-zinc-500">Args: query, project_slug="default", top_k=5</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+        <div class="flex items-center justify-between">
+          <code class="text-xs font-bold text-emerald-400">get_document_full</code>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300">MCP Tool</span>
+        </div>
+        <p class="text-xs text-slate-400">Recupera el contenido íntegro de un archivo Markdown específico (ej. ADRs, contratos API o reglas).</p>
+        <p class="text-[10px] font-mono text-zinc-500">Args: doc_path, project_slug="default"</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+        <div class="flex items-center justify-between">
+          <code class="text-xs font-bold text-amber-400">list_project_structure</code>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300">MCP Tool</span>
+        </div>
+        <p class="text-xs text-slate-400">Lista el árbol jerárquico completo de módulos, documentos y activos disponibles en el proyecto.</p>
+        <p class="text-[10px] font-mono text-zinc-500">Args: project_slug="default"</p>
+      </div>
+    </div>
+
+    <!-- Step-by-Step Tabs for Cursor, Claude Code, Antigravity & LM Studio -->
+    <div class="space-y-4 pt-2">
+      <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+        <button 
+          type="button" 
+          @click="activeAgentTab = 'cursor'"
+          :class="activeAgentTab === 'cursor' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
+        >
+          <i class="fa-solid fa-terminal"></i>
+          <span>1. Cursor IDE (MCP)</span>
+        </button>
+
+        <button 
+          type="button" 
+          @click="activeAgentTab = 'claude'"
+          :class="activeAgentTab === 'claude' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
+        >
+          <span>🎭</span>
+          <span>2. Claude Code CLI</span>
+        </button>
+
+        <button 
+          type="button" 
+          @click="activeAgentTab = 'antigravity'"
+          :class="activeAgentTab === 'antigravity' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
+        >
+          <span>🚀</span>
+          <span>3. Antigravity & OpenAI CLI</span>
+        </button>
+
+        <button 
+          type="button" 
+          @click="activeAgentTab = 'lmstudio'"
+          :class="activeAgentTab === 'lmstudio' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
+        >
+          <span>🖥️</span>
+          <span>4. LM Studio / LocalAI</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: CURSOR IDE -->
+      <div x-show="activeAgentTab === 'cursor'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2 relative">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-300">Opción A: Vía Red SSE (Recomendado con FastAPI activo)</span>
+            <button type="button" @click="copySnippet('cursor_sse')" class="text-[11px] text-zinc-400 hover:text-white font-mono">
+              <i class="fa-regular fa-copy"></i> Copiar
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">Crea el archivo <code class="text-emerald-300">.cursor/mcp.json</code> en la raíz de tu proyecto o en <em>Cursor Settings → MCP</em>:</p>
+<pre class="text-[11px] font-mono text-indigo-200 overflow-x-auto pt-1"><code>{
+  "mcpServers": {
+    "contextforge-docs": {
+      "url": "http://localhost:8000/mcp/sse"
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2 relative">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-300">Opción B: Vía Proceso Local STDIO (`run_mcp.py`)</span>
+            <button type="button" @click="copySnippet('cursor_stdio')" class="text-[11px] text-zinc-400 hover:text-white font-mono">
+              <i class="fa-regular fa-copy"></i> Copiar
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">Cursor levantará automáticamente el servidor MCP bajo demanda sin abrir puertos HTTP:</p>
+<pre class="text-[11px] font-mono text-emerald-200 overflow-x-auto pt-1"><code>{
+  "mcpServers": {
+    "contextforge-local": {
+      "command": "python",
+      "args": ["run_mcp.py"]
+    }
+  }
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- TAB 2: CLAUDE CODE CLI -->
+      <div x-show="activeAgentTab === 'claude'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2 relative">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-300">1. Conectar Claude Code al Servidor MCP de ContextForge</span>
+            <button type="button" @click="copySnippet('claude_mcp')" class="text-[11px] text-zinc-400 hover:text-white font-mono">
+              <i class="fa-regular fa-copy"></i> Copiar
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">Ejecuta en tu terminal para registrar las herramientas de búsqueda documental en Claude Code:</p>
+<pre class="text-[11px] font-mono text-emerald-300 overflow-x-auto pt-1"><code># Conexión vía SSE (con FastAPI corriendo en puerto 8000)
+claude mcp add --transport sse contextforge http://localhost:8000/mcp/sse
+
+# O conexión vía STDIO directo:
+claude mcp add contextforge -- python run_mcp.py</code></pre>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+          <span class="text-xs font-bold text-amber-300">2. Usar Claude Code como Motor de Chat dentro de ContextForge</span>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            En <a href="/settings" class="text-indigo-400 underline hover:text-indigo-300">Configuración → Agentes CLI Locales</a>, selecciona <strong>Claude Code CLI</strong>:
+          </p>
+          <ul class="text-[11px] text-slate-300 space-y-1 font-mono list-disc list-inside">
+            <li>Binario: <code class="text-emerald-300">claude</code></li>
+            <li>Args: <code class="text-indigo-300">-p {prompt} --output-format text</code></li>
+            <li>Además puedes generar <code class="text-amber-300">CLAUDE.md</code> desde <a href="/bundles" class="text-indigo-400 underline">Context Bundler</a>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- TAB 3: ANTIGRAVITY & OPENAI/CODEX CLI -->
+      <div x-show="activeAgentTab === 'antigravity'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2 relative">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-300">1. Conectar Antigravity al Servidor MCP</span>
+            <button type="button" @click="copySnippet('antigravity_mcp')" class="text-[11px] text-zinc-400 hover:text-white font-mono">
+              <i class="fa-regular fa-copy"></i> Copiar
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">Agrega el servidor MCP en la configuración de Antigravity (<code class="text-emerald-300">.antigravity/mcp.json</code>) y genera <code class="text-amber-300">AGENTS.md</code> en la raíz:</p>
+<pre class="text-[11px] font-mono text-indigo-200 overflow-x-auto pt-1"><code>{
+  "mcpServers": {
+    "contextforge": {
+      "command": "python",
+      "args": ["run_mcp.py"]
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+          <span class="text-xs font-bold text-emerald-300">2. Usar Antigravity CLI, Codex CLI o Aider como Motor de Inferencia</span>
+          <p class="text-[11px] text-slate-400">
+            Desde <a href="/settings" class="text-indigo-400 underline">Configuración</a> pulsa <strong>Auto-Detectar CLIs en PATH</strong> para habilitar:
+          </p>
+          <ul class="text-[11px] text-slate-300 space-y-1 font-mono list-disc list-inside">
+            <li><strong>Antigravity CLI:</strong> <code class="text-emerald-300">antigravity chat --message {prompt}</code></li>
+            <li><strong>OpenAI / Codex CLI:</strong> <code class="text-emerald-300">openai api chat.completions.create -m {model} -g user {prompt}</code></li>
+            <li><strong>Aider CLI:</strong> <code class="text-emerald-300">aider --message {prompt} --yes</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- TAB 4: LM STUDIO & LOCALAI -->
+      <div x-show="activeAgentTab === 'lmstudio'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+          <span class="text-xs font-bold text-amber-300">LM Studio (Servidor Local OpenAI-Compatible)</span>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            1. Abre <strong>LM Studio</strong> → pestaña <em>Developer / Local Server</em> e inicia el servidor en el puerto <code class="text-emerald-300">1234</code>.<br>
+            2. En <a href="/settings" class="text-indigo-400 underline">Configuración → Servidores Locales HTTP</a> selecciona <strong>LM Studio (Local Server)</strong>.<br>
+            3. URL Base: <code class="text-indigo-300">http://localhost:1234/v1</code> (No requiere API Key).
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[#0c0e14] border border-[#232738] space-y-2">
+          <span class="text-xs font-bold text-sky-300">LocalAI / vLLM</span>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            1. Levanta tu contenedor LocalAI o vLLM en <code class="text-emerald-300">http://localhost:8080/v1</code>.<br>
+            2. Selecciona <strong>LocalAI / vLLM</strong> en Configuración y pulsa <em>Probar Conexión & Latencia</em>.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+

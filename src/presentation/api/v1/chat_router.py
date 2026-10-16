@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger("presentation.api.chat_router")
 
 from application.chat.commands.send_scoped_message import (
     SendScopedMessageCommand,
@@ -116,3 +119,50 @@ async def get_session_history(
         "messages": res.messages,
         "count": res.count,
     }
+
+
+class AskProjectPayload(BaseModel):
+    project_slug: str = Field(default="default", description="Target project slug")
+    question: str = Field(..., description="Question across the project knowledge base")
+    provider_override: str = Field(default="", description="Optional provider override")
+    top_k: int = Field(default=6, ge=1, le=20)
+
+
+@router.post("/project", summary="Ask a question across the entire project using any Universal AI Engine")
+async def ask_project_context_endpoint(
+    payload: AskProjectPayload,
+) -> dict[str, Any]:
+    from application.chat.commands.ask_project_context import (
+        AskProjectContextCommand,
+        AskProjectContextCommandHandler,
+    )
+    from presentation.api.dependencies import (
+        get_hybrid_searcher,
+        get_llm_config_repo,
+        get_session_factory,
+    )
+
+    session_factory = get_session_factory()
+    searcher = get_hybrid_searcher()
+    async with session_factory() as session:
+        llm_repo = get_llm_config_repo(session)
+        handler = AskProjectContextCommandHandler(
+            config_repo=llm_repo,
+            hybrid_searcher=searcher,
+        )
+        try:
+            res = await handler.handle(
+                AskProjectContextCommand(
+                    project_slug=payload.project_slug,
+                    user_query=payload.question,
+                    provider_override=payload.provider_override,
+                )
+            )
+            return res.to_dict()
+        except Exception as e:
+            logger.error("Error in ask_project_context_endpoint: %s", e, exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Error al procesar consulta con el motor de IA: {str(e)}",
+            )
+

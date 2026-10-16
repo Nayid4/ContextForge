@@ -1,0 +1,128 @@
+{# Reusable Local CLI Agent Rules Synchronization Panel for Context Bundler #}
+<div class="rounded-2xl border border-indigo-500/30 bg-slate-900/70 p-6 space-y-4 shadow-lg" x-data="agentRulesSyncApp('{{ active_project }}')">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div class="flex items-center space-x-3">
+      <span class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+        <i class="fa-solid fa-terminal text-lg"></i>
+      </span>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-white">Sincronización Directa con Agentes CLI Locales</h2>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            CLAUDE.md • .cursorrules • AGENTS.md
+          </span>
+        </div>
+        <p class="text-xs text-slate-400">
+          Genera y escribe automáticamente los archivos maestros de contexto en la raíz del workspace para que Claude Code, Cursor y Antigravity conozcan tu arquitectura al instante.
+        </p>
+      </div>
+    </div>
+
+    <button 
+      type="button"
+      @click="syncAgentRules()"
+      :disabled="syncing"
+      class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/25 transition flex items-center gap-2 cursor-pointer shrink-0"
+    >
+      <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': syncing }"></i>
+      <span x-text="syncing ? 'Sincronizando...' : 'Sincronizar CLAUDE.md, .cursorrules & AGENTS.md'"></span>
+    </button>
+  </div>
+
+  <!-- Target Checkboxes -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <label class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/60 cursor-pointer hover:border-indigo-500/40 transition">
+      <div class="flex items-center space-x-2.5">
+        <input type="checkbox" value="CLAUDE.md" x-model="targets" class="rounded bg-slate-800 border-slate-700 text-indigo-600">
+        <div>
+          <span class="text-xs font-bold text-white font-mono">CLAUDE.md</span>
+          <p class="text-[10px] text-slate-400">Para Claude Code CLI</p>
+        </div>
+      </div>
+      <span class="text-base">🎭</span>
+    </label>
+
+    <label class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/60 cursor-pointer hover:border-indigo-500/40 transition">
+      <div class="flex items-center space-x-2.5">
+        <input type="checkbox" value=".cursorrules" x-model="targets" class="rounded bg-slate-800 border-slate-700 text-indigo-600">
+        <div>
+          <span class="text-xs font-bold text-white font-mono">.cursorrules</span>
+          <p class="text-[10px] text-slate-400">Para Cursor IDE</p>
+        </div>
+      </div>
+      <span class="text-base">⚡</span>
+    </label>
+
+    <label class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/60 cursor-pointer hover:border-indigo-500/40 transition">
+      <div class="flex items-center space-x-2.5">
+        <input type="checkbox" value="AGENTS.md" x-model="targets" class="rounded bg-slate-800 border-slate-700 text-indigo-600">
+        <div>
+          <span class="text-xs font-bold text-white font-mono">AGENTS.md</span>
+          <p class="text-[10px] text-slate-400">Para Antigravity / Open Code / Codex</p>
+        </div>
+      </div>
+      <span class="text-base">🚀</span>
+    </label>
+  </div>
+
+  <!-- Generated Files Result List -->
+  <template x-if="generatedFiles.length > 0">
+    <div class="pt-3 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <template x-for="f in generatedFiles" :key="f.filename">
+        <div class="p-3 rounded-xl bg-[#0c0e14] border border-emerald-500/30 flex items-center justify-between text-xs">
+          <div class="min-w-0">
+            <div class="font-mono font-bold text-emerald-300 truncate" x-text="f.filename"></div>
+            <div class="text-[10px] text-zinc-400 font-mono" x-text="`~${f.token_estimate} tokens`"></div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono">Sincronizado ✓</span>
+        </div>
+      </template>
+    </div>
+  </template>
+</div>
+
+<script>
+function agentRulesSyncApp(projectSlug) {
+  return {
+    projectSlug: projectSlug || 'default',
+    targets: ['CLAUDE.md', '.cursorrules', 'AGENTS.md'],
+    syncing: false,
+    generatedFiles: [],
+    async syncAgentRules() {
+      if (!this.targets.length) {
+        window.$toast.warning('Selecciona al menos un archivo de destino (CLAUDE.md, .cursorrules o AGENTS.md).');
+        return;
+      }
+      this.syncing = true;
+      try {
+        const checkedModules = Array.from(document.querySelectorAll('.module-checkbox:checked')).map(cb => cb.value);
+        const res = await fetch('/api/v1/bundles/export-agent-rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project_slug: this.projectSlug,
+            targets: this.targets,
+            selected_modules: checkedModules,
+            write_to_project_root: true
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.files) {
+          this.generatedFiles = data.files;
+          window.$toast.success(
+            `Archivos generados: ${data.files.map(f => f.filename).join(', ')} (${data.total_documents_included} docs)`,
+            'Agentes Locales Sincronizados'
+          );
+        } else {
+          window.$toast.error(data.detail || 'Error al sincronizar archivos de agentes.');
+        }
+      } catch (err) {
+        window.$toast.error('Error de red al exportar reglas de agentes: ' + err.message);
+      } finally {
+        this.syncing = false;
+      }
+    }
+  };
+}
+</script>
+

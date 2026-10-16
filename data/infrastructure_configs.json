@@ -1,0 +1,138 @@
+{
+  "databases": {
+    "sqlite": {
+      "name": "SQLite Local Soberano (Por Defecto)",
+      "engine_category": "relational_sql",
+      "connection_url": "sqlite+aiosqlite:///./data/contextforge.db",
+      "host": "localhost",
+      "port": 0,
+      "database_name": "contextforge.db",
+      "username": "",
+      "password": "",
+      "api_key": "",
+      "project_id": "",
+      "ssl_enabled": false,
+      "is_active": true
+    },
+    "postgresql": {
+      "name": "PostgreSQL (Local o Remoto)",
+      "engine_category": "relational_sql",
+      "connection_url": "",
+      "host": "localhost",
+      "port": 5432,
+      "database_name": "contextforge",
+      "username": "postgres",
+      "password": "",
+      "api_key": "",
+      "project_id": "",
+      "ssl_enabled": false,
+      "is_active": false
+    },
+    "supabase": {
+      "name": "Supabase (PostgreSQL + BaaS)",
+      "engine_category": "relational_sql",
+      "connection_url": "",
+      "host": "aws-0-us-east-1.pooler.supabase.com",
+      "port": 6543,
+      "database_name": "postgres",
+      "username": "postgres.tu_project_ref",
+      "password": "",
+      "api_key": "",
+      "project_id": "",
+      "ssl_enabled": true,
+      "is_active": false
+    },
+    "sqlserver": {
+      "name": "Microsoft SQL Server / Azure SQL",
+      "engine_category": "relational_sql",
+      "connection_url": "",
+      "host": "localhost",
+      "port": 1433,
+      "database_name": "contextforge",
+      "username": "sa",
+      "password": "",
+      "api_key": "",
+      "project_id": "",
+      "ssl_enabled": true,
+      "is_active": false
+    },
+    "mongodb": {
+      "name": "MongoDB (Local o MongoDB Atlas NoSQL)",
+      "engine_category": "nosql_document",
+      "connection_url": "mongodb://localhost:27017/contextforge",
+      "host": "localhost",
+      "port": 27017,
+      "database_name": "contextforge",
+      "username": "",
+      "password": "",
+      "api_key": "",
+      "project_id": "",
+      "ssl_enabled": false,
+      "is_active": false
+    },
+    "firebase": {
+      "name": "Google Firebase Cloud Firestore (NoSQL)",
+      "engine_category": "nosql_document",
+      "connection_url": "",
+      "host": "firestore.googleapis.com",
+      "port": 443,
+      "database_name": "(default)",
+      "username": "",
+      "password": "",
+      "api_key": "",
+      "project_id": "",
+      "ssl_enabled": true,
+      "is_active": false
+    }
+  },
+  "storages": {
+    "local_fs": {
+      "name": "Sistema de Archivos Local (./docs)",
+      "base_path": "./docs",
+      "endpoint_url": "",
+      "bucket_name": "docs",
+      "region": "local",
+      "access_key": "",
+      "secret_key": "",
+      "project_id": "",
+      "sync_local_mirror": true,
+      "is_active": true
+    },
+    "supabase_storage": {
+      "name": "Supabase Storage Bucket",
+      "base_path": "./docs",
+      "endpoint_url": "https://tu-proyecto.supabase.co",
+      "bucket_name": "contextforge-docs",
+      "region": "us-east-1",
+      "access_key": "",
+      "secret_key": "",
+      "project_id": "",
+      "sync_local_mirror": true,
+      "is_active": false
+    },
+    "s3": {
+      "name": "AWS S3 / MinIO / Cloudflare R2",
+      "base_path": "./docs",
+      "endpoint_url": "https://s3.us-east-1.amazonaws.com",
+      "bucket_name": "contextforge-knowledge",
+      "region": "us-east-1",
+      "access_key": "",
+      "secret_key": "",
+      "project_id": "",
+      "sync_local_mirror": true,
+      "is_active": false
+    },
+    "firebase_storage": {
+      "name": "Google Firebase Cloud Storage",
+      "base_path": "./docs",
+      "endpoint_url": "https://firebasestorage.googleapis.com",
+      "bucket_name": "",
+      "region": "us-central1",
+      "access_key": "",
+      "secret_key": "",
+      "project_id": "",
+      "sync_local_mirror": true,
+      "is_active": false
+    }
+  }
+}

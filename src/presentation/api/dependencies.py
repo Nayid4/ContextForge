@@ -52,8 +52,10 @@ from domain.llm.interfaces import ILLMClient
 from domain.llm.repositories import ILLMConfigRepository
 from infrastructure.external.llm.llm_factory import LLMFactory
 from infrastructure.repositories.sql_llm_config_repo import SqlLLMConfigRepository
-from infrastructure.repositories.sql_social_repo import SqlSocialRepository
 from infrastructure.repositories.sql_chat_repo import SqlChatSessionRepository
+from infrastructure.repositories.sql_social_repo import SqlSocialRepository
+from domain.taxonomy.repositories import ITaxonomyRepository
+from infrastructure.repositories.sql_taxonomy_repo import SqlTaxonomyRepository
 
 # Singletons for application lifecycle
 _engine: AsyncEngine = create_engine_instance()
@@ -105,6 +107,10 @@ def get_lexical_repo() -> ILexicalIndexRepository:
 
 def get_llm_config_repo(session: AsyncSession = Depends(get_db_session)) -> ILLMConfigRepository:
     return SqlLLMConfigRepository(session)
+
+
+def get_taxonomy_repo(session: AsyncSession = Depends(get_db_session)) -> ITaxonomyRepository:
+    return SqlTaxonomyRepository(session)
 
 
 async def get_active_llm_client(
@@ -165,8 +171,15 @@ def get_ask_rag_handler(
     searcher: HybridSearchService = Depends(get_hybrid_searcher),
     ollama_client: ILLMClient = Depends(get_active_llm_client),
     settings_repo: ISettingsRepository = Depends(get_settings_repo),
+    llm_repo: ILLMConfigRepository = Depends(get_llm_config_repo),
 ) -> AskRagQueryHandler:
-    return AskRagQueryHandler(searcher, _prompt_builder, ollama_client, settings_repo)
+    return AskRagQueryHandler(
+        search_service=searcher,
+        prompt_builder=_prompt_builder,
+        ollama_client=ollama_client,
+        settings_repo=settings_repo,
+        llm_config_repo=llm_repo,
+    )
 
 
 def get_bundle_handler(
@@ -254,8 +267,21 @@ def get_social_repo(session: AsyncSession = Depends(get_db_session)) -> SqlSocia
     return SqlSocialRepository(session)
 
 
+from domain.infrastructure_config.repositories import IInfrastructureConfigRepository
+from infrastructure.repositories.json_infrastructure_config_repo import (
+    JsonInfrastructureConfigRepository,
+)
+
+_infra_config_repo = JsonInfrastructureConfigRepository()
+
+
 def get_chat_session_repo(session: AsyncSession = Depends(get_db_session)) -> SqlChatSessionRepository:
     return SqlChatSessionRepository(session)
+
+
+def get_infrastructure_config_repo() -> IInfrastructureConfigRepository:
+    return _infra_config_repo
+
 
 
 

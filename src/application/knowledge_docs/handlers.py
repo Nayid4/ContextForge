@@ -7,7 +7,13 @@ from domain.knowledge_docs.repositories import IDocumentRepository
 from domain.rag_engine.repositories import ILexicalIndexRepository, IVectorRepository
 from domain.shared_kernel.exceptions import EntityNotFoundException
 from application.knowledge_docs.commands import CreateDocumentCommand, IngestDocsCommand
-from application.knowledge_docs.queries import GetDocumentDetailQuery, GetDocumentsQuery
+import math
+from application.knowledge_docs.queries import (
+    GetDocumentDetailQuery,
+    GetDocumentsPagedQuery,
+    GetDocumentsQuery,
+    PagedDocumentsResult,
+)
 
 
 class GetDocumentsQueryHandler:
@@ -21,6 +27,26 @@ class GetDocumentsQueryHandler:
             module=query.module,
             search=query.search,
             project_slug=query.project_slug,
+        )
+
+    async def handle_paged(self, query: GetDocumentsPagedQuery) -> PagedDocumentsResult:
+        items, total_count = await self._doc_repo.list_paged(
+            module=query.module,
+            search=query.search,
+            project_slug=query.project_slug,
+            page=query.page,
+            per_page=query.per_page,
+        )
+        safe_per_page = max(1, query.per_page)
+        total_pages = max(1, math.ceil(total_count / safe_per_page))
+        return PagedDocumentsResult(
+            items=items,
+            total_count=total_count,
+            page=query.page,
+            per_page=safe_per_page,
+            total_pages=total_pages,
+            has_prev=query.page > 1,
+            has_next=query.page < total_pages,
         )
 
 

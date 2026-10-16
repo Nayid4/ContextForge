@@ -1,28 +1,190 @@
-<div class="relative flex items-center">
-  <form id="project-switch-form" class="m-0 p-0">
-    <div class="relative flex items-center">
-      <span class="absolute left-2.5 text-slate-400 pointer-events-none text-xs">
-        <i class="fa-solid fa-folder-tree text-indigo-400"></i>
-      </span>
-      <select 
-        name="project_slug"
-        id="global-project-select"
-        class="bg-slate-800/90 hover:bg-slate-800 text-slate-200 text-xs font-medium rounded-lg pl-7 pr-7 py-1.5 border border-slate-700/80 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer transition shadow-sm"
-        hx-post="/ui/projects/switch"
-        hx-trigger="change"
-        hx-swap="none"
-        title="Seleccionar proyecto activo de ingeniería"
-      >
-        {% for p in projects %}
-        <option value="{{ p.slug.value }}" {% if p.slug.value == active_slug %}selected{% endif %}>
-          {{ p.name }} ({{ p.slug.value }})
-        </option>
-        {% endfor %}
-      </select>
-      <span class="absolute right-2.5 text-slate-400 pointer-events-none text-[10px]">
-        <i class="fa-solid fa-chevron-down"></i>
-      </span>
-    </div>
-  </form>
-</div>
+{# Searchable Combobox for Active Library / Project with Debouncing and Keyboard Navigation #}
 
+<!-- Data Payload safely serialized as application/json to avoid HTML attribute quoting issues -->
+<script id="navbar-projects-data" type="application/json">
+[
+  {% for p in projects %}
+  { "slug": {{ p.slug.value | tojson }}, "name": {{ p.name | tojson }} }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
+<script>
+function navbarSelectorComponent(activeSlug) {
+  let projectsList = [];
+  try {
+    const el = document.getElementById('navbar-projects-data');
+    if (el && el.textContent) {
+      projectsList = JSON.parse(el.textContent);
+    }
+  } catch (e) {
+    projectsList = [];
+  }
+  return {
+    open: false,
+    searchQuery: '',
+    projects: projectsList,
+    activeSlug: activeSlug,
+    filteredProjects() {
+      if (!this.searchQuery.trim()) return this.projects;
+      const q = this.searchQuery.toLowerCase().trim();
+      return this.projects.filter(p => 
+        (p.name && p.name.toLowerCase().includes(q)) || (p.slug && p.slug.toLowerCase().includes(q))
+      );
+    },
+    getActiveName() {
+      const found = this.projects.find(p => p.slug === this.activeSlug);
+      return found ? found.name : this.activeSlug;
+    },
+    async selectProject(slug) {
+      if (slug === this.activeSlug) {
+        this.open = false;
+        return;
+      }
+      this.activeSlug = slug;
+      this.open = false;
+      const formData = new FormData();
+      formData.append('project_slug', slug);
+      try {
+        const res = await fetch('/ui/projects/switch', {
+          method: 'POST',
+          headers: { 'HX-Request': 'true' },
+          body: formData
+        });
+        if (res.ok) {
+          window.$toast?.success?.(`Librería activa: ${slug}`, 'Librería Cambiada');
+          setTimeout(() => window.location.reload(), 150);
+        }
+      } catch (e) {
+        // Fallback form submit
+        document.getElementById('switch-fallback-' + slug)?.submit();
+      }
+    }
+  };
+}
+</script>
+
+<div 
+  class="relative inline-block text-left"
+  x-data="navbarSelectorComponent('{{ active_slug }}')"
+  @keydown.escape.window="open = false"
+  @click.outside="open = false"
+>
+  <!-- Hidden Accessible Select Fallback for standard forms and testing compatibility -->
+  <select id="global-project-select" name="project_slug" class="sr-only hidden" aria-hidden="true" tabindex="-1">
+    {% for p in projects %}
+    <option value="{{ p.slug.value }}" {% if p.slug.value == active_slug %}selected{% endif %}>{{ p.name }} ({{ p.slug.value }})</option>
+    {% endfor %}
+  </select>
+
+  <!-- Trigger Button -->
+  <button
+    type="button"
+    @click="open = !open; if(open) $nextTick(() => $refs.searchInput?.focus())"
+    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 hover:border-indigo-500/50 shadow-sm transition cursor-pointer select-none"
+    title="Seleccionar librería / proyecto activo"
+  >
+    <i class="fa-solid fa-folder-tree text-indigo-400 text-xs"></i>
+    <span class="max-w-[130px] sm:max-w-[180px] truncate" x-text="getActiveName()"></span>
+    <span class="text-[10px] font-mono text-slate-400 bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-700/60" x-text="activeSlug"></span>
+    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+  </button>
+
+  <!-- Dropdown Menu with Debounced Search -->
+  <div
+    x-show="open"
+    x-transition:enter="transition ease-out duration-150"
+    x-transition:enter-start="opacity-0 scale-95"
+    x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="transition ease-in duration-100"
+    x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-95"
+    class="absolute right-0 sm:left-0 z-50 mt-2 w-72 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl shadow-black/60 p-2.5 backdrop-blur-xl space-y-2"
+    style="display: none;"
+  >
+    <!-- Debounced Search Input Header -->
+    <div class="relative">
+      <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 pointer-events-none text-xs">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </span>
+      <input
+        type="text"
+        x-ref="searchInput"
+        x-model.debounce.250ms="searchQuery"
+        placeholder="Buscar librería o proyecto..."
+        class="w-full pl-8 pr-7 py-1.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+      >
+      <button 
+        type="button" 
+        x-show="searchQuery" 
+        @click="searchQuery = ''; $refs.searchInput?.focus()" 
+        class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-white text-xs cursor-pointer"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Filter stats -->
+    <div class="flex items-center justify-between px-1 text-[10px] text-slate-400 font-mono">
+      <span>LIBRERÍAS DISPONIBLES</span>
+      <span x-text="`${filteredProjects().length} de ${projects.length}`"></span>
+    </div>
+
+    <!-- Projects List with Smooth Scroll -->
+    <div class="max-h-56 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+      <template x-for="p in filteredProjects()" :key="p.slug">
+        <div
+          @click="selectProject(p.slug)"
+          :class="{
+            'bg-indigo-600/20 border-indigo-500/40 text-white': p.slug === activeSlug,
+            'text-slate-300 hover:bg-slate-800/80 hover:text-white border-transparent': p.slug !== activeSlug
+          }"
+          class="flex items-center justify-between px-2.5 py-2 rounded-xl text-xs border transition cursor-pointer select-none group"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <i 
+              class="fa-solid fa-book-bookmark text-xs shrink-0" 
+              :class="p.slug === activeSlug ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'"
+            ></i>
+            <div class="truncate">
+              <p class="font-semibold truncate leading-tight" x-text="p.name"></p>
+              <p class="text-[10px] font-mono text-slate-400 truncate" x-text="p.slug"></p>
+            </div>
+          </div>
+
+          <div class="shrink-0 pl-2">
+            <template x-if="p.slug === activeSlug">
+              <span class="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Activa</span>
+              </span>
+            </template>
+            <template x-if="p.slug !== activeSlug">
+              <i class="fa-solid fa-arrow-right text-[10px] text-slate-600 group-hover:text-indigo-400 transition"></i>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Empty Search Results -->
+      <template x-if="filteredProjects().length === 0">
+        <div class="py-6 text-center text-slate-400 text-xs">
+          <i class="fa-solid fa-folder-open text-slate-600 text-base mb-1 block"></i>
+          <span>No hay librerías que coincidan con "<span class="text-indigo-300" x-text="searchQuery"></span>"</span>
+        </div>
+      </template>
+    </div>
+
+    <!-- Footer Quick Link -->
+    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between px-1 text-[11px]">
+      <a 
+        href="/projects" 
+        class="text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-medium"
+      >
+        <i class="fa-solid fa-layer-group text-[10px]"></i>
+        <span>Administrar todas</span>
+      </a>
+      <span class="text-[10px] text-slate-500 font-mono">ContextForge</span>
+    </div>
+  </div>
+</div>

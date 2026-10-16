@@ -1,0 +1,47 @@
+{# Reusable Attachment Card Component for Document Detail View #}
+<div class="p-3.5 rounded-xl bg-[#0d0f17] border border-[#232738] hover:border-indigo-500/40 transition group flex flex-col justify-between space-y-3">
+  <div class="flex items-start space-x-3">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 
+      {% if att.ext == 'pdf' %}bg-rose-500/10 text-rose-400 border border-rose-500/20
+      {% elif att.ext in ['xlsx', 'xls', 'csv'] %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+      {% elif att.ext in ['docx', 'doc'] %}bg-blue-500/10 text-blue-400 border border-blue-500/20
+      {% elif att.ext in ['png', 'jpg', 'jpeg', 'svg', 'webp'] %}bg-violet-500/10 text-violet-400 border border-violet-500/20
+      {% else %}bg-zinc-800 text-zinc-400 border border-zinc-700{% endif %}">
+      {% if att.ext == 'pdf' %}<i class="fa-solid fa-file-pdf text-base"></i>
+      {% elif att.ext in ['xlsx', 'xls', 'csv'] %}<i class="fa-solid fa-file-excel text-base"></i>
+      {% elif att.ext in ['docx', 'doc'] %}<i class="fa-solid fa-file-word text-base"></i>
+      {% elif att.ext in ['png', 'jpg', 'jpeg', 'svg', 'webp'] %}<i class="fa-solid fa-file-image text-base"></i>
+      {% else %}<i class="fa-solid fa-file-lines text-base"></i>{% endif %}
+    </div>
+    <div class="min-w-0 flex-1">
+      <h4 class="text-xs font-semibold text-zinc-200 truncate group-hover:text-white transition" title="{{ att.name }}">{{ att.name }}</h4>
+      <div class="flex items-center gap-1.5 mt-1">
+        <span class="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-[#161824] text-zinc-400 border border-[#232738]">{{ att.ext }}</span>
+        <span class="text-[10px] text-zinc-500">• {{ att.location }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action CTAs: Preview vs Download -->
+  <div class="flex items-center gap-2 pt-1 border-t border-[#1e2233]">
+    <button 
+      type="button" 
+      onclick="window.openFilePreview('{{ att.name }}', '{{ att.url }}', '{{ 'application/pdf' if att.ext == 'pdf' else '' }}')"
+      class="flex-1 py-1.5 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
+      title="Previsualizar archivo directamente en el navegador"
+    >
+      <i class="fa-regular fa-eye text-[11px]"></i>
+      <span>Previsualizar</span>
+    </button>
+    
+    <a 
+      href="{{ att.url }}" 
+      download="{{ att.name }}"
+      class="p-1.5 rounded-lg bg-[#181b28] hover:bg-[#202435] text-zinc-400 hover:text-zinc-200 border border-[#232738] text-xs flex items-center justify-center transition"
+      title="Descargar archivo a tu disco local"
+    >
+      <i class="fa-solid fa-download text-[11px]"></i>
+    </a>
+  </div>
+</div>
+

@@ -71,6 +71,23 @@ class LocalFileSystemRepository(IDocumentRepository):
 
         return sorted(documents, key=lambda d: d.path)
 
+    async def list_paged(
+        self,
+        module: str | None = None,
+        search: str | None = None,
+        project_slug: str | None = None,
+        page: int = 1,
+        per_page: int = 9,
+    ) -> tuple[list[Document], int]:
+        """Return paginated slice of documents and total matching count."""
+        all_docs = await self.list_all(module=module, search=search, project_slug=project_slug)
+        total_count = len(all_docs)
+        safe_page = max(1, page)
+        safe_per_page = max(1, per_page)
+        start = (safe_page - 1) * safe_per_page
+        end = start + safe_per_page
+        return all_docs[start:end], total_count
+
     async def get_by_path(
         self,
         relative_path: str,

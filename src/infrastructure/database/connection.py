@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -34,10 +34,32 @@ def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSessi
     return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
+async def _migrate_llm_configurations_schema(engine: AsyncEngine) -> None:
+    """Ensure new columns exist in llm_configurations table on existing SQLite databases."""
+    async with engine.begin() as conn:
+        res = await conn.execute(text("PRAGMA table_info(llm_configurations)"))
+        existing_cols = {row[1] for row in res.fetchall()}
+        if existing_cols:
+            if "engine_type" not in existing_cols:
+                await conn.execute(
+                    text("ALTER TABLE llm_configurations ADD COLUMN engine_type VARCHAR(50) NOT NULL DEFAULT 'local_http'")
+                )
+            if "cli_command" not in existing_cols:
+                await conn.execute(
+                    text("ALTER TABLE llm_configurations ADD COLUMN cli_command VARCHAR(100) NOT NULL DEFAULT ''")
+                )
+            if "cli_args" not in existing_cols:
+                await conn.execute(
+                    text("ALTER TABLE llm_configurations ADD COLUMN cli_args VARCHAR(255) NOT NULL DEFAULT ''")
+                )
+
+
 async def init_db(engine: AsyncEngine, seed: bool = True) -> None:
     """Create all tables and seed default settings if empty."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    await _migrate_llm_configurations_schema(engine)
 
     if not seed:
         return

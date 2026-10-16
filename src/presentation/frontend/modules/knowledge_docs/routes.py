@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 import uuid
-from fastapi import APIRouter, Cookie, Depends, Form, Request, status
+from fastapi import APIRouter, Cookie, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.domain.project import IProjectRepository
 from core.templates.blueprints import list_blueprints
 from domain.shared_kernel.exceptions import EntityNotFoundException
+from domain.taxonomy.repositories import ITaxonomyRepository
 from application.knowledge_docs.commands import CreateDocumentCommand, IngestDocsCommand
 from application.knowledge_docs.handlers import (
     CreateDocumentCommandHandler,
@@ -20,7 +21,11 @@ from application.knowledge_docs.handlers import (
     GetDocumentsQueryHandler,
     IngestDocsCommandHandler,
 )
-from application.knowledge_docs.queries import GetDocumentDetailQuery, GetDocumentsQuery
+from application.knowledge_docs.queries import (
+    GetDocumentDetailQuery,
+    GetDocumentsPagedQuery,
+    GetDocumentsQuery,
+)
 from infrastructure.database.orm_models import DocumentCommentModel
 from infrastructure.external.markdown_parser import MarkdownParserService
 from presentation.api.dependencies import (
@@ -31,6 +36,7 @@ from presentation.api.dependencies import (
     get_ingest_docs_handler,
     get_markdown_parser,
     get_project_repo,
+    get_taxonomy_repo,
 )
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent.parent
@@ -48,30 +54,55 @@ async def home_redirect() -> Any:
 @router.get("/docs/browser", response_class=HTMLResponse)
 async def docs_browser_view(
     request: Request,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(9, ge=1, le=100),
     module: str | None = None,
     q: str | None = None,
     project: str | None = None,
     cf_active_project: str | None = Cookie(default=None),
     handler: GetDocumentsQueryHandler = Depends(get_documents_handler),
+    taxonomy_repo: ITaxonomyRepository = Depends(get_taxonomy_repo),
 ) -> HTMLResponse:
-    """Docs-as-Code dashboard showing Markdown knowledge files."""
+    """Docs-as-Code dashboard showing Markdown knowledge files with dynamic database-backed pagination."""
     active_slug = project or cf_active_project or "default"
-    docs = await handler.handle(GetDocumentsQuery(module=module, search=q, project_slug=active_slug))
+    clean_module = module if module and module != "all" else None
+    clean_query = q.strip() if q and q.strip() else None
 
-    # Extract distinct modules for filter tabs
+    paged_result = await handler.handle_paged(
+        GetDocumentsPagedQuery(
+            module=clean_module,
+            search=clean_query,
+            project_slug=active_slug,
+            page=page,
+            per_page=per_page,
+        )
+    )
+
+    # Extract distinct modules for filter tabs from taxonomy & documents
+    db_modules = await taxonomy_repo.list_modules(project_slug=active_slug)
+    module_slugs = {m.slug for m in db_modules}
     all_docs = await handler.handle(GetDocumentsQuery(project_slug=active_slug))
-    available_modules = sorted(list({d.module for d in all_docs if d.module}))
+    for d in all_docs:
+        if d.module:
+            module_slugs.add(d.module)
+
+    available_modules = sorted(list(module_slugs))
 
     return templates.TemplateResponse(
         request=request,
         name="modules/knowledge_docs/views/docs_browser.html",
         context={
-            "docs": docs,
-            "selected_module": module,
-            "search_query": q,
+            "docs": paged_result.items,
+            "selected_module": module or "all",
+            "search_query": q or "",
             "active_project": active_slug,
             "available_modules": available_modules,
-            "total_docs": len(all_docs),
+            "total_docs": paged_result.total_count,
+            "current_page": paged_result.page,
+            "per_page": paged_result.per_page,
+            "total_pages": paged_result.total_pages,
+            "has_prev": paged_result.has_prev,
+            "has_next": paged_result.has_next,
         },
     )
 
@@ -87,6 +118,7 @@ async def dual_doc_editor_view(
     doc_path: str | None = None,
     project_repo: IProjectRepository = Depends(get_project_repo),
     doc_handler: GetDocumentDetailQueryHandler = Depends(get_document_detail_handler),
+    taxonomy_repo: ITaxonomyRepository = Depends(get_taxonomy_repo),
 ) -> HTMLResponse:
     """Render Dual Mode Editor (Markdown Pro vs. Block Builder)."""
     projects = await project_repo.list_all()
@@ -107,6 +139,9 @@ async def dual_doc_editor_view(
         except EntityNotFoundException:
             existing_doc = None
 
+    modules = await taxonomy_repo.list_modules()
+    tags = await taxonomy_repo.list_tags()
+
     return templates.TemplateResponse(
         request=request,
         name="modules/BookRegistry/views/editor.html",
@@ -117,9 +152,10 @@ async def dual_doc_editor_view(
             "module": active_module,
             "blueprints": blueprints,
             "existing_doc": existing_doc,
+            "available_modules": modules,
+            "available_tags": tags,
         },
     )
-
 
 
 @router.get("/docs/new", response_class=HTMLResponse)
@@ -127,11 +163,14 @@ async def new_doc_editor_view(
     request: Request,
     cf_active_project: str | None = Cookie(default=None),
     project_repo: IProjectRepository = Depends(get_project_repo),
+    taxonomy_repo: ITaxonomyRepository = Depends(get_taxonomy_repo),
 ) -> HTMLResponse:
     """Render split-screen Markdown documentation editor with blueprint scaffolding."""
     projects = await project_repo.list_all()
     active_slug = cf_active_project or (projects[0].slug.value if projects else "default")
     blueprints = list_blueprints()
+    modules = await taxonomy_repo.list_modules()
+    tags = await taxonomy_repo.list_tags()
 
     default_markdown = """# Título de la Especificación o Regla
 
@@ -162,6 +201,8 @@ def process_event(event_id: str) -> None:
             "projects": projects,
             "active_slug": active_slug,
             "blueprints": blueprints,
+            "available_modules": modules,
+            "available_tags": tags,
         },
     )
 
@@ -325,11 +366,22 @@ async def add_doc_comment_view(
 
 
 @router.get("/docs/integration-guide", response_class=HTMLResponse)
-async def integration_guide_view(request: Request) -> HTMLResponse:
+async def integration_guide_view(
+    request: Request,
+    project_repo: IProjectRepository = Depends(get_project_repo),
+) -> HTMLResponse:
     """Render external API documentation and integration guide for ContextForge."""
+    projects = await project_repo.list_all()
+    active_project = await project_repo.get_active()
+    active_slug = active_project.slug.value if active_project else "default"
+    base_url = str(request.base_url).rstrip("/")
     return templates.TemplateResponse(
         request=request,
         name="modules/knowledge_docs/views/integration_guide.html",
-        context={},
+        context={
+            "projects": projects,
+            "active_slug": active_slug,
+            "base_url": base_url,
+        },
     )
 

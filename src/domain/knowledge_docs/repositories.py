@@ -17,6 +17,16 @@ class IDocumentRepository(Protocol):
     ) -> list[Document]:
         ...
 
+    async def list_paged(
+        self,
+        module: str | None = None,
+        search: str | None = None,
+        project_slug: str | None = None,
+        page: int = 1,
+        per_page: int = 9,
+    ) -> tuple[list[Document], int]:
+        ...
+
     async def get_by_path(
         self,
         relative_path: str,

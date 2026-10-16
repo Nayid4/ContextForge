@@ -1,0 +1,426 @@
+{# Reusable Hexagonal Architecture Database & File Storage Panel for Settings View #}
+<div class="space-y-8">
+
+  <!-- ========================================================================= -->
+  <!-- 1. HEXAGONAL DATABASE PORTS & ADAPTERS (SQLite, Postgres, Supabase, etc.) -->
+  <!-- ========================================================================= -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div>
+        <div class="flex items-center flex-wrap gap-2">
+          <i class="fa-solid fa-database text-indigo-400"></i>
+          <h2 class="text-lg font-semibold text-white">Arquitectura Hexagonal: Motor de Base de Datos (Ports & Adapters)</h2>
+          <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 uppercase" x-text="`Activo: ${activeDatabase}`"></span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Por defecto ContextForge opera con <strong>SQLite Local Soberano</strong> (<code class="text-indigo-300">./data/contextforge.db</code>), pero puedes conectar cualquier motor relacional o NoSQL externo mediante los adaptadores de repositorio.
+        </p>
+      </div>
+    </div>
+
+    <!-- Database Provider Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <template x-for="db in dbConfigs" :key="db.provider">
+        <div
+          @click="selectDb(db)"
+          :class="{
+            'border-indigo-500 bg-indigo-500/15 ring-2 ring-indigo-500 shadow-lg': selectedDatabase === db.provider,
+            'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40': selectedDatabase !== db.provider
+          }"
+          class="p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between select-none"
+        >
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-2">
+              <span 
+                :class="db.engine_category === 'relational_sql' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'"
+                class="text-[9px] font-mono px-1.5 py-0.5 rounded border uppercase"
+                x-text="db.engine_category === 'relational_sql' ? 'SQL' : 'NoSQL'"
+              ></span>
+              <span x-show="activeDatabase === db.provider" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Motor BD Activo"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-base" x-text="getDbIcon(db.provider)"></span>
+              <h4 class="text-xs font-bold text-white leading-tight" x-text="db.name"></h4>
+            </div>
+          </div>
+          <div class="mt-2.5 pt-2 border-t border-slate-800/70 flex items-center justify-between text-[10px] font-mono">
+            <span class="text-slate-400 truncate" x-text="db.provider"></span>
+            <span :class="activeDatabase === db.provider ? 'text-emerald-400 font-bold' : 'text-slate-500'" x-text="activeDatabase === db.provider ? '● ACTIVO' : '○ Standby'"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Selected Database Configuration Form -->
+    <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-5 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg" x-text="getDbIcon(getCurrentDb().provider)"></span>
+          <div>
+            <h3 class="text-sm font-bold text-white" x-text="getCurrentDb().name"></h3>
+            <p class="text-[11px] text-slate-400 font-mono" x-text="`Categoría: ${getCurrentDb().engine_category} • Driver: ${getCurrentDb().provider}`"></p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          @click="activateDb(selectedDatabase)"
+          :disabled="activeDatabase === selectedDatabase"
+          :class="activeDatabase === selectedDatabase 
+            ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40 cursor-default' 
+            : 'bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer shadow'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition flex items-center gap-1.5"
+        >
+          <i class="fa-solid" :class="activeDatabase === selectedDatabase ? 'fa-circle-check text-emerald-400' : 'fa-bolt'"></i>
+          <span x-text="activeDatabase === selectedDatabase ? 'Base de Datos Activa' : 'Activar esta Base de Datos'"></span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Connection URL / URI -->
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            URI / Cadena de Conexión (<code class="text-indigo-300">connection_url</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentDb().connection_url"
+            placeholder="ej. sqlite+aiosqlite:///./data/contextforge.db o postgresql+asyncpg://user:pass@host:5432/db"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <!-- Database Name -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Nombre de Base de Datos (<code class="text-indigo-300">database_name</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentDb().database_name"
+            placeholder="contextforge"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <!-- Host & Port (hidden for SQLite) -->
+        <div x-show="selectedDatabase !== 'sqlite'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Host / Endpoint (<code class="text-indigo-300">host</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentDb().host"
+            placeholder="localhost o db.proyecto.supabase.co"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div x-show="selectedDatabase !== 'sqlite' && selectedDatabase !== 'firebase'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Puerto (<code class="text-indigo-300">port</code>)
+          </label>
+          <input
+            type="number"
+            x-model="getCurrentDb().port"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <!-- Username & Password -->
+        <div x-show="!['sqlite', 'firebase'].includes(selectedDatabase)">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Usuario (<code class="text-indigo-300">username</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentDb().username"
+            placeholder="postgres / sa / admin"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div x-show="!['sqlite', 'firebase'].includes(selectedDatabase)">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Contraseña (<code class="text-indigo-300">password</code>)
+          </label>
+          <input
+            type="password"
+            x-model="getCurrentDb().password"
+            placeholder="••••••••"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <!-- Supabase / Firebase Project ID & API Key -->
+        <div x-show="['supabase', 'firebase'].includes(selectedDatabase)">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Project ID (<code class="text-indigo-300">project_id</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentDb().project_id"
+            placeholder="mi-proyecto-cloud"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div x-show="['supabase', 'firebase'].includes(selectedDatabase)">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Service Role / API Key (<code class="text-indigo-300">api_key</code>)
+          </label>
+          <input
+            type="password"
+            x-model="getCurrentDb().api_key"
+            placeholder="eyJhbG... o AIza..."
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+      </div>
+
+      <!-- DB Test & Save Footer -->
+      <div class="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <template x-if="dbTestResult">
+            <div
+              :class="dbTestResult.healthy ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'"
+              class="px-3 py-1.5 rounded-lg border text-xs font-mono inline-flex items-center gap-2"
+            >
+              <i class="fa-solid" :class="dbTestResult.healthy ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'"></i>
+              <span x-text="dbTestResult.message"></span>
+              <span class="text-zinc-400" x-text="`(${dbTestResult.latency_ms} ms)`"></span>
+            </div>
+          </template>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            @click="testDbConnection(getCurrentDb())"
+            :disabled="testingDb"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <i class="fa-solid fa-plug-circle-check text-indigo-400" :class="{ 'animate-spin': testingDb }"></i>
+            <span x-text="testingDb ? 'Probando BD...' : 'Probar Conexión BD'"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="saveDbConfig(getCurrentDb())"
+            :disabled="savingDb"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-1.5 cursor-pointer shadow"
+          >
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span x-text="savingDb ? 'Guardando...' : 'Guardar Configuración BD'"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. HEXAGONAL FILE STORAGE GATEWAY (Local ./docs, Supabase, S3/R2, Firebase) -->
+  <!-- ========================================================================= -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div>
+        <div class="flex items-center flex-wrap gap-2">
+          <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i>
+          <h2 class="text-lg font-semibold text-white">Almacenamiento de Archivos & Docs-as-Code (<code class="text-sky-300 text-sm">IFileStorageGateway</code>)</h2>
+          <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 uppercase" x-text="`Activo: ${activeStorage}`"></span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Elige dónde almacenar tus documentos <code class="text-indigo-300">.md</code> y adjuntos binarios (PDF, imágenes, Word, Excel). Puedes mantener <strong>Local FileSystem (<code class="text-emerald-300">./docs</code>)</strong> o sincronizar con buckets Cloud manteniendo espejo local para Git.
+        </p>
+      </div>
+    </div>
+
+    <!-- Storage Provider Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <template x-for="st in storageConfigs" :key="st.provider">
+        <div
+          @click="selectStorage(st)"
+          :class="{
+            'border-sky-500 bg-sky-500/15 ring-2 ring-sky-500 shadow-lg': selectedStorage === st.provider,
+            'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40': selectedStorage !== st.provider
+          }"
+          class="p-4 rounded-xl border cursor-pointer transition flex flex-col justify-between select-none"
+        >
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-sky-300 border border-slate-700 uppercase" x-text="st.provider === 'local_fs' ? 'Docs-as-Code Local' : 'Cloud Bucket'"></span>
+              <span x-show="activeStorage === st.provider" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-lg" x-text="getStorageIcon(st.provider)"></span>
+              <h4 class="text-xs font-bold text-white" x-text="st.name"></h4>
+            </div>
+            <p class="text-[11px] text-slate-400 font-mono mt-1.5 truncate" x-text="st.provider === 'local_fs' ? st.base_path : `bucket: ${st.bucket_name}`"></p>
+          </div>
+
+          <div class="mt-3 pt-2 border-t border-slate-800/70 flex items-center justify-between text-[10px] font-mono">
+            <span class="text-slate-400" x-text="st.sync_local_mirror ? 'Mirror ./docs ✓' : 'Solo Remoto'"></span>
+            <span :class="activeStorage === st.provider ? 'text-emerald-400 font-bold' : 'text-slate-500'" x-text="activeStorage === st.provider ? '● EN USO' : '○ Standby'"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Selected Storage Configuration Form -->
+    <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-5 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg" x-text="getStorageIcon(getCurrentStorage().provider)"></span>
+          <div>
+            <h3 class="text-sm font-bold text-white" x-text="getCurrentStorage().name"></h3>
+            <p class="text-[11px] text-slate-400 font-mono" x-text="`Adaptador: ${getCurrentStorage().provider}`"></p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          @click="activateStorage(selectedStorage)"
+          :disabled="activeStorage === selectedStorage"
+          :class="activeStorage === selectedStorage 
+            ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40 cursor-default' 
+            : 'bg-sky-600 hover:bg-sky-500 text-white cursor-pointer shadow'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition flex items-center gap-1.5"
+        >
+          <i class="fa-solid" :class="activeStorage === selectedStorage ? 'fa-circle-check text-emerald-400' : 'fa-bolt'"></i>
+          <span x-text="activeStorage === selectedStorage ? 'Storage Activo' : 'Activar este Storage'"></span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Base Local Path -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Ruta Local Soberana (<code class="text-sky-300">base_path</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentStorage().base_path"
+            placeholder="./docs"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+        </div>
+
+        <!-- Bucket Name (for Cloud Storage) -->
+        <div x-show="selectedStorage !== 'local_fs'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Nombre del Bucket (<code class="text-sky-300">bucket_name</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentStorage().bucket_name"
+            placeholder="contextforge-docs"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+        </div>
+
+        <!-- Endpoint URL -->
+        <div x-show="selectedStorage !== 'local_fs'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Endpoint URL (<code class="text-sky-300">endpoint_url</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentStorage().endpoint_url"
+            placeholder="https://proyecto.supabase.co o https://s3.amazonaws.com"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+        </div>
+
+        <!-- Region (for S3/R2) -->
+        <div x-show="selectedStorage === 's3'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Región (<code class="text-sky-300">region</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentStorage().region"
+            placeholder="us-east-1 o auto"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+        </div>
+
+        <!-- Access Key (for S3) -->
+        <div x-show="selectedStorage === 's3'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Access Key ID (<code class="text-sky-300">access_key</code>)
+          </label>
+          <input
+            type="text"
+            x-model="getCurrentStorage().access_key"
+            placeholder="AKIA..."
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+        </div>
+
+        <!-- Secret Key / Service Token -->
+        <div x-show="selectedStorage !== 'local'">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">
+            Secret Key / Service Role Token (<code class="text-sky-300">secret_key</code>)
+          </label>
+          <input
+            type="password"
+            x-model="getCurrentStorage().secret_key"
+            placeholder="••••••••"
+            class="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+        </div>
+      </div>
+
+      <!-- Sync Local Mirror Toggle -->
+      <div class="flex items-center justify-between pt-2">
+        <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            x-model="getCurrentStorage().sync_local_mirror"
+            class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-sky-500"
+          >
+          <span class="text-xs text-slate-300">Mantener espejo local en <code class="text-emerald-300">./docs</code> para indexación rápida BM25/ChromaDB y compatibilidad Git (Docs-as-Code)</span>
+        </label>
+      </div>
+
+      <!-- Storage Test & Save Footer -->
+      <div class="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <template x-if="storageTestResult">
+            <div
+              :class="storageTestResult.healthy ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'"
+              class="px-3 py-1.5 rounded-lg border text-xs font-mono inline-flex items-center gap-2"
+            >
+              <i class="fa-solid" :class="storageTestResult.healthy ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'"></i>
+              <span x-text="storageTestResult.message"></span>
+              <span class="text-zinc-400" x-text="`(${storageTestResult.latency_ms} ms)`"></span>
+            </div>
+          </template>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            @click="testStorageConnection(getCurrentStorage())"
+            :disabled="testingStorage"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <i class="fa-solid fa-folder-open text-sky-400" :class="{ 'animate-spin': testingStorage }"></i>
+            <span x-text="testingStorage ? 'Verificando...' : 'Probar Storage / Bucket'"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="saveStorageConfig(getCurrentStorage())"
+            :disabled="savingStorage"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white transition flex items-center gap-1.5 cursor-pointer shadow"
+          >
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span x-text="savingStorage ? 'Guardando...' : 'Guardar Storage'"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

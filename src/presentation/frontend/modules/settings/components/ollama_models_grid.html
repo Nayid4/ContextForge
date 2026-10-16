@@ -1,0 +1,75 @@
+{# Reusable Ollama Local Models Grid Component #}
+<div x-show="selectedProvider === 'ollama'" class="space-y-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
+        <i class="fa-solid fa-microchip text-indigo-400"></i>
+        <span>Modelos LLM Instalados en Local (Ollama Daemon)</span>
+      </h2>
+      <p class="text-xs text-slate-400">Haz clic en cualquier modelo detectado para asignarlo instantáneamente al motor Ollama</p>
+    </div>
+    <span class="text-xs text-slate-400 font-medium">
+      {{ models|length }} modelo(s) detectados
+    </span>
+  </div>
+
+  {% if models %}
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {% for m in models %}
+    <label 
+      @click="getCurrentConfig().default_model = '{{ m.name }}'"
+      :class="getCurrentConfig().default_model === '{{ m.name }}' 
+        ? 'border-indigo-500 bg-indigo-500/15 shadow-xl shadow-indigo-500/20 ring-2 ring-indigo-500 scale-[1.02]' 
+        : 'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40 hover:scale-[1.01]'"
+      class="relative flex flex-col p-5 rounded-2xl border cursor-pointer select-none transition-all duration-300 ease-out transform"
+    >
+      <div class="flex items-start justify-between">
+        <div class="flex items-center space-x-2.5">
+          <input 
+            type="radio" 
+            name="ollama_model_choice" 
+            value="{{ m.name }}" 
+            :checked="getCurrentConfig().default_model === '{{ m.name }}'"
+            class="text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 h-4 w-4 border-slate-700 bg-slate-800"
+          >
+          <span class="font-bold text-white text-base font-mono tracking-tight">{{ m.name }}</span>
+        </div>
+
+        <div x-show="getCurrentConfig().default_model === '{{ m.name }}'">
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 flex items-center gap-1.5 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+            <span>Seleccionado</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs text-slate-300">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Tamaño en Disco:</span>
+          <span class="font-mono text-slate-200">{{ m.formatted_size }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Parámetros:</span>
+          <span class="font-mono text-slate-200">{{ m.parameter_size }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Cuantización:</span>
+          <span class="font-mono text-slate-200">{{ m.quantization_level }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Formato:</span>
+          <span class="font-mono text-slate-200">{{ m.format|upper }}</span>
+        </div>
+      </div>
+    </label>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="rounded-xl border border-dashed border-slate-800 p-8 text-center bg-slate-900/20">
+    <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-400 mb-3"></i>
+    <p class="text-sm text-slate-300 font-medium">No se detectaron modelos instalados en Ollama</p>
+    <p class="text-xs text-slate-500 mt-1">Descarga uno en tu terminal ejecutando: <code class="text-indigo-400">ollama pull llama3.1:8b</code></p>
+  </div>
+  {% endif %}
+</div>
+

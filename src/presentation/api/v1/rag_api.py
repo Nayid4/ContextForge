@@ -88,12 +88,17 @@ async def stream_rag(
                 citations_data.append(
                     {"file_path": c.file_path, "header": c.header, "pill": c.format_pill()}
                 )
-        meta_event = json.dumps({"type": "citations", "model": target_model, "citations": citations_data})
+        meta_event = json.dumps({
+            "type": "citations",
+            "model": target_model,
+            "citations": citations_data,
+            "sources": citations_data,
+        })
         yield f"event: citations\ndata: {meta_event}\n\n"
 
         # Stream tokens
         async for token in handler.stream_answer(context, target_model):
-            chunk_event = json.dumps({"type": "token", "content": token})
+            chunk_event = json.dumps({"type": "token", "content": token, "token": token})
             yield f"event: token\ndata: {chunk_event}\n\n"
 
         yield f"event: done\ndata: {json.dumps({'type': 'done'})}\n\n"

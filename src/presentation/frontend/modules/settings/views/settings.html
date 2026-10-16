@@ -1,35 +1,38 @@
 {% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
 
-{% block title %}Configuración de Modelos & APIs | ContextForge{% endblock %}
+{% block title %}Configuración Universal de Motores IA, APIs & CLIs | ContextForge{% endblock %}
 
 {% block content %}
 <div class="space-y-8" x-data="llmSettingsApp()">
 
   <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
-    <div>
-      <div class="flex items-center space-x-3">
-        <span class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-          <i class="fa-solid fa-sliders text-lg"></i>
-        </span>
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-white">Configuración del Motor RAG & Proveedores LLM</h1>
-          <p class="text-sm text-slate-400">Gestión de inferencia local soberana (Ollama) y APIs en la nube (OpenAI, Claude, DeepSeek, Gemini)</p>
-        </div>
-      </div>
-    </div>
-    <div class="flex items-center space-x-3">
-      <button 
-        hx-post="/settings/refresh-models" 
-        hx-target="body" 
-        class="inline-flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition shadow-sm"
-        title="Detectar modelos locales de Ollama"
-      >
-        <i class="fa-solid fa-arrows-rotate text-indigo-400"></i>
-        <span>Sincronizar Ollama</span>
-      </button>
-    </div>
-  </div>
+  {% call page_header(
+    'fa-solid fa-sliders',
+    'Configuración del Motor RAG, Proveedores LLM & Agentes CLI',
+    'Orquestación unificada de Servidores Locales HTTP (Ollama, LM Studio, LocalAI), APIs Cloud (OpenAI, Claude, DeepSeek, Gemini) y Herramientas CLI Locales (Claude Code, Antigravity, Codex, Aider)'
+  ) %}
+    <button 
+      type="button"
+      @click="discoverCliEngines()"
+      :disabled="discoveringCli"
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 rounded-xl transition shadow-sm cursor-pointer"
+      title="Escanear binarios de IA instalados en el PATH del sistema operativo"
+    >
+      <i class="fa-solid fa-terminal text-emerald-400" :class="{ 'animate-bounce': discoveringCli }"></i>
+      <span x-text="discoveringCli ? 'Escaneando PATH...' : 'Auto-Detectar CLIs en PATH'"></span>
+    </button>
+
+    <button 
+      hx-post="/settings/refresh-models" 
+      hx-target="body" 
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm cursor-pointer"
+      title="Detectar modelos GGUF locales de Ollama"
+    >
+      <i class="fa-solid fa-arrows-rotate text-indigo-400"></i>
+      <span>Sincronizar Ollama</span>
+    </button>
+  {% endcall %}
 
   {% if success_message %}
   <div class="rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-300 flex items-center gap-3 shadow-lg">
@@ -47,411 +50,229 @@
           <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
         </div>
         <div>
-          <div class="flex items-center space-x-2">
-            <h2 class="text-base font-semibold text-white">Proveedor de Inferencia Activo</h2>
+          <div class="flex items-center flex-wrap gap-2">
+            <h2 class="text-base font-semibold text-white">Motor de Inferencia Activo Global</h2>
             <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase font-mono" x-text="activeProvider"></span>
+            <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 uppercase" x-text="getActiveConfig().engine_type"></span>
           </div>
           <p class="text-xs text-slate-400 mt-0.5">
-            Las consultas de RAG global, el Copiloto de Documentos y la generación asistida utilizarán el cliente activo.
+            El Chat RAG Global, el Copiloto de Documentos y las consultas de contexto del proyecto se enrutan automáticamente a este motor.
           </p>
         </div>
       </div>
 
       <div class="flex items-center space-x-4 text-xs text-slate-400">
         <div class="text-right">
-          <p class="text-slate-500">Modelo en Uso</p>
+          <p class="text-slate-400">Modelo / Comando en Uso</p>
           <p class="text-sm font-semibold text-indigo-400 font-mono flex items-center justify-end gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span x-text="getCurrentConfig().default_model"></span>
+            <span x-text="getActiveConfig().engine_type === 'local_cli' ? `$ ${getActiveConfig().cli_command} (${getActiveConfig().default_model})` : getActiveConfig().default_model"></span>
           </p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MULTI-PROVIDER SELECTOR CARDS -->
+  <!-- ENGINE CATEGORY TABS -->
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
-          <i class="fa-solid fa-brain text-indigo-400"></i>
-          <span>Proveedores de Inteligencia Artificial Disponibles</span>
+          <i class="fa-solid fa-microchip text-indigo-400"></i>
+          <span>Ecosistema de Motores de IA</span>
         </h2>
-        <p class="text-xs text-slate-400">Selecciona un proveedor para editar sus credenciales o activarlo como motor principal</p>
+        <p class="text-xs text-slate-400">Filtra por categoría de ejecución o selecciona cualquier motor para configurarlo</p>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+        <button 
+          type="button"
+          @click="activeCategory = 'all'"
+          :class="activeCategory === 'all' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+        >
+          Todos (<span x-text="configs.length"></span>)
+        </button>
+        <button 
+          type="button"
+          @click="activeCategory = 'local_http'"
+          :class="activeCategory === 'local_http' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+        >
+          <span>🏠</span>
+          <span>Servidores Locales HTTP</span>
+        </button>
+        <button 
+          type="button"
+          @click="activeCategory = 'cloud_api'"
+          :class="activeCategory === 'cloud_api' ? 'bg-sky-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+        >
+          <span>☁️</span>
+          <span>Cloud APIs</span>
+        </button>
+        <button 
+          type="button"
+          @click="activeCategory = 'local_cli'"
+          :class="activeCategory === 'local_cli' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+        >
+          <span>💻</span>
+          <span>Agentes CLI Locales</span>
+        </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
-      <template x-for="c in configs" :key="c.provider">
-        <div 
-          @click="selectedProvider = c.provider; testResult = null"
-          :class="{
-            'border-indigo-500 bg-indigo-500/15 shadow-xl shadow-indigo-500/20 ring-2 ring-indigo-500 scale-[1.02]': selectedProvider === c.provider,
-            'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40': selectedProvider !== c.provider
-          }"
-          class="relative flex flex-col p-4 rounded-2xl border cursor-pointer select-none transition-all duration-200 transform"
-        >
-          <!-- Active Badge -->
-          <div class="flex items-center justify-between mb-3">
-            <span 
-              :class="c.provider === 'ollama' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-sky-500/10 text-sky-400 border-sky-500/20'"
-              class="text-[10px] font-mono px-2 py-0.5 rounded border uppercase"
-              x-text="c.provider === 'ollama' ? 'Local Soberano' : 'Cloud API'"
-            ></span>
-            <div x-show="activeProvider === c.provider">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Proveedor Activo"></span>
-            </div>
-          </div>
-
-          <!-- Title & Icon -->
-          <div class="flex items-center space-x-2.5 mb-1.5">
-            <span class="text-xl">
-              <template x-if="c.provider === 'ollama'"><span>🦙</span></template>
-              <template x-if="c.provider === 'openai'"><span>🧠</span></template>
-              <template x-if="c.provider === 'anthropic'"><span>🎭</span></template>
-              <template x-if="c.provider === 'deepseek'"><span>⚡</span></template>
-              <template x-if="c.provider === 'gemini'"><span>✨</span></template>
-            </span>
-            <h3 class="font-bold text-sm text-white truncate" x-text="c.name"></h3>
-          </div>
-
-          <div class="mt-2 text-[11px] font-mono text-indigo-300 truncate" x-text="c.default_model"></div>
-
-          <!-- Bottom Status Pill -->
-          <div class="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-            <span class="text-zinc-500" x-text="c.is_active ? 'Motor Activo' : 'Inactivo'"></span>
-            <span 
-              :class="c.is_active ? 'text-emerald-400 font-semibold' : 'text-zinc-500'" 
-              x-text="c.is_active ? '● EN USO' : '○ Standby'"
-            ></span>
-          </div>
-        </div>
+    <!-- Cards Grid using Reusable Component -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+      <template x-for="c in filteredConfigs()" :key="c.provider">
+        {% include "modules/settings/components/engine_card.html" %}
       </template>
     </div>
   </div>
 
-  <!-- PROVIDER CONFIGURATION PANEL -->
+  <!-- PROVIDER CONFIGURATION PANEL COMPONENT -->
+  {% include "modules/settings/components/connection_panel.html" %}
+
+  <!-- OLLAMA DETECTED MODELS GRID COMPONENT -->
+  {% include "modules/settings/components/ollama_models_grid.html" %}
+
+  <!-- HEXAGONAL DATABASE & FILE STORAGE PANEL COMPONENT -->
+  {% include "modules/settings/components/database_storage_panel.html" %}
+
+  <!-- System Storage, Database & Path Settings Panel -->
   <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
       <div>
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span>Configuración de</span>
-          <span class="text-indigo-400" x-text="getCurrentConfig().name"></span>
-        </h3>
-        <p class="text-xs text-slate-400">Ajusta los endpoints, clave de acceso y modelo por defecto para este proveedor</p>
-      </div>
-
-      <div class="flex items-center gap-2.5">
-        <!-- Activate CTA -->
-        <button 
-          type="button" 
-          @click="activateProvider(selectedProvider)"
-          :disabled="activeProvider === selectedProvider"
-          :class="activeProvider === selectedProvider 
-            ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40 cursor-default' 
-            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 cursor-pointer'"
-          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-transparent transition flex items-center gap-1.5"
-        >
-          <i class="fa-solid" :class="activeProvider === selectedProvider ? 'fa-circle-check text-emerald-400' : 'fa-bolt'"></i>
-          <span x-text="activeProvider === selectedProvider ? 'Proveedor Activo' : 'Activar Proveedor'"></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Configuration Form -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-      <!-- API Key Field (for commercial cloud APIs) -->
-      <div x-show="selectedProvider !== 'ollama'">
-        <label class="block text-xs font-medium text-slate-300 mb-2">
-          API Key / Token de Acceso
-        </label>
-        <div class="relative">
-          <input 
-            :type="showKey[selectedProvider] ? 'text' : 'password'"
-            x-model="getCurrentConfig().api_key"
-            placeholder="Introduce tu API Key (ej. sk-...)" 
-            class="w-full px-3.5 py-2 pr-10 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-          >
-          <button 
-            type="button" 
-            @click="toggleKeyVisibility(selectedProvider)"
-            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
-          >
-            <i class="fa-regular" :class="showKey[selectedProvider] ? 'fa-eye-slash' : 'fa-eye'"></i>
-          </button>
-        </div>
-        <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-          <i class="fa-solid fa-lock text-[10px] text-emerald-400"></i>
-          <span>Almacenada con cifrado local en SQLite soberano. Nunca sale de tu máquina.</span>
+        <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-gears text-indigo-400"></i>
+          <span>Parámetros de Base de Conocimiento, Embeddings y Persistencia</span>
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">
+          Sincronización unificada entre el motor de base de datos activo, el almacenamiento soberano y la indexación vectorial RAG.
         </p>
       </div>
 
-      <!-- Base URL -->
-      <div>
-        <label class="block text-xs font-medium text-slate-300 mb-2">
-          URL Base del Endpoint
-        </label>
-        <input 
-          type="text" 
-          x-model="getCurrentConfig().base_url"
-          class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-        >
-        <p class="text-[11px] text-slate-500 mt-1">Endpoint REST compatible para llamadas de inferencia y streaming</p>
-      </div>
+      <!-- Live Engine Ecosystem Status Pills -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Active DB Badge -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-indigo-500/10 text-indigo-300 border border-indigo-500/25">
+          <span x-text="getDbIcon(activeDatabase)"></span>
+          <span class="text-slate-400">BD:</span>
+          <span class="font-bold text-white uppercase" x-text="activeDatabase"></span>
+        </span>
 
-      <!-- Default Model -->
-      <div>
-        <label class="block text-xs font-medium text-slate-300 mb-2">
-          Modelo por Defecto
-        </label>
-        <input 
-          type="text" 
-          x-model="getCurrentConfig().default_model"
-          class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-          placeholder="ej. gpt-4o-mini, claude-3-5-sonnet-20241022, deepseek-chat"
-        >
-        <p class="text-[11px] text-slate-500 mt-1">Identificador del modelo que responderá las consultas en este proveedor</p>
-      </div>
+        <!-- Active Storage Badge -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-sky-500/10 text-sky-300 border border-sky-500/25">
+          <span x-text="getStorageIcon(activeStorage)"></span>
+          <span class="text-slate-400">Storage:</span>
+          <span class="font-bold text-white uppercase" x-text="activeStorage"></span>
+        </span>
 
-      <!-- Temperature & Max Tokens -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-2">
-            Temperatura
-          </label>
-          <input 
-            type="number" 
-            step="0.05"
-            min="0"
-            max="1.5"
-            x-model="getCurrentConfig().temperature"
-            class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-          >
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-2">
-            Max Tokens
-          </label>
-          <input 
-            type="number" 
-            step="256"
-            min="512"
-            max="32768"
-            x-model="getCurrentConfig().max_tokens"
-            class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-          >
-        </div>
+        <!-- Active Embedding Provider Badge -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">
+          <i class="fa-solid fa-vector-square text-[10px] text-emerald-400"></i>
+          <span class="text-slate-400">Vector:</span>
+          <span class="font-bold text-white" x-text="selectedEmbeddingModel || getActiveConfig().default_embedding_model || 'nomic-embed-text'"></span>
+        </span>
       </div>
-
     </div>
 
-    <!-- Test Connection & Save Action Toolbar -->
-    <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <!-- Latency Result Display -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Docs Path -->
       <div>
-        <template x-if="testResult">
-          <div 
-            :class="testResult.healthy ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'"
-            class="px-3.5 py-1.5 rounded-xl border text-xs font-mono inline-flex items-center gap-2"
+        <label class="block text-xs font-medium text-slate-300 mb-2">Ruta Base de Documentación (Docs-as-Code)</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+            <i class="fa-solid fa-folder-tree text-xs"></i>
+          </span>
+          <input 
+            type="text" 
+            x-model="systemSettings.docs_path" 
+            placeholder="./docs"
+            class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
           >
-            <i class="fa-solid" :class="testResult.healthy ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'"></i>
-            <span x-text="testResult.message"></span>
-            <span class="text-zinc-500" x-text="`(${testResult.latency_ms} ms)`"></span>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1">Directorio local para ingesta soberana, espejo Git e indexación híbrida BM25 + ChromaDB.</p>
+      </div>
+
+      <!-- Embedding Model -->
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-2">Modelo de Embeddings Activo</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+            <i class="fa-solid fa-vector-square text-xs"></i>
+          </span>
+          <input 
+            type="text" 
+            x-model="systemSettings.embedding_model" 
+            placeholder="ej. gemini-embedding-2, text-embedding-3-small, voyage-4, nomic-embed-text"
+            class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+          >
+        </div>
+        
+        <!-- Quick Select Chips for Active Provider's Embeddings -->
+        <template x-if="(getActiveConfig().recommended_embedding_models || []).length > 0">
+          <div class="mt-2 flex items-center flex-wrap gap-1.5">
+            <span class="text-[10px] text-slate-400">Recomendados para <span class="text-indigo-300" x-text="activeProvider"></span>:</span>
+            <template x-for="emb in (getActiveConfig().recommended_embedding_models || [])" :key="emb">
+              <button
+                type="button"
+                @click="systemSettings.embedding_model = emb; selectedEmbeddingModel = emb"
+                :class="systemSettings.embedding_model === emb ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500/50 hover:text-white'"
+                class="px-2 py-0.5 rounded text-[10px] font-mono border transition cursor-pointer"
+                x-text="emb"
+              ></button>
+            </template>
           </div>
         </template>
       </div>
 
-      <div class="flex items-center gap-3">
-        <!-- Test Button -->
-        <button 
-          type="button" 
-          @click="testConnection(getCurrentConfig())"
-          :disabled="testing"
-          class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-zinc-200 border border-slate-700 transition flex items-center gap-2 cursor-pointer shadow-sm"
-        >
-          <i class="fa-solid fa-bolt text-indigo-400" :class="{ 'animate-spin': testing }"></i>
-          <span x-text="testing ? 'Probando...' : 'Probar Conexión & Latencia'"></span>
-        </button>
-
-        <!-- Save Button -->
-        <button 
-          type="button" 
-          @click="saveConfig(getCurrentConfig())"
-          :disabled="saving"
-          class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/25 transition flex items-center gap-2 cursor-pointer"
-        >
-          <i class="fa-solid fa-floppy-disk"></i>
-          <span x-text="saving ? 'Guardando...' : 'Guardar Credenciales'"></span>
-        </button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- OLLAMA DETECTED MODELS SECTION (WHEN OLLAMA SELECTED) -->
-  <div x-show="selectedProvider === 'ollama'" class="space-y-4">
-    <div class="flex items-center justify-between">
+      <!-- Temperature Slider -->
       <div>
-        <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
-          <i class="fa-solid fa-microchip text-indigo-400"></i>
-          <span>Modelos LLM Instalados en Local (Ollama)</span>
-        </h2>
-        <p class="text-xs text-slate-400">Selecciona el modelo GGUF instalado que ContextForge utilizará al inferir localmente</p>
+        <label class="block text-xs font-medium text-slate-300 mb-2">
+          Temperatura RAG: <span class="font-bold text-indigo-400 font-mono" x-text="systemSettings.temperature"></span>
+        </label>
+        <div class="flex items-center space-x-3">
+          <input 
+            type="range" 
+            min="0.0" 
+            max="1.0" 
+            step="0.05" 
+            x-model.number="systemSettings.temperature"
+            class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+          >
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1">0.0 - 0.2: Máxima fidelidad técnica a las fuentes Markdown y ADRs del proyecto.</p>
       </div>
-      <span class="text-xs text-slate-400 font-medium">
-        {{ models|length }} modelo(s) detectados
-      </span>
+
+      <!-- Active Database Storage Summary Box -->
+      <div class="rounded-xl border border-slate-800/80 bg-slate-950/40 p-3.5 space-y-1.5 text-xs text-slate-300">
+        <div class="flex items-center justify-between text-[11px] font-mono">
+          <span class="text-slate-400">PERSISTENCIA Y STORAGE:</span>
+          <span class="text-emerald-400">Conectado y Validado ✓</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Base de Datos: <strong class="text-white font-mono" x-text="getCurrentDb().name || activeDatabase"></strong> (<span x-text="getCurrentDb().engine_category || 'SQL'"></span>) • 
+          Almacenamiento: <strong class="text-white font-mono" x-text="getCurrentStorage().name || activeStorage"></strong> •
+          Espejo local Docs-as-Code: <strong class="text-emerald-300" x-text="getCurrentStorage().sync_local_mirror ? 'Habilitado (./docs)' : 'Solo Nube'"></strong>.
+        </p>
+      </div>
     </div>
 
-    {% if models %}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {% for m in models %}
-      <label 
-        @click="getCurrentConfig().default_model = '{{ m.name }}'"
-        :class="getCurrentConfig().default_model === '{{ m.name }}' 
-          ? 'border-indigo-500 bg-indigo-500/15 shadow-xl shadow-indigo-500/20 ring-2 ring-indigo-500 scale-[1.02]' 
-          : 'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40 hover:scale-[1.01]'"
-        class="relative flex flex-col p-5 rounded-2xl border cursor-pointer select-none transition-all duration-300 ease-out transform"
+    <div class="pt-4 border-t border-slate-800 flex justify-end">
+      <button 
+        type="button" 
+        @click="saveSystemSettings()"
+        :disabled="savingSystemSettings"
+        class="inline-flex items-center space-x-2 px-5 py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer"
       >
-        <div class="flex items-start justify-between">
-          <div class="flex items-center space-x-2.5">
-            <input 
-              type="radio" 
-              name="ollama_model_choice" 
-              value="{{ m.name }}" 
-              :checked="getCurrentConfig().default_model === '{{ m.name }}'"
-              class="text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 h-4 w-4 border-slate-700 bg-slate-800"
-            >
-            <span class="font-bold text-white text-base font-mono tracking-tight">{{ m.name }}</span>
-          </div>
-
-          <div x-show="getCurrentConfig().default_model === '{{ m.name }}'">
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 flex items-center gap-1.5 shadow-sm">
-              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-              <span>Seleccionado</span>
-            </span>
-          </div>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs text-slate-300">
-          <div class="flex justify-between">
-            <span class="text-slate-400">Tamaño en Disco:</span>
-            <span class="font-mono text-slate-200">{{ m.formatted_size }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">Parámetros:</span>
-            <span class="font-mono text-slate-200">{{ m.parameter_size }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">Cuantización:</span>
-            <span class="font-mono text-slate-200">{{ m.quantization_level }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">Formato:</span>
-            <span class="font-mono text-slate-200">{{ m.format|upper }}</span>
-          </div>
-        </div>
-      </label>
-      {% endfor %}
+        <i class="fa-solid fa-floppy-disk" :class="{ 'animate-spin': savingSystemSettings }"></i>
+        <span x-text="savingSystemSettings ? 'Guardando Parámetros...' : 'Guardar Parámetros de Conocimiento'"></span>
+      </button>
     </div>
-    {% else %}
-    <div class="rounded-xl border border-dashed border-slate-800 p-8 text-center bg-slate-900/20">
-      <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-400 mb-3"></i>
-      <p class="text-sm text-slate-300 font-medium">No se detectaron modelos instalados en Ollama</p>
-      <p class="text-xs text-slate-500 mt-1">Descarga uno en tu terminal ejecutando: <code class="text-indigo-400">ollama pull llama3.1:8b</code></p>
-    </div>
-    {% endif %}
   </div>
-
-  <!-- System Storage & Path Settings Form -->
-  <form action="/settings" method="POST" class="space-y-8">
-    <input type="hidden" name="active_llm_model" :value="getCurrentConfig().default_model">
-    <input type="hidden" name="ollama_url" :value="configs.find(c => c.provider === 'ollama')?.base_url || 'http://localhost:11434'">
-
-    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-6">
-      <h2 class="text-lg font-semibold text-white flex items-center space-x-2 border-b border-slate-800 pb-4">
-        <i class="fa-solid fa-gears text-indigo-400"></i>
-        <span>Parámetros de Base de Conocimiento y Vectores</span>
-      </h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <!-- Documentation Path -->
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-2">
-            Ruta Base de Documentación
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
-              <i class="fa-solid fa-folder-tree text-xs"></i>
-            </span>
-            <input 
-              type="text" 
-              name="docs_path" 
-              value="{{ settings.docs_path }}" 
-              required
-              class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-            >
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">Directorio de archivos Markdown para ingesta e indexación vectorial (por defecto: ./docs)</p>
-        </div>
-
-        <!-- Embedding Model -->
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-2">
-            Modelo de Embeddings
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
-              <i class="fa-solid fa-vector-square text-xs"></i>
-            </span>
-            <input 
-              type="text" 
-              name="embedding_model" 
-              value="{{ settings.embedding_model }}" 
-              required
-              class="w-full pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
-            >
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">Modelo para calcular vectores densos en ChromaDB (ej. nomic-embed-text o all-minilm)</p>
-        </div>
-
-        <!-- Temperature -->
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-2">
-            Temperatura General: <span id="temp-display" class="font-bold text-indigo-400 font-mono">{{ settings.temperature }}</span>
-          </label>
-          <div class="flex items-center space-x-3">
-            <input 
-              type="range" 
-              name="temperature" 
-              min="0.0" 
-              max="1.0" 
-              step="0.05" 
-              value="{{ settings.temperature }}" 
-              oninput="document.getElementById('temp-display').innerText = this.value"
-              class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            >
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">0.0 = Máxima rigurosidad y precisión técnica (recomendado para RAG: 0.1 - 0.3)</p>
-        </div>
-
-      </div>
-
-      <div class="pt-4 border-t border-slate-800 flex justify-end">
-        <button 
-          type="submit" 
-          class="inline-flex items-center space-x-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer"
-        >
-          <i class="fa-solid fa-floppy-disk"></i>
-          <span>Guardar Parámetros de Almacenamiento</span>
-        </button>
-      </div>
-
-    </div>
-
-  </form>
 
 </div>
 
@@ -461,35 +282,161 @@ function llmSettingsApp() {
     configs: {{ llm_configs | tojson }},
     activeProvider: {{ active_llm.provider | tojson }},
     selectedProvider: {{ active_llm.provider | tojson }},
+    activeCategory: 'all',
     testing: false,
     testResult: null,
+    testingEmbedding: false,
+    embeddingTestResult: null,
+    selectedEmbeddingModel: '',
     saving: false,
+    discoveringCli: false,
+    detectedCliMap: {},
     showKey: {},
+
+    // System Settings (Knowledge Base, Docs path, Embeddings, Temperature)
+    systemSettings: {
+      docs_path: {{ settings.docs_path | tojson }},
+      embedding_model: {{ settings.embedding_model | tojson }},
+      temperature: {{ settings.temperature }},
+    },
+    savingSystemSettings: false,
+
+    // Hexagonal Database & Storage state
+    dbConfigs: {{ (db_configs or []) | tojson }},
+    activeDatabase: {{ (active_db.provider if active_db else 'sqlite') | tojson }},
+    selectedDatabase: {{ (active_db.provider if active_db else 'sqlite') | tojson }},
+    testingDb: false,
+    savingDb: false,
+    dbTestResult: null,
+
+    storageConfigs: {{ (storage_configs or []) | tojson }},
+    activeStorage: {{ (active_storage.provider if active_storage else 'local_fs') | tojson }},
+    selectedStorage: {{ (active_storage.provider if active_storage else 'local_fs') | tojson }},
+    testingStorage: false,
+    savingStorage: false,
+    storageTestResult: null,
+
     init() {
       if (Array.isArray(this.configs)) {
         this.configs.forEach(c => {
           this.showKey[c.provider] = false;
         });
       }
+      const cur = this.getCurrentConfig();
+      if (cur && cur.default_embedding_model) {
+        this.selectedEmbeddingModel = cur.default_embedding_model;
+      }
+      this.discoverCliEngines(true);
+    },
+    filteredConfigs() {
+      if (this.activeCategory === 'all') return this.configs;
+      return this.configs.filter(c => c.engine_type === this.activeCategory);
+    },
+    selectEngine(c) {
+      this.selectedProvider = c.provider;
+      this.testResult = null;
+      this.embeddingTestResult = null;
+      this.selectedEmbeddingModel = c.default_embedding_model || 'nomic-embed-text';
     },
     getCurrentConfig() {
       return this.configs.find(c => c.provider === this.selectedProvider) || this.configs[0] || {};
     },
+    getActiveConfig() {
+      return this.configs.find(c => c.provider === this.activeProvider) || this.getCurrentConfig();
+    },
+    getEngineIcon(prov) {
+      const icons = {
+        ollama: '🦙',
+        lm_studio: '🖥️',
+        vllm: '⚡',
+        localai: '🏠',
+        openai: '🧠',
+        anthropic: '🎭',
+        deepseek: '🐋',
+        gemini: '✨',
+        claude_code_cli: '🤖',
+        antigravity_cli: '🚀',
+        codex_cli: '💻',
+        open_code_cli: '🔧',
+        gemini_cli: '💎',
+        aider_cli: '🛠️',
+        ollama_cli: '📦'
+      };
+      return icons[prov] || '⚙️';
+    },
+    getDbIcon(prov) {
+      const icons = {
+        sqlite: '🗄️',
+        postgresql: '🐘',
+        supabase: '⚡',
+        sqlserver: '🏢',
+        mongodb: '🍃',
+        firebase: '🔥'
+      };
+      return icons[prov] || '💾';
+    },
+    getStorageIcon(prov) {
+      const icons = {
+        local_fs: '📂',
+        supabase_storage: '⚡',
+        s3: '🪣',
+        firebase_storage: '🔥'
+      };
+      return icons[prov] || '☁️';
+    },
+    isCliDetected(prov) {
+      return Boolean(this.detectedCliMap[prov]);
+    },
+    handleApiKeyFocus(cfg) {
+      if (cfg && cfg.api_key && cfg.api_key.includes('•')) {
+        cfg._maskedBackup = cfg.api_key;
+      }
+    },
     toggleKeyVisibility(prov) {
       this.showKey[prov] = !this.showKey[prov];
+    },
+    async discoverCliEngines(silent = false) {
+      this.discoveringCli = true;
+      try {
+        const res = await fetch('/api/v1/settings/llm/discover-cli');
+        const data = await res.json();
+        if (data && Array.isArray(data.engines)) {
+          const map = {};
+          data.engines.forEach(e => {
+            if (e.installed) map[e.provider] = e.binary_path;
+          });
+          this.detectedCliMap = map;
+          if (!silent) {
+            window.$toast.success(
+              `Se detectaron ${data.installed_count} herramientas CLI instaladas en el sistema.`,
+              'Escaneo CLI Completado'
+            );
+          }
+        }
+      } catch (err) {
+        if (!silent) {
+          window.$toast.error('No se pudo escanear herramientas CLI locales.');
+        }
+      } finally {
+        this.discoveringCli = false;
+      }
     },
     async testConnection(cfg) {
       this.testing = true;
       this.testResult = null;
       try {
+        const cleanKey = (cfg.api_key || '').includes('•') ? '' : (cfg.api_key || '').trim();
         const res = await fetch('/api/v1/settings/llm/test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             provider: cfg.provider,
-            api_key: cfg.api_key || '',
+            api_key: cleanKey,
             base_url: cfg.base_url || '',
-            default_model: cfg.default_model || ''
+            default_model: cfg.default_model || '',
+            engine_type: cfg.engine_type || '',
+            cli_command: cfg.cli_command || '',
+            cli_args: cfg.cli_args || ''
           })
         });
         const data = await res.json();
@@ -506,6 +453,36 @@ function llmSettingsApp() {
         this.testing = false;
       }
     },
+    async testEmbedding(cfg) {
+      this.testingEmbedding = true;
+      this.embeddingTestResult = null;
+      try {
+        const cleanKey = (cfg.api_key || '').includes('•') ? '' : (cfg.api_key || '').trim();
+        const embModel = this.selectedEmbeddingModel || cfg.default_embedding_model || '';
+        const res = await fetch('/api/v1/settings/llm/test-embedding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: cfg.provider,
+            embedding_model: embModel,
+            api_key: cleanKey,
+            base_url: cfg.base_url || ''
+          })
+        });
+        const data = await res.json();
+        this.embeddingTestResult = data;
+        if (data.healthy) {
+          window.$toast.success(`${data.message} (${data.latency_ms} ms)`, 'Embeddings Verificados');
+        } else {
+          window.$toast.error(data.message, 'Error en Embeddings');
+        }
+      } catch (err) {
+        this.embeddingTestResult = { healthy: false, message: 'Error de red probando embeddings', latency_ms: 0, dimensions: 0 };
+        window.$toast.error('Error de red al probar embeddings');
+      } finally {
+        this.testingEmbedding = false;
+      }
+    },
     async saveConfig(cfg) {
       this.saving = true;
       try {
@@ -519,7 +496,10 @@ function llmSettingsApp() {
             base_url: cfg.base_url || '',
             default_model: cfg.default_model || '',
             temperature: parseFloat(cfg.temperature) || 0.2,
-            max_tokens: parseInt(cfg.max_tokens) || 4096
+            max_tokens: parseInt(cfg.max_tokens) || 4096,
+            engine_type: cfg.engine_type || '',
+            cli_command: cfg.cli_command || '',
+            cli_args: cfg.cli_args || ''
           })
         });
         const data = await res.json();
@@ -551,15 +531,227 @@ function llmSettingsApp() {
           this.configs.forEach(c => {
             c.is_active = (c.provider === prov);
           });
-          window.$toast.success(data.message, 'Proveedor Activo');
+          window.$toast.success(data.message, 'Motor Activo');
         } else {
           window.$toast.error(data.detail || 'No se pudo activar el proveedor');
         }
       } catch (err) {
         window.$toast.error('Error al cambiar de proveedor: ' + err.message);
       }
+    },
+
+    // Database methods
+    selectDb(db) {
+      this.selectedDatabase = db.provider;
+      this.dbTestResult = null;
+    },
+    getCurrentDb() {
+      return this.dbConfigs.find(d => d.provider === this.selectedDatabase) || this.dbConfigs[0] || {};
+    },
+    async testDbConnection(db) {
+      this.testingDb = true;
+      this.dbTestResult = null;
+      try {
+        const res = await fetch('/api/v1/settings/database/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: db.provider,
+            connection_url: db.connection_url || '',
+            host: db.host || '',
+            port: parseInt(db.port) || 0,
+            database_name: db.database_name || '',
+            username: db.username || '',
+            password: db.password || '',
+            api_key: db.api_key || '',
+            project_id: db.project_id || '',
+            ssl_enabled: Boolean(db.ssl_enabled)
+          })
+        });
+        const data = await res.json();
+        this.dbTestResult = data;
+        if (data.healthy) {
+          window.$toast.success(`${data.message} (${data.latency_ms} ms)`, 'Base de Datos Conectada');
+        } else {
+          window.$toast.error(data.message, 'Error de Base de Datos');
+        }
+      } catch (err) {
+        this.dbTestResult = { healthy: false, message: 'Error al probar conexión con BD', latency_ms: 0 };
+        window.$toast.error('Error de red al probar base de datos');
+      } finally {
+        this.testingDb = false;
+      }
+    },
+    async saveDbConfig(db) {
+      this.savingDb = true;
+      try {
+        const res = await fetch('/api/v1/settings/database', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: db.provider,
+            name: db.name,
+            connection_url: db.connection_url || '',
+            host: db.host || '',
+            port: parseInt(db.port) || 0,
+            database_name: db.database_name || '',
+            username: db.username || '',
+            password: db.password || '',
+            api_key: db.api_key || '',
+            project_id: db.project_id || '',
+            ssl_enabled: Boolean(db.ssl_enabled)
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          window.$toast.success(data.message, 'BD Guardada');
+          const idx = this.dbConfigs.findIndex(d => d.provider === db.provider);
+          if (idx !== -1) this.dbConfigs[idx] = data.config;
+        } else {
+          window.$toast.error(data.detail || 'Error al guardar BD');
+        }
+      } catch (err) {
+        window.$toast.error('Error guardando BD: ' + err.message);
+      } finally {
+        this.savingDb = false;
+      }
+    },
+    async activateDb(prov) {
+      try {
+        const res = await fetch('/api/v1/settings/database/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: prov })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          this.activeDatabase = prov;
+          this.dbConfigs.forEach(d => { d.is_active = (d.provider === prov); });
+          window.$toast.success(data.message, 'Base de Datos Activa');
+        }
+      } catch (err) {
+        window.$toast.error('Error activando BD: ' + err.message);
+      }
+    },
+
+    // Storage methods
+    selectStorage(st) {
+      this.selectedStorage = st.provider;
+      this.storageTestResult = null;
+    },
+    getCurrentStorage() {
+      return this.storageConfigs.find(s => s.provider === this.selectedStorage) || this.storageConfigs[0] || {};
+    },
+    async testStorageConnection(st) {
+      this.testingStorage = true;
+      this.storageTestResult = null;
+      try {
+        const res = await fetch('/api/v1/settings/storage/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: st.provider,
+            base_path: st.base_path || './docs',
+            endpoint_url: st.endpoint_url || '',
+            bucket_name: st.bucket_name || '',
+            region: st.region || 'us-east-1',
+            access_key: st.access_key || '',
+            secret_key: st.secret_key || '',
+            project_id: st.project_id || '',
+            sync_local_mirror: Boolean(st.sync_local_mirror)
+          })
+        });
+        const data = await res.json();
+        this.storageTestResult = data;
+        if (data.healthy) {
+          window.$toast.success(`${data.message} (${data.latency_ms} ms)`, 'Storage Verificado');
+        } else {
+          window.$toast.error(data.message, 'Error de Storage');
+        }
+      } catch (err) {
+        this.storageTestResult = { healthy: false, message: 'Error probando storage', latency_ms: 0 };
+        window.$toast.error('Error de red al probar storage');
+      } finally {
+        this.testingStorage = false;
+      }
+    },
+    async saveStorageConfig(st) {
+      this.savingStorage = true;
+      try {
+        const res = await fetch('/api/v1/settings/storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: st.provider,
+            name: st.name,
+            base_path: st.base_path || './docs',
+            endpoint_url: st.endpoint_url || '',
+            bucket_name: st.bucket_name || '',
+            region: st.region || 'us-east-1',
+            access_key: st.access_key || '',
+            secret_key: st.secret_key || '',
+            project_id: st.project_id || '',
+            sync_local_mirror: Boolean(st.sync_local_mirror)
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          window.$toast.success(data.message, 'Storage Guardado');
+          const idx = this.storageConfigs.findIndex(s => s.provider === st.provider);
+          if (idx !== -1) this.storageConfigs[idx] = data.config;
+        } else {
+          window.$toast.error(data.detail || 'Error guardando storage');
+        }
+      } catch (err) {
+        window.$toast.error('Error guardando storage: ' + err.message);
+      } finally {
+        this.savingStorage = false;
+      }
+    },
+    async activateStorage(prov) {
+      try {
+        const res = await fetch('/api/v1/settings/storage/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: prov })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          this.activeStorage = prov;
+          this.storageConfigs.forEach(s => { s.is_active = (s.provider === prov); });
+          window.$toast.success(data.message, 'Storage Activo');
+        }
+      } catch (err) {
+        window.$toast.error('Error activando storage: ' + err.message);
+      }
+    },
+    async saveSystemSettings() {
+      this.savingSystemSettings = true;
+      try {
+        const res = await fetch('/api/v1/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            active_llm_model: this.getActiveConfig().default_model || '',
+            docs_path: this.systemSettings.docs_path || './docs',
+            embedding_model: this.systemSettings.embedding_model || 'nomic-embed-text',
+            temperature: parseFloat(this.systemSettings.temperature) || 0.2
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          window.$toast.success('Parámetros de Base de Conocimiento y Embeddings guardados.', 'Ajustes Actualizados');
+        } else {
+          window.$toast.error(data.detail || 'No se pudieron guardar los parámetros.');
+        }
+      } catch (err) {
+        window.$toast.error('Error al guardar ajustes: ' + err.message);
+      } finally {
+        this.savingSystemSettings = false;
+      }
     }
   };
 }
 </script>
 {% endblock %}
+

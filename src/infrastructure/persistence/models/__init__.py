@@ -16,6 +16,7 @@ from infrastructure.persistence.models.comment_model import (
 from infrastructure.persistence.models.library_model import LibraryORM, ProjectORM
 from infrastructure.persistence.models.llm_config_model import LLMConfigORM
 from infrastructure.persistence.models.settings_model import SettingsModel
+from infrastructure.persistence.models.taxonomy_model import ModuleORM, TagORM
 
 __all__ = [
     "Base",
@@ -33,4 +34,6 @@ __all__ = [
     "ChatMessageORM",
     "SettingsModel",
     "LLMConfigORM",
+    "ModuleORM",
+    "TagORM",
 ]

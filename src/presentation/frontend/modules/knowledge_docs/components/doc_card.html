@@ -1,0 +1,61 @@
+{# Reusable Document Card Component for Docs Browser #}
+<div class="group flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/60 p-5 hover:border-slate-700 hover:bg-slate-800/40 transition shadow-sm">
+  <div class="space-y-3">
+    <!-- Module badge & path -->
+    <div class="flex items-center justify-between text-xs">
+      <span class="px-2.5 py-0.5 rounded-md font-semibold capitalize bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        {{ doc.module }}
+      </span>
+      <span class="font-mono text-slate-400 text-[11px] truncate max-w-[160px]" title="{{ doc.path }}">
+        {{ doc.path }}
+      </span>
+    </div>
+
+    <!-- Title -->
+    <h2 class="text-base font-semibold text-white group-hover:text-indigo-300 transition line-clamp-2">
+      <a href="/docs/view/{{ doc.path }}">{{ doc.title }}</a>
+    </h2>
+
+    <!-- Tags -->
+    {% if doc.tags %}
+    <div class="flex flex-wrap gap-1.5">
+      {% for tag in doc.tags %}
+      <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
+        #{{ tag }}
+      </span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Chunks & Details -->
+    <p class="text-xs text-slate-400 line-clamp-2">
+      Segmentado en <strong class="text-slate-300">{{ doc.chunks|length }} chunks</strong> atómicos listos para RAG.
+    </p>
+  </div>
+
+  <!-- Footer info & link -->
+  <div class="mt-5 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+    <div class="flex items-center space-x-1.5">
+      <i class="fa-regular fa-user text-slate-500"></i>
+      <span class="truncate max-w-[120px]">{{ doc.author }}</span>
+    </div>
+    <div class="flex items-center space-x-3">
+      <a 
+        href="/books/editor?path={{ doc.path }}&project={{ doc.project_slug }}" 
+        class="inline-flex items-center space-x-1 font-semibold text-emerald-400 hover:text-emerald-300 transition"
+        title="Editar documento en Editor Dual"
+      >
+        <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+        <span>Editar</span>
+      </a>
+      <a 
+        href="/docs/view/{{ doc.path }}" 
+        class="inline-flex items-center space-x-1 font-semibold text-indigo-400 hover:text-indigo-300 transition"
+      >
+        <span>Leer</span>
+        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </a>
+    </div>
+  </div>
+</div>
+

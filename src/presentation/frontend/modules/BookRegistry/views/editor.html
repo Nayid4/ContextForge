@@ -82,26 +82,63 @@
     </div>
   </div>
 
-  <!-- Document Metadata Card (Claude Aesthetic) -->
+  <!-- Document Metadata Card (Claude Aesthetic) with Searchable Comboboxes -->
   <div class="bg-[#12151e] p-5 rounded-2xl border border-[#232738] shadow-sm space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       
-      <!-- Project Selection -->
-      <div>
-        <label class="block text-xs font-medium text-zinc-300 mb-1">Librería / Proyecto *</label>
-        <select 
-          x-model="doc.library_id" 
-          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      <!-- 1. Project Selection Combobox -->
+      <div class="relative" @click.outside="projectOpen = false">
+        <label class="block text-xs font-medium text-zinc-300 mb-1">
+          <i class="fa-solid fa-folder-tree text-indigo-400 mr-1"></i>Librería / Proyecto *
+        </label>
+        <button 
+          type="button" 
+          @click="projectOpen = !projectOpen; if(projectOpen) $nextTick(() => $refs.projInput?.focus())"
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] hover:border-indigo-500/50 rounded-xl text-xs text-white flex items-center justify-between cursor-pointer transition"
         >
-          {% for p in projects %}
-          <option value="{{ p.slug.value }}" {% if p.slug.value == active_slug %}selected{% endif %}>
-            {{ p.name }} ({{ p.slug.value }})
-          </option>
-          {% endfor %}
-        </select>
+          <div class="flex items-center gap-2 truncate">
+            <span class="font-semibold text-white truncate" x-text="getProjectName(doc.library_id)"></span>
+            <span class="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800" x-text="doc.library_id"></span>
+          </div>
+          <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400 transition-transform" :class="{ 'rotate-180': projectOpen }"></i>
+        </button>
+
+        <!-- Dropdown -->
+        <div 
+          x-show="projectOpen" 
+          x-transition
+          class="absolute left-0 z-50 mt-1.5 w-full min-w-[240px] rounded-xl bg-[#0d0f17] border border-zinc-800 shadow-2xl p-2 space-y-1.5 backdrop-blur-xl"
+          style="display: none;"
+        >
+          <div class="relative">
+            <input 
+              type="text" 
+              x-ref="projInput"
+              x-model="projectSearch" 
+              placeholder="Buscar proyecto..."
+              class="w-full pl-7 pr-3 py-1 bg-zinc-900 border border-zinc-700/80 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+            <i class="fa-solid fa-magnifying-glass absolute left-2 top-2 text-[10px] text-zinc-500 pointer-events-none"></i>
+          </div>
+          <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+            <template x-for="p in filteredProjects()" :key="p.slug">
+              <div 
+                @click="selectProject(p.slug)"
+                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between cursor-pointer transition select-none"
+                :class="doc.library_id === p.slug ? 'bg-indigo-600/30 text-white font-semibold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'"
+              >
+                <div class="truncate">
+                  <span x-text="p.name"></span>
+                  <span class="text-[10px] font-mono text-zinc-500 ml-1" x-text="`(${p.slug})`"></span>
+                </div>
+                <i x-show="doc.library_id === p.slug" class="fa-solid fa-check text-indigo-400 text-xs"></i>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
 
-      <!-- Title Input -->
+      <!-- 2. Title Input -->
       <div class="md:col-span-2">
         <label class="block text-xs font-medium text-zinc-300 mb-1">Título del Documento *</label>
         <input 
@@ -113,32 +150,159 @@
         >
       </div>
 
-      <!-- Module Input -->
-      <div>
-        <label class="block text-xs font-medium text-zinc-300 mb-1">Módulo o Categoría</label>
-        <input 
-          type="text" 
-          x-model="doc.module" 
-          placeholder="ej. architecture, backend, payments" 
-          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs font-mono text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      <!-- 3. Module Selection Combobox -->
+      <div class="relative" @click.outside="moduleOpen = false">
+        <label class="block text-xs font-medium text-zinc-300 mb-1">
+          <i class="fa-solid fa-layer-group text-indigo-400 mr-1"></i>Módulo o Categoría *
+        </label>
+        <button 
+          type="button" 
+          @click="moduleOpen = !moduleOpen; if(moduleOpen) $nextTick(() => $refs.modInput?.focus())"
+          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] hover:border-indigo-500/50 rounded-xl text-xs text-white flex items-center justify-between cursor-pointer transition font-mono"
         >
+          <div class="flex items-center gap-2 truncate">
+            <span class="font-semibold text-indigo-300 capitalize truncate" x-text="doc.module"></span>
+            <span class="text-[10px] text-zinc-400 truncate" x-text="`(${getModuleName(doc.module)})`"></span>
+          </div>
+          <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400 transition-transform" :class="{ 'rotate-180': moduleOpen }"></i>
+        </button>
+
+        <!-- Dropdown -->
+        <div 
+          x-show="moduleOpen" 
+          x-transition
+          class="absolute left-0 z-50 mt-1.5 w-full min-w-[260px] rounded-xl bg-[#0d0f17] border border-zinc-800 shadow-2xl p-2 space-y-1.5 backdrop-blur-xl"
+          style="display: none;"
+        >
+          <div class="relative">
+            <input 
+              type="text" 
+              x-ref="modInput"
+              x-model="moduleSearch" 
+              placeholder="Buscar o crear módulo..."
+              @keydown.enter.prevent="addCustomModule()"
+              class="w-full pl-7 pr-3 py-1 bg-zinc-900 border border-zinc-700/80 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+            <i class="fa-solid fa-magnifying-glass absolute left-2 top-2 text-[10px] text-zinc-500 pointer-events-none"></i>
+          </div>
+
+          <div class="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+            <template x-for="m in filteredModules()" :key="m.slug">
+              <div 
+                @click="selectModule(m.slug)"
+                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between cursor-pointer transition select-none"
+                :class="doc.module === m.slug ? 'bg-indigo-600/30 text-white font-semibold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'"
+              >
+                <div class="flex items-center gap-2 truncate">
+                  <i :class="`fa-solid ${m.icon || 'fa-folder'} text-indigo-400 text-xs`"></i>
+                  <span class="font-medium truncate" x-text="m.name"></span>
+                  <span class="text-[10px] font-mono text-zinc-500" x-text="m.slug"></span>
+                </div>
+                <i x-show="doc.module === m.slug" class="fa-solid fa-check text-indigo-400 text-xs"></i>
+              </div>
+            </template>
+
+            <!-- Option to create custom if search has no exact match -->
+            <template x-if="moduleSearch.trim() && !availableModules.some(m => m.slug === moduleSearch.trim().toLowerCase())">
+              <div 
+                @click="addCustomModule()"
+                class="px-2.5 py-1.5 rounded-lg text-xs text-indigo-300 hover:bg-indigo-600/20 cursor-pointer flex items-center gap-2 border border-indigo-500/30 border-dashed"
+              >
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>Crear módulo "<strong x-text="moduleSearch.trim()"></strong>"</span>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
 
     </div>
 
-    <!-- Tags and Description -->
+    <!-- Tags Multi-Select Combobox and Description -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-      <div>
-        <label class="block text-xs font-medium text-zinc-300 mb-1">Etiquetas (separadas por coma)</label>
-        <input 
-          type="text" 
-          x-model="tagsInput" 
-          @input="doc.tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean)"
-          placeholder="ej. adr, api, rest, cache" 
-          class="w-full px-3 py-2 bg-[#0c0e14] border border-[#232738] rounded-xl text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+      
+      <!-- Multi-select Tags Combobox -->
+      <div class="relative" @click.outside="tagOpen = false">
+        <label class="block text-xs font-medium text-zinc-300 mb-1">
+          <i class="fa-solid fa-tags text-indigo-400 mr-1"></i>Etiquetas (Selección Múltiple)
+        </label>
+        
+        <!-- Input Container with Chips -->
+        <div 
+          @click="tagOpen = true; $refs.tagInputField?.focus()"
+          class="min-h-[38px] p-1.5 bg-[#0c0e14] border border-[#232738] hover:border-indigo-500/50 rounded-xl text-xs text-white flex flex-wrap items-center gap-1.5 cursor-text transition"
         >
+          <!-- Selected Tag Chips -->
+          <template x-for="t in doc.tags" :key="t">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span x-text="`#${t}`"></span>
+              <button 
+                type="button" 
+                @click.stop="removeTag(t)" 
+                class="text-indigo-400 hover:text-white hover:bg-indigo-600/40 rounded-full w-3.5 h-3.5 flex items-center justify-center cursor-pointer"
+              >
+                <i class="fa-solid fa-xmark text-[9px]"></i>
+              </button>
+            </span>
+          </template>
+
+          <input 
+            type="text" 
+            x-ref="tagInputField"
+            x-model="tagSearch" 
+            @keydown.enter.prevent="addCustomTag()"
+            @keydown.backspace="if(!tagSearch && doc.tags.length) removeTag(doc.tags[doc.tags.length-1])"
+            placeholder="Seleccionar o escribir..."
+            class="flex-1 min-w-[80px] bg-transparent border-none text-xs text-white placeholder-zinc-500 focus:outline-none py-0.5 px-1 font-mono"
+          >
+          <i class="fa-solid fa-chevron-down text-[10px] text-zinc-500 pr-1.5 pointer-events-none" :class="{ 'rotate-180': tagOpen }"></i>
+        </div>
+
+        <!-- Tags Multi-Select Dropdown -->
+        <div 
+          x-show="tagOpen" 
+          x-transition
+          class="absolute left-0 z-50 mt-1.5 w-full min-w-[280px] rounded-xl bg-[#0d0f17] border border-zinc-800 shadow-2xl p-2.5 space-y-2 backdrop-blur-xl"
+          style="display: none;"
+        >
+          <div class="flex items-center justify-between text-[10px] text-zinc-400 font-mono px-1">
+            <span>ETIQUETAS DEL SISTEMA</span>
+            <span x-text="`${doc.tags.length} seleccionadas`"></span>
+          </div>
+
+          <div class="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+            <template x-for="t in filteredTags()" :key="t.slug">
+              <div 
+                @click="toggleTag(t.slug)"
+                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between cursor-pointer transition select-none"
+                :class="doc.tags.includes(t.slug) ? 'bg-indigo-600/25 border border-indigo-500/40 text-white' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white border border-transparent'"
+              >
+                <div class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-tag text-[10px]" :class="doc.tags.includes(t.slug) ? 'text-indigo-400' : 'text-zinc-500'"></i>
+                  <span class="font-medium" x-text="t.name"></span>
+                  <span class="text-[10px] font-mono text-zinc-500" x-text="`#${t.slug}`"></span>
+                </div>
+                <template x-if="doc.tags.includes(t.slug)">
+                  <span class="text-indigo-400 text-xs"><i class="fa-solid fa-check"></i></span>
+                </template>
+              </div>
+            </template>
+
+            <!-- Custom tag create prompt -->
+            <template x-if="tagSearch.trim() && !availableTags.some(t => t.slug === tagSearch.trim().toLowerCase())">
+              <div 
+                @click="addCustomTag()"
+                class="px-2.5 py-1.5 rounded-lg text-xs text-indigo-300 hover:bg-indigo-600/20 cursor-pointer flex items-center gap-2 border border-indigo-500/30 border-dashed"
+              >
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>Agregar etiqueta personalizada "<strong x-text="tagSearch.trim()"></strong>"</span>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
 
+      <!-- Description Input -->
       <div class="md:col-span-2">
         <label class="block text-xs font-medium text-zinc-300 mb-1">Resumen o descripción ejecutiva</label>
         <input 
@@ -462,6 +626,109 @@ function dualEditorApp() {
     saving: false,
     tagsInput: '{% if existing_doc and existing_doc.tags %}{{ existing_doc.tags | join(", ") }}{% else %}arquitectura, backend{% endif %}',
     renderedHtml: '<p class="text-zinc-500 italic">Escribe en el editor para previsualizar...</p>',
+    
+    // Comboboxes state
+    availableProjects: [
+      {% for p in projects %}
+      { slug: {{ p.slug.value | tojson }}, name: {{ p.name | tojson }} },
+      {% endfor %}
+    ],
+    projectSearch: '',
+    projectOpen: false,
+
+    availableModules: [
+      {% for m in available_modules %}
+      { slug: {{ m.slug | tojson }}, name: {{ m.name | tojson }}, icon: {{ m.icon | tojson }}, color: {{ m.color | tojson }} },
+      {% endfor %}
+    ],
+    moduleSearch: '',
+    moduleOpen: false,
+
+    availableTags: [
+      {% for t in available_tags %}
+      { slug: {{ t.slug | tojson }}, name: {{ t.name | tojson }}, color: {{ t.color | tojson }} },
+      {% endfor %}
+    ],
+    tagSearch: '',
+    tagOpen: false,
+
+    filteredProjects() {
+      if (!this.projectSearch.trim()) return this.availableProjects;
+      const q = this.projectSearch.toLowerCase().trim();
+      return this.availableProjects.filter(p => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
+    },
+    getProjectName(slug) {
+      const p = this.availableProjects.find(x => x.slug === slug);
+      return p ? p.name : slug;
+    },
+    selectProject(slug) {
+      this.doc.library_id = slug;
+      this.projectOpen = false;
+      this.projectSearch = '';
+    },
+
+    filteredModules() {
+      if (!this.moduleSearch.trim()) return this.availableModules;
+      const q = this.moduleSearch.toLowerCase().trim();
+      return this.availableModules.filter(m => m.name.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q));
+    },
+    getModuleName(slug) {
+      const m = this.availableModules.find(x => x.slug === slug);
+      return m ? m.name : slug;
+    },
+    selectModule(slug) {
+      this.doc.module = slug;
+      this.moduleOpen = false;
+      this.moduleSearch = '';
+    },
+    addCustomModule(name) {
+      const val = (name || this.moduleSearch).trim();
+      if (!val) return;
+      const slug = val.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      if (!this.availableModules.some(m => m.slug === slug)) {
+        this.availableModules.push({ slug: slug, name: val, icon: 'fa-folder', color: 'indigo' });
+      }
+      this.doc.module = slug;
+      this.moduleOpen = false;
+      this.moduleSearch = '';
+    },
+
+    filteredTags() {
+      if (!this.tagSearch.trim()) return this.availableTags;
+      const q = this.tagSearch.toLowerCase().trim();
+      return this.availableTags.filter(t => t.name.toLowerCase().includes(q) || t.slug.toLowerCase().includes(q));
+    },
+    toggleTag(tagSlug) {
+      const slug = tagSlug.trim().toLowerCase();
+      if (!slug) return;
+      if (!this.doc.tags) this.doc.tags = [];
+      const idx = this.doc.tags.indexOf(slug);
+      if (idx >= 0) {
+        this.doc.tags.splice(idx, 1);
+      } else {
+        this.doc.tags.push(slug);
+      }
+      this.tagsInput = this.doc.tags.join(', ');
+    },
+    removeTag(slug) {
+      if (!this.doc.tags) return;
+      this.doc.tags = this.doc.tags.filter(t => t !== slug);
+      this.tagsInput = this.doc.tags.join(', ');
+    },
+    addCustomTag() {
+      const val = this.tagSearch.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+      if (!val) return;
+      if (!this.doc.tags) this.doc.tags = [];
+      if (!this.doc.tags.includes(val)) {
+        this.doc.tags.push(val);
+      }
+      if (!this.availableTags.some(t => t.slug === val)) {
+        this.availableTags.push({ slug: val, name: val, color: 'blue' });
+      }
+      this.tagsInput = this.doc.tags.join(', ');
+      this.tagSearch = '';
+    },
+
     doc: {
       doc_path: '{{ existing_doc.path if existing_doc else "" }}',
       title: {{ (existing_doc.title if existing_doc else "Especificación de Flujo y Reglas Técnicas") | tojson }},

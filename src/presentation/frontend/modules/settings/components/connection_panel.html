@@ -1,0 +1,310 @@
+{# Reusable Connection, CLI & Ecosystem Embeddings Configuration Panel for Settings View #}
+<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+    <div>
+      <div class="flex items-center flex-wrap gap-2">
+        <span class="text-xl" x-text="getEngineIcon(getCurrentConfig().provider)"></span>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>Configuración de</span>
+          <span class="text-indigo-400" x-text="getCurrentConfig().name"></span>
+        </h3>
+        <span 
+          class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 uppercase"
+          x-text="getCurrentConfig().engine_type"
+        ></span>
+        <template x-if="getCurrentConfig().ecosystem_label">
+          <span 
+            class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/25"
+            x-text="getCurrentConfig().ecosystem_label"
+          ></span>
+        </template>
+      </div>
+      <p class="text-xs text-slate-400 mt-1">
+        <template x-if="getCurrentConfig().engine_type === 'local_cli'">
+          <span>Ejecución segura por subproceso local (STDIO / <code class="text-emerald-300">create_subprocess_exec</code> sin shell=True)</span>
+        </template>
+        <template x-if="getCurrentConfig().engine_type === 'local_http'">
+          <span>Inferencia en servidor local HTTP soberano sin necesidad de clave comercial externa</span>
+        </template>
+        <template x-if="getCurrentConfig().engine_type === 'cloud_api'">
+          <span>Conexión directa HTTPS con cabeceras nativas (<code class="text-sky-300" x-text="selectedProvider === 'gemini' ? 'x-goog-api-key' : (selectedProvider === 'anthropic' ? 'x-api-key' : 'Authorization: Bearer')"></code>) y sanitización ASCII</span>
+        </template>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <!-- Activate CTA -->
+      <button 
+        type="button" 
+        @click="activateProvider(selectedProvider)"
+        :disabled="activeProvider === selectedProvider"
+        :class="activeProvider === selectedProvider 
+          ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40 cursor-default' 
+          : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 cursor-pointer'"
+        class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-transparent transition flex items-center gap-1.5"
+      >
+        <i class="fa-solid" :class="activeProvider === selectedProvider ? 'fa-circle-check text-emerald-400' : 'fa-bolt'"></i>
+        <span x-text="activeProvider === selectedProvider ? 'Motor Activo Global' : 'Activar este Motor'"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Dynamic Configuration Form Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- API Key Field (for Cloud APIs) -->
+    <div x-show="getCurrentConfig().engine_type === 'cloud_api'">
+      <label class="block text-xs font-medium text-slate-300 mb-2">
+        API Key / Token de Acceso (ASCII Puro)
+      </label>
+      <div class="relative">
+        <input 
+          :type="showKey[selectedProvider] ? 'text' : 'password'"
+          x-model="getCurrentConfig().api_key"
+          @focus="handleApiKeyFocus(getCurrentConfig())"
+          placeholder="Introduce tu API Key (ej. AIza... o sk-...)" 
+          class="w-full px-3.5 py-2 pr-20 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+        >
+        <div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+          <button 
+            type="button"
+            x-show="getCurrentConfig().api_key && getCurrentConfig().api_key.includes('•')"
+            @click="getCurrentConfig().api_key = ''"
+            class="px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[10px] text-amber-300 font-mono cursor-pointer"
+            title="Limpiar máscara para pegar una nueva API Key"
+          >
+            Cambiar
+          </button>
+          <button 
+            type="button" 
+            @click="toggleKeyVisibility(selectedProvider)"
+            class="p-1.5 text-slate-400 hover:text-white cursor-pointer"
+          >
+            <i class="fa-regular" :class="showKey[selectedProvider] ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
+        <i class="fa-solid fa-shield-halved text-[10px] text-emerald-400"></i>
+        <span>Si ves <code class="text-indigo-300">••••</code>, tu clave guardada se usará automáticamente al probar conexión.</span>
+      </p>
+    </div>
+
+    <!-- Base URL (for Local HTTP and Cloud APIs) -->
+    <div x-show="getCurrentConfig().engine_type !== 'local_cli'">
+      <label class="block text-xs font-medium text-slate-300 mb-2">
+        URL Base del Endpoint HTTP
+      </label>
+      <input 
+        type="text" 
+        x-model="getCurrentConfig().base_url"
+        placeholder="ej. https://generativelanguage.googleapis.com/v1beta"
+        class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+      >
+      <p class="text-[11px] text-slate-400 mt-1">
+        <span x-show="selectedProvider === 'gemini'">Google AI Studio (<code class="text-sky-300">https://generativelanguage.googleapis.com/v1beta</code>) — normaliza automáticamente <code class="text-slate-300">/interactions</code> y <code class="text-slate-300">/openai</code></span>
+        <span x-show="selectedProvider === 'lm_studio'">LM Studio Server por defecto: <code class="text-indigo-300">http://localhost:1234/v1</code></span>
+        <span x-show="selectedProvider === 'vllm'">vLLM OpenAI Server por defecto: <code class="text-indigo-300">http://localhost:8000/v1</code></span>
+        <span x-show="selectedProvider === 'localai'">LocalAI Server por defecto: <code class="text-indigo-300">http://localhost:8080/v1</code></span>
+        <span x-show="!['gemini', 'lm_studio', 'vllm', 'localai'].includes(selectedProvider)">Endpoint REST para inferencia, streaming SSE y embeddings</span>
+      </p>
+    </div>
+
+    <!-- CLI Binary Command (for Local CLI Agents) -->
+    <div x-show="getCurrentConfig().engine_type === 'local_cli'">
+      <label class="block text-xs font-medium text-slate-300 mb-2">
+        Ejecutable Binario en PATH (<code class="text-emerald-400">cli_command</code>)
+      </label>
+      <input 
+        type="text" 
+        x-model="getCurrentConfig().cli_command"
+        placeholder="ej. agy, claude, opencode, codex, gemini, aider, ollama"
+        class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-emerald-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+      >
+      <p class="text-[11px] text-slate-400 mt-1">
+        <span x-show="selectedProvider === 'antigravity_cli'">Antigravity CLI utiliza el binario <code class="text-emerald-300">agy</code> (<code class="text-slate-400">%LOCALAPPDATA%\agy\bin\agy.exe</code>)</span>
+        <span x-show="selectedProvider === 'open_code_cli'">OpenCode v2 utiliza el binario <code class="text-emerald-300">opencode</code> (<code class="text-slate-400">opencode run --model {model} "{prompt}"</code>)</span>
+        <span x-show="selectedProvider === 'claude_code_cli'">Claude Code CLI utiliza <code class="text-emerald-300">claude</code> (<code class="text-slate-400">claude -p "{prompt}" --output-format text</code>)</span>
+        <span x-show="!['antigravity_cli', 'open_code_cli', 'claude_code_cli'].includes(selectedProvider)">Nombre del binario instalado en tu sistema o ruta absoluta al ejecutable.</span>
+      </p>
+    </div>
+
+    <!-- CLI Arguments Template (for Local CLI Agents) -->
+    <div x-show="getCurrentConfig().engine_type === 'local_cli'">
+      <label class="block text-xs font-medium text-slate-300 mb-2">
+        Plantilla de Argumentos CLI (<code class="text-emerald-400">cli_args</code>)
+      </label>
+      <input 
+        type="text" 
+        x-model="getCurrentConfig().cli_args"
+        placeholder="ej. -p {prompt} --output-format text"
+        class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+      >
+      <p class="text-[11px] text-slate-400 mt-1">
+        Placeholders soportados: <code class="text-indigo-300">{prompt}</code> y <code class="text-indigo-300">{model}</code> (pasados como lista de argumentos segura).
+      </p>
+    </div>
+
+    <!-- Default Model + Recommended Models Quick-Select Chips -->
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-2">
+        Identificador del Modelo (<code class="text-indigo-300">default_model</code>)
+      </label>
+      <input 
+        type="text" 
+        x-model="getCurrentConfig().default_model"
+        class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+        placeholder="ej. gemini-2.5-flash, gpt-5.4, claude-sonnet-4-5, llama3.1:8b"
+      >
+      <template x-if="(getCurrentConfig().recommended_models || []).length > 0">
+        <div class="mt-2 flex items-center flex-wrap gap-1.5">
+          <span class="text-[10px] text-slate-400">Sugeridos:</span>
+          <template x-for="mod in (getCurrentConfig().recommended_models || [])" :key="mod">
+            <button
+              type="button"
+              @click="getCurrentConfig().default_model = mod"
+              :class="getCurrentConfig().default_model === mod ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800/90 text-slate-300 border-slate-700 hover:border-indigo-500/50 hover:text-white'"
+              class="px-2 py-0.5 rounded-md text-[10px] font-mono border transition cursor-pointer"
+              x-text="mod"
+            ></button>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <!-- Temperature & Max Tokens -->
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-2">
+          Temperatura
+        </label>
+        <input 
+          type="number" 
+          step="0.05"
+          min="0"
+          max="1.5"
+          x-model="getCurrentConfig().temperature"
+          class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+        >
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-2">
+          Max Tokens
+        </label>
+        <input 
+          type="number" 
+          step="256"
+          min="512"
+          max="32768"
+          x-model="getCurrentConfig().max_tokens"
+          class="w-full px-3.5 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+        >
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Ecosystem Embeddings Subsection -->
+  <div class="rounded-xl border border-slate-800/90 bg-slate-950/50 p-4 space-y-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-vector-square text-sky-400 text-xs"></i>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider">Embeddings Vectoriales del Ecosistema</h4>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/10 text-sky-300 border border-sky-500/20" x-text="`Motor: ${getCurrentConfig().embedding_provider || getCurrentConfig().provider}`"></span>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-0.5">
+          <span x-show="selectedProvider === 'gemini' || selectedProvider === 'gemini_cli'">Soporta <strong>Gemini Embeddings 2</strong> (<code class="text-sky-300">gemini-embedding-2</code> multimodal con truncamiento Matryoshka MRL 768/1536/3072) y <code class="text-sky-300">gemini-embedding-001</code>.</span>
+          <span x-show="selectedProvider === 'anthropic' || selectedProvider === 'claude_code_cli'">Anthropic delega embeddings oficialmente en <strong>Voyage AI</strong> (<code class="text-sky-300">voyage-4</code>, <code class="text-sky-300">voyage-code-4</code>, <code class="text-sky-300">voyage-4-large</code>).</span>
+          <span x-show="!['gemini', 'gemini_cli', 'anthropic', 'claude_code_cli'].includes(selectedProvider)">Selecciona o prueba el modelo de embeddings recomendado para indexación híbrida RAG.</span>
+        </p>
+      </div>
+
+      <button
+        type="button"
+        @click="testEmbedding(getCurrentConfig())"
+        :disabled="testingEmbedding"
+        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+      >
+        <i class="fa-solid fa-cubes-stacked text-sky-400" :class="{ 'animate-spin': testingEmbedding }"></i>
+        <span x-text="testingEmbedding ? 'Generando Vector...' : 'Probar Embeddings'"></span>
+      </button>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="flex items-center flex-wrap gap-1.5">
+        <span class="text-[10px] text-slate-400">Modelos Embedding:</span>
+        <template x-for="embMod in (getCurrentConfig().recommended_embedding_models || ['nomic-embed-text'])" :key="embMod">
+          <button
+            type="button"
+            @click="selectedEmbeddingModel = embMod; document.querySelector('input[name=embedding_model]').value = embMod"
+            :class="(selectedEmbeddingModel || getCurrentConfig().embedding_model) === embMod ? 'bg-sky-600 text-white border-sky-400' : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500/50'"
+            class="px-2 py-0.5 rounded text-[10px] font-mono border transition cursor-pointer"
+            x-text="embMod"
+          ></button>
+        </template>
+      </div>
+
+      <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
+        <span>Dimensiones MRL:</span>
+        <template x-for="dim in (getCurrentConfig().supported_embedding_dimensions || [768])" :key="dim">
+          <span class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300" x-text="`${dim}d`"></span>
+        </template>
+      </div>
+    </div>
+
+    <template x-if="embeddingTestResult">
+      <div 
+        :class="embeddingTestResult.healthy ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'"
+        class="px-3 py-2 rounded-lg border text-xs font-mono flex items-center justify-between gap-2"
+      >
+        <div class="flex items-center gap-2">
+          <i class="fa-solid" :class="embeddingTestResult.healthy ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'"></i>
+          <span x-text="embeddingTestResult.message"></span>
+        </div>
+        <span class="text-zinc-400 shrink-0" x-text="`${embeddingTestResult.dimensions || 0} dims • ${embeddingTestResult.latency_ms} ms`"></span>
+      </div>
+    </template>
+  </div>
+
+  <!-- Test Connection & Save Action Toolbar -->
+  <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <!-- Latency Result Display -->
+    <div>
+      <template x-if="testResult">
+        <div 
+          :class="testResult.healthy ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'"
+          class="px-3.5 py-2 rounded-xl border text-xs font-mono inline-flex items-center gap-2"
+        >
+          <i class="fa-solid" :class="testResult.healthy ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'"></i>
+          <span x-text="testResult.message"></span>
+          <span class="text-zinc-400" x-text="`(${testResult.latency_ms} ms)`"></span>
+        </div>
+      </template>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Test Button -->
+      <button 
+        type="button" 
+        @click="testConnection(getCurrentConfig())"
+        :disabled="testing"
+        class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-zinc-200 border border-slate-700 transition flex items-center gap-2 cursor-pointer shadow-sm"
+      >
+        <i class="fa-solid fa-bolt text-indigo-400" :class="{ 'animate-spin': testing }"></i>
+        <span x-text="testing ? 'Verificando...' : (getCurrentConfig().engine_type === 'local_cli' ? 'Verificar Binario CLI' : 'Probar Conexión & Latencia')"></span>
+      </button>
+
+      <!-- Save Button -->
+      <button 
+        type="button" 
+        @click="saveConfig(getCurrentConfig())"
+        :disabled="saving"
+        class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/25 transition flex items-center gap-2 cursor-pointer"
+      >
+        <i class="fa-solid fa-floppy-disk"></i>
+        <span x-text="saving ? 'Guardando...' : 'Guardar Configuración'"></span>
+      </button>
+    </div>
+  </div>
+</div>

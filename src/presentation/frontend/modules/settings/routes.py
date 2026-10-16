@@ -14,8 +14,10 @@ from application.settings.handlers import (
     UpdateSettingsCommandHandler,
 )
 from application.settings.queries import GetOllamaModelsQuery, GetSettingsQuery
+from domain.infrastructure_config.repositories import IInfrastructureConfigRepository
 from domain.llm.repositories import ILLMConfigRepository
 from presentation.api.dependencies import (
+    get_infrastructure_config_repo,
     get_llm_config_repo,
     get_ollama_models_handler,
     get_settings_handler,
@@ -37,18 +39,23 @@ def _format_model_size(size_bytes: int) -> str:
     return f"{size_bytes} B"
 
 
-@router.get("", response_class=HTMLResponse)
-async def settings_view(
-    request: Request,
-    settings_handler: GetSettingsQueryHandler = Depends(get_settings_handler),
-    models_handler: GetOllamaModelsQueryHandler = Depends(get_ollama_models_handler),
-    llm_repo: ILLMConfigRepository = Depends(get_llm_config_repo),
-) -> HTMLResponse:
-    """Render settings page with detected Ollama models and multi-provider configurations."""
-    settings = await settings_handler.handle(GetSettingsQuery())
+async def _build_settings_context(
+    settings_handler: GetSettingsQueryHandler,
+    models_handler: GetOllamaModelsQueryHandler,
+    llm_repo: ILLMConfigRepository,
+    infra_repo: IInfrastructureConfigRepository,
+    success_message: str | None = None,
+    override_settings: Any | None = None,
+) -> dict[str, Any]:
+    """Assemble full settings template context with LLM, CLI, Database, and Storage engines."""
+    settings = override_settings or await settings_handler.handle(GetSettingsQuery())
     models_raw = await models_handler.handle(GetOllamaModelsQuery())
     llm_configs = await llm_repo.get_all()
     active_llm = await llm_repo.get_active()
+    db_configs = await infra_repo.get_all_databases()
+    active_db = await infra_repo.get_active_database()
+    storage_configs = await infra_repo.get_all_storages()
+    active_storage = await infra_repo.get_active_storage()
 
     models = [
         {
@@ -59,19 +66,39 @@ async def settings_view(
         for m in models_raw
     ]
 
-    ollama_online = len(models_raw) > 0
+    return {
+        "settings": settings,
+        "models": models,
+        "ollama_online": len(models_raw) > 0,
+        "llm_configs": [c.to_dict(mask_key=True) for c in llm_configs],
+        "active_llm": active_llm.to_dict(mask_key=True),
+        "db_configs": [d.to_dict(mask_secrets=True) for d in db_configs],
+        "active_db": active_db.to_dict(mask_secrets=True),
+        "storage_configs": [s.to_dict(mask_secrets=True) for s in storage_configs],
+        "active_storage": active_storage.to_dict(mask_secrets=True),
+        "success_message": success_message,
+    }
 
+
+@router.get("", response_class=HTMLResponse)
+async def settings_view(
+    request: Request,
+    settings_handler: GetSettingsQueryHandler = Depends(get_settings_handler),
+    models_handler: GetOllamaModelsQueryHandler = Depends(get_ollama_models_handler),
+    llm_repo: ILLMConfigRepository = Depends(get_llm_config_repo),
+    infra_repo: IInfrastructureConfigRepository = Depends(get_infrastructure_config_repo),
+) -> HTMLResponse:
+    """Render settings page with detected Ollama models and multi-provider configurations."""
+    ctx = await _build_settings_context(
+        settings_handler=settings_handler,
+        models_handler=models_handler,
+        llm_repo=llm_repo,
+        infra_repo=infra_repo,
+    )
     return templates.TemplateResponse(
         request=request,
         name="modules/settings/views/settings.html",
-        context={
-            "settings": settings,
-            "models": models,
-            "ollama_online": ollama_online,
-            "llm_configs": [c.to_dict(mask_key=True) for c in llm_configs],
-            "active_llm": active_llm.to_dict(mask_key=True),
-            "success_message": None,
-        },
+        context=ctx,
     )
 
 
@@ -87,6 +114,7 @@ async def update_settings_view(
     update_handler: UpdateSettingsCommandHandler = Depends(get_update_settings_handler),
     models_handler: GetOllamaModelsQueryHandler = Depends(get_ollama_models_handler),
     llm_repo: ILLMConfigRepository = Depends(get_llm_config_repo),
+    infra_repo: IInfrastructureConfigRepository = Depends(get_infrastructure_config_repo),
 ) -> HTMLResponse:
     """Save updated system settings and active LLM model."""
     command = UpdateSettingsCommand(
@@ -97,32 +125,18 @@ async def update_settings_view(
         temperature=temperature,
     )
     updated_settings = await update_handler.handle(command)
-    models_raw = await models_handler.handle(GetOllamaModelsQuery())
-    llm_configs = await llm_repo.get_all()
-    active_llm = await llm_repo.get_active()
-
-    models = [
-        {
-            **m,
-            "formatted_size": _format_model_size(m.get("size_bytes", 0)),
-            "is_active": m.get("name") == updated_settings.active_llm_model,
-        }
-        for m in models_raw
-    ]
-
-    ollama_online = len(models_raw) > 0
-
+    ctx = await _build_settings_context(
+        settings_handler=settings_handler,
+        models_handler=models_handler,
+        llm_repo=llm_repo,
+        infra_repo=infra_repo,
+        override_settings=updated_settings,
+        success_message=f"Configuración guardada exitosamente. Modelo activo: {updated_settings.active_llm_model}",
+    )
     return templates.TemplateResponse(
         request=request,
         name="modules/settings/views/settings.html",
-        context={
-            "settings": updated_settings,
-            "models": models,
-            "ollama_online": ollama_online,
-            "llm_configs": [c.to_dict(mask_key=True) for c in llm_configs],
-            "active_llm": active_llm.to_dict(mask_key=True),
-            "success_message": f"Configuración guardada exitosamente. Modelo activo: {updated_settings.active_llm_model}",
-        },
+        context=ctx,
     )
 
 
@@ -132,34 +146,20 @@ async def refresh_models_htmx(
     settings_handler: GetSettingsQueryHandler = Depends(get_settings_handler),
     models_handler: GetOllamaModelsQueryHandler = Depends(get_ollama_models_handler),
     llm_repo: ILLMConfigRepository = Depends(get_llm_config_repo),
+    infra_repo: IInfrastructureConfigRepository = Depends(get_infrastructure_config_repo),
 ) -> HTMLResponse:
     """HTMX endpoint to refresh installed models from Ollama daemon."""
-    settings = await settings_handler.handle(GetSettingsQuery())
-    models_raw = await models_handler.handle(GetOllamaModelsQuery())
-    llm_configs = await llm_repo.get_all()
-    active_llm = await llm_repo.get_active()
-
-    models = [
-        {
-            **m,
-            "formatted_size": _format_model_size(m.get("size_bytes", 0)),
-            "is_active": m.get("name") == settings.active_llm_model,
-        }
-        for m in models_raw
-    ]
-
-    ollama_online = len(models_raw) > 0
-
+    ctx = await _build_settings_context(
+        settings_handler=settings_handler,
+        models_handler=models_handler,
+        llm_repo=llm_repo,
+        infra_repo=infra_repo,
+        success_message="Lista de modelos Ollama sincronizada en tiempo real.",
+    )
     return templates.TemplateResponse(
         request=request,
         name="modules/settings/views/settings.html",
-        context={
-            "settings": settings,
-            "models": models,
-            "ollama_online": ollama_online,
-            "llm_configs": [c.to_dict(mask_key=True) for c in llm_configs],
-            "active_llm": active_llm.to_dict(mask_key=True),
-            "success_message": "Lista de modelos Ollama sincronizada en tiempo real.",
-        },
+        context=ctx,
     )
+
 

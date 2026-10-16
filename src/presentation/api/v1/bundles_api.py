@@ -69,3 +69,64 @@ async def download_bundle(
         filename=filename,
     )
 
+
+class ExportAgentRulesRequest(BaseModel):
+    project_slug: str = Field(default="default")
+    targets: list[str] = Field(default_factory=lambda: ["CLAUDE.md", ".cursorrules", "AGENTS.md"])
+    selected_modules: list[str] = Field(default_factory=list)
+    write_to_project_root: bool = Field(default=True)
+
+
+@router.post("/export-agent-rules")
+async def export_agent_rules_endpoint(
+    payload: ExportAgentRulesRequest,
+) -> dict[str, Any]:
+    """Generate and optionally write CLAUDE.md, .cursorrules, and AGENTS.md for local CLI agents."""
+    from application.context_bridge.commands.export_agent_rules import (
+        ExportAgentRulesCommand,
+        ExportAgentRulesCommandHandler,
+    )
+    from presentation.api.dependencies import get_doc_repo
+
+    doc_repo = get_doc_repo()
+    out_dir = "." if payload.write_to_project_root else "./bundles"
+    handler = ExportAgentRulesCommandHandler(doc_repo=doc_repo, output_dir=out_dir)
+
+    target_map = {
+        "CLAUDE.md": "claude_md",
+        "claude_md": "claude_md",
+        ".cursorrules": "cursorrules",
+        "cursorrules": "cursorrules",
+        "AGENTS.md": "agents_md",
+        "agents_md": "agents_md",
+    }
+
+    generated_files: list[dict[str, Any]] = []
+    docs_count = 0
+    for raw_target in payload.targets:
+        mapped = target_map.get(raw_target, "claude_md")
+        res = await handler.handle(
+            ExportAgentRulesCommand(
+                project_slug=payload.project_slug,
+                agent_target=mapped,
+                modules=payload.selected_modules,
+            )
+        )
+        docs_count = res.documents_included
+        generated_files.append(
+            {
+                "filename": res.filename,
+                "target": mapped,
+                "token_estimate": res.token_estimate,
+                "written_path": res.file_path,
+                "content": res.content,
+            }
+        )
+
+    return {
+        "project_slug": payload.project_slug,
+        "total_documents_included": docs_count,
+        "files": generated_files,
+    }
+
+

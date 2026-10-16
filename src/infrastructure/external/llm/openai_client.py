@@ -1,4 +1,4 @@
-"""OpenAI & DeepSeek HTTP Client Adapter for LLM inference."""
+"""OpenAI, DeepSeek & Local OpenAI-Compatible (LM Studio, vLLM, LocalAI) HTTP Client Adapter."""
 
 from __future__ import annotations
 
@@ -7,13 +7,14 @@ import logging
 import time
 from typing import Any, AsyncGenerator
 import httpx
+from domain.llm.entities import is_masked_api_key, sanitize_api_key
 from domain.llm.interfaces import ILLMClient
 
 logger = logging.getLogger("infrastructure.llm.openai")
 
 
 class OpenAIHttpClient(ILLMClient):
-    """Client for OpenAI-compatible APIs (OpenAI, DeepSeek, Google Gemini OpenAI endpoint)."""
+    """Client for OpenAI-compatible APIs (OpenAI, DeepSeek, LM Studio, vLLM, LocalAI, Gemini)."""
 
     def __init__(
         self,
@@ -21,22 +22,33 @@ class OpenAIHttpClient(ILLMClient):
         base_url: str = "https://api.openai.com/v1",
         default_model: str = "gpt-4o-mini",
         timeout_seconds: float = 60.0,
+        require_api_key: bool = True,
     ) -> None:
-        self._api_key = api_key
-        self._base_url = base_url.rstrip("/")
+        self._raw_key_was_masked = bool(api_key and is_masked_api_key(api_key))
+        self._api_key = sanitize_api_key(api_key)
+        self._base_url = (base_url or "https://api.openai.com/v1").strip().rstrip("/")
         self._default_model = default_model
         self._timeout = timeout_seconds
+        self._require_api_key = require_api_key
 
     def _get_headers(self) -> dict[str, str]:
-        headers = {
+        effective_key = self._api_key or ("local-no-key-required" if not self._require_api_key else "")
+        headers: dict[str, str] = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self._api_key}",
         }
+        if effective_key:
+            headers["Authorization"] = f"Bearer {effective_key}"
         return headers
 
     async def test_connection(self) -> tuple[bool, str, float]:
-        """Test API key validity and calculate latency."""
-        if not self._api_key:
+        """Test API key validity or local server availability and calculate latency."""
+        if self._require_api_key and not self._api_key:
+            if self._raw_key_was_masked:
+                return (
+                    False,
+                    "La API Key mostrada está oculta por seguridad. Escribe o pega tu API Key real para probar o actualizar.",
+                    0.0,
+                )
             return False, "API Key no configurada", 0.0
 
         t0 = time.perf_counter()
@@ -46,9 +58,9 @@ class OpenAIHttpClient(ILLMClient):
                 res = await client.get(endpoint, headers=self._get_headers())
                 latency_ms = (time.perf_counter() - t0) * 1000.0
                 if res.status_code == 200:
-                    return True, "Conexión exitosa y autenticada", round(latency_ms, 1)
-                elif res.status_code == 401:
-                    return False, "Error de autenticación: API Key inválida", round(latency_ms, 1)
+                    return True, f"Conexión exitosa con {self._base_url}", round(latency_ms, 1)
+                elif res.status_code in (401, 403):
+                    return False, "Error de autenticación: API Key inválida o sin permisos", round(latency_ms, 1)
                 else:
                     return False, f"HTTP {res.status_code}: {res.text[:100]}", round(latency_ms, 1)
         except Exception as e:
@@ -165,4 +177,3 @@ class OpenAIHttpClient(ILLMClient):
                 return []
         except Exception:
             return []
-

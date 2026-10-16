@@ -362,9 +362,10 @@ class TestLLMRESTApiAndIntegrationGuide:
             res = await client.get("/docs/integration-guide")
             assert res.status_code == 200
             html = res.text
-            assert "Guía de Integración Externa" in html
+            assert "Guía de Integración" in html
             assert "Swagger / OpenAPI UI" in html
-            assert "connectContextForgeChat" in html
-            assert "ask_contextforge" in html
-            assert "cf-chat-bubble" in html
+            assert "ContextForge.postman_collection.json" in html
+            assert "contextforge-chat-widget.js" in html
+            assert "window.ContextForgeChat" in html
+
 

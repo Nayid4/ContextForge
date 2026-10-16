@@ -1,93 +1,324 @@
 {% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
 
-{% block title %}API Docs & Guía de Integración Externa | ContextForge{% endblock %}
+{% block title %}Guía de Integración MCP, Postman, Widget Chatbot & API REST/SSE | ContextForge{% endblock %}
 
 {% block content %}
-<div class="space-y-8 max-w-5xl mx-auto" x-data="integrationDocsApp()">
+<div class="space-y-10 max-w-5xl mx-auto" x-data="integrationDocsApp('{{ active_slug }}', '{{ base_url }}')">
 
   <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
-    <div>
-      <div class="flex items-center space-x-3">
-        <span class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
-          <i class="fa-solid fa-plug text-lg"></i>
-        </span>
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-white">Guía de Integración Externa & API REST / SSE</h1>
-          <p class="text-sm text-slate-400">Conecta chatbots, asistentes de Slack/Discord y microservicios a la base de conocimiento soberana</p>
-        </div>
-      </div>
-    </div>
-    <div class="flex items-center space-x-3">
-      <a 
-        href="/api/docs" 
-        target="_blank" 
-        class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm"
-      >
-        <i class="fa-solid fa-book text-indigo-400"></i>
-        <span>Swagger / OpenAPI UI</span>
-      </a>
-    </div>
-  </div>
+  {% call page_header(
+    'fa-solid fa-plug',
+    'Guía de Integración Externa: Servidor MCP, Postman, Widget Chatbot & API REST/SSE',
+    'Conecta Cursor, Claude Code CLI, Antigravity, Postman y microservicios externos a tu Hub de Conocimiento Soberano',
+    'MCP + Postman + Chatbot Widget',
+    'teal'
+  ) %}
+    <a 
+      href="/api/v1/integrations/postman-collection?project={{ active_slug }}" 
+      download="ContextForge.postman_collection.json"
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-orange-300 bg-orange-950/40 hover:bg-orange-900/50 border border-orange-500/30 rounded-xl transition shadow-sm cursor-pointer"
+      title="Descargar colección lista para importar en Postman"
+    >
+      <i class="fa-solid fa-file-import text-orange-400"></i>
+      <span>Postman Collection (v2.1)</span>
+    </a>
+    <a 
+      href="/mcp/info" 
+      target="_blank" 
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 rounded-xl transition shadow-sm"
+    >
+      <i class="fa-solid fa-satellite-dish text-emerald-400"></i>
+      <span>Estado MCP (/mcp/info)</span>
+    </a>
+    <a 
+      href="/api/docs" 
+      target="_blank" 
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm"
+    >
+      <i class="fa-solid fa-book text-indigo-400"></i>
+      <span>Swagger / OpenAPI UI</span>
+    </a>
+  {% endcall %}
 
-  <!-- Architecture Flow Diagram -->
-  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-4">
-    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <!-- Architecture Flow Diagram (Significantly Improved) -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-4 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
       <h3 class="text-sm font-semibold text-white flex items-center gap-2">
         <i class="fa-solid fa-network-wired text-teal-400"></i>
-        <span>Topología de Consumo Externo (Zero-Leakage & Aislamiento por Proyecto)</span>
+        <span>Arquitectura Hexagonal Multi-Tenant: Clientes Externos, Gateway RAG y Adaptadores Desacoplados</span>
       </h3>
-      <span class="text-[11px] font-mono text-zinc-500">Streaming SSE + REST JSON</span>
+      <span class="text-[11px] font-mono text-zinc-400">Postman • MCP JSON-RPC 2.0 • SSE Streaming • Widget</span>
     </div>
     
-    <div class="p-4 bg-[#0c0e14] border border-[#1e2235] rounded-xl flex justify-center">
+    <div class="p-4 bg-[#0c0e14] border border-[#1e2235] rounded-xl flex justify-center overflow-x-auto">
       <pre class="mermaid text-xs">
-flowchart LR
-    ExternalApp["🚀 App Externa / Chatbot"] -->|"SSE /api/v1/rag/stream"| CFGateway["ContextForge Gateway"]
-    ExternalApp -->|"POST /api/v1/chat/scoped"| CFGateway
-    CFGateway -->|"Aislamiento project_slug"| VectorStore[("ChromaDB Vectorial")]
-    CFGateway -->|"Aislamiento léxico"| LexicalStore[("BM25Plus Index")]
-    CFGateway -->|"RRF k=60 Fusión"| PromptBuilder["Prompt Builder"]
-    PromptBuilder -->|"Inferencia"| LLMActive["LLM Activo\n(Ollama / Claude / GPT / Gemini)"]
-    LLMActive -->|"Tokens + Citas .md"| ExternalApp
+flowchart TD
+    subgraph CLIENTES["1. Clientes Externos y Ecosistemas"]
+        IDEs["💻 IDEs y Agentes CLI\n(Cursor, Claude Code, Antigravity agy, OpenCode)"]
+        PostmanClient["🚀 Postman & QA Automation\n(Colección v2.1 con Variables y Scripts)"]
+        ExternalWeb["🌐 Aplicaciones Web Externas\n(Widget Flotante Embeddable con data-project)"]
+    end
+
+    subgraph PLATAFORMA["2. ContextForge Core Hub & Gateway"]
+        MCPGateway["📡 Servidor MCP Universal\n(/mcp/sse & STDIO run_mcp.py)"]
+        RESTGateway["⚡ REST & SSE Streaming Gateway\n(/api/v1/rag/stream, /chat/project)"]
+        TenantRouter["🛡️ Router Multi-Tenant Soberano\n(Aislamiento estricto por project_slug)"]
+        RAGPipeline["🔍 Motor RAG Híbrido RRF\n(ChromaDB Dense + BM25 Sparse Lexical)"]
+    end
+
+    subgraph ADAPTADORES["3. Adaptadores de Infraestructura (Patrones Strategy & Template Method)"]
+        StorageAdapters["💾 Almacenamiento (Template Method):\n• Local FS (Docs-as-Code)\n• Supabase Storage\n• AWS S3 / MinIO / R2\n• Firebase Storage"]
+        DatabaseAdapters["🗄️ Bases de Datos (Strategy):\n• SQLite Local Soberano\n• PostgreSQL / Supabase\n• SQL Server / Azure SQL\n• MongoDB & Firestore"]
+        LLMAdapters["🧠 Motores IA Universales:\n• Local HTTP: Ollama, LM Studio, vLLM\n• Cloud APIs: Gemini 2.5, Claude, GPT-4o, DeepSeek\n• Local CLI: agy, claude, codex, opencode"]
+    end
+
+    IDEs -->|"JSON-RPC 2.0 / MCP"| MCPGateway
+    PostmanClient -->|"REST / Tests Scripts"| RESTGateway
+    ExternalWeb -->|"SSE Streaming Token-a-Token"| RESTGateway
+
+    MCPGateway --> TenantRouter
+    RESTGateway --> TenantRouter
+    TenantRouter --> RAGPipeline
+
+    RAGPipeline --> StorageAdapters
+    RAGPipeline --> DatabaseAdapters
+    RAGPipeline --> LLMAdapters
       </pre>
     </div>
   </div>
 
-  <!-- Language Switcher Tabs for Snippets -->
+  <!-- Postman Collection v2.1 Generator Section -->
+  <div class="rounded-2xl border border-orange-500/30 bg-gradient-to-b from-orange-950/20 to-slate-900/80 p-6 backdrop-blur space-y-5 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-500/20 pb-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 text-lg">
+          <i class="fa-solid fa-paper-plane"></i>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span>Colección Postman Oficial (v2.1) con Variables y Scripts de Verificación</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-orange-500/20 text-orange-300 border border-orange-500/40">v2.1.0 JSON</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Importa todos los endpoints agrupados por carpetas, con variables de entorno precargadas y scripts de prueba automáticos.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <a 
+          :href="`/api/v1/integrations/postman-collection?base_url=${encodeURIComponent(baseUrl)}&project=${encodeURIComponent(selectedProject)}`"
+          download="ContextForge.postman_collection.json"
+          class="inline-flex items-center px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold shadow-md shadow-orange-600/30 transition cursor-pointer gap-2"
+        >
+          <i class="fa-solid fa-download"></i>
+          <span>Descargar Colección JSON</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Postman Folders and Automated Testing Features -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+      <div class="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+        <div class="font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-folder-tree text-orange-400"></i>
+          <span>7 Carpetas Modulares</span>
+        </div>
+        <p class="text-slate-400 text-[11px] leading-relaxed">
+          Health & Diagnóstico, Proyectos Multi-Tenant, Chat RAG & SSE Streaming, Configuración de LLM/DB/Storage, Taxonomía de Módulos y Bundler de Reglas.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+        <div class="font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-indigo-400"></i>
+          <span>Variables Dinámicas</span>
+        </div>
+        <p class="text-slate-400 text-[11px] leading-relaxed">
+          Variables <code class="text-orange-300">{{ '{{baseUrl}}' }}</code>, <code class="text-orange-300">{{ '{{project_slug}}' }}</code> y <code class="text-orange-300">{{ '{{sample_query}}' }}</code> configuradas a nivel de colección para cambiar de entorno sin tocar URLs.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+        <div class="font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-check-double text-emerald-400"></i>
+          <span>Tests y Auto-Asignación</span>
+        </div>
+        <p class="text-slate-400 text-[11px] leading-relaxed">
+          Scripts en pestaña <em>Tests</em> que validan tiempos de respuesta (&lt; 2000 ms), códigos 200/201 y extraen slugs creados automáticamente hacia las siguientes peticiones.
+        </p>
+      </div>
+    </div>
+
+    <!-- Newman CLI Execution snippet -->
+    <div class="space-y-2 pt-2 border-t border-slate-800/80">
+      <div class="flex items-center justify-between text-xs">
+        <span class="text-slate-300 font-semibold flex items-center gap-1.5">
+          <i class="fa-solid fa-terminal text-orange-400 text-[11px]"></i>
+          <span>Ejecución en Terminal o CI/CD con Newman</span>
+        </span>
+        <button 
+          type="button" 
+          @click="copySnippet('newman')" 
+          class="text-[11px] text-orange-300 hover:text-white transition flex items-center gap-1 cursor-pointer"
+        >
+          <i class="fa-regular fa-copy"></i>
+          <span>Copiar Comando</span>
+        </button>
+      </div>
+      <div class="p-3 rounded-xl bg-[#080d0e] border border-orange-500/20 text-xs font-mono text-orange-200 overflow-x-auto">
+        <code>newman run ContextForge.postman_collection.json --env-var "baseUrl={{ base_url }}" --env-var "project_slug={{ active_slug }}"</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Embeddable Floating Chatbot Widget Blueprint (Significantly Improved) -->
+  <div class="rounded-2xl border border-teal-500/30 bg-gradient-to-b from-teal-950/20 to-slate-900/90 p-6 backdrop-blur space-y-5 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-teal-500/20 pb-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-300 text-xl">
+          🤖
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span>Blueprint: Widget Flotante de Chatbot para Aplicaciones Externas</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40">Zero-Dependencies</span>
+          </h2>
+          <p class="text-xs text-teal-200/70 mt-0.5">
+            Copia este fragmento HTML/JS en cualquier aplicación web para incrustar un asistente inteligente conectado a ContextForge.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <button 
+          type="button" 
+          @click="testWidgetInPage()" 
+          class="inline-flex items-center px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/40 text-xs font-semibold transition cursor-pointer gap-1.5"
+          title="Abrir el widget en esta misma página para interactuar con él"
+        >
+          <i class="fa-solid fa-play text-xs"></i>
+          <span>Probar Widget en Vivo</span>
+        </button>
+        <button 
+          type="button" 
+          @click="copySnippet('widget')" 
+          class="inline-flex items-center px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-md shadow-teal-600/30 transition cursor-pointer gap-1.5"
+        >
+          <i class="fa-regular fa-copy"></i>
+          <span>Copiar Script Tag</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Project Scope Selector for the Widget snippet -->
+    <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div class="space-y-0.5">
+        <span class="font-bold text-white flex items-center gap-1.5">
+          <i class="fa-solid fa-bullseye text-teal-400"></i>
+          <span>Ámbito de Librería / Proyecto (data-project):</span>
+        </span>
+        <p class="text-[11px] text-slate-400">
+          El widget consultará exclusivamente el contexto RAG y documentos de la librería indicada en el atributo <code class="text-teal-300">data-project</code>.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label for="widget-project-select" class="text-slate-400 font-mono text-[11px]">Librería:</label>
+        <select 
+          id="widget-project-select"
+          x-model="selectedProject" 
+          class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-500 font-mono cursor-pointer"
+        >
+          {% for p in projects %}
+          <option value="{{ p.slug.value }}">{{ p.name }} ({{ p.slug.value }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Drop-in Code Snippet -->
+    <div class="relative">
+      <div class="p-4 rounded-xl bg-[#080d0e] border border-teal-500/20 text-xs font-mono text-teal-200 overflow-x-auto shadow-inner leading-relaxed">
+<pre><code><span class="text-zinc-500">&lt;!-- ContextForge Embeddable Assistant Widget: Aisla estilos en Shadow DOM y consume SSE --&gt;</span>
+&lt;script 
+  src="<span class="text-sky-300" x-text="baseUrl"></span>/static/js/contextforge-chat-widget.js"
+  data-project="<span class="text-yellow-300" x-text="selectedProject"></span>"
+  data-endpoint="<span class="text-sky-300" x-text="baseUrl"></span>"
+  data-title="ContextForge Assistant"
+  data-position="right"
+  defer&gt;
+&lt;/script&gt;</code></pre>
+      </div>
+      <button 
+        type="button" 
+        @click="copySnippet('widget')" 
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700 cursor-pointer"
+      >
+        <i class="fa-regular fa-copy"></i>
+        <span>Copiar</span>
+      </button>
+    </div>
+
+    <!-- Widget Capabilities Specs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+      <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+        <span class="font-bold text-teal-300 block">Shadow DOM</span>
+        <p class="text-[11px] text-slate-400">Totalmente aislado. No afecta ni se ve alterado por Bootstrap, Tailwind ni estilos del sitio anfitrión.</p>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+        <span class="font-bold text-teal-300 block">Streaming SSE</span>
+        <p class="text-[11px] text-slate-400">Recibe respuestas token-a-token con efecto máquina de escribir y render de Markdown.</p>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+        <span class="font-bold text-teal-300 block">Citas de Fuentes</span>
+        <p class="text-[11px] text-slate-400">Muestra píldoras de citas exactas a los archivos Markdown que sustentaron la respuesta.</p>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+        <span class="font-bold text-teal-300 block">Soberanía de Datos</span>
+        <p class="text-[11px] text-slate-400">Las preguntas van directo a tu ContextForge local o privado sin pasar por servidores de terceros.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular MCP & Local CLI Agents Section Component -->
+  {% include "modules/knowledge_docs/components/mcp_guide_section.html" %}
+
+  <!-- Language Switcher Tabs for REST & SSE Snippets -->
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-lg font-bold text-white flex items-center space-x-2">
           <i class="fa-solid fa-code text-indigo-400"></i>
-          <span>Ejemplos de Consumo en Código</span>
+          <span>Ejemplos de Consumo Programático (REST & Streaming SSE)</span>
         </h2>
-        <p class="text-xs text-slate-400">Selecciona tu stack tecnológico para ver cómo invocar el motor de conocimiento en tiempo real</p>
+        <p class="text-xs text-slate-400">Selecciona tu lenguaje para invocar el motor RAG o el chat de proyecto completo</p>
       </div>
 
       <!-- Tab Buttons -->
       <div class="flex items-center p-1 bg-slate-800/80 border border-slate-700 rounded-xl">
         <button 
           type="button" 
-          @click="activeLang = 'python'"
+          @click="activeLang = 'python'" 
           :class="activeLang === 'python' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
-          class="px-3 py-1 rounded-lg text-xs font-semibold transition"
+          class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
         >
           Python
         </button>
         <button 
           type="button" 
-          @click="activeLang = 'js'"
+          @click="activeLang = 'js'" 
           :class="activeLang === 'js' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
-          class="px-3 py-1 rounded-lg text-xs font-semibold transition"
+          class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
         >
           TypeScript / JS
         </button>
         <button 
           type="button" 
-          @click="activeLang = 'curl'"
+          @click="activeLang = 'curl'" 
           :class="activeLang === 'curl' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
-          class="px-3 py-1 rounded-lg text-xs font-semibold transition"
+          class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
         >
           cURL
         </button>
@@ -122,7 +353,7 @@ flowchart LR
       <button 
         type="button" 
         @click="copySnippet('python')" 
-        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700"
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700 cursor-pointer"
       >
         <i class="fa-regular fa-copy"></i>
         <span>Copiar</span>
@@ -137,21 +368,22 @@ flowchart LR
   <span class="text-purple-400">const</span> params = <span class="text-purple-400">new</span> <span class="text-sky-300">URLSearchParams</span>({ q: userQuestion, project: projectSlug });
   <span class="text-purple-400">const</span> sse = <span class="text-purple-400">new</span> <span class="text-sky-300">EventSource</span>(<span class="text-emerald-300">`/api/v1/rag/stream?${params.toString()}`</span>);
 
-  sse.onmessage = (event) => {
-    <span class="text-purple-400">if</span> (event.data === <span class="text-emerald-300">'[DONE]'</span>) {
-      sse.close();
-      <span class="text-purple-400">if</span> (onDone) onDone();
-      <span class="text-purple-400">return</span>;
-    }
+  <span class="text-purple-400">sse</span>.<span class="text-yellow-400">addEventListener</span>(<span class="text-emerald-300">'token'</span>, (event) => {
     <span class="text-purple-400">try</span> {
       <span class="text-purple-400">const</span> payload = JSON.parse(event.data);
-      <span class="text-purple-400">if</span> (payload.token) onToken(payload.token);
+      <span class="text-purple-400">const</span> tok = payload.content || payload.token;
+      <span class="text-purple-400">if</span> (tok) onToken(tok);
     } <span class="text-purple-400">catch</span> (e) {
-      console.warn(<span class="text-emerald-300">'Error parsing chunk'</span>, e);
+      onToken(event.data);
     }
-  };
+  });
 
-  sse.onerror = (err) => {
+  <span class="text-purple-400">sse</span>.<span class="text-yellow-400">addEventListener</span>(<span class="text-emerald-300">'done'</span>, () => {
+    sse.close();
+    <span class="text-purple-400">if</span> (onDone) onDone();
+  });
+
+  <span class="text-purple-400">sse</span>.<span class="text-yellow-400">onerror</span> = (err) => {
     console.error(<span class="text-emerald-300">'SSE Connection error'</span>, err);
     sse.close();
   };
@@ -160,7 +392,7 @@ flowchart LR
       <button 
         type="button" 
         @click="copySnippet('js')" 
-        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700"
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700 cursor-pointer"
       >
         <i class="fa-regular fa-copy"></i>
         <span>Copiar</span>
@@ -170,31 +402,27 @@ flowchart LR
     <!-- cURL Code Example -->
     <div x-show="activeLang === 'curl'" class="relative">
       <div class="p-5 rounded-2xl bg-[#0c0e14] border border-[#232738] text-xs font-mono text-emerald-300 overflow-x-auto shadow-inner leading-relaxed">
-<pre><code><span class="text-zinc-500"># 1. Consulta RAG Sincrónica (Respuesta JSON completa con citas)</span>
-curl -X POST http://localhost:8000/api/v1/rag/ask \
+<pre><code><span class="text-zinc-500"># 1. Consulta de Proyecto con Selección Dinámica de Motor (HTTP, Cloud API o CLI)</span>
+curl -X POST http://localhost:8000/api/v1/chat/project \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "¿Cuál es la política de reintentos para pagos?",
     "project_slug": "default",
-    "top_k": 5
+    "question": "¿Cuál es la arquitectura y política de reintentos?",
+    "provider_override": "gemini"
   }'
 
 <span class="text-zinc-500"># 2. Consulta SSE Streaming en Terminal</span>
 curl -N "http://localhost:8000/api/v1/rag/stream?q=Explica+la+arquitectura&project=default"
 
-<span class="text-zinc-500"># 3. Chat Focalizado en un Documento y sus anexos</span>
-curl -X POST http://localhost:8000/api/v1/chat/scoped \
+<span class="text-zinc-500"># 3. Exportar CLAUDE.md, .cursorrules y AGENTS.md vía API</span>
+curl -X POST http://localhost:8000/api/v1/bundles/export-agent-rules \
   -H "Content-Type: application/json" \
-  -d '{
-    "library_id": "default",
-    "book_id": "adrs/001_event_driven_payments.md",
-    "query": "¿Qué eventos Kafka se disparan al completar una transacción?"
-  }'</code></pre>
+  -d '{"project_slug": "default", "targets": ["CLAUDE.md", ".cursorrules", "AGENTS.md"]}'</code></pre>
       </div>
       <button 
         type="button" 
         @click="copySnippet('curl')" 
-        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700"
+        class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition border border-zinc-700 cursor-pointer"
       >
         <i class="fa-regular fa-copy"></i>
         <span>Copiar</span>
@@ -203,131 +431,68 @@ curl -X POST http://localhost:8000/api/v1/chat/scoped \
 
   </div>
 
-  <!-- Endpoints Reference Cards -->
-  <div class="space-y-4">
-    <h2 class="text-lg font-bold text-white flex items-center space-x-2">
-      <i class="fa-solid fa-list-check text-emerald-400"></i>
-      <span>Catálogo de Endpoints REST Principales</span>
-    </h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      
-      <!-- Endpoint 1 -->
-      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">POST</span>
-          <span class="text-xs font-mono text-zinc-400">/api/v1/rag/ask</span>
-        </div>
-        <h4 class="text-sm font-semibold text-white">RAG Global Sincrónico</h4>
-        <p class="text-xs text-zinc-400">Ejecuta recuperación híbrida (ChromaDB + BM25) y genera una respuesta completa con citas a archivos Markdown.</p>
-        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
-          Body: { query, project_slug, top_k, model? }
-        </div>
-      </div>
-
-      <!-- Endpoint 2 -->
-      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">GET</span>
-          <span class="text-xs font-mono text-zinc-400">/api/v1/rag/stream</span>
-        </div>
-        <h4 class="text-sm font-semibold text-white">RAG Streaming en Tiempo Real (SSE)</h4>
-        <p class="text-xs text-zinc-400">Emite tokens token-a-token usando Server-Sent Events con baja latencia y citas únicas al finalizar la respuesta.</p>
-        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
-          Query: ?q={pregunta}&project={slug}&top_k={k}
-        </div>
-      </div>
-
-      <!-- Endpoint 3 -->
-      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">POST</span>
-          <span class="text-xs font-mono text-zinc-400">/api/v1/chat/scoped</span>
-        </div>
-        <h4 class="text-sm font-semibold text-white">Chat Focalizado (Scoped RAG)</h4>
-        <p class="text-xs text-zinc-400">Dialoga con un documento individual y sus anexos multiformato (PDF, Word, Excel) manteniendo historial conversacional.</p>
-        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
-          Body: { library_id, book_id, query, raw_markdown?, history? }
-        </div>
-      </div>
-
-      <!-- Endpoint 4 -->
-      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">GET</span>
-          <span class="text-xs font-mono text-zinc-400">/api/v1/search/hybrid</span>
-        </div>
-        <h4 class="text-sm font-semibold text-white">Búsqueda Híbrida Pura</h4>
-        <p class="text-xs text-zinc-400">Retorna los fragmentos atómicos más relevantes combinando similitud de coseno y BM25 sin invocar LLM.</p>
-        <div class="pt-2 border-t border-slate-800/60 text-[11px] font-mono text-zinc-500">
-          Query: ?q={query}&project={slug}&top_k=5
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Drop-in Floating Chatbot Widget Blueprint -->
-  <div class="rounded-2xl border border-teal-500/30 bg-[#0d1617]/80 p-6 backdrop-blur space-y-4">
-    <div class="flex items-center justify-between border-b border-teal-500/20 pb-3">
-      <div class="flex items-center space-x-2.5">
-        <span class="text-xl">🤖</span>
-        <div>
-          <h3 class="text-sm font-bold text-white">Blueprint: Widget Flotante de Chatbot para Aplicaciones Externas</h3>
-          <p class="text-xs text-teal-300/80">Copia este fragmento HTML/JS en cualquier aplicación web para incrustar un asistente inteligente conectado a ContextForge</p>
-        </div>
-      </div>
-      <button 
-        type="button" 
-        @click="copySnippet('widget')" 
-        class="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow"
-      >
-        <i class="fa-regular fa-copy"></i>
-        <span>Copiar Widget</span>
-      </button>
-    </div>
-
-    <div class="p-4 rounded-xl bg-[#080d0e] border border-teal-500/20 text-xs font-mono text-teal-200 overflow-x-auto">
-<pre><code>&lt;!-- ContextForge Sovereign Knowledge Assistant Widget --&gt;
-&lt;div id="cf-chat-bubble" onclick="toggleCFChat()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 25px rgba(79,70,229,0.4);z-index:9999;"&gt;
-  🤖
-&lt;/div&gt;
-
-&lt;script&gt;
-function toggleCFChat() {
-  window.open('http://localhost:8000/chat', '_blank', 'width=500,height=700');
-}
-&lt;/script&gt;</code></pre>
-    </div>
-  </div>
-
 </div>
 
 <script>
-function integrationDocsApp() {
+function integrationDocsApp(initialProject, baseUrl) {
   return {
     activeLang: 'python',
-    copySnippet(lang) {
-      let code = '';
-      if (lang === 'python') {
-        code = `import httpx\nimport json\n\nasync def ask_contextforge(query: str, project: str = "default"):\n    url = f"http://localhost:8000/api/v1/rag/stream?q={query}&project={project}"\n    async with httpx.AsyncClient(timeout=60.0) as client:\n        async with client.stream("GET", url) as response:\n            async for line in response.aiter_lines():\n                if line.startswith("data:"):\n                    data_str = line[5:].strip()\n                    if data_str == "[DONE]":\n                        break\n                    payload = json.loads(data_str)\n                    print(payload.get("token", ""), end="", flush=True)`;
-      } else if (lang === 'js') {
-        code = `function connectContextForgeChat(userQuestion, projectSlug = 'default', onToken, onDone) {\n  const params = new URLSearchParams({ q: userQuestion, project: projectSlug });\n  const sse = new EventSource(\`/api/v1/rag/stream?\${params.toString()}\`);\n  sse.onmessage = (event) => {\n    if (event.data === '[DONE]') { sse.close(); if (onDone) onDone(); return; }\n    const payload = JSON.parse(event.data);\n    if (payload.token) onToken(payload.token);\n  };\n}`;
-      } else if (lang === 'curl') {
-        code = `curl -X POST http://localhost:8000/api/v1/rag/ask \\\n  -H "Content-Type: application/json" \\\n  -d '{"query": "¿Cuál es la política de reintentos?", "project_slug": "default", "top_k": 5}'`;
-      } else if (lang === 'widget') {
-        code = `<div id="cf-chat-bubble" onclick="window.open('http://localhost:8000/chat', '_blank', 'width=500,height=700')" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 25px rgba(79,70,229,0.4);z-index:9999;">🤖</div>`;
+    activeAgentTab: 'cursor',
+    selectedProject: initialProject || 'default',
+    baseUrl: baseUrl || 'http://localhost:8000',
+
+    testWidgetInPage() {
+      // Load script dynamically if not present
+      if (!window.ContextForgeChat) {
+        const s = document.createElement('script');
+        s.src = `${this.baseUrl}/static/js/contextforge-chat-widget.js`;
+        s.setAttribute('data-project', this.selectedProject);
+        s.setAttribute('data-endpoint', this.baseUrl);
+        s.onload = () => {
+          setTimeout(() => {
+            if (window.ContextForgeChat) {
+              window.ContextForgeChat.setProject(this.selectedProject);
+              window.ContextForgeChat.open();
+              window.$toast?.success?.(`Widget activado con alcance: ${this.selectedProject}`, 'Widget Flotante');
+            }
+          }, 200);
+        };
+        document.body.appendChild(s);
+      } else {
+        window.ContextForgeChat.setProject(this.selectedProject);
+        window.ContextForgeChat.open();
+        window.$toast?.info?.(`Widget abierto para librería: ${this.selectedProject}`);
       }
-      if (navigator.clipboard) {
+    },
+
+    copySnippet(type) {
+      let code = '';
+      if (type === 'widget') {
+        code = `<script \n  src="${this.baseUrl}/static/js/contextforge-chat-widget.js"\n  data-project="${this.selectedProject}"\n  data-endpoint="${this.baseUrl}"\n  data-title="ContextForge Assistant"\n  data-position="right"\n  defer>\n<\/script>`;
+      } else if (type === 'newman') {
+        code = `newman run ContextForge.postman_collection.json --env-var "baseUrl=${this.baseUrl}" --env-var "project_slug=${this.selectedProject}"`;
+      } else {
+        const snippets = {
+          python: `import httpx\nimport json\n\nasync def ask_contextforge(query: str, project: str = "${this.selectedProject}"):\n    url = f"${this.baseUrl}/api/v1/rag/stream?q={query}&project={project}"\n    async with httpx.AsyncClient(timeout=60.0) as client:\n        async with client.stream("GET", url) as response:\n            async for line in response.aiter_lines():\n                if line.startswith("data:"):\n                    data_str = line[5:].strip()\n                    if data_str == "[DONE]":\n                        break\n                    payload = json.loads(data_str)\n                    print(payload.get("token", ""), end="", flush=True)`,
+          js: `function connectContextForgeChat(userQuestion, projectSlug = '${this.selectedProject}', onToken, onDone) {\n  const params = new URLSearchParams({ q: userQuestion, project: projectSlug });\n  const sse = new EventSource(\`${this.baseUrl}/api/v1/rag/stream?\${params.toString()}\`);\n  sse.addEventListener('token', (event) => {\n    try {\n      const payload = JSON.parse(event.data);\n      const tok = payload.content || payload.token;\n      if (tok) onToken(tok);\n    } catch (e) { onToken(event.data); }\n  });\n  sse.addEventListener('done', () => {\n    sse.close();\n    if (onDone) onDone();\n  });\n  sse.onerror = (err) => { sse.close(); };\n}`,
+          curl: `curl -X POST ${this.baseUrl}/api/v1/chat/project \\\n  -H "Content-Type: application/json" \\\n  -d '{"project_slug": "${this.selectedProject}", "question": "¿Cuál es la política de reintentos?"}'`,
+          cursor_sse: `{\n  "mcpServers": {\n    "contextforge-docs": {\n      "url": "${this.baseUrl}/mcp/sse"\n    }\n  }\n}`,
+          cursor_stdio: `{\n  "mcpServers": {\n    "contextforge-local": {\n      "command": "python",\n      "args": ["run_mcp.py"]\n    }\n  }\n}`,
+          claude_mcp: `claude mcp add --transport sse contextforge ${this.baseUrl}/mcp/sse`,
+          antigravity_mcp: `{\n  "mcpServers": {\n    "contextforge": {\n      "command": "python",\n      "args": ["run_mcp.py"]\n    }\n  }\n}`
+        };
+        code = snippets[type] || '';
+      }
+
+      if (navigator.clipboard && code) {
         navigator.clipboard.writeText(code).then(() => {
-          window.$toast.success('Código copiado al portapapeles exitosamente.', 'Snippet Copiado');
+          window.$toast?.success?.('Fragmento copiado al portapapeles.', 'Copiado');
         });
       } else {
-        window.$toast.info('Selecciona y copia el texto del código.');
+        window.$toast?.info?.('Selecciona y copia el código directamente.');
       }
     }
   };
 }
 </script>
 {% endblock %}
-
