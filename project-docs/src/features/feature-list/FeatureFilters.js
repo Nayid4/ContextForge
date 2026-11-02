@@ -12,10 +12,10 @@ export function renderFeatureFilters({ filters, modules = [] }) {
   `).join('');
 
   return `
-    <div class="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md shadow-lg">
+    <div class="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-md">
       <!-- Search Bar -->
       <div class="relative flex-1 min-w-[240px]">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
           ${Icons.search}
         </div>
         <input
@@ -23,19 +23,19 @@ export function renderFeatureFilters({ filters, modules = [] }) {
           id="feature-search-input"
           value="${escapeAttr(searchVal)}"
           placeholder="Buscar por ID, título, nombre o rama..."
-          class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-700/80 bg-slate-950/70 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+          class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
         />
       </div>
 
       <!-- Type Filter -->
-      <select id="filter-type" class="px-3 py-2 text-xs rounded-xl border border-slate-700/80 bg-slate-950/70 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+      <select id="filter-type" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
         <option value="">Todos los Tipos</option>
         <option value="feature" ${currentFilters.type === 'feature' ? 'selected' : ''}>feature</option>
         <option value="bugfix" ${currentFilters.type === 'bugfix' ? 'selected' : ''}>bugfix</option>
       </select>
 
       <!-- Status Filter -->
-      <select id="filter-status" class="px-3 py-2 text-xs rounded-xl border border-slate-700/80 bg-slate-950/70 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      <select id="filter-status" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
         <option value="">Todos los Estados</option>
         <option value="pending" ${currentFilters.status === 'pending' ? 'selected' : ''}>Pendiente</option>
         <option value="spec_ready" ${currentFilters.status === 'spec_ready' ? 'selected' : ''}>Spec Listo</option>
@@ -45,13 +45,13 @@ export function renderFeatureFilters({ filters, modules = [] }) {
       </select>
 
       <!-- Module Filter -->
-      <select id="filter-module" class="px-3 py-2 text-xs rounded-xl border border-slate-700/80 bg-slate-950/70 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      <select id="filter-module" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
         <option value="">Todos los Módulos</option>
         ${moduleOptions}
       </select>
 
       <!-- Priority Filter -->
-      <select id="filter-priority" class="px-3 py-2 text-xs rounded-xl border border-slate-700/80 bg-slate-950/70 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      <select id="filter-priority" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
         <option value="">Todas las Prioridades</option>
         <option value="alta" ${currentFilters.priority === 'alta' ? 'selected' : ''}>Alta</option>
         <option value="media" ${currentFilters.priority === 'media' ? 'selected' : ''}>Media</option>
@@ -65,7 +65,7 @@ export function renderFeatureFilters({ filters, modules = [] }) {
       <button
         data-action="reset-filters"
         type="button"
-        class="px-3 py-2 text-xs font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors"
+        class="px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
         title="Restablecer filtros"
       >
         Limpiar

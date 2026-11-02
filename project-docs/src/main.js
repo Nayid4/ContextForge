@@ -23,20 +23,16 @@ class App {
   }
 
   async init() {
-    // Escuchar cambios de ruta en el hash
     router.init((tabId) => {
       this.handleTabChange(tabId);
     });
 
-    // Suscribirse a cambios en el Store reactivo
     store.subscribe(() => {
       this.render();
     });
 
-    // Delegación global de eventos interactivos
     this.bindGlobalEvents();
 
-    // Cargar datos
     await this.refreshData();
   }
 
@@ -54,7 +50,6 @@ class App {
   }
 
   handleTabChange(tabId) {
-    // Si salimos de 3D, desmontar Three.js
     if (this.activeTab === 'three' && tabId !== 'three') {
       this.spaceView3D.unmount();
     }
@@ -69,14 +64,15 @@ class App {
     const stats = store.getStats();
     const filteredFeatures = store.getFilteredFeatures();
     const modules = store.getAvailableModules();
+    const isDark = state.theme === 'dark';
 
     // 1. Loading State
     if (state.loading && state.features.length === 0) {
       this.root.innerHTML = `
-        <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
+        <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
           <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
           <h2 class="text-xl font-bold tracking-tight">Cargando Antigravity AI Harness...</h2>
-          <p class="text-sm text-slate-400 mt-1 font-mono">Sincronizando spec, tareas y branches</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 font-mono">Sincronizando spec, tareas y branches</p>
         </div>
       `;
       return;
@@ -85,13 +81,13 @@ class App {
     // 2. Error State
     if (state.error && state.features.length === 0) {
       this.root.innerHTML = `
-        <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
-          <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mb-4">
+        <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
+          <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mb-4">
             ${Icons.clock}
           </div>
-          <h2 class="text-xl font-bold text-rose-400">Error al inicializar el tablero</h2>
-          <p class="text-sm text-slate-400 mt-2 max-w-md text-center">${state.error}</p>
-          <button type="button" data-action="refresh" class="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all">
+          <h2 class="text-xl font-bold text-rose-600 dark:text-rose-400">Error al inicializar el tablero</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-md text-center">${state.error}</p>
+          <button type="button" data-action="refresh" class="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all cursor-pointer">
             Reintentar
           </button>
         </div>
@@ -101,33 +97,47 @@ class App {
 
     // 3. Render Principal
     this.root.innerHTML = `
-      <div class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+      <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
         <!-- Barra de Estado Superior -->
-        <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30">
+        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 transition-colors">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
                 <span class="font-mono font-black text-sm">AG</span>
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-sm font-bold tracking-tight text-white">Antigravity AI Harness</h1>
-                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">Antigravity AI Harness</h1>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
                     SDD 2.0
                   </span>
                 </div>
-                <p class="text-[11px] text-slate-400 font-mono">
-                  Branch naming: <span class="text-indigo-300">{type}/INT-{id}/{name}</span> (≤80c)
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  Branch naming: <span class="text-indigo-600 dark:text-indigo-300">{type}/INT-{id}/{name}</span> (≤80c)
                 </p>
               </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <!-- Controles de cabecera: Modo Claro/Oscuro y Refrescar -->
+            <div class="flex items-center gap-2.5">
+              <!-- Switch de Modo Claro / Oscuro -->
+              <button type="button" 
+                      data-action="toggle-theme" 
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer"
+                      title="${isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}">
+                <span class="text-amber-500 shrink-0">
+                  ${isDark ? Icons.sun : Icons.moon}
+                </span>
+                <span class="hidden sm:inline">${isDark ? 'Modo Claro' : 'Modo Oscuro'}</span>
+              </button>
+
+              <!-- Botón Refrescar -->
               <button type="button" 
                       data-action="refresh" 
-                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm">
-                <span class="${state.loading ? 'animate-spin' : ''}">${Icons.refresh}</span>
-                <span>Refrescar</span>
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer"
+                      title="Refrescar datos del arnés">
+                <span class="shrink-0 ${state.loading ? 'animate-spin' : ''}">${Icons.refresh}</span>
+                <span class="hidden sm:inline">Refrescar</span>
               </button>
             </div>
           </div>
@@ -147,7 +157,7 @@ class App {
           </section>
 
           <!-- 3. Navegación por pestañas (Router) -->
-          <nav class="flex items-center gap-2 border-b border-slate-800/80 pb-3" aria-label="Vistas del tablero">
+          <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: 'features', label: 'Tareas y Bugfixes', icon: Icons.folder, active: this.activeTab === 'features', badge: String(state.features.length) })}
             ${renderTabButton({ id: 'graph', label: 'Grafo de Bloqueos', icon: Icons.gitBranch, active: this.activeTab === 'graph' })}
             ${renderTabButton({ id: 'tree', label: 'Árbol Jerárquico', icon: Icons.check, active: this.activeTab === 'tree' })}
@@ -166,7 +176,6 @@ class App {
       </div>
     `;
 
-    // Inicializaciones post-render para vistas con canvas (Tree / 3D)
     this.postRender({ state, filteredFeatures });
   }
 
@@ -232,8 +241,14 @@ class App {
   }
 
   bindGlobalEvents() {
-    // 1. Delegación de clics
     document.addEventListener('click', (e) => {
+      // Toggle de Modo Claro / Oscuro
+      const themeBtn = e.target.closest('[data-action="toggle-theme"]');
+      if (themeBtn) {
+        store.toggleTheme();
+        return;
+      }
+
       // Cambio de pestaña
       const tabBtn = e.target.closest('[data-tab]');
       if (tabBtn) {
@@ -292,7 +307,6 @@ class App {
       }
     });
 
-    // 2. Delegación de inputs y cambios (filtros de búsqueda)
     document.addEventListener('input', (e) => {
       if (e.target.id === 'feature-search-input') {
         store.setFilter('search', e.target.value);
@@ -313,7 +327,6 @@ class App {
       }
     });
 
-    // 3. Tecla Escape para cerrar modal
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && store.getState().selectedFeature) {
         store.setSelectedFeature(null);
@@ -322,7 +335,6 @@ class App {
   }
 }
 
-// Arrancar aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
   const app = new App();
   app.init();

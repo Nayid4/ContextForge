@@ -1,9 +1,25 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-950">
+<html lang="es" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tablero de Seguimiento de IA — Antigravity Harness SDD</title>
+
+  <!-- Inicialización inmediata de tema para evitar FOUC -->
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem('harness_theme');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
 
   <!-- Tailwind CSS v4 Browser Runtime -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -21,7 +37,7 @@
   <!-- Datos de inicialización y fallback para compatibilidad con protocolo file:/// y offline -->
   <script src="./data-fallback.js"></script>
 </head>
-<body class="h-full bg-slate-950 text-slate-100 antialiased overflow-x-hidden">
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased overflow-x-hidden transition-colors duration-200">
   <!-- Contenedor Raíz de la Aplicación -->
   <div id="app"></div>
 

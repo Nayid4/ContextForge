@@ -2,6 +2,17 @@
  * Central state store using Observer pattern (Vanilla reactive state).
  */
 
+const getInitialTheme = () => {
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem('harness_theme');
+    if (saved) return saved;
+  }
+  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'dark'; // Dark mode por defecto para el arnés
+};
+
 const initialState = {
   project: 'Proyecto',
   features: [],
@@ -9,6 +20,7 @@ const initialState = {
   history: { records: [] },
   historyData: { records: [] },
   activeTab: 'features', // 'features' | 'graph' | 'tree' | 'three' | 'history'
+  theme: getInitialTheme(),
   filters: {
     search: '',
     status: '',
@@ -33,6 +45,7 @@ class Store {
   constructor(state = initialState) {
     this.state = { ...state };
     this.listeners = new Set();
+    this.syncThemeDom();
   }
 
   getState() {
@@ -54,6 +67,27 @@ class Store {
     for (const listener of this.listeners) {
       listener(this.state);
     }
+  }
+
+  // --- Theme Management ---
+
+  syncThemeDom() {
+    if (typeof document !== 'undefined') {
+      if (this.state.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }
+
+  toggleTheme() {
+    const nextTheme = this.state.theme === 'dark' ? 'light' : 'dark';
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('harness_theme', nextTheme);
+    }
+    this.setState({ theme: nextTheme });
+    this.syncThemeDom();
   }
 
   // --- Mutators ---
