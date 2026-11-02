@@ -1,0 +1,220 @@
+{
+  "project": {
+    "name": "CloudSaaS Platform",
+    "tagline": "E-Commerce & Microservicios Cloud con Arquitectura Limpia y Eventos Asíncronos",
+    "description": "Plataforma SaaS integral de comercio electrónico y microservicios orientada a eventos. Diseñada para alta concurrencia, resiliencia financiera y trazabilidad SDD. Gestiona catálogo de productos en tiempo real, carritos de compra de baja latencia con sincronización Redis, pasarela de pagos con prevención de duplicados e idempotencia, facturación con redondeo contable estricto, despacho asíncrono con Dead Letter Queues (DLQ) y observabilidad mediante streams de analítica y métricas Prometheus.",
+    "version": "2.0.0",
+    "type": "Fullstack / Cloud Distributed Microservices",
+    "maturity": "SDD 2.0 (Spec Driven Development)",
+    "verification_mode": "verify.sh + Test Suites"
+  },
+  "business_goals": [
+    "Garantizar transacciones de pago atómicas, seguras y sin duplicidad mediante llaves de idempotencia.",
+    "Mantener latencia de consulta de catálogo < 50ms mediante cursor pagination e invalidación reactiva de cache.",
+    "Aislamiento estricto de dominios con Clean Architecture para permitir escalado y despliegues independientes.",
+    "Trazabilidad completa de especificaciones EARS, pruebas unitarias y verificación continua."
+  ],
+  "tech_stack": {
+    "runtimes": [
+      {
+        "name": "Node.js & TypeScript",
+        "version": "v20.x (LTS) / TS 5.4",
+        "purpose": "APIs REST, Gateway y orquestación de servicios asíncronos",
+        "icon": "⚡"
+      },
+      {
+        "name": ".NET 10 / C#",
+        "version": "10.0 (Preview / LTS)",
+        "purpose": "Workers de alta concurrencia, reglas de facturación contable y procesamiento intensivo",
+        "icon": "🔷"
+      },
+      {
+        "name": "Vanilla JS & Tailwind v4",
+        "version": "ES2024 / Tailwind @tailwindcss/browser@4",
+        "purpose": "Tablero de seguimiento de ingeniería con Screaming Architecture y Three.js",
+        "icon": "🎨"
+      }
+    ],
+    "databases": [
+      {
+        "name": "PostgreSQL 16",
+        "type": "Relacional ACID",
+        "port": 5432,
+        "purpose": "Persistencia principal transaccional de órdenes, usuarios, roles y catálogo con migraciones automáticas",
+        "icon": "🐘"
+      },
+      {
+        "name": "Redis 7.2",
+        "type": "In-Memory Key-Value / Cache",
+        "port": 6379,
+        "purpose": "Cache distribuido de lectura, sesiones de carrito volátiles y locks distribuidos (Redlock)",
+        "icon": "🔴"
+      }
+    ],
+    "messaging": [
+      {
+        "name": "RabbitMQ 3.13 / Apache Kafka",
+        "type": "Message Broker & Colas de Eventos",
+        "port": 5672,
+        "purpose": "Procesamiento asíncrono de órdenes, eventos de integración y Dead Letter Queues (DLQ)",
+        "icon": "🐇"
+      }
+    ],
+    "libraries": [
+      {
+        "name": "Zod / FluentValidation",
+        "category": "Validación & Contratos",
+        "purpose": "Validación estricta de DTOs en tiempo de compilación y ejecución para contratos de API OpenAPI v3"
+      },
+      {
+        "name": "jsonwebtoken & node-crypto",
+        "category": "Seguridad & Criptografía",
+        "purpose": "Tokens JWT (Access + Refresh), verificación RBAC y validación de firmas HMAC-SHA256 en webhooks"
+      },
+      {
+        "name": "Prisma / Entity Framework Core",
+        "category": "ORM & Persistencia",
+        "purpose": "Mapeo objeto-relacional con pool de conexiones gestionado y migraciones deterministas"
+      },
+      {
+        "name": "Prometheus Client & Winston",
+        "category": "Observabilidad & Telemetría",
+        "purpose": "Exportador de métricas en /metrics y registro de logs estructurados JSON con correlation_id"
+      },
+      {
+        "name": "Three.js r128",
+        "category": "Visualización 3D",
+        "purpose": "Constelación 3D espacial con pesos de importancia, sprites y órbitas"
+      },
+      {
+        "name": "Vitest / Supertest / xUnit",
+        "category": "Aseguramiento de Calidad",
+        "purpose": "Suites completas de pruebas unitarias, de integración y regresión TDD/SDD"
+      }
+    ]
+  },
+  "architecture": {
+    "style": "Clean Architecture (Onion / Hexagonal) + Event-Driven Architecture (EDA)",
+    "description": "Arquitectura modular por capas con inversión de dependencias estricta. Las capas internas de Dominio no conocen frameworks, bases de datos ni servicios externos. La comunicación entre dominios desacoplados se realiza mediante eventos asíncronos publicados en colas de mensajería.",
+    "layers": [
+      {
+        "name": "Capa 1: Clientes & Perímetro",
+        "badge": "External Entry",
+        "description": "Aplicaciones cliente (Web, Móvil, Agentes de IA) y proveedores de webhooks que acceden al sistema a través de HTTPS/WSS."
+      },
+      {
+        "name": "Capa 2: API Gateway & Seguridad",
+        "badge": "Gateway / Edge",
+        "description": "Control de tráfico, terminación TLS, rate limiting perimetral, middleware de autenticación JWT y enrutamiento hacia los dominios internos."
+      },
+      {
+        "name": "Capa 3: Dominios & Microservicios (Clean Core)",
+        "badge": "Core Domain & Use Cases",
+        "description": "Casos de uso y reglas de negocio aisladas: Auth, Catálogo, Carrito, Pagos, Despacho, Analítica y Notificaciones."
+      },
+      {
+        "name": "Capa 4: Datos, Cache & Event Broker",
+        "badge": "Infrastructure & State",
+        "description": "PostgreSQL (ACID), Redis (Cache & Locks) y RabbitMQ (Broker de eventos asíncronos y colas DLQ)."
+      }
+    ],
+    "patterns": [
+      {
+        "name": "Clean / Hexagonal Architecture",
+        "type": "Estructural",
+        "description": "Aislamiento total del núcleo de negocio mediante puertos e interfaces (Domain → Application → Infrastructure)."
+      },
+      {
+        "name": "Repository & Unit of Work",
+        "type": "Persistencia",
+        "description": "Abstrae el motor SQL garantizando transacciones atómicas coordinadas entre múltiples agregados."
+      },
+      {
+        "name": "CQRS Ligero (Command Query Separation)",
+        "type": "Rendimiento",
+        "description": "Separa lecturas rápidas optimizadas con Redis de comandos transaccionales hacia PostgreSQL."
+      },
+      {
+        "name": "Idempotency Key Pattern",
+        "type": "Resiliencia Financiera",
+        "description": "Previene cobros duplicados en la pasarela de pagos registrando llaves de idempotencia en Redis."
+      },
+      {
+        "name": "Dead Letter Queue (DLQ) & Exponential Backoff",
+        "type": "Mensajería",
+        "description": "Aísla eventos fallidos tras reintentos exponenciales para análisis forense sin bloquear el pipeline."
+      },
+      {
+        "name": "Banker's Rounding (IEEE 754)",
+        "type": "Lógica Contable",
+        "description": "Algoritmo de redondeo bancario a dos decimales para evitar discrepancias de centavos en facturas e impuestos."
+      }
+    ]
+  },
+  "modules": [
+    {
+      "id": "infra",
+      "name": "Infraestructura & Plataforma Base",
+      "purpose": "Scaffolding de base de datos relacional, pool de conexiones, migraciones versionadas y workers de procesamiento en cola.",
+      "responsibilities": [
+        "Inicialización de PostgreSQL con healthchecks activos",
+        "Ejecución determinista de migraciones en arranque",
+        "Worker asíncrono consumidor de colas con Dead Letter Queue (DLQ)"
+      ],
+      "features": ["INT-001", "INT-008"],
+      "tech": "PostgreSQL 16, Docker Compose, RabbitMQ, verify.sh",
+      "status": "in_progress"
+    },
+    {
+      "id": "backend",
+      "name": "Servicios Core & Catálogo",
+      "purpose": "Autenticación segura JWT, roles de usuario RBAC, catálogo de productos con paginación cursor y carrito en memoria.",
+      "responsibilities": [
+        "Emisión y rotación de tokens JWT (Access + Refresh)",
+        "Middleware de autenticación y aislamiento de roles",
+        "Endpoints de catálogo con latencia < 50ms y filtros full-text",
+        "Gestión atómica de stock en carrito temporal y persistente con Redis"
+      ],
+      "features": ["INT-002", "INT-003", "INT-004", "INT-005"],
+      "tech": "Node.js, TypeScript, Redis 7, JWT, Zod",
+      "status": "in_progress"
+    },
+    {
+      "id": "billing",
+      "name": "Facturación & Pasarelas de Pago",
+      "purpose": "Flujo de cobro seguro con pasarelas (Stripe/PSE), webhooks firmados con HMAC y redondeo financiero contable.",
+      "responsibilities": [
+        "Integración con API de pagos con idempotencia obligatoria",
+        "Validación criptográfica de webhooks con HMAC-SHA256",
+        "Cálculo de impuestos con algoritmo de redondeo contable exacto"
+      ],
+      "features": ["INT-006", "INT-007"],
+      "tech": "Stripe SDK, Crypto HMAC, Banker's Rounding",
+      "status": "pending"
+    },
+    {
+      "id": "analytics",
+      "name": "Analítica & Streams de Eventos",
+      "purpose": "Ingesta no bloqueante de eventos de comportamiento y métricas operativas de la plataforma.",
+      "responsibilities": [
+        "Buffer de eventos en memoria con descarga por lotes comprimidos",
+        "Exportador de métricas Prometheus para monitoreo en /metrics"
+      ],
+      "features": ["INT-009"],
+      "tech": "Prometheus, Stream Ingestion, gzip",
+      "status": "pending"
+    },
+    {
+      "id": "notifications",
+      "name": "Comunicaciones & Notificaciones",
+      "purpose": "Servicio de emails transaccionales con plantillas seguras contra inyecciones y colas de reintento.",
+      "responsibilities": [
+        "Renderizado seguro de plantillas HTML responsivas",
+        "Gestión de rebotes, reintentos SMTP/SES y preferencias de usuario"
+      ],
+      "features": ["INT-010"],
+      "tech": "SMTP / AWS SES, HTML Sanitizer, Queue Retries",
+      "status": "pending"
+    }
+  ]
+}

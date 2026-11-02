@@ -98,6 +98,16 @@ export async function detectEnvironment(projectData = {}) {
     isAgnostic: true
   };
 
+  if (projectData?.projectSpec) {
+    const spec = projectData.projectSpec;
+    const runtimeNames = (spec.tech_stack?.runtimes || []).map(r => r.name).join(' · ');
+    stack = {
+      name: runtimeNames || spec.project?.type || 'Node.js & .NET',
+      runtime: spec.project?.type || 'Clean Architecture',
+      isAgnostic: false
+    };
+  }
+
   // Intentar leer project-spec.yaml si fue generado por la skill technical-audit
   try {
     const yamlRes = await fetch('project-spec.yaml');

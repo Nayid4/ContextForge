@@ -14,6 +14,7 @@ import { renderDependencyGraph } from './features/dependency-graph/DependencyGra
 import { DependencyTreeComponent } from './features/dependency-tree/DependencyTree.js';
 import { SpaceView3D } from './features/space-view-3d/SpaceView3D.js';
 import { renderHistoryTimeline } from './features/history-timeline/HistoryTimeline.js';
+import { renderArchitectureDocs } from './features/architecture-docs/ArchitectureDocs.js';
 
 class App {
   constructor() {
@@ -267,6 +268,7 @@ class App {
           <!-- 3. Navegación por pestañas (Router) -->
           <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: 'features', label: 'Tareas y Bugfixes', icon: Icons.folder, active: this.activeTab === 'features', badge: String(state.features.length) })}
+            ${renderTabButton({ id: 'architecture', label: 'Arquitectura & Stack', icon: Icons.layers, active: this.activeTab === 'architecture' })}
             ${renderTabButton({ id: 'graph', label: 'Grafo Visual DAG', icon: Icons.gitBranch, active: this.activeTab === 'graph' })}
             ${renderTabButton({ id: 'tree', label: 'Árbol Jerárquico', icon: Icons.check, active: this.activeTab === 'tree' })}
             ${renderTabButton({ id: 'three', label: 'Constelación 3D', icon: Icons.eye, active: this.activeTab === 'three' })}
@@ -326,6 +328,12 @@ class App {
             </div>
           </div>
         `;
+
+      case 'architecture':
+        return renderArchitectureDocs({ 
+          projectSpec: state.projectSpec, 
+          features: state.features 
+        });
 
       case 'graph':
         return renderDependencyGraph({ 

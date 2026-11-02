@@ -1,0 +1,84 @@
+# project-spec.yaml — Auditoría Técnica y Especificación de Arquitectura
+# Generado por skill: technical-audit (Harness SDD)
+
+project:
+  name: "CloudSaaS Platform"
+  description: "Plataforma SaaS integral de comercio electrónico y microservicios orientada a eventos. Diseñada para alta concurrencia, resiliencia financiera y trazabilidad SDD."
+  version: "2.0.0"
+  type: fullstack
+  architecture: "Clean Architecture (Hexagonal) + Event-Driven Architecture (EDA)"
+
+runtime:
+  language: "Node.js & .NET"
+  version: "Node v20.x / .NET 10.0"
+  packageManager: "npm / dotnet"
+
+environment:
+  required:
+    - name: DATABASE_URL
+      description: "Cadena de conexión a PostgreSQL"
+      required: true
+    - name: REDIS_URL
+      description: "Cadena de conexión a Redis"
+      required: true
+    - name: JWT_SECRET
+      description: "Clave secreta para firma y verificación de tokens"
+      required: true
+    - name: STRIPE_WEBHOOK_SECRET
+      description: "Clave HMAC para validación de webhooks"
+      required: true
+  optional:
+    - name: RABBITMQ_URL
+      description: "URL del broker de mensajería"
+      defaultValue: "amqp://localhost:5672"
+    - name: PORT
+      description: "Puerto de la API"
+      defaultValue: "8080"
+
+services:
+  - name: postgres
+    type: database
+    port: 5432
+    required: true
+  - name: redis
+    type: cache
+    port: 6379
+    required: true
+  - name: rabbitmq
+    type: queue
+    port: 5672
+    required: false
+
+modules:
+  - id: infra
+    name: "Infraestructura & Plataforma Base"
+    tech: "PostgreSQL 16, Docker, RabbitMQ"
+    features: ["INT-001", "INT-008"]
+  - id: backend
+    name: "Servicios Core & Catálogo"
+    tech: "Node.js, TypeScript, Redis 7, JWT"
+    features: ["INT-002", "INT-003", "INT-004", "INT-005"]
+  - id: billing
+    name: "Facturación & Pasarelas de Pago"
+    tech: "Stripe SDK, HMAC-SHA256, Banker's Rounding"
+    features: ["INT-006", "INT-007"]
+  - id: analytics
+    name: "Analítica & Streams de Eventos"
+    tech: "Prometheus, Stream Ingestion"
+    features: ["INT-009"]
+  - id: notifications
+    name: "Comunicaciones & Notificaciones"
+    tech: "SMTP, AWS SES, HTML Sanitizer"
+    features: ["INT-010"]
+
+checks:
+  build:
+    command: "npm run build || dotnet build"
+    timeout: 120
+  test:
+    command: "npm test || dotnet test"
+    timeout: 180
+    hasTests: true
+  verify:
+    command: "bash verify.sh"
+    timeout: 60
