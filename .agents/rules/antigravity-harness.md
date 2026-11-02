@@ -90,6 +90,7 @@ El proyecto expone 18 skills en `.agents/skills/` invocables con `/` o por detec
 - `/implement-sdd` — Implementación dirigida por spec por fases (SDD).
 - `/implement-ftd` — Implementación ágil para cambios menores (FTD).
 - `/write-unit-tests` — Cobertura de tests unitarios agnósticos al lenguaje.
+- `/acceptance-testing` — Pruebas de aceptación con Playwright, caja blanca/negra, sistema y carga (k6).
 - `/verify-spec` — Reconciliación de metadata y verificación de cierre.
 - `/api-test-plan` y `/execute-api-test-plan` — Pruebas de API REST.
 - `/sync-skills` — Sincronización masiva triple (`.opencode/skills/` → `.github/skills/` y `.agents/skills/`).
@@ -100,6 +101,7 @@ El proyecto expone 18 skills en `.agents/skills/` invocables con `/` o por detec
 ## 6. Consulta Obligatoria de la Base de Conocimiento (`project-docs/knowledge/`)
 
 Para eliminar el sesgo (bias) y evitar errores por falta de contexto:
-- **Antes de redactar o implementar**: Los subagentes `spec-author` e `implementer` deben consultar obligatoriamente los artefactos en `project-docs/knowledge/` (`c4-model.md`, `uml-diagrams.md`, `business-rules.md`, `external-services.md`, `coding-standards.md` y `modules/{modulo}/`).
-- **Respeto a las reglas de negocio**: Ninguna implementación puede violar las invariantes documentadas (`BR-*`).
-- **Respeto a las convenciones**: Debe seguirse la forma de programar, patrones de inyección y librerías canónicas registradas.
+- **Invariante de Conocimiento Obligatoria**: Antes de redactar especificaciones (`spec-author`), implementar código (`implementer`) o resolver consultas, el agente DEBE verificar si existe `project-docs/knowledge/`. Si existe, es OBLIGATORIO consultar `knowledge-index.json`, `c4-model.md`, `uml-diagrams.md`, `business-rules.md`, `external-services.md`, `coding-standards.md` y `modules/{modulo}/`.
+- **Respeto a las reglas de negocio**: Ninguna implementación ni sugerencia puede violar las invariantes documentadas (`BR-*`).
+- **Respeto a las convenciones**: Debe seguirse la forma de programar, patrones de inyección y librerías canónicas registradas. Queda estrictamente prohibido alucinar paquetes o librerías externas que no figuren en los estándares.
+- **Sincronización Automática con el Tablero**: Toda skill que actualice o genere artefactos de auditoría o conocimiento (`technical-audit`, `project-knowledge`, `requirements-analysis`, `generate-verify`, `verify-spec`) debe ejecutar automáticamente `node project-docs/sync-data.js` para asegurar que el tablero interactivo refleje de inmediato los datos tanto en modo servidor (`serve.js`) como en modo offline (`file:///`).

@@ -2404,6 +2404,96 @@
   `;
   }
 
+  // project-docs/src/shared/MermaidViewer.js
+  function renderMermaidViewer(diagram) {
+    const { id, title, type, level, description, mermaid: code } = diagram;
+    return `
+    <div class="mermaid-viewer-card rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 shadow-sm overflow-hidden transition-all duration-200" 
+         id="mermaid-card-${id}">
+      
+      <!-- 1. Barra de Herramientas Superior -->
+      <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+            ${type || "Diagrama"}
+          </span>
+          <span class="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
+            ${level || ""}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Switcher Vista Visual / C\xF3digo -->
+          <div class="inline-flex rounded-xl p-0.5 bg-slate-200/70 dark:bg-slate-800/80 text-xs font-medium">
+            <button type="button" 
+                    data-diagram-toggle="visual" 
+                    data-diagram-id="${id}"
+                    class="diagram-view-btn active px-3 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold shadow-xs transition-all cursor-pointer">
+              \u{1F3A8} Visual
+            </button>
+            <button type="button" 
+                    data-diagram-toggle="code" 
+                    data-diagram-id="${id}"
+                    class="diagram-view-btn px-3 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+              \u{1F4DD} C\xF3digo
+            </button>
+          </div>
+
+          <!-- Bot\xF3n Pantalla Completa / Zoom -->
+          <button type="button" 
+                  data-action="expand-diagram" 
+                  data-diagram-id="${id}"
+                  class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  title="Expandir a Pantalla Completa">
+            ${Icons.eye("w-3.5 h-3.5")}
+          </button>
+
+          <!-- Bot\xF3n Copiar C\xF3digo -->
+          <button type="button" 
+                  data-copy-mermaid="${escapeAttr2(code)}"
+                  class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  title="Copiar c\xF3digo Mermaid">
+            <span class="text-xs">\u{1F4CB}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Informaci\xF3n del Diagrama -->
+      <div class="px-5 pt-4 pb-2">
+        <h4 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">${escapeHtml3(title)}</h4>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">${escapeHtml3(description)}</p>
+      </div>
+
+      <!-- 3. Contenedores de Vista -->
+      
+      <!-- 3.1 VISTA VISUAL (RENDER SVG MERMAID) -->
+      <div id="diagram-view-visual-${id}" class="diagram-visual-panel p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950/60 overflow-x-auto min-h-[320px] flex items-center justify-center">
+        <div class="mermaid-render-container w-full max-w-4xl flex justify-center" 
+             id="mermaid-target-${id}" 
+             data-mermaid-src="${escapeAttr2(code)}">
+          <div class="mermaid text-xs font-mono text-slate-500 animate-pulse text-center p-8">
+            ${escapeHtml3(code)}
+          </div>
+        </div>
+      </div>
+
+      <!-- 3.2 VISTA DE C\xD3DIGO FUENTE (OCULTA POR DEFECTO) -->
+      <div id="diagram-view-code-${id}" class="diagram-code-panel hidden p-4 bg-slate-900 border-t border-slate-800">
+        <pre class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 select-all"><code>${escapeHtml3(code)}</code></pre>
+      </div>
+
+    </div>
+  `;
+  }
+  function escapeHtml3(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function escapeAttr2(text) {
+    if (!text) return "";
+    return String(text).replace(/"/g, "&quot;");
+  }
+
   // project-docs/src/features/architecture-docs/ArchitectureDocs.js
   function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
     const spec = projectSpec || getFallbackSpec();
@@ -2435,10 +2525,10 @@
               </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              ${escapeHtml3(proj.name || "CloudSaaS Platform")}
+              ${escapeHtml4(proj.name || "CloudSaaS Platform")}
             </h2>
             <p class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mt-1">
-              ${escapeHtml3(proj.tagline || "E-Commerce & Microservicios Cloud")}
+              ${escapeHtml4(proj.tagline || "E-Commerce & Microservicios Cloud")}
             </p>
           </div>
 
@@ -2468,7 +2558,7 @@
               ${Icons.folder} Prop\xF3sito y Alcance del Sistema
             </h3>
             <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-              ${escapeHtml3(proj.description || "")}
+              ${escapeHtml4(proj.description || "")}
             </p>
           </div>
 
@@ -2480,7 +2570,7 @@
               ${goals.map((g) => `
                 <li class="flex items-start gap-2">
                   <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u25AA</span>
-                  <span>${escapeHtml3(g)}</span>
+                  <span>${escapeHtml4(g)}</span>
                 </li>
               `).join("")}
             </ul>
@@ -2540,7 +2630,7 @@
             \u{1F3DB}\uFE0F UML: Clases
           </button>
           <button type="button" 
-                  data-arch-tab="uml-sequence" 
+                  data-arch-tab="uml-sequence-checkout" 
                   class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
             \u{1F504} UML: Secuencia Checkout
           </button>
@@ -2772,31 +2862,10 @@
           </div>
         </div>
 
-        <!-- 2.2 PANELES DE DIAGRAMAS C4 & UML (Generados desde knowledge-index.json) -->
+        <!-- 2.2 PANELES DE DIAGRAMAS C4 & UML (Renderizado Visual Interactivo) -->
         ${diagrams.map((diag) => `
-          <div id="diagram-panel-${diag.id}" class="diagram-panel hidden mt-6 space-y-4">
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">
-                    ${diag.type}
-                  </span>
-                  <span class="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    ${diag.level}
-                  </span>
-                </div>
-                <button type="button" 
-                        data-copy-mermaid="${escapeAttr2(diag.mermaid)}"
-                        class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-700 dark:text-slate-300 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1">
-                  <span>\u{1F4CB}</span> Copiar Mermaid
-                </button>
-              </div>
-              <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 mb-1">${diag.title}</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">${diag.description}</p>
-              
-              <!-- Visor de C\xF3digo Mermaid -->
-              <pre class="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800"><code>${escapeHtml3(diag.mermaid)}</code></pre>
-            </div>
+          <div id="diagram-panel-${diag.id}" class="diagram-panel hidden mt-6">
+            ${renderMermaidViewer(diag)}
           </div>
         `).join("")}
 
@@ -2971,7 +3040,7 @@
                       ${(mod.responsibilities || []).map((r) => `
                         <li class="flex items-start gap-1.5">
                           <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u203A</span>
-                          <span>${escapeHtml3(r)}</span>
+                          <span>${escapeHtml4(r)}</span>
                         </li>
                       `).join("")}
                     </ul>
@@ -2980,7 +3049,7 @@
                   <div>
                     <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Stack Tecnol\xF3gico & Tareas Asignadas:</span>
                     <div class="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 mb-2">
-                      ${escapeHtml3(mod.tech || "")}
+                      ${escapeHtml4(mod.tech || "")}
                     </div>
                     <div class="flex flex-wrap gap-1.5">
                       ${modFeatures.map((f) => `
@@ -3005,13 +3074,9 @@
     </div>
   `;
   }
-  function escapeHtml3(text) {
+  function escapeHtml4(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  }
-  function escapeAttr2(text) {
-    if (!text) return "";
-    return String(text).replace(/"/g, "&quot;");
   }
   function getFallbackSpec() {
     if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.projectSpec) {
@@ -3055,6 +3120,210 @@
     };
   }
 
+  // project-docs/src/shared/MarkdownViewer.js
+  function renderMarkdown(content = "") {
+    if (!content) return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
+    if (typeof window !== "undefined" && window.marked && typeof window.marked.parse === "function") {
+      try {
+        const rawHtml = window.marked.parse(content);
+        return postProcessMarkdownHtml(rawHtml);
+      } catch (_) {
+      }
+    }
+    return parseMarkdownNative(content);
+  }
+  function postProcessMarkdownHtml(html) {
+    return html.replace(/<blockquote>\s*<p>\s*\[!NOTE\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
+      <div class="my-4 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-950 dark:text-indigo-200 flex items-start gap-3 shadow-xs">
+        <span class="text-indigo-600 dark:text-indigo-400 text-base shrink-0 mt-0.5">\u2139\uFE0F</span>
+        <div class="leading-relaxed flex-1">${text}</div>
+      </div>
+    `).replace(/<blockquote>\s*<p>\s*\[!TIP\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
+      <div class="my-4 p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-3 shadow-xs">
+        <span class="text-emerald-600 dark:text-emerald-400 text-base shrink-0 mt-0.5">\u{1F4A1}</span>
+        <div class="leading-relaxed flex-1">${text}</div>
+      </div>
+    `).replace(/<blockquote>\s*<p>\s*\[!WARNING\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
+      <div class="my-4 p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-950 dark:text-amber-200 flex items-start gap-3 shadow-xs">
+        <span class="text-amber-600 dark:text-amber-400 text-base shrink-0 mt-0.5">\u26A0\uFE0F</span>
+        <div class="leading-relaxed flex-1">${text}</div>
+      </div>
+    `).replace(/<blockquote>\s*<p>\s*\[!IMPORTANT\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
+      <div class="my-4 p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 text-xs text-purple-950 dark:text-purple-200 flex items-start gap-3 shadow-xs">
+        <span class="text-purple-600 dark:text-purple-400 text-base shrink-0 mt-0.5">\u26A1</span>
+        <div class="leading-relaxed flex-1">${text}</div>
+      </div>
+    `).replace(/<blockquote>\s*<p>\s*\[!CAUTION\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
+      <div class="my-4 p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-950 dark:text-rose-200 flex items-start gap-3 shadow-xs">
+        <span class="text-rose-600 dark:text-rose-400 text-base shrink-0 mt-0.5">\u{1F6D1}</span>
+        <div class="leading-relaxed flex-1">${text}</div>
+      </div>
+    `);
+  }
+  function parseMarkdownNative(md) {
+    const lines = md.split(/\r?\n/);
+    let html = [];
+    let inCodeBlock = false;
+    let codeLang = "";
+    let codeBuffer = [];
+    let inTable = false;
+    let tableHeaderParsed = false;
+    let inList = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim().startsWith("```")) {
+        if (inCodeBlock) {
+          const codeText = codeBuffer.join("\n");
+          if (codeLang.toLowerCase() === "mermaid") {
+            html.push(`
+            <div class="my-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 overflow-hidden shadow-xs">
+              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 text-[11px] font-mono font-semibold text-slate-500">
+                <span class="flex items-center gap-1.5 text-indigo-500">\u{1F4CA} Diagrama Mermaid</span>
+                <button type="button" data-copy-mermaid="${escapeAttr3(codeText)}" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">Copiar</button>
+              </div>
+              <div class="p-4 overflow-x-auto flex justify-center">
+                <pre class="mermaid text-xs font-mono text-slate-300">${escapeHtml5(codeText)}</pre>
+              </div>
+            </div>
+          `);
+          } else {
+            html.push(`
+            <div class="my-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-900 text-slate-100 overflow-hidden shadow-xs">
+              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-950/60 text-[11px] font-mono text-slate-400">
+                <span>${codeLang || "text"}</span>
+                <button type="button" data-action="copy-code-block" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer text-[10px]">Copiar</button>
+              </div>
+              <pre class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><code>${escapeHtml5(codeText)}</code></pre>
+            </div>
+          `);
+          }
+          codeBuffer = [];
+          inCodeBlock = false;
+          codeLang = "";
+          continue;
+        } else {
+          inCodeBlock = true;
+          codeLang = line.trim().replace(/^```/, "").trim();
+          continue;
+        }
+      }
+      if (inCodeBlock) {
+        codeBuffer.push(line);
+        continue;
+      }
+      if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+        const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+        if (cells.every((c) => /^:?-+:?$/.test(c))) {
+          tableHeaderParsed = true;
+          continue;
+        }
+        if (!inTable) {
+          inTable = true;
+          tableHeaderParsed = false;
+          html.push('<div class="my-4 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs"><table class="w-full text-left text-xs border-collapse">');
+        }
+        if (!tableHeaderParsed) {
+          html.push('<thead class="bg-slate-100 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800"><tr>');
+          cells.forEach((c) => html.push(`<th class="px-3.5 py-2.5">${formatInline(c)}</th>`));
+          html.push('</tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 bg-white dark:bg-slate-950/50">');
+        } else {
+          html.push('<tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">');
+          cells.forEach((c) => html.push(`<td class="px-3.5 py-2.5 text-slate-700 dark:text-slate-300 leading-relaxed">${formatInline(c)}</td>`));
+          html.push("</tr>");
+        }
+        continue;
+      } else if (inTable) {
+        html.push("</tbody></table></div>");
+        inTable = false;
+        tableHeaderParsed = false;
+      }
+      if (line.startsWith("# ")) {
+        html.push(`<h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-8 mb-4 tracking-tight border-b border-slate-200 dark:border-slate-800 pb-2">${formatInline(line.slice(2))}</h1>`);
+        continue;
+      }
+      if (line.startsWith("## ")) {
+        html.push(`<h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-6 mb-3 tracking-tight">${formatInline(line.slice(3))}</h2>`);
+        continue;
+      }
+      if (line.startsWith("### ")) {
+        html.push(`<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 mt-5 mb-2">${formatInline(line.slice(4))}</h3>`);
+        continue;
+      }
+      if (line.startsWith("#### ")) {
+        html.push(`<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mt-4 mb-1.5">${formatInline(line.slice(5))}</h4>`);
+        continue;
+      }
+      if (/^(\*\*\*|---|___)$/.test(line.trim())) {
+        html.push('<hr class="my-6 border-slate-200 dark:border-slate-800" />');
+        continue;
+      }
+      if (line.startsWith("> [!NOTE]")) {
+        const rest = line.replace("> [!NOTE]", "").trim();
+        html.push(`
+        <div class="my-3 p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-950 dark:text-indigo-200 flex items-start gap-2.5">
+          <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u2139\uFE0F</span>
+          <div class="leading-relaxed flex-1">${formatInline(rest)}</div>
+        </div>
+      `);
+        continue;
+      }
+      if (line.startsWith("> [!TIP]")) {
+        const rest = line.replace("> [!TIP]", "").trim();
+        html.push(`
+        <div class="my-3 p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-2.5">
+          <span class="text-emerald-500 font-bold shrink-0 mt-0.5">\u{1F4A1}</span>
+          <div class="leading-relaxed flex-1">${formatInline(rest)}</div>
+        </div>
+      `);
+        continue;
+      }
+      if (line.startsWith("> [!WARNING]")) {
+        const rest = line.replace("> [!WARNING]", "").trim();
+        html.push(`
+        <div class="my-3 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 flex items-start gap-2.5">
+          <span class="text-amber-500 font-bold shrink-0 mt-0.5">\u26A0\uFE0F</span>
+          <div class="leading-relaxed flex-1">${formatInline(rest)}</div>
+        </div>
+      `);
+        continue;
+      }
+      if (line.startsWith("> ")) {
+        html.push(`<blockquote class="my-3 pl-4 border-l-2 border-indigo-500 text-slate-600 dark:text-slate-400 italic text-xs leading-relaxed">${formatInline(line.slice(2))}</blockquote>`);
+        continue;
+      }
+      if (/^[\*\-]\s/.test(line)) {
+        if (!inList) {
+          html.push('<ul class="my-3 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">');
+          inList = true;
+        }
+        const itemText = line.replace(/^[\*\-]\s/, "");
+        html.push(`<li class="flex items-start gap-2"><span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u25AA</span><span>${formatInline(itemText)}</span></li>`);
+        continue;
+      } else if (inList) {
+        html.push("</ul>");
+        inList = false;
+      }
+      if (!line.trim()) {
+        continue;
+      }
+      html.push(`<p class="my-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${formatInline(line)}</p>`);
+    }
+    if (inTable) html.push("</tbody></table></div>");
+    if (inList) html.push("</ul>");
+    return html.join("");
+  }
+  function formatInline(text = "") {
+    return text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-indigo-600 dark:text-indigo-400 text-[11px] border border-slate-200 dark:border-slate-700">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>').replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 underline underline-offset-2 hover:text-indigo-500 font-medium">$1</a>');
+  }
+  function escapeHtml5(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function escapeAttr3(text) {
+    if (!text) return "";
+    return String(text).replace(/"/g, "&quot;");
+  }
+
   // project-docs/src/features/knowledge-base/KnowledgeBase.js
   function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
     const kData = knowledgeIndex || getFallbackKnowledge2();
@@ -3063,8 +3332,24 @@
     const standards = kData.coding_standards || {};
     const guardrails = standards.guardrails || [];
     const naming = standards.naming_conventions || {};
+    const docs = kData.docs || getDefaultDocs();
+    const defaultDocKey = Object.keys(docs)[0] || "coding-standards.md";
+    const defaultDocContent = docs[defaultDocKey] || "# Documentaci\xF3n no disponible";
+    const generalDocs = [];
+    const moduleDocsMap = {};
+    Object.keys(docs).forEach((key) => {
+      if (key.startsWith("modules/")) {
+        const parts = key.split("/");
+        const modName = parts[1] || "general";
+        const fileName = parts.slice(2).join("/") || parts[1];
+        if (!moduleDocsMap[modName]) moduleDocsMap[modName] = [];
+        moduleDocsMap[modName].push({ key, fileName });
+      } else {
+        generalDocs.push({ key, fileName: key });
+      }
+    });
     return `
-    <div class="space-y-8">
+    <div class="space-y-10">
       
       <!-- 1. HEADER HERO: Base de Conocimiento Can\xF3nica -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
@@ -3082,12 +3367,12 @@
               <span>\u{1F4DA}</span> Base de Conocimiento del Proyecto
             </h2>
             <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-              Repositorio can\xF3nico de reglas de negocio, contratos de servicios externos, diagramas y est\xE1ndares de codificaci\xF3n.
-              Sirve de <strong>contexto can\xF3nico</strong> para alimentar a los agentes de IA (Google Antigravity, Claude Code, Open Code, Copilot, Codex) y evitar el sesgo o las alucinaciones por falta de informaci\xF3n.
+              Repositorio can\xF3nico de arquitectura, reglas de negocio, contratos de servicios externos y est\xE1ndares de codificaci\xF3n.
+              Sirve de <strong>contexto can\xF3nico</strong> para alimentar a los agentes de IA (Google Antigravity, Claude Code, Open Code, Copilot, Codex) y desarrolladores, eliminando el sesgo y las alucinaciones por falta de contexto.
             </p>
           </div>
 
-          <!-- Bot\xF3n Generador de Prompt de Contexto -->
+          <!-- Bot\xF3n Generador de Prompt de Contexto (ContextForge Prompt Bundler) -->
           <div class="shrink-0">
             <button type="button" 
                     data-action="open-ai-context-modal" 
@@ -3115,14 +3400,109 @@
             <div class="text-[10px] text-slate-500 mt-0.5">Reglas de no-alucinaci\xF3n</div>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Documentaci\xF3n Modular</div>
-            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">5 Bounded Contexts</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">infra, backend, billing...</div>
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Docs-as-Code</div>
+            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${Object.keys(docs).length} documentos</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Markdown vivo y C4</div>
           </div>
         </div>
       </section>
 
-      <!-- 2. CAT\xC1LOGO DE REGLAS DE NEGOCIO (BR-*) -->
+      <!-- 2. LECTOR EDITORIAL DOCS-AS-CODE (Inspirado en ContextForge) -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+                ${Icons.folder}
+              </span>
+              Lector Editorial Docs-as-Code (Markdown & Diagramas)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Explora los documentos de arquitectura y m\xF3dulos parseados con dise\xF1o editorial limpio y alertas interactivas
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button type="button" 
+                    id="copy-active-doc-btn" 
+                    class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5">
+              <span>\u{1F4CB}</span> Copiar Markdown Activo
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Columna Izquierda: \xC1rbol de Navegaci\xF3n de Documentos (Estilo ContextForge Sidebar) -->
+          <div class="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 space-y-4 max-h-[640px] overflow-y-auto">
+            
+            <!-- Grupo 1: Documentaci\xF3n Can\xF3nica General -->
+            <div class="space-y-1.5">
+              <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2">
+                \u{1F3DB}\uFE0F Documentos Can\xF3nicos
+              </div>
+              <div class="space-y-1 text-xs">
+                ${generalDocs.map((doc) => `
+                  <button type="button" 
+                          data-doc-key="${escapeAttr4(doc.key)}"
+                          class="doc-nav-item w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 font-mono transition-all cursor-pointer ${doc.key === defaultDocKey ? "active bg-indigo-600 text-white font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60"}">
+                    <span class="text-xs shrink-0">\u{1F4C4}</span>
+                    <span class="truncate">${doc.fileName}</span>
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+
+            <!-- Grupo 2: M\xF3dulos / Bounded Contexts -->
+            <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2">
+                \u{1F4E6} M\xF3dulos / Bounded Contexts
+              </div>
+              
+              ${Object.keys(moduleDocsMap).map((modName) => `
+                <div class="space-y-1">
+                  <div class="flex items-center gap-1.5 px-2 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                    <span>\u{1F4C1}</span>
+                    <span>${modName}</span>
+                  </div>
+                  <div class="pl-3 space-y-0.5 text-xs font-mono">
+                    ${moduleDocsMap[modName].map((doc) => `
+                      <button type="button" 
+                              data-doc-key="${escapeAttr4(doc.key)}"
+                              class="doc-nav-item w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${doc.key === defaultDocKey ? "active bg-indigo-600 text-white font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60"}">
+                        <span class="text-[10px] opacity-70">\u{1F4C4}</span>
+                        <span class="truncate text-[11px]">${doc.fileName}</span>
+                      </button>
+                    `).join("")}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+
+          </div>
+
+          <!-- Columna Derecha: Lector Editorial del Documento Activo -->
+          <div class="lg:col-span-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-8 min-h-[500px] shadow-sm">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80 text-xs">
+              <div class="flex items-center gap-2 font-mono text-slate-400">
+                <span>Ruta:</span>
+                <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold">${defaultDocKey}</span>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                Docs-as-Code
+              </span>
+            </div>
+
+            <!-- Contenedor del Art\xEDculo Parseado -->
+            <div id="doc-active-body" class="prose dark:prose-invert max-w-none">
+              ${renderMarkdown(defaultDocContent)}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 3. CAT\xC1LOGO DE REGLAS DE NEGOCIO (BR-*) -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -3184,7 +3564,7 @@
         </div>
       </section>
 
-      <!-- 3. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
+      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -3226,7 +3606,7 @@
         </div>
       </section>
 
-      <!-- 4. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
+      <!-- 5. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -3250,7 +3630,7 @@
               ${guardrails.map((g) => `
                 <li class="flex items-start gap-2">
                   <span class="text-rose-500 font-bold shrink-0 mt-0.5">\u2715</span>
-                  <span>${escapeHtml4(g)}</span>
+                  <span>${escapeHtml6(g)}</span>
                 </li>
               `).join("")}
             </ul>
@@ -3280,43 +3660,6 @@
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- 5. EXPLORADOR MODULAR DE DOCUMENTACI\xD3N -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="mb-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
-              ${Icons.folder}
-            </span>
-            Documentaci\xF3n Modular Generada (<code class="font-mono text-indigo-500">project-docs/knowledge/modules/</code>)
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Archivos estructurados por Bounded Context listos para referencia de agentes y desarrolladores
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          ${["infra", "backend", "billing", "analytics", "notifications"].map((modName) => `
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 space-y-2 text-xs">
-              <div class="flex items-center gap-2 font-bold font-mono text-indigo-600 dark:text-indigo-400">
-                <span>\u{1F4C1}</span>
-                <span>${modName}</span>
-              </div>
-              <div class="space-y-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
-                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-                  <span>\u{1F4C4}</span> <code>module-spec.md</code>
-                </div>
-                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-                  <span>\u{1F4C4}</span> <code>rules.md</code>
-                </div>
-                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-                  <span>\u{1F4C4}</span> <code>sequence.md</code>
-                </div>
-              </div>
-            </div>
-          `).join("")}
         </div>
       </section>
 
@@ -3364,21 +3707,50 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         </div>
       </div>
 
+      <!-- MODAL PARA EXPANDIR DIAGRAMAS A PANTALLA COMPLETA -->
+      <div id="diagram-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base">\u{1F4D0}</span>
+              <h3 id="diagram-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Diagrama Ampliado</h3>
+            </div>
+            <button type="button" data-action="close-diagram-modal" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+              \u2715
+            </button>
+          </div>
+          <div id="diagram-modal-content" class="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-50 dark:bg-slate-950">
+          </div>
+        </div>
+      </div>
+
     </div>
   `;
   }
-  function escapeHtml4(text) {
+  function escapeHtml6(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function escapeAttr4(text) {
+    if (!text) return "";
+    return String(text).replace(/"/g, "&quot;");
   }
   function getFallbackKnowledge2() {
     if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.knowledgeIndex) {
       return window.__FALLBACK_DATA__.knowledgeIndex;
     }
     return {
+      diagrams: [],
       business_rules: [],
       external_services: [],
-      coding_standards: { guardrails: [], naming_conventions: {} }
+      coding_standards: { guardrails: [], naming_conventions: {} },
+      docs: getDefaultDocs()
+    };
+  }
+  function getDefaultDocs() {
+    return {
+      "coding-standards.md": "# Est\xE1ndares de Codificaci\xF3n & Guardrails Anti-Sesgo\n\n> [!NOTE]\n> Este documento define las directrices obligatorias para desarrolladores y agentes de IA.\n\n## Convenciones\n- **Ramas**: `{type}/INT-{id}/{name}` (\u226480c)\n- **Commits**: `feat(scope): desc` o `fix(scope): desc`\n\n## Guardrails Estrictos\n1. No instalar librer\xEDas redundantes.\n2. Inversi\xF3n de dependencias estricta en controladores.",
+      "modules/billing/module-spec.md": "# M\xF3dulo: billing (Facturaci\xF3n & Pagos)\n\n> [!IMPORTANT]\n> M\xF3dulo cr\xEDtico que gestiona cobros e impuestos.\n\n## Tareas Asignadas\n- `INT-006`: `payment_gateway_integration` (Stripe HMAC e idempotencia).\n- `INT-007`: `fix_cart_tax_rounding` (Banker's rounding a 2 decimales)."
     };
   }
 
@@ -3529,7 +3901,7 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml5(state.project)}</h1>
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml7(state.project)}</h1>
                   <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
                     SDD 2.0
                   </span>
@@ -3563,7 +3935,7 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs"
                    title="Stack tecnol\xF3gico detectado por technical-audit">
                 <span class="text-slate-400">Stack:</span>
-                <span class="font-semibold">${escapeHtml5(stackInfo.name)}</span>
+                <span class="font-semibold">${escapeHtml7(stackInfo.name)}</span>
               </div>
             </div>
 
@@ -3716,6 +4088,41 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
       } else if (this.activeTab === "graph") {
         this.bindGraphHoverEvents();
       }
+      if (this.activeTab === "architecture" || this.activeTab === "knowledge") {
+        this.initMermaidDiagrams();
+      }
+    }
+    initMermaidDiagrams() {
+      if (typeof window !== "undefined" && window.mermaid) {
+        try {
+          const isDark = document.documentElement.classList.contains("dark");
+          window.mermaid.initialize({
+            startOnLoad: false,
+            theme: isDark ? "dark" : "neutral",
+            themeVariables: {
+              darkMode: isDark,
+              background: "transparent",
+              primaryColor: "#6366f1",
+              primaryTextColor: isDark ? "#f8fafc" : "#0f172a",
+              primaryBorderColor: "#818cf8",
+              lineColor: "#38bdf8",
+              secondaryColor: "#3b82f6",
+              tertiaryColor: "#1e293b"
+            },
+            securityLevel: "loose",
+            fontFamily: "system-ui, -apple-system, sans-serif"
+          });
+          const targets = document.querySelectorAll(".mermaid");
+          if (targets.length > 0) {
+            window.mermaid.run({
+              nodes: targets
+            }).catch(() => {
+            });
+          }
+        } catch (err) {
+          console.warn("Error Mermaid run:", err);
+        }
+      }
     }
     bindGraphHoverEvents() {
       const nodes = document.querySelectorAll("[data-graph-node]");
@@ -3768,6 +4175,7 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         const themeBtn = e.target.closest('[data-action="toggle-theme"]');
         if (themeBtn) {
           store.toggleTheme();
+          setTimeout(() => this.initMermaidDiagrams(), 50);
           return;
         }
         const tabBtn = e.target.closest("[data-tab]");
@@ -3907,6 +4315,108 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
           }
           return;
         }
+        const diagToggle = e.target.closest("[data-diagram-toggle]");
+        if (diagToggle) {
+          const viewMode = diagToggle.getAttribute("data-diagram-toggle");
+          const diagId = diagToggle.getAttribute("data-diagram-id");
+          const card = document.getElementById(`mermaid-card-${diagId}`);
+          if (card) {
+            card.querySelectorAll(".diagram-view-btn").forEach((b) => {
+              b.classList.remove("active", "bg-white", "dark:bg-slate-900", "text-slate-900", "dark:text-white", "shadow-xs");
+              b.classList.add("text-slate-600", "dark:text-slate-400");
+            });
+            diagToggle.classList.add("active", "bg-white", "dark:bg-slate-900", "text-slate-900", "dark:text-white", "shadow-xs");
+            diagToggle.classList.remove("text-slate-600", "dark:text-slate-400");
+            const visualEl = document.getElementById(`diagram-view-visual-${diagId}`);
+            const codeEl = document.getElementById(`diagram-view-code-${diagId}`);
+            if (viewMode === "visual") {
+              visualEl?.classList.remove("hidden");
+              codeEl?.classList.add("hidden");
+              this.initMermaidDiagrams();
+            } else {
+              visualEl?.classList.add("hidden");
+              codeEl?.classList.remove("hidden");
+            }
+          }
+          return;
+        }
+        const expandBtn = e.target.closest('[data-action="expand-diagram"]');
+        if (expandBtn) {
+          const diagId = expandBtn.getAttribute("data-diagram-id");
+          const visualTarget = document.getElementById(`mermaid-target-${diagId}`);
+          const modal = document.getElementById("diagram-modal");
+          const modalContent = document.getElementById("diagram-modal-content");
+          const modalTitle = document.getElementById("diagram-modal-title");
+          const cardTitle = document.querySelector(`#mermaid-card-${diagId} h4`);
+          if (modal && modalContent && visualTarget) {
+            modalTitle.textContent = cardTitle ? cardTitle.textContent : "Diagrama Ampliado";
+            modalContent.innerHTML = visualTarget.innerHTML;
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+          }
+          return;
+        }
+        const closeDiagModal = e.target.closest('[data-action="close-diagram-modal"]');
+        if (closeDiagModal || e.target.id === "diagram-modal") {
+          const modal = document.getElementById("diagram-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          return;
+        }
+        const docItem = e.target.closest("[data-doc-key]");
+        if (docItem) {
+          const docKey = docItem.getAttribute("data-doc-key");
+          const state = store.getState();
+          const docs = state.knowledgeIndex?.docs || {};
+          const content = docs[docKey] || "# Documento no disponible";
+          document.querySelectorAll(".doc-nav-item").forEach((el) => {
+            el.classList.remove("active", "bg-indigo-600", "text-white", "font-bold");
+            el.classList.add("text-slate-600", "dark:text-slate-400");
+          });
+          docItem.classList.add("active", "bg-indigo-600", "text-white", "font-bold");
+          docItem.classList.remove("text-slate-600", "dark:text-slate-400");
+          const pathEl = document.getElementById("doc-active-path");
+          const bodyEl = document.getElementById("doc-active-body");
+          if (pathEl) pathEl.textContent = docKey;
+          if (bodyEl) {
+            bodyEl.innerHTML = renderMarkdown(content);
+            this.initMermaidDiagrams();
+          }
+          return;
+        }
+        const copyDocBtn = e.target.closest("#copy-active-doc-btn");
+        if (copyDocBtn) {
+          const pathEl = document.getElementById("doc-active-path");
+          const docKey = pathEl ? pathEl.textContent.trim() : "";
+          const state = store.getState();
+          const content = state.knowledgeIndex?.docs?.[docKey] || "";
+          if (content && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(content).then(() => {
+              const orig = copyDocBtn.innerHTML;
+              copyDocBtn.innerHTML = "<span>\u2705</span> \xA1Copiado!";
+              setTimeout(() => {
+                copyDocBtn.innerHTML = orig;
+              }, 2e3);
+            });
+          }
+          return;
+        }
+        const copyCodeBlockBtn = e.target.closest('[data-action="copy-code-block"]');
+        if (copyCodeBlockBtn) {
+          const pre = copyCodeBlockBtn.closest("div.my-4")?.querySelector("pre code");
+          if (pre && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(pre.textContent).then(() => {
+              const orig = copyCodeBlockBtn.textContent;
+              copyCodeBlockBtn.textContent = "\xA1Copiado! \u2713";
+              setTimeout(() => {
+                copyCodeBlockBtn.textContent = orig;
+              }, 2e3);
+            });
+          }
+          return;
+        }
       });
       document.addEventListener("input", (e) => {
         if (e.target.id === "feature-search-input") {
@@ -3951,11 +4461,16 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
             aiModal.classList.add("hidden");
             aiModal.classList.remove("flex");
           }
+          const diagModal = document.getElementById("diagram-modal");
+          if (diagModal && !diagModal.classList.contains("hidden")) {
+            diagModal.classList.add("hidden");
+            diagModal.classList.remove("flex");
+          }
         }
       });
     }
   };
-  function escapeHtml5(text) {
+  function escapeHtml7(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }

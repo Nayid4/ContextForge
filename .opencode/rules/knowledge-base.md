@@ -20,3 +20,10 @@ Evitar el sesgo (bias), las alucinaciones y las decisiones arquitecturales incon
    - Respetar la forma en que se ha venido programando: convenciones de nomenclatura, manejo de excepciones (`Result` pattern o excepciones de dominio), DTOs y patrones de inyección.
 6. **`project-docs/knowledge/modules/{modulo}/`**:
    - Respetar los límites de contexto (*Bounded Contexts*) del módulo correspondiente.
+
+## Garantía de Sincronización Automática con el Tablero Visual
+Toda skill que audite o genere conocimiento (`technical-audit`, `project-knowledge`, `requirements-analysis`, `generate-verify`, `verify-spec`) ejecutará obligatoriamente:
+```bash
+node project-docs/sync-data.js
+```
+Esto asegura que el archivo `project-docs/data-fallback.js` quede sincronizado con los datos reales del proyecto, permitiendo que el tablero de seguimiento (`project-docs/index.html`) muestre siempre los datos del proyecto tanto a través de servidor HTTP (`serve.js`) como al abrirlo directamente con doble clic (`file:///`).

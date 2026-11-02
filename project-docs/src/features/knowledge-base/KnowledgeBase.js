@@ -1,15 +1,19 @@
 import { Icons } from '../../shared/Icons.js';
 import { renderBadge } from '../../shared/Badge.js';
+import { renderMarkdown } from '../../shared/MarkdownViewer.js';
 
 /**
- * KnowledgeBaseComponent: Base de Conocimiento Canónica del Proyecto.
- * Provee contexto completo para agentes de IA y desarrolladores:
- * - Catálogo de Reglas de Negocio con IDs únicos (BR-*).
- * - Matriz de Servicios Externos e Integraciones.
- * - Estándares de Programación & Directrices Anti-Sesgo.
- * - Explorador de Documentación Modular (infra, backend, billing, analytics, notifications).
- * - Generador de Prompt de Contexto para Agentes de IA.
+ * KnowledgeBaseComponent: Base de Conocimiento Canónica del Proyecto (Docs-as-Code).
+ * Diseñado con la estética editorial minimalista de ContextForge y Claude AI.
+ *
+ * Módulos integrados:
+ * 1. Hero con métricas y generador de contexto para LLM.
+ * 2. Catálogo interactivo de Reglas de Negocio con severidades e invariantes.
+ * 3. Matriz de Servicios Externos & Protocolos de resiliencia.
+ * 4. Guardrails Anti-Sesgo & Estándares de Codificación.
+ * 5. Lector Editorial Docs-as-Code con navegación lateral de archivos Markdown y diagramas.
  */
+
 export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
   const kData = knowledgeIndex || getFallbackKnowledge();
   const rules = kData.business_rules || [];
@@ -17,9 +21,30 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
   const standards = kData.coding_standards || {};
   const guardrails = standards.guardrails || [];
   const naming = standards.naming_conventions || {};
+  const docs = kData.docs || getDefaultDocs();
+
+  // Documento inicial por defecto
+  const defaultDocKey = Object.keys(docs)[0] || 'coding-standards.md';
+  const defaultDocContent = docs[defaultDocKey] || '# Documentación no disponible';
+
+  // Agrupar documentos por categoría (Generales y Módulos)
+  const generalDocs = [];
+  const moduleDocsMap = {};
+
+  Object.keys(docs).forEach(key => {
+    if (key.startsWith('modules/')) {
+      const parts = key.split('/');
+      const modName = parts[1] || 'general';
+      const fileName = parts.slice(2).join('/') || parts[1];
+      if (!moduleDocsMap[modName]) moduleDocsMap[modName] = [];
+      moduleDocsMap[modName].push({ key, fileName });
+    } else {
+      generalDocs.push({ key, fileName: key });
+    }
+  });
 
   return `
-    <div class="space-y-8">
+    <div class="space-y-10">
       
       <!-- 1. HEADER HERO: Base de Conocimiento Canónica -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
@@ -37,12 +62,12 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <span>📚</span> Base de Conocimiento del Proyecto
             </h2>
             <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-              Repositorio canónico de reglas de negocio, contratos de servicios externos, diagramas y estándares de codificación.
-              Sirve de <strong>contexto canónico</strong> para alimentar a los agentes de IA (Google Antigravity, Claude Code, Open Code, Copilot, Codex) y evitar el sesgo o las alucinaciones por falta de información.
+              Repositorio canónico de arquitectura, reglas de negocio, contratos de servicios externos y estándares de codificación.
+              Sirve de <strong>contexto canónico</strong> para alimentar a los agentes de IA (Google Antigravity, Claude Code, Open Code, Copilot, Codex) y desarrolladores, eliminando el sesgo y las alucinaciones por falta de contexto.
             </p>
           </div>
 
-          <!-- Botón Generador de Prompt de Contexto -->
+          <!-- Botón Generador de Prompt de Contexto (ContextForge Prompt Bundler) -->
           <div class="shrink-0">
             <button type="button" 
                     data-action="open-ai-context-modal" 
@@ -70,14 +95,109 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <div class="text-[10px] text-slate-500 mt-0.5">Reglas de no-alucinación</div>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Documentación Modular</div>
-            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">5 Bounded Contexts</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">infra, backend, billing...</div>
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Docs-as-Code</div>
+            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${Object.keys(docs).length} documentos</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Markdown vivo y C4</div>
           </div>
         </div>
       </section>
 
-      <!-- 2. CATÁLOGO DE REGLAS DE NEGOCIO (BR-*) -->
+      <!-- 2. LECTOR EDITORIAL DOCS-AS-CODE (Inspirado en ContextForge) -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+                ${Icons.folder}
+              </span>
+              Lector Editorial Docs-as-Code (Markdown & Diagramas)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Explora los documentos de arquitectura y módulos parseados con diseño editorial limpio y alertas interactivas
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button type="button" 
+                    id="copy-active-doc-btn" 
+                    class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5">
+              <span>📋</span> Copiar Markdown Activo
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Columna Izquierda: Árbol de Navegación de Documentos (Estilo ContextForge Sidebar) -->
+          <div class="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 space-y-4 max-h-[640px] overflow-y-auto">
+            
+            <!-- Grupo 1: Documentación Canónica General -->
+            <div class="space-y-1.5">
+              <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2">
+                🏛️ Documentos Canónicos
+              </div>
+              <div class="space-y-1 text-xs">
+                ${generalDocs.map(doc => `
+                  <button type="button" 
+                          data-doc-key="${escapeAttr(doc.key)}"
+                          class="doc-nav-item w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 font-mono transition-all cursor-pointer ${doc.key === defaultDocKey ? 'active bg-indigo-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
+                    <span class="text-xs shrink-0">📄</span>
+                    <span class="truncate">${doc.fileName}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Grupo 2: Módulos / Bounded Contexts -->
+            <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2">
+                📦 Módulos / Bounded Contexts
+              </div>
+              
+              ${Object.keys(moduleDocsMap).map(modName => `
+                <div class="space-y-1">
+                  <div class="flex items-center gap-1.5 px-2 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                    <span>📁</span>
+                    <span>${modName}</span>
+                  </div>
+                  <div class="pl-3 space-y-0.5 text-xs font-mono">
+                    ${moduleDocsMap[modName].map(doc => `
+                      <button type="button" 
+                              data-doc-key="${escapeAttr(doc.key)}"
+                              class="doc-nav-item w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${doc.key === defaultDocKey ? 'active bg-indigo-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
+                        <span class="text-[10px] opacity-70">📄</span>
+                        <span class="truncate text-[11px]">${doc.fileName}</span>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+          </div>
+
+          <!-- Columna Derecha: Lector Editorial del Documento Activo -->
+          <div class="lg:col-span-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-8 min-h-[500px] shadow-sm">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80 text-xs">
+              <div class="flex items-center gap-2 font-mono text-slate-400">
+                <span>Ruta:</span>
+                <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold">${defaultDocKey}</span>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                Docs-as-Code
+              </span>
+            </div>
+
+            <!-- Contenedor del Artículo Parseado -->
+            <div id="doc-active-body" class="prose dark:prose-invert max-w-none">
+              ${renderMarkdown(defaultDocContent)}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 3. CATÁLOGO DE REGLAS DE NEGOCIO (BR-*) -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -142,7 +262,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         </div>
       </section>
 
-      <!-- 3. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
+      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -184,7 +304,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         </div>
       </section>
 
-      <!-- 4. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
+      <!-- 5. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -241,43 +361,6 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         </div>
       </section>
 
-      <!-- 5. EXPLORADOR MODULAR DE DOCUMENTACIÓN -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="mb-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
-              ${Icons.folder}
-            </span>
-            Documentación Modular Generada (<code class="font-mono text-indigo-500">project-docs/knowledge/modules/</code>)
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Archivos estructurados por Bounded Context listos para referencia de agentes y desarrolladores
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          ${['infra', 'backend', 'billing', 'analytics', 'notifications'].map(modName => `
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 space-y-2 text-xs">
-              <div class="flex items-center gap-2 font-bold font-mono text-indigo-600 dark:text-indigo-400">
-                <span>📁</span>
-                <span>${modName}</span>
-              </div>
-              <div class="space-y-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
-                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-                  <span>📄</span> <code>module-spec.md</code>
-                </div>
-                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-                  <span>📄</span> <code>rules.md</code>
-                </div>
-                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-                  <span>📄</span> <code>sequence.md</code>
-                </div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </section>
-
       <!-- MODAL FLOTANTE DE CONTEXTO CANÓNICO PARA IA -->
       <div id="ai-context-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
@@ -322,6 +405,23 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         </div>
       </div>
 
+      <!-- MODAL PARA EXPANDIR DIAGRAMAS A PANTALLA COMPLETA -->
+      <div id="diagram-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base">📐</span>
+              <h3 id="diagram-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Diagrama Ampliado</h3>
+            </div>
+            <button type="button" data-action="close-diagram-modal" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+              ✕
+            </button>
+          </div>
+          <div id="diagram-modal-content" class="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-50 dark:bg-slate-950">
+          </div>
+        </div>
+      </div>
+
     </div>
   `;
 }
@@ -336,13 +436,27 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
+function escapeAttr(text) {
+  if (!text) return '';
+  return String(text).replace(/"/g, '&quot;');
+}
+
 function getFallbackKnowledge() {
   if (typeof window !== 'undefined' && window.__FALLBACK_DATA__?.knowledgeIndex) {
     return window.__FALLBACK_DATA__.knowledgeIndex;
   }
   return {
+    diagrams: [],
     business_rules: [],
     external_services: [],
-    coding_standards: { guardrails: [], naming_conventions: {} }
+    coding_standards: { guardrails: [], naming_conventions: {} },
+    docs: getDefaultDocs()
+  };
+}
+
+function getDefaultDocs() {
+  return {
+    'coding-standards.md': '# Estándares de Codificación & Guardrails Anti-Sesgo\n\n> [!NOTE]\n> Este documento define las directrices obligatorias para desarrolladores y agentes de IA.\n\n## Convenciones\n- **Ramas**: `{type}/INT-{id}/{name}` (≤80c)\n- **Commits**: `feat(scope): desc` o `fix(scope): desc`\n\n## Guardrails Estrictos\n1. No instalar librerías redundantes.\n2. Inversión de dependencias estricta en controladores.',
+    'modules/billing/module-spec.md': '# Módulo: billing (Facturación & Pagos)\n\n> [!IMPORTANT]\n> Módulo crítico que gestiona cobros e impuestos.\n\n## Tareas Asignadas\n- `INT-006`: `payment_gateway_integration` (Stripe HMAC e idempotencia).\n- `INT-007`: `fix_cart_tax_rounding` (Banker\'s rounding a 2 decimales).'
   };
 }

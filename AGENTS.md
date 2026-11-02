@@ -75,6 +75,7 @@ Todas mantienen el mismo contenido y frontmatter (`name` + `description`).
 | `verification` | Documentación de verificación | Consultar estructura |
 | `api-test-plan` | Plan de pruebas API REST | Generar plan markdown + archivos .http |
 | `execute-api-test-plan` | Ejecutar plan de pruebas API | Correr pruebas con curl y documentar hallazgos |
+| `acceptance-testing` | Pruebas de aceptación (Playwright), caja blanca/negra, sistema y carga | Automatización integral de QA y verificación end-to-end |
 | `requirements-analysis` | Análisis de requerimientos | Generar feature_list.json |
 | `generate-spec` | Generar spec técnico de una feature | Crear spec.md/tasks.md/decisions.md en project-docs + recomendar tdd/sdd/ftd |
 | `implement-tdd` | Implementar un spec con TDD (tests primero) | Lógica con ramas y rutas de error |

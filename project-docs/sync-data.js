@@ -3,17 +3,17 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 /**
- * Script de sincronización de datos para el modo offline (file:///).
+ * Script de sincronización de datos para el modo offline (file:///) y servidor HTTP.
  * Lee los archivos reales generados por las skills:
  * - project-docs/feature_list.json (o raíz)
  * - project-docs/project-spec.json (o raíz)
  * - project-docs/knowledge/knowledge-index.json
+ * - project-docs/knowledge/*.md y modules/**\/*.md (Docs-as-Code)
  * - project-docs/progres/current.json (o progress/current.json)
  * - project-docs/progres/history.json (o progress/history.json)
  *
- * Y actualiza automáticamente project-docs/data-fallback.js
- * para que al hacer doble clic directo en index.html, la página
- * muestre los datos reales del proyecto sin necesidad de servidor.
+ * Y actualiza automáticamente project-docs/data-fallback.js y knowledge-index.json
+ * para que el tablero muestre la documentación y diagramas reales tanto en local como por servidor.
  */
 
 const PROJECT_DOCS_DIR = __dirname;
@@ -47,11 +47,37 @@ const projectSpec = readJsonIfExists([
   path.join(ROOT_DIR, 'project-spec.json')
 ]);
 
-// 3. Knowledge Index
+// 3. Knowledge Index & Ingesta de Documentos Markdown (Docs-as-Code)
 const knowledgeIndex = readJsonIfExists([
   path.join(PROJECT_DOCS_DIR, 'knowledge', 'knowledge-index.json'),
   path.join(ROOT_DIR, 'knowledge', 'knowledge-index.json')
-]);
+]) || {};
+
+const knowledgeDir = path.join(PROJECT_DOCS_DIR, 'knowledge');
+if (fs.existsSync(knowledgeDir)) {
+  const docs = {};
+  function scanDocs(dir, prefix = '') {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const ent of entries) {
+      if (ent.isDirectory()) {
+        scanDocs(path.join(dir, ent.name), prefix ? `${prefix}/${ent.name}` : ent.name);
+      } else if (ent.isFile() && ent.name.endsWith('.md')) {
+        const key = prefix ? `${prefix}/${ent.name}` : ent.name;
+        try {
+          docs[key] = fs.readFileSync(path.join(dir, ent.name), 'utf8');
+        } catch (_) {}
+      }
+    }
+  }
+  scanDocs(knowledgeDir);
+  knowledgeIndex.docs = docs;
+
+  // Actualizar también el archivo JSON en disco
+  const kIndexPath = path.join(knowledgeDir, 'knowledge-index.json');
+  try {
+    fs.writeFileSync(kIndexPath, JSON.stringify(knowledgeIndex, null, 2), 'utf8');
+  } catch (_) {}
+}
 
 // 4. Current Spec
 const currentSpec = readJsonIfExists([
@@ -87,7 +113,7 @@ window.__FALLBACK_DATA__ = {
 `;
 
 fs.writeFileSync(fallbackPath, fallbackContent, 'utf8');
-console.log('✅ project-docs/data-fallback.js actualizado con los datos reales del proyecto.');
+console.log('✅ project-docs/data-fallback.js actualizado con los datos reales y documentos Markdown.');
 
 // Recompilar bundle para incluir cambios si existe esbuild
 try {

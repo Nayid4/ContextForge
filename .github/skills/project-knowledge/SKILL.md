@@ -5,18 +5,18 @@ description: Use when extracting deep project context, architectural analysis, C
 
 # Skill: Extracción de Base de Conocimiento y Arquitectura del Proyecto
 
-## Descripción
-Realiza un análisis exhaustivo y sistemático de un proyecto para extraer su **Base de Conocimiento Canónica**. Su objetivo es capturar la arquitectura real implementada, diagramas de modelo C4 (Contexto, Contenedores, Componentes), diagramas UML (Clases, Secuencia, Casos de Uso), el catálogo completo de reglas de negocio, consumos de servicios externos y los estándares y forma de programar observados.
+## Rol y Persona
+Actúa como un **Ingeniero Principal de Software y Arquitecto de Sistemas (Staff / Principal Software Engineer)** con amplia maestría en **Domain-Driven Design (DDD)**, **Clean Architecture**, **Sistemas Distribuidos**, **Event-Driven Architecture (EDA)** y **Documentación Soberana Docs-as-Code**.
 
-Esta información elimina el sesgo de las IAs y evita errores por falta de contexto, asegurando que todos los agentes (Google Antigravity, Claude Code, Open Code, GitHub Copilot, Codex) sigan las convenciones exactas del proyecto.
+Tu objetivo es inspeccionar el repositorio con rigor ingenieril, comprender a fondo cada subsistema, dominio funcional y flujo de datos, y generar la **Base de Conocimiento Canónica** en `project-docs/knowledge/`. Esta documentación es la **Única Fuente de Verdad (Single Source of Truth)** para desarrolladores humanos y agentes de inteligencia artificial (Google Antigravity, Claude Code, Open Code, GitHub Copilot, Codex), garantizando **cero sesgo**, **cero alucinaciones** y **pleno respeto a los patrones existentes**.
 
 ---
 
 ## Cuándo Usar Esta Skill
-- Al iniciar a trabajar en un proyecto nuevo o heredado para darle contexto completo a la IA.
-- Tras realizar cambios arquitecturales o agregar nuevos módulos.
-- Antes de planificar features complejas o refactorizaciones de gran escala.
-- Cuando la IA necesite consultar diagramas C4, diagramas de clases, secuencias o reglas de negocio para no alucinar.
+- Al inicializar el arnés en un proyecto nuevo o existente para transferir el contexto completo a las IAs.
+- Tras realizar cambios arquitecturales significativos, migraciones de base de datos o incorporación de nuevos bounded contexts.
+- Antes de planificar features complejas (`/generate-spec`) o refactorizaciones estructurales.
+- Cuando la IA o el equipo necesiten consultar diagramas C4, diagramas de clases, secuencias o reglas de negocio para tomar decisiones técnicas certeras.
 
 ---
 
@@ -26,17 +26,17 @@ La skill produce una estructura organizada dentro de `project-docs/knowledge/`:
 
 ```
 project-docs/knowledge/
-├── knowledge-index.json         # Índice estructurado para consumo por agentes y UI
-├── c4-model.md                  # Diagramas C4: C1 Contexto, C2 Contenedores, C3 Componentes
-├── uml-diagrams.md              # Diagramas UML: Clases, Secuencias críticas, Casos de Uso
-├── business-rules.md            # Catálogo consolidado de reglas de negocio
-├── external-services.md         # Catálogo de servicios externos y contratos
-├── coding-standards.md          # Estándares, patrones y convenciones observadas
-└── modules/                     # Documentación granular por módulo identificado
+├── knowledge-index.json         # Índice unificado con diagramas Mermaid, reglas y contratos
+├── c4-model.md                  # Modelo C4 completo: C1 Contexto, C2 Contenedores, C3 Componentes
+├── uml-diagrams.md              # Diagramas UML: Clases con tipos, Secuencias con alt/else, Casos de Uso
+├── business-rules.md            # Catálogo formal de reglas de negocio e invariantes (BR-*)
+├── external-services.md         # Matriz de integraciones externas, protocolos, SLAs y failover
+├── coding-standards.md          # Estándares, patrones canónicos y directrices anti-sesgo para IA
+└── modules/                     # Documentación granular por Bounded Context identificado
     ├── {modulo_1}/
     │   ├── module-spec.md       # Alcance, entidades, contratos DTO y servicios
-    │   ├── rules.md             # Reglas de negocio exclusivas del módulo
-    │   └── sequence.md          # Diagrama de secuencia del flujo principal
+    │   ├── rules.md             # Invariantes exclusivas del módulo
+    │   └── sequence.md          # Diagrama de secuencia del flujo transaccional principal
     └── {modulo_N}/
         ├── module-spec.md
         ├── rules.md
@@ -45,65 +45,102 @@ project-docs/knowledge/
 
 ---
 
-## Procedimiento de Ejecución
+## Procedimiento de Análisis Ingenieril
 
-### Paso 1: Inspección de Estructura y Código Fuente
-1. **Identificar Módulos y Bounded Contexts**:
-   - Analizar directorios principales (`src/`, `apps/`, `packages/`, `modules/`, etc.).
-   - Detectar la separación de responsabilidades y agrupar por dominios funcionales.
-2. **Identificar el Estilo Arquitectónico**:
-   - Clean Architecture (Onion / Hexagonal): verificar si existen capas de Domain, Application e Infrastructure con inversión de dependencias.
-   - Event-Driven Architecture (EDA): verificar si hay publicadores, consumidores, eventos de dominio o colas (RabbitMQ, Kafka, SQS).
-   - Monolito Modular o Microservicios.
+### Paso 1: Exploración Estructural y Bounded Contexts (DDD Estratégico)
+1. **Mapeo de Dominios y Bounded Contexts**:
+   - Inspeccionar la estructura de directorios (`src/`, `apps/`, `packages/`, `modules/`, `core/`, `domain/`).
+   - Identificar el Lenguaje Ubicuo (*Ubiquitous Language*) y los límites de cada contexto (ej. Catálogo, Pagos/Facturación, Carrito, Autenticación, Órdenes, Notificaciones).
+2. **Identificación del Paradigma Arquitectónico**:
+   - Clean / Hexagonal / Onion: Confirmar la regla de dependencia hacia adentro (Dominio -> Aplicación -> Infraestructura/Adaptadores).
+   - Event-Driven / CQRS: Localizar publicadores de eventos, manejadores (*Handlers*), colas (RabbitMQ, Kafka, SQS) y modelos de lectura/escritura segregados.
+   - Microservicios o Monolito Modular: Definir fronteras de red, protocolos IPC y persistencia compartida o aislada.
 
-### Paso 2: Generar Diagramas del Modelo C4
-En `project-docs/knowledge/c4-model.md`, generar con sintaxis **Mermaid**:
-1. **Nivel 1 — Diagrama de Contexto del Sistema (System Context)**:
-   - Usuarios, sistemas externos, pasarelas y el sistema principal con sus fronteras.
-2. **Nivel 2 — Diagrama de Contenedores (Container Diagram)**:
-   - Aplicaciones web, APIs backend, bases de datos relacionales/NoSQL, brokers de mensajería, servidores de cache.
-3. **Nivel 3 — Diagrama de Componentes (Component Diagram)**:
-   - Desglose interno de los controladores, servicios de aplicación, repositorios y adaptadores del contenedor principal.
+---
 
-### Paso 3: Generar Diagramas UML
+### Paso 2: Generar Diagramas del Modelo C4 (Industrial Grade)
+En `project-docs/knowledge/c4-model.md`, redactar con sintaxis **Mermaid**:
+
+1. **C4 Nivel 1 — Contexto del Sistema (System Context C1)**:
+   - Actores (clientes web, móviles, administradores, sistemas externos, APIs de socios).
+   - El sistema en análisis como caja negra central con sus límites de responsabilidad.
+   - Protocolos de entrada y salida (HTTPS, WSS, REST, gRPC).
+2. **C4 Nivel 2 — Contenedores (Container Diagram C2)**:
+   - Cada ejecutable o almacenamiento independiente: SPA / Frontend, API Gateway, Microservicios / Workers, Bases de datos (PostgreSQL, MongoDB), Cachés distribuidas (Redis), Message Brokers (RabbitMQ).
+   - Especificar protocolos e interfaces (`HTTPS/JSON`, `AMQP 0-9-1`, `TCP/RESP`, `JDBC/Pool`).
+3. **C4 Nivel 3 — Componentes (Component Diagram C3)**:
+   - Radiografía interna del contenedor principal: Controladores / Routers, Casos de Uso / Comandos CQRS, Interfaces de Dominio, Repositorios concretos y Adaptadores de Infraestructura.
+
+---
+
+### Paso 3: Generar Diagramas UML Exhaustivos
 En `project-docs/knowledge/uml-diagrams.md`, generar con sintaxis **Mermaid**:
+
 1. **Diagrama de Clases de Dominio (Class Diagram)**:
-   - Entidades principales, value objects, relaciones (composición, agregación, herencia), atributos clave y métodos de negocio.
-2. **Diagramas de Secuencia (Sequence Diagrams)**:
-   - Al menos 2 flujos críticos del proyecto (ej. Autenticación y Checkout/Procesamiento transaccional).
+   - Modelar las entidades raíz (*Aggregate Roots*), Value Objects y Enums.
+   - Declarar atributos con su tipo exacto (`string`, `UUID`, `decimal`, `DateTime`) y visibilidad (`+`, `-`, `#`).
+   - Indicar relaciones precisas: Composición (`*--`), Agregación (`o--`), Herencia (`<|--`) y Dependencia (`..>`), con multiplicidades (`1`, `0..1`, `1..*`).
+2. **Diagramas de Secuencia Transaccionales (Sequence Diagrams)**:
+   - Modelar al menos 2 flujos críticos (ej. Autenticación / Refresh Token y Checkout / Pago Idempotente).
+   - **Obligatorio**: Incluir bloques condicionales (`alt / else / opt`), timeouts, validación de firmas criptográficas (HMAC), cabeceras de idempotencia y compensaciones ante fallos.
 3. **Diagrama de Casos de Uso (Use Case Diagram)**:
-   - Actores (Usuario, Administrador, Sistema Externo, Worker) e interacciones con el sistema.
+   - Actores primarios y secundarios, casos de uso principales y relaciones de inclusión (`<<include>>`) y extensión (`<<extend>>`).
+4. **Diagrama de Máquina de Estados (State Diagram)** (si aplica):
+   - Transiciones de ciclo de vida de entidades transaccionales (ej. `Order: Pending -> Reserved -> Paid -> Dispatched -> Cancelled`).
 
-### Paso 4: Extraer Reglas de Negocio
-En `project-docs/knowledge/business-rules.md`:
-- Extraer invariantes de dominio (ej. "Un carrito de compras expira a las 24h si el usuario es anónimo").
-- Fórmulas de cálculo (ej. "Algoritmo de redondeo Banker's rounding IEEE 754 a dos decimales").
-- Reglas de validación, estados permitidos y transiciones de ciclo de vida.
-- Asignar a cada regla un identificador único (ej. `BR-AUTH-001`, `BR-BILL-002`).
+---
 
-### Paso 5: Catalogar Servicios Externos
+### Paso 4: Catálogo Formal de Reglas de Negocio (`BR-*`)
+En `project-docs/knowledge/business-rules.md`, consolidar las invariantes:
+
+Para cada regla:
+- **ID Único**: `BR-[MODULO]-[NUMERO]` (ej. `BR-BILL-001`, `BR-AUTH-002`).
+- **Título Descriptivo**: Resumen de la invariante.
+- **Severidad**: `Crítica` (afecta dinero, seguridad o datos) o `Alta` (integridad de negocio).
+- **Módulo / Bounded Context**: Contexto al que pertenece.
+- **Descripción e Invariante Matemática/Lógica**: La regla exacta sin ambigüedades (ej. "La tasa de redondeo utiliza Banker's Rounding IEEE 754 a 2 decimales; no se aceptan transacciones con monto <= 0").
+- **Condición de Rechazo y Excepción**: Código de error o excepción arrojada ante incumplimiento.
+
+---
+
+### Paso 5: Matriz de Servicios Externos & Integraciones
 En `project-docs/knowledge/external-services.md`:
-- Documentar pasarelas de pago, servicios de email/SMS, proveedores OAuth, APIs de terceros.
-- Indicar protocolo (REST, gRPC, Webhook), autenticación requerida, políticas de reintentos y timeouts.
+- Catalogar pasarelas de pago, bases de datos, brokers, proveedores de correo (SES/SMTP), auth providers (OAuth2/OIDC).
+- Documentar: Nombre, Tipo, Protocolo, Método de Autenticación, Variable de Entorno requerida, SLA / Timeout configurado, y **Política de Contingencia (Failover / Circuit Breaker / DLQ)**.
 
-### Paso 6: Documentar Estándares y Convenciones de Código
+---
+
+### Paso 6: Estándares de Codificación & Guardrails Anti-Sesgo
 En `project-docs/knowledge/coding-standards.md`:
-- Documentar convenciones de nomenclatura (PascalCase, camelCase, snake_case).
-- Patrones de diseño implementados (Repository, CQRS, Idempotency, Circuit Breaker).
-- Manejo de excepciones y tipos de resultado (Result pattern, DTOs, validaciones con Zod/FluentValidation).
-- **Directrices anti-sesgo para agentes de IA**: Qué prácticas NO están permitidas y qué bibliotecas deben preferirse.
+- Convenciones de nomenclatura (archivos, clases, funciones, bases de datos).
+- Patrones arquitecturales obligatorios (Result pattern, Repository, Unit of Work, MediatR/CQRS).
+- **Guardrails Estrictos Anti-Alucinación**: Lista explícita de bibliotecas prohibidas y librerías canónicas obligatorias (para impedir que la IA invente librerías o rompa la arquitectura).
 
-### Paso 7: Generar Documentación Modular
-Para cada módulo identificado en el Paso 1:
-- Crear carpeta `project-docs/knowledge/modules/{modulo}/`.
-- Generar `module-spec.md`, `rules.md` y `sequence.md`.
+---
 
-### Paso 8: Generar el Índice `knowledge-index.json`
-Consolidar el resumen en formato JSON para que el tablero de seguimiento (`project-docs/index.html`) pueda visualizar los diagramas y exploradores de conocimiento interactivamente.
+### Paso 7: Documentación Modular Granular
+Para cada Bounded Context identificado:
+- Crear `project-docs/knowledge/modules/{modulo}/`.
+- Redactar `module-spec.md` (responsabilidades y contratos), `rules.md` (invariantes locales) y `sequence.md` (flujo detallado).
+
+---
+
+### Paso 8: Generar `knowledge-index.json` y Sincronización Automática
+1. Consolidar la información en `project-docs/knowledge/knowledge-index.json` conteniendo:
+   - Lista completa de diagramas Mermaid (`id`, `title`, `type`, `level`, `description`, `mermaid`).
+   - Catálogo de reglas de negocio (`id`, `title`, `module`, `severity`, `description`).
+   - Catálogo de servicios externos (`name`, `type`, `protocol`, `auth`, `env_var`, `failover`).
+   - Estándares y guardrails anti-sesgo.
+2. **Sincronización con el Tablero Visual**:
+   - Ejecutar obligatoriamente:
+     ```bash
+     node project-docs/sync-data.js
+     ```
+   - Esto inyecta los datos reales dentro de `project-docs/data-fallback.js` y recompila el bundle para que el tablero muestre la información de inmediato tanto por servidor local como en modo offline (`file:///`).
 
 ---
 
 ## Verificación de Calidad
-- Todos los diagramas Mermaid deben tener sintaxis válida sin errores de renderizado.
-- Las referencias a archivos y módulos deben existir en el proyecto.
-- Los estándares documentados deben reflejar el código existente real del repositorio.
+- Cada bloque Mermaid debe ser sintácticamente válido y visualmente comprensible.
+- Ninguna regla de negocio debe ser inventada; debe reflejar el código y dominio real del proyecto.
+- Los guardrails deben cubrir los errores más comunes cometidos por modelos de lenguaje en el stack analizado.

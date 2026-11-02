@@ -16,6 +16,7 @@ import { SpaceView3D } from './features/space-view-3d/SpaceView3D.js';
 import { renderHistoryTimeline } from './features/history-timeline/HistoryTimeline.js';
 import { renderArchitectureDocs } from './features/architecture-docs/ArchitectureDocs.js';
 import { renderKnowledgeBase } from './features/knowledge-base/KnowledgeBase.js';
+import { renderMarkdown } from './shared/MarkdownViewer.js';
 
 class App {
   constructor() {
@@ -389,6 +390,43 @@ class App {
     } else if (this.activeTab === 'graph') {
       this.bindGraphHoverEvents();
     }
+
+    if (this.activeTab === 'architecture' || this.activeTab === 'knowledge') {
+      this.initMermaidDiagrams();
+    }
+  }
+
+  initMermaidDiagrams() {
+    if (typeof window !== 'undefined' && window.mermaid) {
+      try {
+        const isDark = document.documentElement.classList.contains('dark');
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: isDark ? 'dark' : 'neutral',
+          themeVariables: {
+            darkMode: isDark,
+            background: 'transparent',
+            primaryColor: '#6366f1',
+            primaryTextColor: isDark ? '#f8fafc' : '#0f172a',
+            primaryBorderColor: '#818cf8',
+            lineColor: '#38bdf8',
+            secondaryColor: '#3b82f6',
+            tertiaryColor: '#1e293b'
+          },
+          securityLevel: 'loose',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        });
+
+        const targets = document.querySelectorAll('.mermaid');
+        if (targets.length > 0) {
+          window.mermaid.run({
+            nodes: targets
+          }).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('Error Mermaid run:', err);
+      }
+    }
   }
 
   bindGraphHoverEvents() {
@@ -454,6 +492,7 @@ class App {
       const themeBtn = e.target.closest('[data-action="toggle-theme"]');
       if (themeBtn) {
         store.toggleTheme();
+        setTimeout(() => this.initMermaidDiagrams(), 50);
         return;
       }
 
@@ -613,6 +652,120 @@ class App {
         }
         return;
       }
+
+      // Conmutar entre Diagrama Visual y Código Mermaid
+      const diagToggle = e.target.closest('[data-diagram-toggle]');
+      if (diagToggle) {
+        const viewMode = diagToggle.getAttribute('data-diagram-toggle');
+        const diagId = diagToggle.getAttribute('data-diagram-id');
+        const card = document.getElementById(`mermaid-card-${diagId}`);
+        if (card) {
+          card.querySelectorAll('.diagram-view-btn').forEach(b => {
+            b.classList.remove('active', 'bg-white', 'dark:bg-slate-900', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+            b.classList.add('text-slate-600', 'dark:text-slate-400');
+          });
+          diagToggle.classList.add('active', 'bg-white', 'dark:bg-slate-900', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+          diagToggle.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+          const visualEl = document.getElementById(`diagram-view-visual-${diagId}`);
+          const codeEl = document.getElementById(`diagram-view-code-${diagId}`);
+          if (viewMode === 'visual') {
+            visualEl?.classList.remove('hidden');
+            codeEl?.classList.add('hidden');
+            this.initMermaidDiagrams();
+          } else {
+            visualEl?.classList.add('hidden');
+            codeEl?.classList.remove('hidden');
+          }
+        }
+        return;
+      }
+
+      // Expandir Diagrama a Pantalla Completa
+      const expandBtn = e.target.closest('[data-action="expand-diagram"]');
+      if (expandBtn) {
+        const diagId = expandBtn.getAttribute('data-diagram-id');
+        const visualTarget = document.getElementById(`mermaid-target-${diagId}`);
+        const modal = document.getElementById('diagram-modal');
+        const modalContent = document.getElementById('diagram-modal-content');
+        const modalTitle = document.getElementById('diagram-modal-title');
+        const cardTitle = document.querySelector(`#mermaid-card-${diagId} h4`);
+
+        if (modal && modalContent && visualTarget) {
+          modalTitle.textContent = cardTitle ? cardTitle.textContent : 'Diagrama Ampliado';
+          modalContent.innerHTML = visualTarget.innerHTML;
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+        return;
+      }
+
+      // Cerrar modal de diagrama ampliado
+      const closeDiagModal = e.target.closest('[data-action="close-diagram-modal"]');
+      if (closeDiagModal || e.target.id === 'diagram-modal') {
+        const modal = document.getElementById('diagram-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
+
+      // Lector Docs-as-Code: Seleccionar documento Markdown
+      const docItem = e.target.closest('[data-doc-key]');
+      if (docItem) {
+        const docKey = docItem.getAttribute('data-doc-key');
+        const state = store.getState();
+        const docs = state.knowledgeIndex?.docs || {};
+        const content = docs[docKey] || '# Documento no disponible';
+
+        document.querySelectorAll('.doc-nav-item').forEach(el => {
+          el.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold');
+          el.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+        docItem.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold');
+        docItem.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+        const pathEl = document.getElementById('doc-active-path');
+        const bodyEl = document.getElementById('doc-active-body');
+        if (pathEl) pathEl.textContent = docKey;
+        if (bodyEl) {
+          bodyEl.innerHTML = renderMarkdown(content);
+          this.initMermaidDiagrams();
+        }
+        return;
+      }
+
+      // Copiar Markdown Activo
+      const copyDocBtn = e.target.closest('#copy-active-doc-btn');
+      if (copyDocBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        const state = store.getState();
+        const content = state.knowledgeIndex?.docs?.[docKey] || '';
+        if (content && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(content).then(() => {
+            const orig = copyDocBtn.innerHTML;
+            copyDocBtn.innerHTML = '<span>✅</span> ¡Copiado!';
+            setTimeout(() => { copyDocBtn.innerHTML = orig; }, 2000);
+          });
+        }
+        return;
+      }
+
+      // Copiar bloque de código dentro del Markdown
+      const copyCodeBlockBtn = e.target.closest('[data-action="copy-code-block"]');
+      if (copyCodeBlockBtn) {
+        const pre = copyCodeBlockBtn.closest('div.my-4')?.querySelector('pre code');
+        if (pre && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(pre.textContent).then(() => {
+            const orig = copyCodeBlockBtn.textContent;
+            copyCodeBlockBtn.textContent = '¡Copiado! ✓';
+            setTimeout(() => { copyCodeBlockBtn.textContent = orig; }, 2000);
+          });
+        }
+        return;
+      }
     });
 
     // Búsqueda con Debouncing Inteligente (260ms) para no bloquear la escritura
@@ -660,6 +813,11 @@ class App {
         if (aiModal && !aiModal.classList.contains('hidden')) {
           aiModal.classList.add('hidden');
           aiModal.classList.remove('flex');
+        }
+        const diagModal = document.getElementById('diagram-modal');
+        if (diagModal && !diagModal.classList.contains('hidden')) {
+          diagModal.classList.add('hidden');
+          diagModal.classList.remove('flex');
         }
       }
     });

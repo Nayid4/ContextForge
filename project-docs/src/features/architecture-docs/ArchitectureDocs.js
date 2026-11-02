@@ -1,5 +1,6 @@
 import { Icons } from '../../shared/Icons.js';
 import { renderBadge } from '../../shared/Badge.js';
+import { renderMermaidViewer } from '../../shared/MermaidViewer.js';
 
 /**
  * ArchitectureDocs Component: Vista técnica completa del proyecto.
@@ -154,7 +155,7 @@ export function renderArchitectureDocs({ projectSpec, knowledgeIndex, features =
             🏛️ UML: Clases
           </button>
           <button type="button" 
-                  data-arch-tab="uml-sequence" 
+                  data-arch-tab="uml-sequence-checkout" 
                   class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
             🔄 UML: Secuencia Checkout
           </button>
@@ -386,31 +387,10 @@ export function renderArchitectureDocs({ projectSpec, knowledgeIndex, features =
           </div>
         </div>
 
-        <!-- 2.2 PANELES DE DIAGRAMAS C4 & UML (Generados desde knowledge-index.json) -->
+        <!-- 2.2 PANELES DE DIAGRAMAS C4 & UML (Renderizado Visual Interactivo) -->
         ${diagrams.map(diag => `
-          <div id="diagram-panel-${diag.id}" class="diagram-panel hidden mt-6 space-y-4">
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">
-                    ${diag.type}
-                  </span>
-                  <span class="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    ${diag.level}
-                  </span>
-                </div>
-                <button type="button" 
-                        data-copy-mermaid="${escapeAttr(diag.mermaid)}"
-                        class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-700 dark:text-slate-300 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1">
-                  <span>📋</span> Copiar Mermaid
-                </button>
-              </div>
-              <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 mb-1">${diag.title}</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">${diag.description}</p>
-              
-              <!-- Visor de Código Mermaid -->
-              <pre class="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800"><code>${escapeHtml(diag.mermaid)}</code></pre>
-            </div>
+          <div id="diagram-panel-${diag.id}" class="diagram-panel hidden mt-6">
+            ${renderMermaidViewer(diag)}
           </div>
         `).join('')}
 
