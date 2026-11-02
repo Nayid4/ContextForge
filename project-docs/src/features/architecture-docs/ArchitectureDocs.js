@@ -164,6 +164,11 @@ export function renderArchitectureDocs({ projectSpec, knowledgeIndex, features =
                   class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
             👥 UML: Casos de Uso
           </button>
+          <button type="button" 
+                  data-arch-tab="erd-database" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            🗄️ ERD: Base de Datos
+          </button>
         </div>
 
         <!-- 2.1 PANEL: CAPAS GENERALES DEL SISTEMA -->
