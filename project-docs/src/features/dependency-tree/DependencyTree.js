@@ -1,0 +1,284 @@
+import { renderBadge } from '../../shared/Badge.js';
+import { Icons } from '../../shared/Icons.js';
+
+/**
+ * DependencyTree: Visualizador visual en SVG interactivo del árbol jerárquico de ejecución.
+ * Calcula niveles topológicos y renderiza nodos con conectores directos.
+ */
+export class DependencyTreeComponent {
+  constructor(containerEl, { features, onSelect }) {
+    this.container = containerEl;
+    this.features = features || [];
+    this.onSelect = onSelect;
+    this.zoom = 1;
+    this.pan = { x: 40, y: 40 };
+    this.isDragging = false;
+    this.dragStart = { x: 0, y: 0 };
+  }
+
+  render() {
+    if (!this.container) return;
+
+    // Calcular capas topológicas
+    const { levels, nodesMap } = this.calculateTopologicalLevels(this.features);
+
+    // Dimensiones de nodos y layout
+    const nodeWidth = 260;
+    const nodeHeight = 110;
+    const gapX = 100;
+    const gapY = 40;
+
+    let maxNodesInLevel = 0;
+    levels.forEach(lvl => {
+      if (lvl.length > maxNodesInLevel) maxNodesInLevel = lvl.length;
+    });
+
+    const totalWidth = Math.max(900, levels.length * (nodeWidth + gapX) + 120);
+    const totalHeight = Math.max(500, maxNodesInLevel * (nodeHeight + gapY) + 120);
+
+    // Posicionar cada nodo
+    levels.forEach((levelFeatures, colIndex) => {
+      const colX = colIndex * (nodeWidth + gapX) + 60;
+      const colHeight = levelFeatures.length * (nodeHeight + gapY) - gapY;
+      const startY = Math.max(60, (totalHeight - colHeight) / 2);
+
+      levelFeatures.forEach((f, rowIndex) => {
+        const x = colX;
+        const y = startY + rowIndex * (nodeHeight + gapY);
+        nodesMap.set(f.id, { ...f, x, y, width: nodeWidth, height: nodeHeight, colIndex, rowIndex });
+      });
+    });
+
+    // Conectores (paths)
+    const linksSvg = [];
+    this.features.forEach(f => {
+      const targetNode = nodesMap.get(f.id);
+      if (!targetNode || !f.depends_on) return;
+
+      f.depends_on.forEach(sourceId => {
+        const sourceNode = nodesMap.get(sourceId);
+        if (!sourceNode) return;
+
+        const startX = sourceNode.x + sourceNode.width;
+        const startY = sourceNode.y + sourceNode.height / 2;
+        const endX = targetNode.x;
+        const endY = targetNode.y + targetNode.height / 2;
+        const midX = (startX + endX) / 2;
+
+        const pathD = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+        const isDone = sourceNode.status === 'done';
+
+        linksSvg.push(`
+          <path d="${pathD}" 
+                fill="none" 
+                stroke="${isDone ? '#10b981' : '#6366f1'}" 
+                stroke-width="2" 
+                stroke-dasharray="${isDone ? 'none' : '4 4'}" 
+                opacity="0.6"
+                class="transition-all hover:opacity-100 hover:stroke-width-3" />
+        `);
+      });
+    });
+
+    // Nodos en SVG foreignObject para conservar diseño HTML/Tailwind
+    const nodesSvg = Array.from(nodesMap.values()).map(n => {
+      const isDone = n.status === 'done';
+      const isFeature = (n.type || 'feature') === 'feature';
+      const borderColor = isDone ? 'border-emerald-500/60' : isFeature ? 'border-indigo-500/40' : 'border-rose-500/40';
+
+      return `
+        <foreignObject x="${n.x}" y="${n.y}" width="${n.width}" height="${n.height}">
+          <div xmlns="http://www.w3.org/1999/xhtml" 
+               data-node-id="${n.id}"
+               class="p-3 w-full h-full rounded-xl bg-slate-900/90 backdrop-blur-md border ${borderColor} shadow-lg hover:border-slate-500 transition-all cursor-pointer flex flex-col justify-between text-left select-none">
+            <div>
+              <div class="flex items-center justify-between text-[11px] mb-1">
+                <span class="font-mono font-bold text-indigo-400">INT-${String(n.id).padStart(3, '0')}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isDone ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">
+                  ${n.status}
+                </span>
+              </div>
+              <div class="font-semibold text-xs text-slate-100 truncate">${n.title || n.name}</div>
+            </div>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px] text-slate-400">
+              <span>${n.module || 'Core'}</span>
+              <span class="font-mono text-slate-500">${n.type || 'feature'}</span>
+            </div>
+          </div>
+        </foreignObject>
+      `;
+    }).join('');
+
+    this.container.innerHTML = `
+      <div class="relative w-full h-[650px] bg-slate-950/70 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col">
+        <!-- Barra de herramientas superior -->
+        <div class="absolute top-4 right-4 z-20 flex items-center gap-2 bg-slate-900/90 border border-slate-700/80 rounded-xl p-1.5 backdrop-blur-md shadow-lg">
+          <button type="button" data-tree-action="zoom-in" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg text-xs" title="Acercar">+</button>
+          <button type="button" data-tree-action="zoom-out" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg text-xs" title="Alejar">-</button>
+          <button type="button" data-tree-action="reset" class="px-2 py-1 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg text-xs" title="Centrar">Reset</button>
+        </div>
+
+        <div class="absolute top-4 left-4 z-20 pointer-events-none text-xs text-slate-400">
+          <span class="px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
+            💡 Arrastra para desplazar el lienzo | Clic en un nodo para detalle
+          </span>
+        </div>
+
+        <!-- Canvas SVG de árbol -->
+        <div id="tree-canvas-wrapper" class="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden">
+          <svg id="tree-svg" width="100%" height="100%" class="w-full h-full">
+            <g id="tree-viewport" transform="translate(${this.pan.x}, ${this.pan.y}) scale(${this.zoom})">
+              <!-- Grid punteado de fondo -->
+              <defs>
+                <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1" fill="#334155" opacity="0.4"></circle>
+                </pattern>
+              </defs>
+              <rect x="-1000" y="-1000" width="5000" height="5000" fill="url(#dot-grid)"></rect>
+
+              <!-- Conexiones -->
+              <g class="tree-links">
+                ${linksSvg.join('')}
+              </g>
+
+              <!-- Nodos -->
+              <g class="tree-nodes">
+                ${nodesSvg}
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    `;
+
+    this.bindEvents();
+  }
+
+  calculateTopologicalLevels(features) {
+    const nodesMap = new Map();
+    const levels = [];
+    const inDegrees = new Map();
+    const adj = new Map();
+
+    features.forEach(f => {
+      inDegrees.set(f.id, (f.depends_on || []).length);
+      adj.set(f.id, []);
+    });
+
+    features.forEach(f => {
+      (f.depends_on || []).forEach(depId => {
+        if (adj.has(depId)) {
+          adj.get(depId).push(f.id);
+        }
+      });
+    });
+
+    // Cola con nodos que tienen grado de entrada 0
+    let currentQueue = features.filter(f => (f.depends_on || []).length === 0);
+    const visited = new Set();
+
+    while (currentQueue.length > 0) {
+      levels.push(currentQueue);
+      currentQueue.forEach(f => visited.add(f.id));
+
+      const nextQueue = [];
+      currentQueue.forEach(f => {
+        const neighbors = adj.get(f.id) || [];
+        neighbors.forEach(nxtId => {
+          if (!visited.has(nxtId)) {
+            const nxtFeature = features.find(item => item.id === nxtId);
+            if (nxtFeature && !nextQueue.includes(nxtFeature)) {
+              nextQueue.push(nxtFeature);
+            }
+          }
+        });
+      });
+
+      currentQueue = nextQueue;
+    }
+
+    // Nodos restantes que pudieran tener dependencias circulares o no conectadas
+    const unvisited = features.filter(f => !visited.has(f.id));
+    if (unvisited.length > 0) {
+      levels.push(unvisited);
+    }
+
+    return { levels, nodesMap };
+  }
+
+  bindEvents() {
+    const wrapper = this.container.querySelector('#tree-canvas-wrapper');
+    const viewport = this.container.querySelector('#tree-viewport');
+
+    const updateTransform = () => {
+      if (viewport) {
+        viewport.setAttribute('transform', `translate(${this.pan.x}, ${this.pan.y}) scale(${this.zoom})`);
+      }
+    };
+
+    // Pan (Arrastrar)
+    wrapper.addEventListener('mousedown', (e) => {
+      // Ignorar si se hace clic sobre un botón o nodo
+      if (e.target.closest('[data-node-id]') || e.target.closest('button')) return;
+      this.isDragging = true;
+      this.dragStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!this.isDragging) return;
+      this.pan.x = e.clientX - this.dragStart.x;
+      this.pan.y = e.clientY - this.dragStart.y;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      this.isDragging = false;
+    });
+
+    // Zoom con rueda
+    wrapper.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      this.zoom = Math.min(Math.max(0.3, this.zoom * delta), 2.5);
+      updateTransform();
+    }, { passive: false });
+
+    // Botones de zoom
+    this.container.querySelector('[data-tree-action="zoom-in"]')?.addEventListener('click', () => {
+      this.zoom = Math.min(2.5, this.zoom * 1.2);
+      updateTransform();
+    });
+
+    this.container.querySelector('[data-tree-action="zoom-out"]')?.addEventListener('click', () => {
+      this.zoom = Math.max(0.3, this.zoom * 0.8);
+      updateTransform();
+    });
+
+    this.container.querySelector('[data-tree-action="reset"]')?.addEventListener('click', () => {
+      this.zoom = 1;
+      this.pan = { x: 40, y: 40 };
+      updateTransform();
+    });
+
+    // Clic en nodo
+    this.container.querySelectorAll('[data-node-id]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = parseInt(el.getAttribute('data-node-id'), 10);
+        const feature = this.features.find(f => f.id === id);
+        if (feature && this.onSelect) {
+          this.onSelect(feature);
+        }
+      });
+    });
+  }
+}
+
+/**
+ * Función helper para renderizar en contenedores declarativos
+ */
+export function mountDependencyTree(containerEl, { features, onSelect }) {
+  const treeComp = new DependencyTreeComponent(containerEl, { features, onSelect });
+  treeComp.render();
+  return treeComp;
+}

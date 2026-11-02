@@ -3,7 +3,7 @@
 > **Esto no es un proyecto de software, es un arnés de control para desarrollo dirigido por specs.**
 >
 > Un repositorio plantilla que cualquier proyecto puede adoptar para desarrollar
-> features con agentes de IA (opencode, Claude Code, GitHub Copilot) de forma
+> features y bugfixes con agentes de IA (**Google Antigravity**, **opencode**, **GitHub Copilot**, Claude Code) de forma
 > **autónoma, verificable y trazable**. Es agnóstico al stack: funciona con
 > Node, .NET, Python, Go o cualquier tecnología.
 
@@ -16,7 +16,8 @@ Descárgalo cuando quieras que un agente de IA desarrolle features de tu proyect
 - **Spec Driven Development** — primero se escribe el qué (spec), los pasos (tasks) y las decisiones; luego se codifica. Todo aprobado por un humano.
 - **Flujo completo por skills** — `requirements-analysis` → `generate-spec` → técnica (`implement-tdd`/`implement-sdd`/`implement-ftd`) → `verify-spec`.
 - **Verificación real** — `technical-audit` genera `project-spec.yaml` y `generate-verify` crea `verify.sh` con los comandos reales del proyecto (test, build, lint).
-- **Agnóstico al proyecto** — el stack, puertos y servicios los defines tú; el arnés solo aporta el proceso.
+- **Tablero de visualización de seguimiento** — interfaz interactiva modular (`project-docs/`) con arquitectura screaming, componentes React-like en Vanilla JS y Tailwind CSS v4.
+- **Agnóstico al proyecto** — el stack, puertos y servicios los defines tú; el arnés aporta el estándar de ingeniería.
 
 ---
 
@@ -79,17 +80,50 @@ git add -A && git commit -m "feat: initialize project with harness"
 
    | Herramienta | Comando |
    |-------------|---------|
-   | **opencode** | `opencode` (usa `opencode.json`) |
-   | **GitHub Copilot** | `code .` (usa `.github/instructions/`) |
+   | **Google Antigravity** | Abre en Antigravity 2.0 / IDE o ejecuta `agy` (usa `.agents/` y `ANTIGRAVITY.md`) |
+   | **opencode** | `opencode` (usa `opencode.json` y `.opencode/`) |
+   | **GitHub Copilot** | `code .` (usa `.github/instructions/` y `.github/skills/`) |
    | **Claude Code / Cursor** | usan `AGENTS.md` |
 
-5. **Pide una feature:**
+5. **Pide una feature o bugfix:**
 
    ```
    genera el spec de la feature 1
    ```
 
-   El flujo completo queda a cargo de las skills: `generate-spec` (spec aprobado por ti) → `implement-tdd`/`implement-sdd`/`implement-ftd` → `verify-spec` (cierre con tests y `verify.sh`).
+   El flujo completo queda a cargo de las skills: `generate-spec` (spec aprobado por ti) → `implement-tdd`/`implement-sdd`/`implement-ftd` → `verify-spec` (cierre con tests y `verify.sh`), siempre trabajando dentro de una rama `{feature|bugfix}/INT-{numero}/{nombre}` (≤ 80 caracteres).
+
+---
+
+## Convención de Ramas Git (Obligatoria)
+
+Toda tarea debe realizarse en su propia rama con límite estricto de longitud:
+
+```
+{feature o bugfix}/INT-{numero}/{nombre_rama_de_lo_realizado}
+```
+
+- **Tipos permitidos**: `feature` o `bugfix`.
+- **Límite de longitud**: **máximo 80 caracteres**.
+- **Ejemplos válidos**:
+  - `feature/INT-001/document_crud_api`
+  - `bugfix/INT-002/fix_jwt_token_expiration`
+
+---
+
+## Tablero de Seguimiento Visual (`project-docs/`)
+
+El repositorio incluye un visualizador interactivo desacoplado para monitorear el avance de la IA:
+- **Tecnologías**: Vanilla JS modular (ES Modules nativos sin build step), **Tailwind CSS v4** (`@tailwindcss/browser@4`) y Three.js.
+- **Arquitectura Screaming (`project-docs/src/`)**:
+  - `features/stats/`: Tarjetas de KPI (total, progreso %, pendientes, completadas, bloqueadas).
+  - `features/current-spec/`: Tarjeta interactiva del spec que la IA está ejecutando en tiempo real.
+  - `features/feature-list/`: Tabla reactiva de tareas con filtrado en tiempo real, búsqueda y paginación.
+  - `features/dependency-graph/`: Matriz de dependencias y análisis de bloqueos.
+  - `features/dependency-tree/`: Árbol jerárquico SVG con controles de zoom y pan.
+  - `features/space-view-3d/`: Constelación espacial 3D con ciclo de vida `mount`/`unmount` para liberar memoria GPU.
+  - `features/history-timeline/`: Bitácora histórica cronológica de entregas y commits.
+- **Uso**: Abre directamente `project-docs/index.html` en tu navegador o sírvelo con cualquier servidor web estático.
 
 ---
 
@@ -97,20 +131,27 @@ git add -A && git commit -m "feat: initialize project with harness"
 
 ```
 .
-├── AGENTS.md                    # Punto de entrada para cualquier agente
+├── AGENTS.md                    # Punto de entrada universal para cualquier agente
+├── ANTIGRAVITY.md               # Guía de referencia rápida para Google Antigravity
 ├── README.md                    # Este archivo
 ├── opencode.json                # Configuración para opencode (instrucciones + skills)
 ├── .gitignore                   # Exclusiones del arnés
 │
-├── project-docs/                # Documentación y estado del proyecto
-│   ├── feature_list.json        # Features (status, prioridad, aceptación)
+├── project-docs/                # Documentación y Tablero Visual de la IA
+│   ├── index.html               # Shell HTML con Tailwind CSS v4 y Three.js
+│   ├── feature_list.json        # Features y bugfixes (ramas INT-*, status, prioridad)
 │   ├── progres/
 │   │   ├── current.json         # Spec activo ({} = ninguno)
 │   │   └── history.json         # Historial de specs cerrados
-│   └── <module>/specs/          # Specs por feature (spec.md, tasks.md, decisions.md)
+│   └── src/                     # Screaming Architecture en Vanilla JS (core, shared, features)
+│
+├── .agents/                     # Homologación para Google Antigravity
+│   ├── rules/                   # Reglas de arnés y branching
+│   ├── agents/                  # Roles (leader, spec-author, implementer, reviewer)
+│   └── skills/                  # Skills homologadas para Antigravity
 │
 ├── .opencode/                   # Configuración de opencode
-│   ├── rules/                   # Reglas: commits, skills-sync, project-status
+│   ├── rules/                   # Reglas: branches, commits, skills-sync, project-status
 │   └── skills/                  # 13 skills (FUENTE DE VERDAD)
 │
 └── .github/                     # Homologación para GitHub Copilot
@@ -122,7 +163,7 @@ git add -A && git commit -m "feat: initialize project with harness"
 
 ## Flujo de trabajo (SDD)
 
-Una feature completa el siguiente ciclo, siempre en su propia rama `feature/{NNN}_{name}`:
+Una feature completa el siguiente ciclo, siempre en su propia rama `{feature|bugfix}/INT-{numero}/{nombre}` (≤ 80c):
 
 | Paso | Skill | Produce |
 |------|-------|---------|
@@ -164,14 +205,15 @@ Una feature completa el siguiente ciclo, siempre en su propia rama `feature/{NNN
 | `verify-spec` | Cierre completo de un spec |
 | `api-test-plan` | Plan de pruebas API REST |
 | `execute-api-test-plan` | Ejecución de pruebas API con curl |
-| `sync-skills` | Sincroniza `.opencode/skills/` → `.github/skills/` |
+| `sync-skills` | Sincroniza `.opencode/skills/` → `.github/skills/` y `.agents/skills/` |
 
 ---
 
 ## Reglas
 
+- **Ramas estandarizadas**: `{feature|bugfix}/INT-{numero}/{nombre}` (máx 80c) → `.opencode/rules/branches.md`
 - **Commits semánticos** en inglés: `feat(scope): description` → `.opencode/rules/commits.md`
-- **Skills sincronizadas**: fuente `.opencode/skills/`, espejo `.github/skills/` → `.opencode/rules/skills-sync.md`
+- **Skills sincronizadas**: fuente `.opencode/skills/`, espejos `.github/skills/` y `.agents/skills/` → `.opencode/rules/skills-sync.md`
 - **Estado del proyecto**: al pedir "estado del proyecto", el agente lee `project-docs/` → `.opencode/rules/project-status.md`
 - **Sin push** sin confirmación explícita del usuario.
 
@@ -183,9 +225,9 @@ Una feature completa el siguiente ciclo, siempre en su propia rama `feature/{NNN
 
 Sí. Copia los archivos (Opción A o B) en la raíz de tu proyecto. El `project-docs/` plantilla convive con tu documentación existente.
 
-### ¿Necesito opencode?
+### ¿Necesito una herramienta específica (Antigravity u opencode)?
 
-No. `AGENTS.md` es el punto de entrada universal (Claude Code, Cursor, Copilot). `opencode.json` agrega integración profunda con opencode.
+No. `AGENTS.md` es el punto de entrada universal (Claude Code, Cursor). El arnés incluye soporte de primera clase tanto para **Google Antigravity** (`.agents/`), como para **opencode** (`opencode.json`, `.opencode/`) y **GitHub Copilot** (`.github/`).
 
 ### ¿Dónde cambia el stack de mi proyecto?
 
@@ -193,4 +235,4 @@ En `project-spec.yaml` (lo genera `technical-audit`) y en la sección de convenc
 
 ### ¿Cómo agrego una skill nueva?
 
-Crea `.opencode/skills/<name>/SKILL.md` (fuente de verdad) y propágala a `.github/skills/<name>/SKILL.md` — o ejecuta la skill `sync-skills`. Detalle en `.opencode/rules/skills-sync.md`.
+Crea `.opencode/skills/<name>/SKILL.md` (fuente de verdad) y propágala a `.github/skills/<name>/SKILL.md` y `.agents/skills/<name>/SKILL.md` — o ejecuta la skill `sync-skills`.
