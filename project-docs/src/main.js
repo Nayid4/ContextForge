@@ -27,6 +27,7 @@ class App {
     this.envInfo = null;
     this.isAppMounted = false;
     this.searchDebounceTimer = null;
+    this.kbSearchDebounceTimer = null;
     this.autoSyncController = null;
     this.lastSyncTime = new Date();
   }
@@ -396,36 +397,92 @@ class App {
     }
   }
 
-  initMermaidDiagrams() {
-    if (typeof window !== 'undefined' && window.mermaid) {
-      try {
-        const isDark = document.documentElement.classList.contains('dark');
-        window.mermaid.initialize({
-          startOnLoad: false,
-          theme: isDark ? 'dark' : 'neutral',
-          themeVariables: {
-            darkMode: isDark,
-            background: 'transparent',
-            primaryColor: '#6366f1',
-            primaryTextColor: isDark ? '#f8fafc' : '#0f172a',
-            primaryBorderColor: '#818cf8',
-            lineColor: '#38bdf8',
-            secondaryColor: '#3b82f6',
-            tertiaryColor: '#1e293b'
-          },
-          securityLevel: 'loose',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
-        });
+  async initMermaidDiagrams() {
+    if (typeof window === 'undefined' || !window.mermaid) return;
 
-        const targets = document.querySelectorAll('.mermaid');
-        if (targets.length > 0) {
-          window.mermaid.run({
-            nodes: targets
-          }).catch(() => {});
+    try {
+      const isDark = document.documentElement.classList.contains('dark');
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'neutral',
+        themeVariables: {
+          darkMode: isDark,
+          background: 'transparent',
+          primaryColor: '#6366f1',
+          primaryTextColor: isDark ? '#f8fafc' : '#0f172a',
+          primaryBorderColor: '#818cf8',
+          lineColor: '#38bdf8',
+          secondaryColor: '#3b82f6',
+          tertiaryColor: '#1e293b'
+        },
+        securityLevel: 'loose',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      });
+
+      // 1. Renderizar tarjetas interactivas .mermaid-render-target con data-mermaid-code
+      const targets = document.querySelectorAll('.mermaid-render-target[data-mermaid-code]');
+      for (const target of targets) {
+        const rawCode = target.getAttribute('data-mermaid-code');
+        if (!rawCode) continue;
+
+        // Si ya tiene un SVG renderizado válido y no ha cambiado el código, omitir
+        if (target.querySelector('svg') && target.getAttribute('data-rendered-code') === rawCode) {
+          continue;
         }
-      } catch (err) {
-        console.warn('Error Mermaid run:', err);
+
+        const uniqueId = 'mmd_' + Math.random().toString(36).substring(2, 9);
+        try {
+          const { svg } = await window.mermaid.render(uniqueId, rawCode);
+          target.innerHTML = svg;
+          target.setAttribute('data-rendered-code', rawCode);
+          const svgEl = target.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.maxWidth = '100%';
+            svgEl.style.height = 'auto';
+          }
+        } catch (renderErr) {
+          console.warn('Mermaid render error for target:', renderErr);
+          target.innerHTML = `
+            <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 max-w-lg text-center space-y-2">
+              <div class="font-bold flex items-center justify-center gap-1.5">
+                <span>⚠️</span> Diagrama en edición de sintaxis
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                ${escapeHtml(renderErr.message || 'Error de parsing en Mermaid')}
+              </p>
+              <pre class="text-[10px] font-mono text-left bg-slate-900 text-indigo-300 p-2.5 rounded-xl overflow-x-auto max-h-36">${escapeHtml(rawCode)}</pre>
+            </div>
+          `;
+          const strayError = document.getElementById('d' + uniqueId);
+          if (strayError) strayError.remove();
+        }
       }
+
+      // 2. Renderizar bloques Markdown <pre class="mermaid">
+      const preMermaids = document.querySelectorAll('pre.mermaid:not([data-processed="true"])');
+      for (const pre of preMermaids) {
+        pre.setAttribute('data-processed', 'true');
+        const code = pre.textContent.trim();
+        const uniqueId = 'mmd_pre_' + Math.random().toString(36).substring(2, 9);
+        try {
+          const { svg } = await window.mermaid.render(uniqueId, code);
+          const wrapper = document.createElement('div');
+          wrapper.className = 'w-full flex justify-center items-center py-2';
+          wrapper.innerHTML = svg;
+          const svgEl = wrapper.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.maxWidth = '100%';
+            svgEl.style.height = 'auto';
+          }
+          pre.replaceWith(wrapper);
+        } catch (err) {
+          console.warn('Mermaid pre render error:', err);
+          const strayError = document.getElementById('d' + uniqueId);
+          if (strayError) strayError.remove();
+        }
+      }
+    } catch (err) {
+      console.warn('Error Mermaid general initialization:', err);
     }
   }
 
@@ -583,6 +640,7 @@ class App {
         if (targetPanel) {
           targetPanel.classList.remove('hidden');
           targetPanel.classList.add('block');
+          this.initMermaidDiagrams();
         }
         return;
       }
@@ -733,6 +791,207 @@ class App {
           bodyEl.innerHTML = renderMarkdown(content);
           this.initMermaidDiagrams();
         }
+
+        // Actualizar también editor y previsualización si están en pantalla
+        const editorTextarea = document.getElementById('doc-editor-textarea');
+        const editorPreview = document.getElementById('doc-editor-live-preview');
+        if (editorTextarea) editorTextarea.value = content;
+        if (editorPreview) editorPreview.innerHTML = renderMarkdown(content);
+        return;
+      }
+
+      // Conmutar entre Modo Lectura y Modo Editor en la Base de Conocimiento
+      const toggleEditorBtn = e.target.closest('#btn-toggle-doc-editor');
+      if (toggleEditorBtn) {
+        const readerContainer = document.getElementById('doc-reader-view-container');
+        const editorContainer = document.getElementById('doc-editor-view-container');
+        const btnText = document.getElementById('btn-toggle-doc-text');
+        const btnIcon = document.getElementById('btn-toggle-doc-icon');
+        const textarea = document.getElementById('doc-editor-textarea');
+        const preview = document.getElementById('doc-editor-live-preview');
+        const pathEl = document.getElementById('doc-active-path');
+
+        if (readerContainer && editorContainer) {
+          const isEditorHidden = editorContainer.classList.contains('hidden');
+          if (isEditorHidden) {
+            // Entrar al editor
+            const docKey = pathEl ? pathEl.textContent.trim() : '';
+            const docs = store.getState().knowledgeIndex?.docs || {};
+            const content = docs[docKey] || '';
+            if (textarea) textarea.value = content;
+            if (preview) preview.innerHTML = renderMarkdown(content);
+            editorContainer.classList.remove('hidden');
+            readerContainer.classList.add('hidden');
+            if (btnText) btnText.textContent = 'Ver Lector';
+            if (btnIcon) btnIcon.textContent = '👁️';
+          } else {
+            // Salir del editor
+            editorContainer.classList.add('hidden');
+            readerContainer.classList.remove('hidden');
+            if (btnText) btnText.textContent = 'Editar';
+            if (btnIcon) btnIcon.textContent = '✏️';
+          }
+        }
+        return;
+      }
+
+      // Cancelar edición de documento
+      const cancelEditBtn = e.target.closest('#btn-cancel-doc-edit');
+      if (cancelEditBtn) {
+        const readerContainer = document.getElementById('doc-reader-view-container');
+        const editorContainer = document.getElementById('doc-editor-view-container');
+        const btnText = document.getElementById('btn-toggle-doc-text');
+        const btnIcon = document.getElementById('btn-toggle-doc-icon');
+        if (readerContainer && editorContainer) {
+          editorContainer.classList.add('hidden');
+          readerContainer.classList.remove('hidden');
+          if (btnText) btnText.textContent = 'Editar';
+          if (btnIcon) btnIcon.textContent = '✏️';
+        }
+        return;
+      }
+
+      // Guardar cambios del documento editado
+      const saveEditBtn = e.target.closest('#btn-save-doc-edit');
+      if (saveEditBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        const textarea = document.getElementById('doc-editor-textarea');
+        const newContent = textarea ? textarea.value : '';
+
+        if (docKey) {
+          store.saveDoc(docKey, newContent);
+          const bodyEl = document.getElementById('doc-active-body');
+          if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
+
+          const readerContainer = document.getElementById('doc-reader-view-container');
+          const editorContainer = document.getElementById('doc-editor-view-container');
+          const btnText = document.getElementById('btn-toggle-doc-text');
+          const btnIcon = document.getElementById('btn-toggle-doc-icon');
+          if (readerContainer && editorContainer) {
+            editorContainer.classList.add('hidden');
+            readerContainer.classList.remove('hidden');
+            if (btnText) btnText.textContent = 'Editar';
+            if (btnIcon) btnIcon.textContent = '✏️';
+          }
+          this.initMermaidDiagrams();
+        }
+        return;
+      }
+
+      // Abrir modal de nuevo documento
+      const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
+      if (openNewDocBtn) {
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          const modInput = document.getElementById('new-doc-module');
+          if (modInput) modInput.focus();
+        }
+        return;
+      }
+
+      // Cerrar modal de nuevo documento
+      const closeNewDocBtn = e.target.closest('[data-action="close-new-doc-modal"]');
+      if (closeNewDocBtn || e.target.id === 'new-doc-modal') {
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
+
+      // Eliminar documento activo
+      const deleteDocBtn = e.target.closest('[data-action="delete-active-doc"]');
+      if (deleteDocBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        if (docKey) {
+          if (confirm(`¿Estás seguro de que deseas eliminar el documento "${docKey}" de la Base de Conocimiento?`)) {
+            store.deleteDoc(docKey);
+          }
+        }
+        return;
+      }
+
+      // Descargar documento activo en archivo .md
+      const downloadDocBtn = e.target.closest('[data-action="download-active-doc"]');
+      if (downloadDocBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        const docs = store.getState().knowledgeIndex?.docs || {};
+        const content = docs[docKey] || '';
+        const filename = docKey.split('/').pop() || 'document.md';
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Exportar toda la Base de Conocimiento en JSON
+      const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
+      if (exportKnowledgeBtn) {
+        const kData = store.getState().knowledgeIndex;
+        const jsonStr = JSON.stringify(kData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `knowledge-base-${store.getState().project || 'project'}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Trigger para importar documento o JSON desde archivo local
+      const triggerImportBtn = e.target.closest('[data-action="trigger-import-doc"]');
+      if (triggerImportBtn) {
+        const fileInput = document.getElementById('import-doc-file-input');
+        if (fileInput) fileInput.click();
+        return;
+      }
+
+      // Filtrar documentos por píldora de módulo (Pills)
+      const kbModPill = e.target.closest('.kb-mod-pill');
+      if (kbModPill) {
+        const targetMod = kbModPill.getAttribute('data-kb-filter-module');
+        document.querySelectorAll('.kb-mod-pill').forEach(p => {
+          p.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold');
+          p.classList.add('bg-slate-200/70', 'dark:bg-slate-800/80', 'text-slate-600', 'dark:text-slate-400');
+        });
+        kbModPill.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold');
+        kbModPill.classList.remove('bg-slate-200/70', 'dark:bg-slate-800/80', 'text-slate-600', 'dark:text-slate-400');
+
+        const generalGroup = document.querySelector('.kb-doc-group[data-group-type="general"]');
+        const moduleItems = document.querySelectorAll('.kb-module-item');
+
+        if (!targetMod) {
+          if (generalGroup) generalGroup.classList.remove('hidden');
+          moduleItems.forEach(mi => mi.classList.remove('hidden'));
+        } else if (targetMod === 'general') {
+          if (generalGroup) generalGroup.classList.remove('hidden');
+          moduleItems.forEach(mi => mi.classList.add('hidden'));
+        } else {
+          if (generalGroup) generalGroup.classList.add('hidden');
+          moduleItems.forEach(mi => {
+            const mName = mi.getAttribute('data-module-name');
+            if (mName === targetMod) {
+              mi.classList.remove('hidden');
+            } else {
+              mi.classList.add('hidden');
+            }
+          });
+        }
         return;
       }
 
@@ -776,6 +1035,38 @@ class App {
         this.searchDebounceTimer = setTimeout(() => {
           store.setFilter('search', val);
         }, 260);
+      } else if (e.target.id === 'kb-doc-search-input') {
+        clearTimeout(this.kbSearchDebounceTimer);
+        const query = (e.target.value || '').toLowerCase().trim();
+        this.kbSearchDebounceTimer = setTimeout(() => {
+          const docItems = document.querySelectorAll('.doc-nav-item');
+          docItems.forEach(item => {
+            const name = (item.getAttribute('data-doc-name') || '').toLowerCase();
+            const key = (item.getAttribute('data-doc-key') || '').toLowerCase();
+            const mod = (item.getAttribute('data-doc-module') || '').toLowerCase();
+            if (!query || name.includes(query) || key.includes(query) || mod.includes(query)) {
+              item.classList.remove('hidden');
+            } else {
+              item.classList.add('hidden');
+            }
+          });
+
+          // Ocultar o mostrar grupos de módulos según si tienen documentos visibles
+          document.querySelectorAll('.kb-module-item').forEach(mi => {
+            const visibleChildren = mi.querySelectorAll('.doc-nav-item:not(.hidden)');
+            if (query && visibleChildren.length === 0) {
+              mi.classList.add('hidden');
+            } else {
+              mi.classList.remove('hidden');
+            }
+          });
+        }, 180);
+      } else if (e.target.id === 'doc-editor-textarea') {
+        // Previsualización en vivo en el editor Markdown
+        const preview = document.getElementById('doc-editor-live-preview');
+        if (preview) {
+          preview.innerHTML = renderMarkdown(e.target.value);
+        }
       }
     });
 
@@ -801,6 +1092,66 @@ class App {
             card.classList.add('hidden');
           }
         });
+      } else if (e.target.id === 'import-doc-file-input') {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const fileReader = new FileReader();
+        fileReader.onload = (loadEvent) => {
+          const text = loadEvent.target.result;
+          if (file.name.endsWith('.json')) {
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed.docs && typeof parsed.docs === 'object') {
+                Object.entries(parsed.docs).forEach(([k, c]) => store.saveDoc(k, c));
+              } else if (typeof parsed === 'object') {
+                Object.entries(parsed).forEach(([k, c]) => {
+                  if (typeof c === 'string') store.saveDoc(k, c);
+                });
+              }
+            } catch (err) {
+              alert('Error al parsear el archivo JSON: ' + err.message);
+            }
+          } else {
+            // Archivo .md o .markdown
+            store.saveDoc(file.name, text);
+          }
+          e.target.value = '';
+        };
+        fileReader.readAsText(file);
+      }
+    });
+
+    // Envío del formulario para crear nuevo documento
+    document.addEventListener('submit', (e) => {
+      if (e.target.id === 'new-doc-form') {
+        e.preventDefault();
+        const modInput = document.getElementById('new-doc-module');
+        const fileInput = document.getElementById('new-doc-filename');
+        const contentInput = document.getElementById('new-doc-content');
+
+        const modVal = (modInput?.value || '').trim();
+        let fileVal = (fileInput?.value || '').trim();
+        const contentVal = contentInput?.value || '# Nuevo Documento';
+
+        if (!fileVal) return;
+        if (!fileVal.endsWith('.md') && !fileVal.endsWith('.markdown')) {
+          fileVal += '.md';
+        }
+
+        let docKey = fileVal;
+        if (modVal && modVal.toLowerCase() !== 'general') {
+          docKey = `modules/${modVal.toLowerCase()}/${fileVal}`;
+        }
+
+        store.saveDoc(docKey, contentVal);
+
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        e.target.reset();
       }
     });
 
@@ -818,6 +1169,11 @@ class App {
         if (diagModal && !diagModal.classList.contains('hidden')) {
           diagModal.classList.add('hidden');
           diagModal.classList.remove('flex');
+        }
+        const newDocModal = document.getElementById('new-doc-modal');
+        if (newDocModal && !newDocModal.classList.contains('hidden')) {
+          newDocModal.classList.add('hidden');
+          newDocModal.classList.remove('flex');
         }
       }
     });

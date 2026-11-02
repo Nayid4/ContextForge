@@ -103,6 +103,19 @@ class Store {
     const pageSize = this.state.pagination.pageSize || 10;
     const totalPages = Math.ceil(featList.length / pageSize) || 1;
 
+    let mergedKIndex = knowledgeIndex || this.state.knowledgeIndex || null;
+    if (mergedKIndex && typeof localStorage !== 'undefined') {
+      try {
+        const customDocs = JSON.parse(localStorage.getItem('harness_custom_docs') || '{}');
+        if (Object.keys(customDocs).length > 0) {
+          mergedKIndex = {
+            ...mergedKIndex,
+            docs: { ...(mergedKIndex.docs || {}), ...customDocs }
+          };
+        }
+      } catch (_) {}
+    }
+
     this.setState({
       project: project || this.state.project,
       features: featList,
@@ -110,7 +123,7 @@ class Store {
       history: historyData || { records: [] },
       historyData: historyData || { records: [] },
       projectSpec: projectSpec || this.state.projectSpec || null,
-      knowledgeIndex: knowledgeIndex || this.state.knowledgeIndex || null,
+      knowledgeIndex: mergedKIndex,
       pagination: {
         ...this.state.pagination,
         totalPages
@@ -118,6 +131,37 @@ class Store {
       loading: false,
       error: null
     });
+  }
+
+  saveDoc(key, content) {
+    const kIndex = this.state.knowledgeIndex ? { ...this.state.knowledgeIndex } : { docs: {} };
+    if (!kIndex.docs) kIndex.docs = {};
+    kIndex.docs[key] = content;
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const customDocs = JSON.parse(localStorage.getItem('harness_custom_docs') || '{}');
+        customDocs[key] = content;
+        localStorage.setItem('harness_custom_docs', JSON.stringify(customDocs));
+      } catch (_) {}
+    }
+
+    this.setState({ knowledgeIndex: { ...kIndex } });
+  }
+
+  deleteDoc(key) {
+    const kIndex = this.state.knowledgeIndex ? { ...this.state.knowledgeIndex } : { docs: {} };
+    if (kIndex.docs && kIndex.docs[key]) {
+      delete kIndex.docs[key];
+    }
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const customDocs = JSON.parse(localStorage.getItem('harness_custom_docs') || '{}');
+        delete customDocs[key];
+        localStorage.setItem('harness_custom_docs', JSON.stringify(customDocs));
+      } catch (_) {}
+    }
+    this.setState({ knowledgeIndex: { ...kIndex } });
   }
 
   setError(error) {

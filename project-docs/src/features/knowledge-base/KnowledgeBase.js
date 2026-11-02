@@ -3,15 +3,16 @@ import { renderBadge } from '../../shared/Badge.js';
 import { renderMarkdown } from '../../shared/MarkdownViewer.js';
 
 /**
- * KnowledgeBaseComponent: Base de Conocimiento Canónica del Proyecto (Docs-as-Code).
- * Diseñado con la estética editorial minimalista de ContextForge y Claude AI.
+ * KnowledgeBaseComponent: Base de Conocimiento de Ingeniería Soberana (Docs-as-Code).
+ * Inspirada en la arquitectura, gestión y diseño editorial de ContextForge.
  *
- * Módulos integrados:
- * 1. Hero con métricas y generador de contexto para LLM.
- * 2. Catálogo interactivo de Reglas de Negocio con severidades e invariantes.
- * 3. Matriz de Servicios Externos & Protocolos de resiliencia.
- * 4. Guardrails Anti-Sesgo & Estándares de Codificación.
- * 5. Lector Editorial Docs-as-Code con navegación lateral de archivos Markdown y diagramas.
+ * Capacidades:
+ * 1. Gestión de Documentos: Lectura, Creación (➕), Edición directa (✏️) y Eliminación (🗑️).
+ * 2. Importación & Exportación: Carga de archivos .md/.json y exportación en 1-clic.
+ * 3. Buscador reactivo con debouncing para módulos y documentos.
+ * 4. Lector Editorial con soporte de GitHub Alerts, tablas limpias y bloques de código.
+ * 5. Prompt Bundler para LLMs (copiar contexto canónico sin sesgo).
+ * 6. Catálogo formal de Reglas de Negocio (BR-*), Servicios Externos y Guardrails.
  */
 
 export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
@@ -23,178 +24,323 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
   const naming = standards.naming_conventions || {};
   const docs = kData.docs || getDefaultDocs();
 
-  // Documento inicial por defecto
-  const defaultDocKey = Object.keys(docs)[0] || 'coding-standards.md';
-  const defaultDocContent = docs[defaultDocKey] || '# Documentación no disponible';
+  // Documento activo por defecto
+  const docKeys = Object.keys(docs);
+  const activeDocKey = docKeys.includes('coding-standards.md') 
+    ? 'coding-standards.md' 
+    : (docKeys[0] || 'c4-model.md');
+  const activeDocContent = docs[activeDocKey] || '# Documento no disponible';
 
-  // Agrupar documentos por categoría (Generales y Módulos)
+  // Categorizar documentos
   const generalDocs = [];
   const moduleDocsMap = {};
 
-  Object.keys(docs).forEach(key => {
+  docKeys.forEach(key => {
     if (key.startsWith('modules/')) {
       const parts = key.split('/');
       const modName = parts[1] || 'general';
       const fileName = parts.slice(2).join('/') || parts[1];
       if (!moduleDocsMap[modName]) moduleDocsMap[modName] = [];
-      moduleDocsMap[modName].push({ key, fileName });
+      moduleDocsMap[modName].push({ key, fileName, modName });
     } else {
       generalDocs.push({ key, fileName: key });
     }
   });
 
+  const availableModules = Object.keys(moduleDocsMap);
+
   return `
     <div class="space-y-10">
       
-      <!-- 1. HEADER HERO: Base de Conocimiento Canónica -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+      <!-- 1. HEADER HERO: ContextForge Sovereign Knowledge Base -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div class="space-y-2">
             <div class="flex items-center gap-2">
               <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                Single Source of Truth
+                Docs-as-Code
               </span>
               <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-                Anti-Bias Context for AI
+                Sovereign Engineering Knowledge
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Anti-Bias Context
               </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-              <span>📚</span> Base de Conocimiento del Proyecto
+              <span>📚</span> Base de Conocimiento de Ingeniería (ContextForge)
             </h2>
             <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-              Repositorio canónico de arquitectura, reglas de negocio, contratos de servicios externos y estándares de codificación.
-              Sirve de <strong>contexto canónico</strong> para alimentar a los agentes de IA (Google Antigravity, Claude Code, Open Code, Copilot, Codex) y desarrolladores, eliminando el sesgo y las alucinaciones por falta de contexto.
+              Repositorio soberano de arquitectura, requerimientos, reglas de negocio y documentación viva en Markdown.
+              Permite auditar, crear y editar documentos técnicos para transferir contexto libre de sesgos a desarrolladores e inteligencias artificiales.
             </p>
           </div>
 
-          <!-- Botón Generador de Prompt de Contexto (ContextForge Prompt Bundler) -->
-          <div class="shrink-0">
+          <!-- Barra de Acciones Principales -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Nuevo Documento -->
+            <button type="button" 
+                    data-action="open-new-doc-modal"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
+              <span>➕</span> Nuevo Doc
+            </button>
+
+            <!-- Importar Archivo -->
+            <button type="button" 
+                    data-action="trigger-import-doc"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                    title="Importar archivo .md o .json local">
+              <span>📥</span> Importar
+            </button>
+            <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
+
+            <!-- Exportar Todo -->
+            <button type="button" 
+                    data-action="export-all-knowledge"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                    title="Descargar paquete JSON con toda la Base de Conocimiento">
+              <span>📤</span> Exportar
+            </button>
+
+            <!-- Prompt Bundler para LLM -->
             <button type="button" 
                     data-action="open-ai-context-modal" 
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all cursor-pointer">
-              <span>🤖</span> Copiar Contexto para IA
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+              <span>🤖</span> Contexto IA
             </button>
           </div>
         </div>
 
-        <!-- Métricas Rápidas de la Base de Conocimiento -->
+        <!-- Métricas Rápidas -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Documentos Vivos</div>
+            <div id="kb-stats-doc-count" class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${docKeys.length} indexados</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Docs-as-Code (.md)</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Bounded Contexts</div>
+            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${availableModules.length} módulos</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">DDD estratégicos</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
             <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
-            <div class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${rules.length} catalogadas</div>
+            <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-0.5">${rules.length} catalogadas</div>
             <div class="text-[10px] text-slate-500 mt-0.5">Identificadores BR-*</div>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
             <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
             <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} integraciones</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Stripe, PG, Redis, RabbitMQ</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Guardrails Anti-Sesgo</div>
-            <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">${guardrails.length} directrices</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Reglas de no-alucinación</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Docs-as-Code</div>
-            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${Object.keys(docs).length} documentos</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Markdown vivo y C4</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Stripe, PG, Redis...</div>
           </div>
         </div>
       </section>
 
-      <!-- 2. LECTOR EDITORIAL DOCS-AS-CODE (Inspirado en ContextForge) -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
-                ${Icons.folder}
-              </span>
-              Lector Editorial Docs-as-Code (Markdown & Diagramas)
-            </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Explora los documentos de arquitectura y módulos parseados con diseño editorial limpio y alertas interactivas
-            </p>
-          </div>
+      <!-- 2. EXPLORADOR & LECTOR EDITORIAL DOCS-AS-CODE (Estilo ContextForge) -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          <div class="flex items-center gap-2">
-            <button type="button" 
-                    id="copy-active-doc-btn" 
-                    class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5">
-              <span>📋</span> Copiar Markdown Activo
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <!-- Columna Izquierda: Árbol de Navegación de Documentos (Estilo ContextForge Sidebar) -->
-          <div class="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 space-y-4 max-h-[640px] overflow-y-auto">
+          <!-- 2.1 SIDEBAR DE NAVEGACIÓN Y BÚSQUEDA (4 de 12 columnas) -->
+          <div class="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 space-y-4">
             
-            <!-- Grupo 1: Documentación Canónica General -->
-            <div class="space-y-1.5">
-              <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2">
-                🏛️ Documentos Canónicos
-              </div>
-              <div class="space-y-1 text-xs">
-                ${generalDocs.map(doc => `
-                  <button type="button" 
-                          data-doc-key="${escapeAttr(doc.key)}"
-                          class="doc-nav-item w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 font-mono transition-all cursor-pointer ${doc.key === defaultDocKey ? 'active bg-indigo-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
-                    <span class="text-xs shrink-0">📄</span>
-                    <span class="truncate">${doc.fileName}</span>
-                  </button>
-                `).join('')}
-              </div>
+            <!-- Buscador con Debouncing -->
+            <div class="relative">
+              <input type="text" 
+                     id="kb-doc-search-input" 
+                     placeholder="Buscar documento o módulo..." 
+                     class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
+              <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none text-xs">
+                ${Icons.search('w-3.5 h-3.5')}
+              </span>
             </div>
 
-            <!-- Grupo 2: Módulos / Bounded Contexts -->
-            <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2">
-                📦 Módulos / Bounded Contexts
-              </div>
-              
-              ${Object.keys(moduleDocsMap).map(modName => `
-                <div class="space-y-1">
-                  <div class="flex items-center gap-1.5 px-2 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                    <span>📁</span>
-                    <span>${modName}</span>
-                  </div>
-                  <div class="pl-3 space-y-0.5 text-xs font-mono">
-                    ${moduleDocsMap[modName].map(doc => `
-                      <button type="button" 
-                              data-doc-key="${escapeAttr(doc.key)}"
-                              class="doc-nav-item w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${doc.key === defaultDocKey ? 'active bg-indigo-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
-                        <span class="text-[10px] opacity-70">📄</span>
-                        <span class="truncate text-[11px]">${doc.fileName}</span>
-                      </button>
-                    `).join('')}
-                  </div>
-                </div>
+            <!-- Filtro rápido por Módulo (Pills) -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-mono" id="kb-module-pill-filters">
+              <button type="button" 
+                      data-kb-filter-module="" 
+                      class="kb-mod-pill active px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0">
+                Todos
+              </button>
+              ${availableModules.map(m => `
+                <button type="button" 
+                        data-kb-filter-module="${m}" 
+                        class="kb-mod-pill px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0">
+                  ${m}
+                </button>
               `).join('')}
             </div>
 
+            <!-- Lista Jerárquica de Documentos -->
+            <div class="space-y-4 max-h-[560px] overflow-y-auto pr-1" id="kb-docs-list-tree">
+              
+              <!-- Documentos Canónicos Generales -->
+              <div class="space-y-1 kb-doc-group" data-group-type="general">
+                <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 py-1 flex items-center justify-between">
+                  <span>🏛️ Canónicos Generales</span>
+                  <span class="text-[9px] opacity-70">${generalDocs.length}</span>
+                </div>
+                <div class="space-y-0.5">
+                  ${generalDocs.map(doc => `
+                    <button type="button" 
+                            data-doc-key="${escapeAttr(doc.key)}"
+                            data-doc-name="${escapeAttr(doc.fileName)}"
+                            class="doc-nav-item w-full text-left px-3 py-2 rounded-xl flex items-center justify-between font-mono text-xs transition-all cursor-pointer ${doc.key === activeDocKey ? 'active bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
+                      <span class="flex items-center gap-2 truncate">
+                        <span class="text-xs opacity-75">📄</span>
+                        <span class="truncate">${doc.fileName}</span>
+                      </span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Módulos / Bounded Contexts -->
+              <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800" id="kb-modules-container">
+                <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center justify-between">
+                  <span>📦 Bounded Contexts</span>
+                  <span class="text-[9px] opacity-70">${availableModules.length}</span>
+                </div>
+
+                ${availableModules.map(modName => `
+                  <div class="space-y-1 kb-module-item" data-module-name="${modName}">
+                    <div class="flex items-center justify-between px-2 py-0.5 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                      <span class="flex items-center gap-1.5">
+                        <span>📁</span>
+                        <span>${modName}</span>
+                      </span>
+                      <span class="text-[9px] font-normal text-slate-400">${moduleDocsMap[modName].length} docs</span>
+                    </div>
+                    <div class="pl-2 space-y-0.5 text-xs font-mono">
+                      ${moduleDocsMap[modName].map(doc => `
+                        <button type="button" 
+                                data-doc-key="${escapeAttr(doc.key)}"
+                                data-doc-name="${escapeAttr(doc.fileName)}"
+                                data-doc-module="${escapeAttr(modName)}"
+                                class="doc-nav-item w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-all cursor-pointer ${doc.key === activeDocKey ? 'active bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
+                          <span class="flex items-center gap-1.5 truncate">
+                            <span class="text-[10px] opacity-70">📄</span>
+                            <span class="truncate text-[11px]">${doc.fileName}</span>
+                          </span>
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+            </div>
+
           </div>
 
-          <!-- Columna Derecha: Lector Editorial del Documento Activo -->
-          <div class="lg:col-span-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-8 min-h-[500px] shadow-sm">
-            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80 text-xs">
-              <div class="flex items-center gap-2 font-mono text-slate-400">
-                <span>Ruta:</span>
-                <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold">${defaultDocKey}</span>
+          <!-- 2.2 LECTOR & EDITOR EDITORIAL (8 de 12 columnas) -->
+          <div class="lg:col-span-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-8 min-h-[560px] shadow-sm flex flex-col justify-between">
+            
+            <div>
+              <!-- Barra Superior del Documento -->
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80">
+                <div class="flex items-center gap-2 text-xs font-mono">
+                  <span class="text-slate-400">Documento:</span>
+                  <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
+                    ${activeDocKey}
+                  </span>
+                </div>
+
+                <!-- Herramientas del Documento Activo -->
+                <div class="flex items-center gap-2">
+                  <!-- Botón Conmutar Modo Edición / Lectura -->
+                  <button type="button" 
+                          id="btn-toggle-doc-editor" 
+                          class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                          title="Editar el contenido de este documento">
+                    <span id="btn-toggle-doc-icon">✏️</span>
+                    <span id="btn-toggle-doc-text">Editar</span>
+                  </button>
+
+                  <!-- Botón Copiar Markdown -->
+                  <button type="button" 
+                          id="copy-active-doc-btn" 
+                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                          title="Copiar contenido Markdown completo">
+                    <span class="text-xs">📋</span>
+                  </button>
+
+                  <!-- Botón Descargar Archivo .md -->
+                  <button type="button" 
+                          data-action="download-active-doc" 
+                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                          title="Descargar este archivo .md a tu equipo">
+                    <span class="text-xs">💾</span>
+                  </button>
+
+                  <!-- Botón Eliminar Documento -->
+                  <button type="button" 
+                          data-action="delete-active-doc" 
+                          class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                          title="Eliminar este documento de la Base de Conocimiento">
+                    <span class="text-xs">🗑️</span>
+                  </button>
+                </div>
               </div>
-              <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                Docs-as-Code
-              </span>
+
+              <!-- MODO 1: LECTOR EDITORIAL (ACTIVO) -->
+              <div id="doc-reader-view-container" class="space-y-4">
+                <div id="doc-active-body" class="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200">
+                  ${renderMarkdown(activeDocContent)}
+                </div>
+              </div>
+
+              <!-- MODO 2: EDITOR MARKDOWN EN VIVO (OCULTO POR DEFECTO) -->
+              <div id="doc-editor-view-container" class="hidden space-y-4">
+                <div class="flex items-center justify-between text-xs text-slate-500 font-mono">
+                  <span>Modo Editor Directo (Markdown)</span>
+                  <span>Soporta tablas, alertas GitHub y diagramas Mermaid</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Textarea de Edición -->
+                  <textarea id="doc-editor-textarea" 
+                            rows="18" 
+                            class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">${escapeHtml(activeDocContent)}</textarea>
+
+                  <!-- Previsualización en Vivo -->
+                  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 overflow-y-auto max-h-[460px]">
+                    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+                      Vista Previa en Vivo
+                    </div>
+                    <div id="doc-editor-live-preview" class="prose dark:prose-invert max-w-none text-xs">
+                      ${renderMarkdown(activeDocContent)}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botones de Guardar / Cancelar Edición -->
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <button type="button" 
+                          id="btn-cancel-doc-edit" 
+                          class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    Cancelar
+                  </button>
+                  <button type="button" 
+                          id="btn-save-doc-edit" 
+                          class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
+                    <span>💾</span> Guardar Cambios
+                  </button>
+                </div>
+              </div>
+
             </div>
 
-            <!-- Contenedor del Artículo Parseado -->
-            <div id="doc-active-body" class="prose dark:prose-invert max-w-none">
-              ${renderMarkdown(defaultDocContent)}
+            <!-- Pie del Lector -->
+            <div class="pt-6 mt-8 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
+              <span>Soberanía: Docs-as-Code</span>
+              <span>Guardado local persistente</span>
             </div>
+
           </div>
 
         </div>
+
       </section>
 
       <!-- 3. CATÁLOGO DE REGLAS DE NEGOCIO (BR-*) -->
@@ -361,7 +507,47 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         </div>
       </section>
 
-      <!-- MODAL FLOTANTE DE CONTEXTO CANÓNICO PARA IA -->
+      <!-- MODAL PARA NUEVO DOCUMENTO (➕) -->
+      <div id="new-doc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>📄</span> Crear Nuevo Documento Técnico
+            </h3>
+            <button type="button" data-action="close-new-doc-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+              ✕
+            </button>
+          </div>
+          
+          <form id="new-doc-form" class="space-y-3 text-xs">
+            <div>
+              <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">Módulo o Categoría:</label>
+              <input type="text" id="new-doc-module" placeholder="general, infra, backend, billing..." value="general" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
+            </div>
+
+            <div>
+              <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">Nombre del Archivo (.md):</label>
+              <input type="text" id="new-doc-filename" placeholder="mi-especificacion.md" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
+            </div>
+
+            <div>
+              <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">Contenido Markdown Inicial:</label>
+              <textarea id="new-doc-content" rows="8" placeholder="# Título del Documento&#10;&#10;Descripción y requerimientos..." class="w-full p-3 font-mono text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 resize-none focus:ring-1 focus:ring-indigo-500 focus:outline-none" required></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button type="button" data-action="close-new-doc-modal" class="px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold cursor-pointer">
+                Cancelar
+              </button>
+              <button type="submit" class="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md transition-colors cursor-pointer">
+                Crear Documento
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL FLOTANTE DE CONTEXTO CANÓNICO PARA IA (PROMPT BUNDLER) -->
       <div id="ai-context-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">

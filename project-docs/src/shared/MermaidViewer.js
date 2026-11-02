@@ -5,7 +5,7 @@ import { Icons } from './Icons.js';
  * Inspirado en la elegancia visual de ContextForge y diagramas interactivos modernos.
  *
  * Ofrece:
- * - Renderizado visual directo como SVG interactivo (no volcado de texto plano).
+ * - Renderizado visual directo como SVG interactivo mediante mermaid.render().
  * - Conmutador entre "Diagrama Visual" y "Código Mermaid".
  * - Botón de pantalla completa / modal ampliado con zoom.
  * - Botón de 1-clic para copiar el código Mermaid.
@@ -73,19 +73,24 @@ export function renderMermaidViewer(diagram) {
 
       <!-- 3. Contenedores de Vista -->
       
-      <!-- 3.1 VISTA VISUAL (RENDER SVG MERMAID) -->
+      <!-- 3.1 VISTA VISUAL (RENDER SVG INTERACTIVO) -->
       <div id="diagram-view-visual-${id}" class="diagram-visual-panel p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950/60 overflow-x-auto min-h-[320px] flex items-center justify-center">
-        <div class="mermaid-render-container w-full max-w-4xl flex justify-center" 
+        <div class="mermaid-render-target w-full flex justify-center items-center" 
              id="mermaid-target-${id}" 
-             data-mermaid-src="${escapeAttr(code)}">
-          <div class="mermaid text-xs font-mono text-slate-500 animate-pulse text-center p-8">
-            ${escapeHtml(code)}
+             data-mermaid-code="${escapeAttr(code)}">
+          <div class="text-xs font-mono text-slate-400 animate-pulse text-center p-6 flex flex-col items-center gap-2">
+            <div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <span>Generando visualización interactiva del diagrama...</span>
           </div>
         </div>
       </div>
 
       <!-- 3.2 VISTA DE CÓDIGO FUENTE (OCULTA POR DEFECTO) -->
       <div id="diagram-view-code-${id}" class="diagram-code-panel hidden p-4 bg-slate-900 border-t border-slate-800">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+          <span>Sintaxis Mermaid</span>
+          <button type="button" data-copy-mermaid="${escapeAttr(code)}" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] cursor-pointer">Copiar</button>
+        </div>
         <pre class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 select-all"><code>${escapeHtml(code)}</code></pre>
       </div>
 
