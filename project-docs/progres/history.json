@@ -1,3 +1,37 @@
 {
-  "records": []
+  "records": [
+    {
+      "id": 1,
+      "type": "feature",
+      "name": "infra_database_setup",
+      "title": "Infraestructura Base de Datos y Migraciones",
+      "branch": "feature/INT-001/infra_database_setup",
+      "completed_at": "2026-11-01 16:30 UTC",
+      "commit": "a4f891b2c3d4e5f67890",
+      "executor": "implementer + reviewer",
+      "summary": "Base de datos PostgreSQL configurada con migraciones automáticas y pool de conexiones verificado al 100%."
+    },
+    {
+      "id": 2,
+      "type": "feature",
+      "name": "user_auth_service",
+      "title": "Servicio de Autenticación JWT y Roles",
+      "branch": "feature/INT-002/user_auth_service",
+      "completed_at": "2026-11-02 08:45 UTC",
+      "commit": "e8c21a4f5b6c7d8e9f01",
+      "executor": "implementer + reviewer",
+      "summary": "Endpoints de login, registro y middleware de validación RBAC con cobertura de pruebas unitarias al 92%."
+    },
+    {
+      "id": 3,
+      "type": "bugfix",
+      "name": "fix_jwt_token_expiration",
+      "title": "Corrección de Expiración JWT en Desfases UTC",
+      "branch": "bugfix/INT-003/fix_jwt_token_expiration",
+      "completed_at": "2026-11-02 09:30 UTC",
+      "commit": "c3d4e5f6a1b2c3d4e5f6",
+      "executor": "implementer + reviewer",
+      "summary": "Corregido cálculo de expiración de token para operar estrictamente en Epoch UTC independientemente del huso horario del servidor."
+    }
+  ]
 }

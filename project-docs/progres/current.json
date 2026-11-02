@@ -1,1 +1,22 @@
-{}
+{
+  "feature": {
+    "id": 4,
+    "type": "feature",
+    "name": "product_catalog_api",
+    "title": "API de Catálogo de Productos y Búsqueda",
+    "description": "Endpoints para consultar catálogo de productos con paginación basada en cursor, filtros por categoría y búsqueda full-text optimizada.",
+    "module": "backend",
+    "priority": "P1",
+    "branch": "feature/INT-004/product_catalog_api",
+    "spec_folder": "specs/004_product_catalog_api"
+  },
+  "responsable": "leader (orquestador)",
+  "started_at": "2026-11-02 10:15 UTC",
+  "tasks": [
+    { "title": "Definir DTOs y validadores de consulta de productos", "done": true },
+    { "title": "Crear repositorio con consultas paginadas por cursor", "done": true },
+    { "title": "Implementar endpoint GET /api/v1/products con filtros", "done": true },
+    { "title": "Integrar cache en memoria / Redis con invalidación", "done": false },
+    { "title": "Escribir tests de integración y carga con k6", "done": false }
+  ]
+}

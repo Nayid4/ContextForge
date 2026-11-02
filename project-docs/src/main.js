@@ -1,6 +1,7 @@
 import { store } from './core/store.js';
 import { api } from './core/api.js';
 import { router } from './core/router.js';
+import { detectEnvironment } from './core/detector.js';
 import { Icons } from './shared/Icons.js';
 import { renderTabButton } from './shared/Button.js';
 import { renderModal } from './shared/Modal.js';
@@ -20,6 +21,7 @@ class App {
     this.spaceView3D = new SpaceView3D();
     this.currentTreeComponent = null;
     this.activeTab = 'features';
+    this.envInfo = null;
   }
 
   async init() {
@@ -40,6 +42,7 @@ class App {
     store.setLoading(true);
     try {
       const data = await api.fetchAll();
+      this.envInfo = await detectEnvironment(data);
       store.setData(data);
     } catch (err) {
       console.error('Error cargando datos del arnés:', err);
@@ -65,6 +68,8 @@ class App {
     const filteredFeatures = store.getFilteredFeatures();
     const modules = store.getAvailableModules();
     const isDark = state.theme === 'dark';
+    const activeAgent = this.envInfo?.activeAgent || { name: 'Google Antigravity', icon: '⚡' };
+    const stackInfo = this.envInfo?.stack || { name: 'Multi-Stack Agnostico' };
 
     // 1. Loading State
     if (state.loading && state.features.length === 0) {
@@ -97,33 +102,55 @@ class App {
 
     // 3. Render Principal
     this.root.innerHTML = `
-      <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
+      <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
+        
         <!-- Barra de Estado Superior -->
         <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 transition-colors">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- Logo & Info del Proyecto -->
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
                 <span class="font-mono font-black text-sm">AG</span>
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">Antigravity AI Harness</h1>
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml(state.project)}</h1>
                   <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
                     SDD 2.0
                   </span>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                  Branch naming: <span class="text-indigo-600 dark:text-indigo-300">{type}/INT-{id}/{name}</span> (≤80c)
-                </p>
+                <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span>Branch: <code class="text-indigo-600 dark:text-indigo-300 font-semibold">{type}/INT-{id}/{name}</code></span>
+                  <span class="text-slate-300 dark:text-slate-700">•</span>
+                  <span class="hidden sm:inline">Límite: <strong class="text-slate-700 dark:text-slate-300">≤80c</strong></span>
+                </div>
               </div>
             </div>
 
-            <!-- Controles de cabecera: Modo Claro/Oscuro y Refrescar -->
-            <div class="flex items-center gap-2.5">
-              <!-- Switch de Modo Claro / Oscuro -->
+            <!-- Chips de Agente Detectado y Stack Tecnológico -->
+            <div class="hidden lg:flex items-center gap-2 text-xs">
+              <!-- Agente Detectado -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 shadow-xs"
+                   title="Agentes compatibles homologados: Google Antigravity, Open Code, GitHub Copilot, Claude Code, Codex">
+                <span class="text-sm">${activeAgent.icon}</span>
+                <span class="font-medium">${activeAgent.name}</span>
+              </div>
+
+              <!-- Stack Detectado -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs"
+                   title="Stack tecnológico detectado por technical-audit">
+                <span class="text-slate-400">Stack:</span>
+                <span class="font-semibold">${escapeHtml(stackInfo.name)}</span>
+              </div>
+            </div>
+
+            <!-- Controles: Modo Claro/Oscuro y Refrescar -->
+            <div class="flex items-center gap-2">
+              <!-- Switch Modo Claro/Oscuro -->
               <button type="button" 
                       data-action="toggle-theme" 
-                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer select-none"
                       title="${isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}">
                 <span class="text-amber-500 shrink-0">
                   ${isDark ? Icons.sun : Icons.moon}
@@ -159,14 +186,14 @@ class App {
           <!-- 3. Navegación por pestañas (Router) -->
           <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: 'features', label: 'Tareas y Bugfixes', icon: Icons.folder, active: this.activeTab === 'features', badge: String(state.features.length) })}
-            ${renderTabButton({ id: 'graph', label: 'Grafo de Bloqueos', icon: Icons.gitBranch, active: this.activeTab === 'graph' })}
+            ${renderTabButton({ id: 'graph', label: 'Grafo Visual DAG', icon: Icons.gitBranch, active: this.activeTab === 'graph' })}
             ${renderTabButton({ id: 'tree', label: 'Árbol Jerárquico', icon: Icons.check, active: this.activeTab === 'tree' })}
             ${renderTabButton({ id: 'three', label: 'Constelación 3D', icon: Icons.eye, active: this.activeTab === 'three' })}
             ${renderTabButton({ id: 'history', label: 'Bitácora Histórica', icon: Icons.clock, active: this.activeTab === 'history', badge: String(state.history?.records?.length || 0) })}
           </nav>
 
           <!-- 4. Contenido Dinámico de la Pestaña -->
-          <section id="tab-content" class="min-h-[400px]">
+          <section id="tab-content" class="min-h-[420px]">
             ${this.renderActiveTabContent({ state, filteredFeatures, modules })}
           </section>
         </main>
@@ -237,7 +264,66 @@ class App {
           onSelect: (f) => store.setSelectedFeature(f)
         });
       }
+    } else if (this.activeTab === 'graph') {
+      this.bindGraphHoverEvents();
     }
+  }
+
+  bindGraphHoverEvents() {
+    const nodes = document.querySelectorAll('[data-graph-node]');
+    const edges = document.querySelectorAll('.graph-edge');
+
+    nodes.forEach(node => {
+      node.addEventListener('mouseenter', () => {
+        const nodeId = parseInt(node.getAttribute('data-graph-node'), 10);
+        const nodeDeps = (node.getAttribute('data-deps') || '').split(',').filter(Boolean).map(Number);
+
+        // Atenuar todo
+        nodes.forEach(n => n.classList.add('opacity-30'));
+        edges.forEach(e => e.classList.add('opacity-10'));
+
+        // Resaltar nodo actual
+        node.classList.remove('opacity-30');
+        node.classList.add('scale-105', 'ring-2', 'ring-indigo-500');
+
+        // Resaltar dependencias (predecesores)
+        nodeDeps.forEach(depId => {
+          const depEl = document.querySelector(`[data-graph-node="${depId}"]`);
+          if (depEl) {
+            depEl.classList.remove('opacity-30');
+            depEl.classList.add('ring-2', 'ring-amber-500');
+          }
+          const edge = document.querySelector(`[data-edge-from="${depId}"][data-edge-to="${nodeId}"]`);
+          if (edge) {
+            edge.classList.remove('opacity-10');
+            edge.setAttribute('stroke-width', '4');
+            edge.setAttribute('opacity', '1');
+          }
+        });
+
+        // Resaltar dependientes (sucesores)
+        document.querySelectorAll(`.graph-edge[data-edge-from="${nodeId}"]`).forEach(edge => {
+          edge.classList.remove('opacity-10');
+          edge.setAttribute('stroke-width', '4');
+          edge.setAttribute('opacity', '1');
+          const toId = edge.getAttribute('data-edge-to');
+          const toEl = document.querySelector(`[data-graph-node="${toId}"]`);
+          if (toEl) {
+            toEl.classList.remove('opacity-30');
+            toEl.classList.add('ring-2', 'ring-cyan-500');
+          }
+        });
+      });
+
+      node.addEventListener('mouseleave', () => {
+        nodes.forEach(n => n.classList.remove('opacity-30', 'scale-105', 'ring-2', 'ring-indigo-500', 'ring-amber-500', 'ring-cyan-500'));
+        edges.forEach(e => {
+          e.classList.remove('opacity-10');
+          e.setAttribute('stroke-width', '2');
+          e.setAttribute('opacity', '0.65');
+        });
+      });
+    });
   }
 
   bindGlobalEvents() {
@@ -261,6 +347,15 @@ class App {
       const refreshBtn = e.target.closest('[data-action="refresh"]');
       if (refreshBtn) {
         this.refreshData();
+        return;
+      }
+
+      // Clic en nodo de grafo para ver detalle
+      const graphNode = e.target.closest('[data-graph-node]');
+      if (graphNode) {
+        const id = parseInt(graphNode.getAttribute('data-graph-node'), 10);
+        const feature = store.getState().features.find(f => f.id === id);
+        if (feature) store.setSelectedFeature(feature);
         return;
       }
 
@@ -333,6 +428,16 @@ class App {
       }
     });
   }
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

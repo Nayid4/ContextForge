@@ -1,0 +1,2419 @@
+(() => {
+  // project-docs/src/core/store.js
+  var getInitialTheme = () => {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem("harness_theme");
+      if (saved) return saved;
+    }
+    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+    return "dark";
+  };
+  var initialState = {
+    project: "Proyecto",
+    features: [],
+    currentSpec: {},
+    history: { records: [] },
+    historyData: { records: [] },
+    activeTab: "features",
+    // 'features' | 'graph' | 'tree' | 'three' | 'history'
+    theme: getInitialTheme(),
+    filters: {
+      search: "",
+      status: "",
+      module: "",
+      priority: "",
+      type: ""
+      // 'feature' | 'bugfix'
+    },
+    pagination: {
+      page: 1,
+      currentPage: 1,
+      perPage: 10,
+      pageSize: 10,
+      totalPages: 1
+    },
+    selectedFeature: null,
+    theme3D: "dark",
+    error: null,
+    loading: true
+  };
+  var Store = class {
+    constructor(state = initialState) {
+      this.state = { ...state };
+      this.listeners = /* @__PURE__ */ new Set();
+      this.syncThemeDom();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const nextPartial = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...nextPartial };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        listener(this.state);
+      }
+    }
+    // --- Theme Management ---
+    syncThemeDom() {
+      if (typeof document !== "undefined") {
+        if (this.state.theme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+    }
+    toggleTheme() {
+      const nextTheme = this.state.theme === "dark" ? "light" : "dark";
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("harness_theme", nextTheme);
+      }
+      this.setState({ theme: nextTheme });
+      this.syncThemeDom();
+    }
+    // --- Mutators ---
+    setLoading(loading) {
+      this.setState({ loading });
+    }
+    setData({ project, features, currentSpec, historyData }) {
+      const featList = Array.isArray(features) ? features : [];
+      const pageSize = this.state.pagination.pageSize || 10;
+      const totalPages = Math.ceil(featList.length / pageSize) || 1;
+      this.setState({
+        project: project || this.state.project,
+        features: featList,
+        currentSpec: currentSpec || {},
+        history: historyData || { records: [] },
+        historyData: historyData || { records: [] },
+        pagination: {
+          ...this.state.pagination,
+          totalPages
+        },
+        loading: false,
+        error: null
+      });
+    }
+    setError(error) {
+      this.setState({ error, loading: false });
+    }
+    setSelectedFeature(selectedFeature) {
+      this.setState({ selectedFeature });
+    }
+    setPage(page) {
+      this.setState({
+        pagination: { ...this.state.pagination, page, currentPage: page }
+      });
+    }
+    setPageSize(pageSize) {
+      const totalPages = Math.ceil(this.state.features.length / pageSize) || 1;
+      this.setState({
+        pagination: {
+          ...this.state.pagination,
+          perPage: pageSize,
+          pageSize,
+          page: 1,
+          currentPage: 1,
+          totalPages
+        }
+      });
+    }
+    setFilter(key, value) {
+      this.setState({
+        filters: { ...this.state.filters, [key]: value },
+        pagination: { ...this.state.pagination, page: 1, currentPage: 1 }
+      });
+    }
+    resetFilters() {
+      this.setState({
+        filters: { search: "", status: "", module: "", priority: "", type: "" },
+        pagination: { ...this.state.pagination, page: 1, currentPage: 1 }
+      });
+    }
+    // --- Selectors ---
+    getAvailableModules() {
+      const modules = /* @__PURE__ */ new Set();
+      this.state.features.forEach((f) => {
+        if (f.module) modules.add(f.module);
+      });
+      return Array.from(modules);
+    }
+    isReady(feature) {
+      if (feature.status === "done" || feature.status === "in_progress") return false;
+      const deps = feature.depends_on || feature.dependencies || [];
+      if (!deps.length) return true;
+      return deps.every((depId) => {
+        const dep = this.state.features.find((f) => f.id === depId);
+        return dep && dep.status === "done";
+      });
+    }
+    getBlockedBy(feature) {
+      const deps = feature.depends_on || feature.dependencies || [];
+      if (!deps.length) return [];
+      return deps.map((depId) => this.state.features.find((f) => f.id === depId)).filter((dep) => dep && dep.status !== "done");
+    }
+    getDepChain(feature, visited = /* @__PURE__ */ new Set()) {
+      if (visited.has(feature.id)) return [];
+      visited.add(feature.id);
+      const chain = [feature];
+      const deps = feature.depends_on || feature.dependencies || [];
+      deps.forEach((depId) => {
+        const dep = this.state.features.find((f) => f.id === depId);
+        if (dep) {
+          const subChain = this.getDepChain(dep, visited);
+          chain.push(...subChain);
+        }
+      });
+      return chain;
+    }
+    getFilteredFeatures() {
+      const { features, filters } = this.state;
+      return features.filter((f) => {
+        const q = filters.search.trim().toLowerCase();
+        if (q) {
+          const matchTitle = (f.title || "").toLowerCase().includes(q);
+          const matchName = (f.name || "").toLowerCase().includes(q);
+          const matchDesc = (f.description || "").toLowerCase().includes(q);
+          const matchBranch = (f.branch || "").toLowerCase().includes(q);
+          const matchId = String(f.id).includes(q);
+          if (!matchTitle && !matchName && !matchDesc && !matchBranch && !matchId) {
+            return false;
+          }
+        }
+        if (filters.status && f.status !== filters.status) return false;
+        if (filters.module && f.module !== filters.module) return false;
+        if (filters.priority && f.priority !== filters.priority) return false;
+        if (filters.type && (f.type || "feature") !== filters.type) return false;
+        return true;
+      });
+    }
+    getPaginatedFeatures() {
+      const filtered = this.getFilteredFeatures();
+      const { page, perPage } = this.state.pagination;
+      const start = (page - 1) * perPage;
+      return {
+        total: filtered.length,
+        totalPages: Math.ceil(filtered.length / perPage) || 1,
+        currentPage: page,
+        items: filtered.slice(start, start + perPage)
+      };
+    }
+    getStats() {
+      const { features } = this.state;
+      const total = features.length;
+      const pending = features.filter((f) => f.status === "pending").length;
+      const inProgress = features.filter((f) => f.status === "in_progress").length;
+      const specReady = features.filter((f) => f.status === "spec_ready").length;
+      const done = features.filter((f) => f.status === "done").length;
+      const blocked = features.filter((f) => f.status === "blocked").length;
+      const featuresCount = features.filter((f) => !f.type || f.type === "feature").length;
+      const bugfixesCount = features.filter((f) => f.type === "bugfix").length;
+      const percentage = total > 0 ? Math.round(done / total * 100) : 0;
+      return {
+        total,
+        pending,
+        inProgress,
+        specReady,
+        done,
+        blocked,
+        featuresCount,
+        bugfixesCount,
+        percentage
+      };
+    }
+  };
+  var store = new Store();
+
+  // project-docs/src/core/api.js
+  async function fetchProjectData() {
+    let featureData = null;
+    let currentSpec = {};
+    let historyData = { records: [] };
+    const featurePaths = ["feature_list.json", "../feature_list.json", "./project-docs/feature_list.json"];
+    const currentPaths = ["progres/current.json", "progress/current.json", "../progress/current.json", "../project-docs/progres/current.json"];
+    const historyPaths = ["progres/history.json", "progress/history.json", "../progress/history.json", "../project-docs/progres/history.json"];
+    for (const path of featurePaths) {
+      try {
+        const res = await fetch(path);
+        if (res.ok) {
+          featureData = await res.json();
+          break;
+        }
+      } catch (_) {
+      }
+    }
+    for (const path of currentPaths) {
+      try {
+        const res = await fetch(path);
+        if (res.ok) {
+          currentSpec = await res.json();
+          break;
+        }
+      } catch (_) {
+      }
+    }
+    for (const path of historyPaths) {
+      try {
+        const res = await fetch(path);
+        if (res.ok) {
+          historyData = await res.json();
+          break;
+        }
+      } catch (_) {
+      }
+    }
+    if (!featureData && typeof window !== "undefined" && window.__FALLBACK_DATA__) {
+      featureData = window.__FALLBACK_DATA__.featureList || null;
+      currentSpec = window.__FALLBACK_DATA__.currentSpec || {};
+      historyData = window.__FALLBACK_DATA__.historyData || { records: [] };
+    }
+    if (!featureData) {
+      featureData = {
+        project: "Proyecto (Modo Local)",
+        features: []
+      };
+    }
+    return {
+      project: featureData.project || "Proyecto",
+      features: Array.isArray(featureData.features) ? featureData.features : [],
+      currentSpec,
+      historyData
+    };
+  }
+  var api = {
+    fetchAll: fetchProjectData
+  };
+
+  // project-docs/src/core/router.js
+  var router = {
+    init(callback) {
+      const handleHash = () => {
+        const hash = window.location.hash.replace("#", "").trim() || "features";
+        if (callback) callback(hash);
+      };
+      window.addEventListener("hashchange", handleHash);
+      handleHash();
+    },
+    navigate(tabId) {
+      window.location.hash = tabId;
+    }
+  };
+
+  // project-docs/src/core/detector.js
+  async function detectEnvironment(projectData = {}) {
+    const agents = [];
+    const agentChecks = [
+      {
+        id: "antigravity",
+        name: "Google Antigravity",
+        badge: "Antigravity 2.0",
+        icon: "\u26A1",
+        color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+        paths: [".agents/rules/antigravity-harness.md", "ANTIGRAVITY.md", ".agents/agents/leader.md"]
+      },
+      {
+        id: "opencode",
+        name: "Open Code",
+        badge: "OpenCode SDD",
+        icon: "\u{1F537}",
+        color: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30",
+        paths: ["opencode.json", ".opencode/rules/commits.md"]
+      },
+      {
+        id: "copilot",
+        name: "GitHub Copilot",
+        badge: "Copilot Chat",
+        icon: "\u{1F419}",
+        color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
+        paths: [".github/instructions/commits.instructions.md", ".github/copilot-instructions.md", ".github/skills/"]
+      },
+      {
+        id: "claude",
+        name: "Claude Code",
+        badge: "Claude SDD",
+        icon: "\u{1F9E0}",
+        color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+        paths: ["CLAUDE.md", ".claude/", ".claude.json"]
+      },
+      {
+        id: "codex",
+        name: "Codex / OpenAI",
+        badge: "Codex Engine",
+        icon: "\u{1F916}",
+        color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+        paths: [".codex/", ".openai/"]
+      }
+    ];
+    for (const check of agentChecks) {
+      let detected = false;
+      for (const p of check.paths) {
+        try {
+          const res = await fetch(p, { method: "HEAD" });
+          if (res.ok) {
+            detected = true;
+            break;
+          }
+        } catch (_) {
+        }
+      }
+      if (!detected && typeof window !== "undefined") {
+        if (check.id === "antigravity" || check.id === "opencode" || check.id === "copilot") {
+          detected = true;
+        }
+      }
+      if (detected) {
+        agents.push(check);
+      }
+    }
+    let activeAgent = agents[0] || {
+      id: "antigravity",
+      name: "Google Antigravity",
+      badge: "Antigravity 2.0",
+      icon: "\u26A1",
+      color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
+    };
+    const currentExecutor = projectData?.currentSpec?.responsable || projectData?.currentSpec?.executor || "";
+    if (currentExecutor.toLowerCase().includes("claude")) {
+      activeAgent = agents.find((a) => a.id === "claude") || activeAgent;
+    } else if (currentExecutor.toLowerCase().includes("copilot")) {
+      activeAgent = agents.find((a) => a.id === "copilot") || activeAgent;
+    } else if (currentExecutor.toLowerCase().includes("opencode")) {
+      activeAgent = agents.find((a) => a.id === "opencode") || activeAgent;
+    }
+    let stack = {
+      name: projectData?.tech_stack || projectData?.metadata?.stack || "Multi-Stack Agnostico",
+      runtime: projectData?.runtime || "Universal",
+      isAgnostic: true
+    };
+    try {
+      const yamlRes = await fetch("project-spec.yaml");
+      if (yamlRes.ok) {
+        const text = await yamlRes.text();
+        const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);
+        const frameworkMatch = text.match(/framework:\s*([^\r\n]+)/);
+        if (runtimeMatch || frameworkMatch) {
+          stack = {
+            name: [frameworkMatch?.[1], runtimeMatch?.[1]].filter(Boolean).join(" \xB7 "),
+            runtime: runtimeMatch?.[1] || "Detectado por technical-audit",
+            isAgnostic: false
+          };
+        }
+      }
+    } catch (_) {
+    }
+    return {
+      agents,
+      activeAgent,
+      stack
+    };
+  }
+
+  // project-docs/src/shared/Icons.js
+  function createIcon(svgInner, defaultCls = "w-4 h-4") {
+    const fn = (cls = defaultCls) => `
+    <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      ${svgInner}
+    </svg>`.trim();
+    fn.toString = () => fn(defaultCls);
+    return fn;
+  }
+  var Icons = {
+    check: createIcon('<path d="M5 13l4 4L19 7"/>'),
+    checkCircle: createIcon('<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>'),
+    clock: createIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+    spinner: createIcon(`
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+  `, "w-4 h-4 animate-spin"),
+    alert: createIcon('<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'),
+    search: createIcon('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>'),
+    branch: createIcon('<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'),
+    gitBranch: createIcon('<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'),
+    folder: createIcon('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>'),
+    cube: createIcon('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'),
+    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
+    gitTree: createIcon('<path d="M4 6h16M4 12h16M4 18h7"/>'),
+    chevronLeft: createIcon('<polyline points="15 18 9 12 15 6"/>'),
+    chevronRight: createIcon('<polyline points="9 18 15 12 9 6"/>'),
+    refresh: createIcon('<path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'),
+    close: createIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
+    sun: createIcon('<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'),
+    moon: createIcon('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>')
+  };
+
+  // project-docs/src/shared/Button.js
+  function renderTabButton({ id, label, icon = "", active = false, badge = null }) {
+    const baseClasses = "inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer select-none";
+    const activeClasses = active ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-900 border border-transparent hover:border-slate-300 dark:hover:border-slate-800";
+    const badgeHtml = badge !== null ? `<span class="ml-1 px-1.5 py-0.2 text-[10px] font-mono rounded-full font-bold ${active ? "bg-indigo-500 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}">${badge}</span>` : "";
+    return `
+    <button type="button" data-tab="${id}" class="${baseClasses} ${activeClasses}">
+      <span class="shrink-0 flex items-center justify-center">${icon}</span>
+      <span>${label}</span>
+      ${badgeHtml}
+    </button>
+  `;
+  }
+
+  // project-docs/src/shared/Badge.js
+  var STATUS_CONFIG = {
+    pending: {
+      label: "Pendiente",
+      classes: "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+    },
+    spec_ready: {
+      label: "Spec Listo",
+      classes: "bg-amber-50 text-amber-800 ring-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800"
+    },
+    in_progress: {
+      label: "En Progreso",
+      classes: "bg-blue-50 text-blue-700 ring-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-800"
+    },
+    done: {
+      label: "Completado",
+      classes: "bg-emerald-50 text-emerald-700 ring-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800"
+    },
+    blocked: {
+      label: "Bloqueado",
+      classes: "bg-rose-50 text-rose-700 ring-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-800"
+    }
+  };
+  var PRIORITY_CONFIG = {
+    alta: {
+      label: "Alta",
+      classes: "bg-rose-50 text-rose-700 ring-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-800"
+    },
+    media: {
+      label: "Media",
+      classes: "bg-amber-50 text-amber-700 ring-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800"
+    },
+    baja: {
+      label: "Baja",
+      classes: "bg-slate-100 text-slate-700 ring-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+    }
+  };
+  var MODULE_CONFIG = {
+    backend: {
+      label: "Backend",
+      classes: "bg-indigo-50 text-indigo-700 ring-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300 dark:ring-indigo-800"
+    },
+    frontend: {
+      label: "Frontend",
+      classes: "bg-purple-50 text-purple-700 ring-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:ring-purple-800"
+    },
+    infra: {
+      label: "Infra",
+      classes: "bg-sky-50 text-sky-700 ring-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:ring-sky-800"
+    },
+    domain: {
+      label: "Domain",
+      classes: "bg-emerald-50 text-emerald-700 ring-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800"
+    },
+    application: {
+      label: "Application",
+      classes: "bg-blue-50 text-blue-700 ring-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-800"
+    }
+  };
+  var TYPE_CONFIG = {
+    feature: {
+      label: "feature",
+      classes: "bg-cyan-50 text-cyan-800 ring-cyan-300 dark:bg-cyan-950/60 dark:text-cyan-300 dark:ring-cyan-800 font-mono"
+    },
+    bugfix: {
+      label: "bugfix",
+      classes: "bg-rose-50 text-rose-800 ring-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-800 font-mono"
+    }
+  };
+  function Badge({ type, value, extraClasses = "" }) {
+    let label = value;
+    let classes = "bg-slate-100 text-slate-700 ring-slate-200";
+    if (type === "status" && STATUS_CONFIG[value]) {
+      label = STATUS_CONFIG[value].label;
+      classes = STATUS_CONFIG[value].classes;
+    } else if (type === "priority" && PRIORITY_CONFIG[value]) {
+      label = PRIORITY_CONFIG[value].label;
+      classes = PRIORITY_CONFIG[value].classes;
+    } else if (type === "module") {
+      const mod = (value || "").toLowerCase();
+      label = MODULE_CONFIG[mod]?.label || value;
+      classes = MODULE_CONFIG[mod]?.classes || "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300";
+    } else if (type === "type") {
+      const t = (value || "feature").toLowerCase();
+      label = TYPE_CONFIG[t]?.label || value;
+      classes = TYPE_CONFIG[t]?.classes || "bg-slate-100 text-slate-700 ring-slate-200 font-mono";
+    } else if (type === "ready") {
+      label = "Listo";
+      classes = "bg-emerald-50 text-emerald-700 ring-emerald-400 font-semibold";
+    } else if (type === "blocked-dep") {
+      label = "Bloqueado por deps";
+      classes = "bg-rose-50 text-rose-700 ring-rose-400 font-semibold";
+    }
+    return `
+    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ring-1 ring-inset ${classes} ${extraClasses}">
+      ${label}
+    </span>
+  `;
+  }
+  function renderBadge(type, value, extraClasses = "") {
+    return Badge({ type, value, extraClasses });
+  }
+
+  // project-docs/src/shared/Modal.js
+  function renderModal(feature) {
+    if (!feature) {
+      return `<div id="modal-container"></div>`;
+    }
+    const branchName = feature.branch || `${feature.type || "feature"}/INT-${String(feature.id).padStart(3, "0")}/${feature.name}`;
+    const branchLength = branchName.length;
+    const isBranchLengthOk = branchLength <= 80;
+    const acceptanceHtml = feature.acceptance && feature.acceptance.length ? `
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Criterios de Aceptaci\xF3n (${feature.acceptance.length})</h4>
+        <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+          ${feature.acceptance.map((a) => `
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">\u2713</span>
+              <span>${a}</span>
+            </li>`).join("")}
+        </ul>
+      </div>` : "";
+    const tasksHtml = feature.tasks && feature.tasks.length ? `
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Tareas (${feature.tasks.filter((t) => t.done).length}/${feature.tasks.length})</h4>
+        <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+          ${feature.tasks.map((t) => `
+            <li class="flex items-start gap-2 ${t.done ? "text-emerald-700 dark:text-emerald-400 line-through opacity-80" : ""}">
+              <span class="${t.done ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"} font-mono">${t.done ? "\u2713" : "\u25CB"}</span>
+              <span>${t.title || t}</span>
+            </li>`).join("")}
+        </ul>
+      </div>` : "";
+    const rawDeps = feature.depends_on || feature.dependencies || [];
+    const depsHtml = rawDeps.length ? `
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Dependencias Directas (${rawDeps.length})</h4>
+        <div class="flex flex-wrap gap-1.5">
+          ${rawDeps.map((dId) => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-mono">
+              <span>INT-${String(dId).padStart(3, "0")}</span>
+            </span>`).join("")}
+        </div>
+      </div>` : "";
+    return `
+    <div id="modal-container" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <!-- Backdrop -->
+      <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity cursor-pointer" data-action="close-modal"></div>
+
+      <!-- Modal Card -->
+      <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 bg-slate-50 dark:bg-slate-950/50">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">INT-${String(feature.id).padStart(3, "0")}</span>
+              ${Badge({ type: "type", value: feature.type || "feature" })}
+              ${Badge({ type: "status", value: feature.status || "pending" })}
+              ${Badge({ type: "priority", value: feature.priority || "P2" })}
+              ${feature.module ? Badge({ type: "module", value: feature.module }) : ""}
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-snug">
+              ${feature.title || feature.name}
+            </h3>
+          </div>
+          <button type="button" data-action="close-modal" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Cerrar modal (Esc)">
+            \u2715
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-5 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300">
+          <div>
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Descripci\xF3n</h4>
+            <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200">${feature.description || "Sin descripci\xF3n detallada."}</p>
+          </div>
+
+          <!-- Branch Info (\u226480c check) -->
+          <div class="bg-slate-50 dark:bg-slate-950/80 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <span class="text-indigo-600 dark:text-indigo-400 inline-block align-middle">${Icons.gitBranch}</span> Rama de trabajo SDD
+              </span>
+              <span class="font-mono text-xs ${isBranchLengthOk ? "text-emerald-600 dark:text-emerald-400 font-semibold" : "text-rose-600 dark:text-rose-400 font-bold"}">
+                ${branchLength}/80 caracteres ${isBranchLengthOk ? "(V\xE1lida)" : "(Excede 80c)"}
+              </span>
+            </div>
+            <code class="text-xs font-mono text-indigo-700 dark:text-indigo-300 select-all break-all block bg-white dark:bg-slate-900/90 p-2 rounded border border-slate-200 dark:border-slate-800">
+              git checkout -b ${branchName}
+            </code>
+          </div>
+
+          ${feature.spec_folder ? `
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Carpeta de Especificaci\xF3n</h4>
+              <p class="text-xs font-mono bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 px-2.5 py-1.5 rounded-md inline-block text-slate-800 dark:text-slate-300">
+                ${feature.spec_folder}
+              </p>
+            </div>` : ""}
+
+          ${acceptanceHtml}
+          ${tasksHtml}
+          ${depsHtml}
+
+          ${feature.documentation && feature.documentation.length ? `
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Documentaci\xF3n</h4>
+              <div class="flex flex-wrap gap-1 text-xs font-mono">
+                ${feature.documentation.map((d) => `<span class="bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-800">${d}</span>`).join("")}
+              </div>
+            </div>` : ""}
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex justify-end">
+          <button type="button" data-action="close-modal" class="px-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-200/80 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-xl transition-all cursor-pointer">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/stats/StatsSummary.js
+  function renderStatsSummary(stats = {}) {
+    const s = {
+      total: stats.total || 0,
+      featuresCount: stats.featuresCount || 0,
+      bugfixesCount: stats.bugfixesCount || 0,
+      pending: stats.pending || 0,
+      specReady: stats.specReady || 0,
+      inProgress: stats.inProgress || 0,
+      done: stats.done || 0,
+      blocked: stats.blocked || 0,
+      percentage: stats.percentage || 0
+    };
+    const items = [
+      {
+        label: "Total Tareas",
+        value: s.total,
+        sub: `${s.featuresCount} feat \xB7 ${s.bugfixesCount} fix`,
+        color: "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-900 dark:text-slate-100"
+      },
+      {
+        label: "Pendientes",
+        value: s.pending,
+        sub: "Por iniciar",
+        color: "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300"
+      },
+      {
+        label: "Spec Listo",
+        value: s.specReady,
+        sub: "Esperando aprobaci\xF3n",
+        color: "border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300"
+      },
+      {
+        label: "En Progreso",
+        value: s.inProgress,
+        sub: "Implementando",
+        color: "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300"
+      },
+      {
+        label: "Completados",
+        value: s.done,
+        sub: `${s.percentage}% del total`,
+        color: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300"
+      },
+      {
+        label: "Bloqueados",
+        value: s.blocked,
+        sub: "Requieren atenci\xF3n",
+        color: "border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300"
+      }
+    ];
+    return `
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      ${items.map((item) => `
+        <div class="p-4 rounded-2xl border ${item.color} shadow-sm backdrop-blur-md flex flex-col justify-between transition-all hover:border-slate-300 dark:hover:border-slate-700">
+          <div class="text-[11px] uppercase tracking-wider font-semibold opacity-70 mb-1">${item.label}</div>
+          <div class="text-2xl sm:text-3xl font-extrabold tracking-tight">${item.value}</div>
+          <div class="text-[11px] opacity-60 mt-1 truncate">${item.sub}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/current-spec/CurrentSpecCard.js
+  function renderCurrentSpecCard(currentSpec) {
+    const hasSpec = currentSpec && currentSpec.feature && currentSpec.feature.name;
+    if (!hasSpec) {
+      return `
+      <div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30 flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-3">
+          <div class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+          <div>
+            <div class="text-xs uppercase font-semibold text-slate-500 tracking-wider">Spec Activo de la IA</div>
+            <div class="text-sm text-slate-600 dark:text-slate-400">No hay ninguna tarea en proceso en este momento (Agente en espera).</div>
+          </div>
+        </div>
+        <span class="text-xs text-slate-400 dark:text-slate-600 font-mono font-semibold">IDLE</span>
+      </div>
+    `;
+    }
+    const specFeature = currentSpec.feature;
+    const tasks = currentSpec.tasks || [];
+    const completedTasks = tasks.filter((t) => t.done).length;
+    const totalTasks = tasks.length;
+    const progressPercent = totalTasks > 0 ? Math.round(completedTasks / totalTasks * 100) : 0;
+    const branchName = specFeature.branch || `${specFeature.type || "feature"}/INT-${String(specFeature.id).padStart(3, "0")}/${specFeature.name}`;
+    return `
+    <article class="p-5 rounded-2xl border-2 border-indigo-500/80 bg-white dark:bg-slate-900/90 shadow-lg relative overflow-hidden backdrop-blur-md cursor-pointer group"
+             data-action="view-detail" 
+             data-id="${specFeature.id}">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+          </span>
+          <span class="text-xs uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400">Spec Activo de la IA</span>
+          ${Badge({ type: "type", value: specFeature.type || "feature" })}
+          ${Badge({ type: "status", value: "in_progress" })}
+        </div>
+        
+        <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+          <span>Ejecutado por: <strong class="text-slate-700 dark:text-slate-200">${currentSpec.responsable || "leader"}</strong></span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div class="space-y-1 max-w-2xl">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
+            #${specFeature.id} \u2014 ${specFeature.title || specFeature.name}
+          </h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+            ${specFeature.description || "En desarrollo por el agente implementer."}
+          </p>
+          <div class="flex items-center gap-2 pt-1">
+            <span class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+              ${branchName}
+            </span>
+            ${specFeature.module ? Badge({ type: "module", value: specFeature.module }) : ""}
+            ${specFeature.priority ? Badge({ type: "priority", value: specFeature.priority }) : ""}
+          </div>
+        </div>
+
+        <div class="sm:min-w-44 text-right">
+          <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            Progreso de Tareas: ${completedTasks}/${totalTasks}
+          </div>
+          <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+          </div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex items-center justify-end gap-1">
+            <span>Clic para ver detalles</span>
+            <span class="group-hover:translate-x-0.5 transition-transform">\u2192</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+  }
+
+  // project-docs/src/features/feature-list/FeatureFilters.js
+  function renderFeatureFilters({ filters, modules = [] }) {
+    const currentFilters = filters || {};
+    const searchVal = currentFilters.search || "";
+    const moduleOptions = modules.map((m) => `
+    <option value="${m}" ${currentFilters.module === m ? "selected" : ""}>${m}</option>
+  `).join("");
+    return `
+    <div class="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-md">
+      <!-- Search Bar -->
+      <div class="relative flex-1 min-w-[240px]">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+          ${Icons.search}
+        </div>
+        <input
+          type="text"
+          id="feature-search-input"
+          value="${escapeAttr(searchVal)}"
+          placeholder="Buscar por ID, t\xEDtulo, nombre o rama..."
+          class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+        />
+      </div>
+
+      <!-- Type Filter -->
+      <select id="filter-type" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+        <option value="">Todos los Tipos</option>
+        <option value="feature" ${currentFilters.type === "feature" ? "selected" : ""}>feature</option>
+        <option value="bugfix" ${currentFilters.type === "bugfix" ? "selected" : ""}>bugfix</option>
+      </select>
+
+      <!-- Status Filter -->
+      <select id="filter-status" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        <option value="">Todos los Estados</option>
+        <option value="pending" ${currentFilters.status === "pending" ? "selected" : ""}>Pendiente</option>
+        <option value="spec_ready" ${currentFilters.status === "spec_ready" ? "selected" : ""}>Spec Listo</option>
+        <option value="in_progress" ${currentFilters.status === "in_progress" ? "selected" : ""}>En Progreso</option>
+        <option value="done" ${currentFilters.status === "done" ? "selected" : ""}>Completado</option>
+        <option value="blocked" ${currentFilters.status === "blocked" ? "selected" : ""}>Bloqueado</option>
+      </select>
+
+      <!-- Module Filter -->
+      <select id="filter-module" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        <option value="">Todos los M\xF3dulos</option>
+        ${moduleOptions}
+      </select>
+
+      <!-- Priority Filter -->
+      <select id="filter-priority" class="px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        <option value="">Todas las Prioridades</option>
+        <option value="alta" ${currentFilters.priority === "alta" ? "selected" : ""}>Alta</option>
+        <option value="media" ${currentFilters.priority === "media" ? "selected" : ""}>Media</option>
+        <option value="baja" ${currentFilters.priority === "baja" ? "selected" : ""}>Baja</option>
+        <option value="P0" ${currentFilters.priority === "P0" ? "selected" : ""}>P0</option>
+        <option value="P1" ${currentFilters.priority === "P1" ? "selected" : ""}>P1</option>
+        <option value="P2" ${currentFilters.priority === "P2" ? "selected" : ""}>P2</option>
+      </select>
+
+      <!-- Reset Button -->
+      <button
+        data-action="reset-filters"
+        type="button"
+        class="px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
+        title="Restablecer filtros"
+      >
+        Limpiar
+      </button>
+    </div>
+  `;
+  }
+  function escapeAttr(text) {
+    if (!text) return "";
+    return String(text).replace(/"/g, "&quot;");
+  }
+
+  // project-docs/src/features/feature-list/FeatureTable.js
+  function renderFeatureTable({ features, pagination, onSelect }) {
+    const { currentPage, pageSize } = pagination;
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedFeatures = features.slice(startIndex, startIndex + pageSize);
+    if (features.length === 0) {
+      return `
+      <div class="p-12 text-center bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-slate-600 flex items-center justify-center">
+          ${Icons.search}
+        </div>
+        <h4 class="text-lg font-semibold text-slate-800 dark:text-slate-300 mb-1">No se encontraron tareas</h4>
+        <p class="text-sm text-slate-500">Intenta ajustar los filtros de b\xFAsqueda o restablecer los criterios.</p>
+      </div>
+    `;
+    }
+    const rowsHtml = paginatedFeatures.map((f) => {
+      const idFormatted = `INT-${String(f.id).padStart(3, "0")}`;
+      const branchName = f.branch || `${f.type || "feature"}/INT-${String(f.id).padStart(3, "0")}/${f.name}`;
+      const depsCount = f.depends_on && f.depends_on.length || f.dependencies && f.dependencies.length || 0;
+      return `
+      <tr class="border-b border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+          data-feature-id="${f.id}"
+          tabindex="0"
+          role="row">
+        <!-- ID -->
+        <td class="py-3.5 px-4 font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+          ${idFormatted}
+        </td>
+
+        <!-- Type -->
+        <td class="py-3.5 px-4 whitespace-nowrap">
+          ${renderBadge("type", f.type || "feature")}
+        </td>
+
+        <!-- Title & Description -->
+        <td class="py-3.5 px-4">
+          <div class="font-medium text-slate-900 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
+            ${escapeHtml(f.title || f.name)}
+          </div>
+          ${f.description ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">${escapeHtml(f.description)}</p>` : ""}
+        </td>
+
+        <!-- Module -->
+        <td class="py-3.5 px-4 whitespace-nowrap">
+          ${renderBadge("module", f.module || "Core")}
+        </td>
+
+        <!-- Priority -->
+        <td class="py-3.5 px-4 whitespace-nowrap">
+          ${renderBadge("priority", f.priority || "P2")}
+        </td>
+
+        <!-- Status -->
+        <td class="py-3.5 px-4 whitespace-nowrap">
+          ${renderBadge("status", f.status || "pending")}
+        </td>
+
+        <!-- Branch (\u226480 chars) -->
+        <td class="py-3.5 px-4 font-mono text-xs text-slate-500 dark:text-slate-400 max-w-xs truncate" title="${branchName}">
+          <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-mono text-[11px]">
+            <span class="text-indigo-600 dark:text-indigo-400">${Icons.gitBranch}</span>
+            <span class="truncate max-w-[200px]">${branchName}</span>
+          </span>
+        </td>
+
+        <!-- Dependencies -->
+        <td class="py-3.5 px-4 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
+          ${depsCount > 0 ? `<span class="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                ${depsCount} dep${depsCount > 1 ? "s" : ""}
+              </span>` : `<span class="text-slate-400 dark:text-slate-600">\u2014</span>`}
+        </td>
+
+        <!-- Action -->
+        <td class="py-3.5 px-4 text-right whitespace-nowrap">
+          <button type="button" 
+                  data-action="view-detail" 
+                  data-id="${f.id}" 
+                  class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-all shadow-xs cursor-pointer">
+            ${Icons.eye}
+            <span>Detalle</span>
+          </button>
+        </td>
+      </tr>
+    `;
+    }).join("");
+    return `
+    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur-md shadow-md">
+      <table class="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+        <thead class="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <tr>
+            <th scope="col" class="py-3.5 px-4">Ticket</th>
+            <th scope="col" class="py-3.5 px-4">Tipo</th>
+            <th scope="col" class="py-3.5 px-4">T\xEDtulo / Descripci\xF3n</th>
+            <th scope="col" class="py-3.5 px-4">M\xF3dulo</th>
+            <th scope="col" class="py-3.5 px-4">Prioridad</th>
+            <th scope="col" class="py-3.5 px-4">Estado</th>
+            <th scope="col" class="py-3.5 px-4">Rama Git (m\xE1x 80c)</th>
+            <th scope="col" class="py-3.5 px-4">Bloqueos</th>
+            <th scope="col" class="py-3.5 px-4 text-right">Acci\xF3n</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40 font-normal">
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+  }
+  function escapeHtml(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  // project-docs/src/features/feature-list/FeaturePagination.js
+  function renderFeaturePagination({ totalItems, pagination }) {
+    const { currentPage, pageSize, totalPages } = pagination;
+    if (totalItems === 0) return "";
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, totalItems);
+    const pages = [];
+    let minPage = Math.max(1, currentPage - 2);
+    let maxPage = Math.min(totalPages, minPage + 4);
+    if (maxPage - minPage < 4) {
+      minPage = Math.max(1, maxPage - 4);
+    }
+    for (let p = minPage; p <= maxPage; p++) {
+      pages.push(p);
+    }
+    const pageButtons = pages.map((p) => {
+      const isActive = p === currentPage;
+      return `
+      <button type="button" 
+              data-page="${p}" 
+              class="w-8 h-8 rounded-lg text-xs font-semibold transition-all ${isActive ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30" : "bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700"}">
+        ${p}
+      </button>
+    `;
+    }).join("");
+    return `
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-2 text-xs text-slate-400">
+      <!-- Info & Page size selector -->
+      <div class="flex items-center gap-3">
+        <span>Mostrando <span class="font-semibold text-slate-200">${start}-${end}</span> de <span class="font-semibold text-slate-200">${totalItems}</span> tareas</span>
+        <span class="text-slate-600">|</span>
+        <div class="flex items-center gap-1.5">
+          <label for="page-size-select" class="text-slate-400">Por p\xE1gina:</label>
+          <select id="page-size-select" 
+                  data-action="change-page-size" 
+                  class="bg-slate-800 text-slate-200 text-xs rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <option value="5" ${pageSize === 5 ? "selected" : ""}>5</option>
+            <option value="10" ${pageSize === 10 ? "selected" : ""}>10</option>
+            <option value="20" ${pageSize === 20 ? "selected" : ""}>20</option>
+            <option value="50" ${pageSize === 50 ? "selected" : ""}>50</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Page navigation -->
+      <div class="flex items-center gap-1.5" role="navigation" aria-label="Paginaci\xF3n de tareas">
+        <button type="button" 
+                data-page="${currentPage - 1}" 
+                ${currentPage <= 1 ? "disabled" : ""} 
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                title="P\xE1gina anterior"
+                aria-label="P\xE1gina anterior">
+          ${Icons.chevronLeft}
+        </button>
+
+        ${pageButtons}
+
+        <button type="button" 
+                data-page="${currentPage + 1}" 
+                ${currentPage >= totalPages ? "disabled" : ""} 
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                title="P\xE1gina siguiente"
+                aria-label="P\xE1gina siguiente">
+          ${Icons.chevronRight}
+        </button>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/dependency-graph/DependencyGraph.js
+  function renderDependencyGraph({ features }) {
+    if (!features || features.length === 0) {
+      return `<div class="p-12 text-center text-slate-500 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">No hay datos de dependencias disponibles.</div>`;
+    }
+    const featureMap = /* @__PURE__ */ new Map();
+    features.forEach((f) => featureMap.set(f.id, f));
+    const nodeLevels = /* @__PURE__ */ new Map();
+    function getDepth(id, visited = /* @__PURE__ */ new Set()) {
+      if (visited.has(id)) return 0;
+      visited.add(id);
+      const f = featureMap.get(id);
+      if (!f) return 0;
+      const deps = f.depends_on || f.dependencies || [];
+      if (!deps.length) return 0;
+      return 1 + Math.max(...deps.map((dId) => getDepth(dId, new Set(visited))));
+    }
+    features.forEach((f) => {
+      nodeLevels.set(f.id, getDepth(f.id));
+    });
+    const maxLevel = Math.max(...Array.from(nodeLevels.values()), 0);
+    const levels = [];
+    for (let i = 0; i <= maxLevel; i++) levels.push([]);
+    features.forEach((f) => {
+      const lvl = nodeLevels.get(f.id) || 0;
+      levels[lvl].push(f);
+    });
+    const analyzed = features.map((f) => {
+      const rawDeps = f.depends_on || f.dependencies || [];
+      const deps = rawDeps.map((dId) => featureMap.get(dId)).filter(Boolean);
+      const pendingDeps = deps.filter((d) => d.status !== "done");
+      const isBlocked = f.status !== "done" && pendingDeps.length > 0;
+      const isReady = f.status === "pending" && pendingDeps.length === 0;
+      const dependents = features.filter((other) => (other.depends_on || other.dependencies || []).includes(f.id));
+      return {
+        feature: f,
+        deps,
+        pendingDeps,
+        isBlocked,
+        isReady,
+        dependents
+      };
+    });
+    const blockedCount = analyzed.filter((a) => a.isBlocked).length;
+    const readyCount = analyzed.filter((a) => a.isReady).length;
+    const doneCount = analyzed.filter((a) => a.feature.status === "done").length;
+    const colWidth = 260;
+    const nodeHeight = 85;
+    const gapY = 30;
+    const gapX = 80;
+    let maxRowInCol = 0;
+    levels.forEach((lvl) => {
+      if (lvl.length > maxRowInCol) maxRowInCol = lvl.length;
+    });
+    const totalWidth = Math.max(920, levels.length * (colWidth + gapX) + 80);
+    const totalHeight = Math.max(480, maxRowInCol * (nodeHeight + gapY) + 100);
+    const coords = /* @__PURE__ */ new Map();
+    levels.forEach((colFeatures, colIdx) => {
+      const x = colIdx * (colWidth + gapX) + 40;
+      const colHeight = colFeatures.length * (nodeHeight + gapY) - gapY;
+      const startY = Math.max(50, (totalHeight - colHeight) / 2);
+      colFeatures.forEach((f, rowIdx) => {
+        const y = startY + rowIdx * (nodeHeight + gapY);
+        coords.set(f.id, { x, y, width: colWidth, height: nodeHeight, colIdx, rowIdx });
+      });
+    });
+    const edgesSvg = [];
+    features.forEach((f) => {
+      const target = coords.get(f.id);
+      const rawDeps = f.depends_on || f.dependencies || [];
+      if (!target || !rawDeps.length) return;
+      rawDeps.forEach((depId) => {
+        const source = coords.get(depId);
+        const sourceFeature = featureMap.get(depId);
+        if (!source || !sourceFeature) return;
+        const isResolved = sourceFeature.status === "done";
+        const startX = source.x + source.width;
+        const startY = source.y + source.height / 2;
+        const endX = target.x;
+        const endY = target.y + target.height / 2;
+        const midX = (startX + endX) / 2;
+        const pathD = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+        const strokeColor = isResolved ? "#10b981" : "#f43f5e";
+        const markerId = isResolved ? "arrow-resolved" : "arrow-blocked";
+        edgesSvg.push(`
+        <path d="${pathD}" 
+              data-edge-from="${depId}" 
+              data-edge-to="${f.id}" 
+              class="graph-edge transition-all duration-200" 
+              fill="none" 
+              stroke="${strokeColor}" 
+              stroke-width="2" 
+              stroke-dasharray="${isResolved ? "none" : "4 4"}" 
+              opacity="0.65" 
+              marker-end="url(#${markerId})" />
+      `);
+      });
+    });
+    const nodesSvg = features.map((f) => {
+      const pos = coords.get(f.id);
+      if (!pos) return "";
+      const isDone = f.status === "done";
+      const isProg = f.status === "in_progress";
+      const rawDeps = f.depends_on || f.dependencies || [];
+      const pendingDeps = rawDeps.filter((dId) => {
+        const dep = featureMap.get(dId);
+        return dep && dep.status !== "done";
+      });
+      const isBlocked = f.status !== "done" && pendingDeps.length > 0;
+      const isReady = f.status === "pending" && pendingDeps.length === 0;
+      let borderClass = "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90";
+      let statusDot = "bg-slate-400";
+      if (isDone) {
+        borderClass = "border-emerald-500/60 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xs";
+        statusDot = "bg-emerald-500";
+      } else if (isProg) {
+        borderClass = "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-md ring-2 ring-indigo-500/20";
+        statusDot = "bg-indigo-500 animate-pulse";
+      } else if (isBlocked) {
+        borderClass = "border-rose-400 dark:border-rose-500/60 bg-rose-50/50 dark:bg-rose-950/20";
+        statusDot = "bg-rose-500";
+      } else if (isReady) {
+        borderClass = "border-cyan-400 dark:border-cyan-500/60 bg-cyan-50/50 dark:bg-cyan-950/20 shadow-xs";
+        statusDot = "bg-cyan-500";
+      }
+      const branchName = f.branch || `${f.type || "feature"}/INT-${String(f.id).padStart(3, "0")}/${f.name}`;
+      return `
+      <foreignObject x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}">
+        <div xmlns="http://www.w3.org/1999/xhtml"
+             data-graph-node="${f.id}"
+             data-deps="${rawDeps.join(",")}"
+             class="graph-node p-2.5 w-full h-full rounded-xl border ${borderClass} backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer select-none flex flex-col justify-between hover:scale-[1.02] hover:shadow-md"
+             title="${branchName}">
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full ${statusDot}"></span>
+                <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">INT-${String(f.id).padStart(3, "0")}</span>
+                <span class="text-[10px] font-mono px-1 py-0.2 rounded font-semibold ${f.type === "bugfix" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}">
+                  ${f.type || "feat"}
+                </span>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                ${f.status}
+              </span>
+            </div>
+            <div class="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate leading-tight">
+              ${f.title || f.name}
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+            <span>${f.module || "Core"}</span>
+            <span class="font-mono">${rawDeps.length ? `${rawDeps.length} dep${rawDeps.length > 1 ? "s" : ""}` : "Ra\xEDz"}</span>
+          </div>
+        </div>
+      </foreignObject>
+    `;
+    }).join("");
+    const phaseHeaders = levels.map((lvl, colIdx) => {
+      const x = colIdx * (colWidth + gapX) + 40;
+      const titles = ["Fase 1: Fundamentos", "Fase 2: Core Services", "Fase 3: APIs & L\xF3gica", "Fase 4: Consumo & Workers", "Fase 5: Extensi\xF3n"];
+      const title = titles[colIdx] || `Fase ${colIdx + 1}`;
+      return `
+      <div class="absolute top-2 font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-1 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-lg backdrop-blur-xs pointer-events-none"
+           style="left: ${x}px; width: ${colWidth}px;">
+        ${title} (${lvl.length})
+      </div>
+    `;
+    }).join("");
+    return `
+    <div class="space-y-6">
+      <!-- Barra KPI de Grafo -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Listas para iniciar (Desbloqueadas)</div>
+            <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-0.5">${readyCount}</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+            ${Icons.check}
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Bloqueadas por predecesores</div>
+            <div class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-0.5">${blockedCount}</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+            ${Icons.clock}
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Resueltas en el flujo</div>
+            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${doneCount}</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            ${Icons.checkCircle}
+          </div>
+        </div>
+      </div>
+
+      <!-- Lienzo SVG Interactivo del Grafo Dirigido -->
+      <div class="relative w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/80 shadow-md overflow-hidden">
+        
+        <!-- Controles y Leyenda Superior -->
+        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              ${Icons.gitBranch} Grafo de Dependencias (DAG)
+            </span>
+            <span class="text-slate-400 dark:text-slate-500">|</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px]">
+              Pasa el cursor sobre un nodo para aislar sus dependencias y dependientes
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3 text-[11px]">
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-emerald-500"></span> Resuelta</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 border-b border-dashed border-rose-500"></span> Bloqueo Activo</span>
+          </div>
+        </div>
+
+        <!-- Canvas con Scroll Horizontal Suave -->
+        <div id="graph-scroll-container" class="relative overflow-x-auto overflow-y-hidden p-6 min-h-[500px]">
+          ${phaseHeaders}
+          <svg width="${totalWidth}" height="${totalHeight}" class="w-full h-full block pt-6">
+            <defs>
+              <marker id="arrow-resolved" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+              </marker>
+              <marker id="arrow-blocked" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+              </marker>
+            </defs>
+
+            <!-- Aristas de Grafo -->
+            <g id="graph-edges-group">
+              ${edgesSvg.join("")}
+            </g>
+
+            <!-- Nodos de Grafo -->
+            <g id="graph-nodes-group">
+              ${nodesSvg}
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/dependency-tree/DependencyTree.js
+  var DependencyTreeComponent = class {
+    constructor(containerEl, { features, onSelect }) {
+      this.container = containerEl;
+      this.features = features || [];
+      this.onSelect = onSelect;
+      this.zoom = 1;
+      this.pan = { x: 40, y: 40 };
+      this.isDragging = false;
+      this.dragStart = { x: 0, y: 0 };
+    }
+    render() {
+      if (!this.container) return;
+      const { levels, nodesMap } = this.calculateTopologicalLevels(this.features);
+      const nodeWidth = 260;
+      const nodeHeight = 110;
+      const gapX = 100;
+      const gapY = 40;
+      let maxNodesInLevel = 0;
+      levels.forEach((lvl) => {
+        if (lvl.length > maxNodesInLevel) maxNodesInLevel = lvl.length;
+      });
+      const totalWidth = Math.max(900, levels.length * (nodeWidth + gapX) + 120);
+      const totalHeight = Math.max(500, maxNodesInLevel * (nodeHeight + gapY) + 120);
+      levels.forEach((levelFeatures, colIndex) => {
+        const colX = colIndex * (nodeWidth + gapX) + 60;
+        const colHeight = levelFeatures.length * (nodeHeight + gapY) - gapY;
+        const startY = Math.max(60, (totalHeight - colHeight) / 2);
+        levelFeatures.forEach((f, rowIndex) => {
+          const x = colX;
+          const y = startY + rowIndex * (nodeHeight + gapY);
+          nodesMap.set(f.id, { ...f, x, y, width: nodeWidth, height: nodeHeight, colIndex, rowIndex });
+        });
+      });
+      const linksSvg = [];
+      this.features.forEach((f) => {
+        const targetNode = nodesMap.get(f.id);
+        const rawDeps = f.depends_on || f.dependencies || [];
+        if (!targetNode || !rawDeps.length) return;
+        rawDeps.forEach((sourceId) => {
+          const sourceNode = nodesMap.get(sourceId);
+          if (!sourceNode) return;
+          const startX = sourceNode.x + sourceNode.width;
+          const startY = sourceNode.y + sourceNode.height / 2;
+          const endX = targetNode.x;
+          const endY = targetNode.y + targetNode.height / 2;
+          const midX = (startX + endX) / 2;
+          const pathD = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+          const isDone = sourceNode.status === "done";
+          linksSvg.push(`
+          <path d="${pathD}" 
+                fill="none" 
+                stroke="${isDone ? "#10b981" : "#6366f1"}" 
+                stroke-width="2" 
+                stroke-dasharray="${isDone ? "none" : "4 4"}" 
+                opacity="0.6"
+                class="transition-all hover:opacity-100 hover:stroke-width-3" />
+        `);
+        });
+      });
+      const nodesSvg = Array.from(nodesMap.values()).map((n) => {
+        const isDone = n.status === "done";
+        const isFeature = (n.type || "feature") === "feature";
+        const borderColor = isDone ? "border-emerald-500/60" : isFeature ? "border-indigo-500/40" : "border-rose-500/40";
+        return `
+        <foreignObject x="${n.x}" y="${n.y}" width="${n.width}" height="${n.height}">
+          <div xmlns="http://www.w3.org/1999/xhtml" 
+               data-node-id="${n.id}"
+               class="p-3 w-full h-full rounded-xl bg-white dark:bg-slate-900/95 backdrop-blur-md border ${borderColor} shadow-lg hover:border-slate-500 transition-all cursor-pointer flex flex-col justify-between text-left select-none">
+            <div>
+              <div class="flex items-center justify-between text-[11px] mb-1">
+                <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">INT-${String(n.id).padStart(3, "0")}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isDone ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"}">
+                  ${n.status}
+                </span>
+              </div>
+              <div class="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">${n.title || n.name}</div>
+            </div>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-500 dark:text-slate-400">
+              <span>${n.module || "Core"}</span>
+              <span class="font-mono text-slate-400 dark:text-slate-500">${n.type || "feature"}</span>
+            </div>
+          </div>
+        </foreignObject>
+      `;
+      }).join("");
+      this.container.innerHTML = `
+      <div class="relative w-full h-[650px] bg-slate-50 dark:bg-slate-950/70 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md flex flex-col">
+        <!-- Barra de herramientas superior -->
+        <div class="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/80 rounded-xl p-1.5 backdrop-blur-md shadow-lg">
+          <button type="button" data-tree-action="zoom-in" class="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-bold" title="Acercar">+</button>
+          <button type="button" data-tree-action="zoom-out" class="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-bold" title="Alejar">-</button>
+          <button type="button" data-tree-action="reset" class="px-2 py-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-semibold" title="Centrar">Reset</button>
+        </div>
+
+        <div class="absolute top-4 left-4 z-20 pointer-events-none text-xs text-slate-500 dark:text-slate-400">
+          <span class="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-xs">
+            \u{1F4A1} Arrastra para desplazar el lienzo | Clic en un nodo para detalle
+          </span>
+        </div>
+
+        <div id="tree-canvas-wrapper" class="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden">
+          <svg id="tree-svg" width="100%" height="100%" class="w-full h-full">
+            <g id="tree-viewport" transform="translate(${this.pan.x}, ${this.pan.y}) scale(${this.zoom})">
+              <defs>
+                <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1" class="fill-slate-300 dark:fill-slate-700" opacity="0.6"></circle>
+                </pattern>
+              </defs>
+              <rect x="-1000" y="-1000" width="5000" height="5000" fill="url(#dot-grid)"></rect>
+
+              <g class="tree-links">
+                ${linksSvg.join("")}
+              </g>
+
+              <g class="tree-nodes">
+                ${nodesSvg}
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    `;
+      this.bindEvents();
+    }
+    calculateTopologicalLevels(features) {
+      const nodesMap = /* @__PURE__ */ new Map();
+      const levels = [];
+      const inDegrees = /* @__PURE__ */ new Map();
+      const adj = /* @__PURE__ */ new Map();
+      features.forEach((f) => {
+        const rawDeps = f.depends_on || f.dependencies || [];
+        inDegrees.set(f.id, rawDeps.length);
+        adj.set(f.id, []);
+      });
+      features.forEach((f) => {
+        const rawDeps = f.depends_on || f.dependencies || [];
+        rawDeps.forEach((depId) => {
+          if (adj.has(depId)) {
+            adj.get(depId).push(f.id);
+          }
+        });
+      });
+      let currentQueue = features.filter((f) => {
+        const rawDeps = f.depends_on || f.dependencies || [];
+        return rawDeps.length === 0;
+      });
+      const visited = /* @__PURE__ */ new Set();
+      while (currentQueue.length > 0) {
+        levels.push(currentQueue);
+        currentQueue.forEach((f) => visited.add(f.id));
+        const nextQueue = [];
+        currentQueue.forEach((f) => {
+          const neighbors = adj.get(f.id) || [];
+          neighbors.forEach((nxtId) => {
+            if (!visited.has(nxtId)) {
+              const nxtFeature = features.find((item) => item.id === nxtId);
+              if (nxtFeature && !nextQueue.includes(nxtFeature)) {
+                nextQueue.push(nxtFeature);
+              }
+            }
+          });
+        });
+        currentQueue = nextQueue;
+      }
+      const unvisited = features.filter((f) => !visited.has(f.id));
+      if (unvisited.length > 0) {
+        levels.push(unvisited);
+      }
+      return { levels, nodesMap };
+    }
+    bindEvents() {
+      const wrapper = this.container.querySelector("#tree-canvas-wrapper");
+      const viewport = this.container.querySelector("#tree-viewport");
+      const updateTransform = () => {
+        if (viewport) {
+          viewport.setAttribute("transform", `translate(${this.pan.x}, ${this.pan.y}) scale(${this.zoom})`);
+        }
+      };
+      wrapper.addEventListener("mousedown", (e) => {
+        if (e.target.closest("[data-node-id]") || e.target.closest("button")) return;
+        this.isDragging = true;
+        this.dragStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!this.isDragging) return;
+        this.pan.x = e.clientX - this.dragStart.x;
+        this.pan.y = e.clientY - this.dragStart.y;
+        updateTransform();
+      });
+      window.addEventListener("mouseup", () => {
+        this.isDragging = false;
+      });
+      wrapper.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        this.zoom = Math.min(Math.max(0.3, this.zoom * delta), 2.5);
+        updateTransform();
+      }, { passive: false });
+      this.container.querySelector('[data-tree-action="zoom-in"]')?.addEventListener("click", () => {
+        this.zoom = Math.min(2.5, this.zoom * 1.2);
+        updateTransform();
+      });
+      this.container.querySelector('[data-tree-action="zoom-out"]')?.addEventListener("click", () => {
+        this.zoom = Math.max(0.3, this.zoom * 0.8);
+        updateTransform();
+      });
+      this.container.querySelector('[data-tree-action="reset"]')?.addEventListener("click", () => {
+        this.zoom = 1;
+        this.pan = { x: 40, y: 40 };
+        updateTransform();
+      });
+      this.container.querySelectorAll("[data-node-id]").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = parseInt(el.getAttribute("data-node-id"), 10);
+          const feature = this.features.find((f) => f.id === id);
+          if (feature && this.onSelect) {
+            this.onSelect(feature);
+          }
+        });
+      });
+    }
+  };
+
+  // project-docs/src/features/space-view-3d/SpaceView3D.js
+  var SpaceView3D = class {
+    constructor() {
+      this.container = null;
+      this.features = [];
+      this.onSelect = null;
+      this.scene = null;
+      this.camera = null;
+      this.renderer = null;
+      this.animationId = null;
+      this.nodes = [];
+      this.orbitRings = [];
+      this.flowParticles = [];
+      this.raycaster = null;
+      this.mouse = null;
+      this.isDragging = false;
+      this.prevMousePos = { x: 0, y: 0 };
+      this.rotation = { x: 0.25, y: 0.5 };
+      this.targetRotation = { x: 0.25, y: 0.5 };
+      this.hoveredMesh = null;
+      this.hudElement = null;
+    }
+    mount(containerEl, { features, onSelect }) {
+      this.container = containerEl;
+      this.features = features || [];
+      this.onSelect = onSelect;
+      if (!window.THREE) {
+        this.container.innerHTML = `
+        <div class="h-[600px] flex items-center justify-center bg-slate-900 text-slate-400 rounded-2xl border border-slate-800">
+          <p>Librer\xEDa Three.js no disponible.</p>
+        </div>
+      `;
+        return;
+      }
+      this.container.innerHTML = `
+      <div class="relative w-full h-[680px] bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl select-none">
+        
+        <!-- HUD Superior -->
+        <div class="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2">
+          <span class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-slate-200 text-xs backdrop-blur-md shadow-lg flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            Constelaci\xF3n 3D de Tareas | Arrastra para orbitar | Clic para inspeccionar
+          </span>
+        </div>
+
+        <!-- Leyenda de Estados y Tama\xF1os -->
+        <div class="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex flex-wrap items-center gap-3 text-[11px] bg-slate-900/85 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md shadow-lg text-slate-300">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400"></span> Resuelto</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 shadow-xs shadow-indigo-500"></span> En Progreso</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cyan-400 shadow-xs shadow-cyan-400"></span> Spec Listo</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 shadow-xs shadow-rose-500"></span> Bloqueado</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 shadow-xs shadow-amber-400"></span> Bugfix</span>
+          <span class="text-slate-600">|</span>
+          <span class="text-slate-400">Tama\xF1o del planeta = Prioridad (P0 grande, P2 est\xE1ndar)</span>
+        </div>
+
+        <!-- Panel Lateral de Selecci\xF3n R\xE1pida 3D -->
+        <div class="absolute top-4 right-4 z-20 w-52 max-h-[620px] bg-slate-900/85 border border-slate-800 rounded-xl p-2.5 backdrop-blur-md shadow-xl overflow-y-auto hidden md:block">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Nodos en Orbita (${this.features.length})</div>
+          <div class="space-y-1" id="three-node-list">
+            ${this.features.map((f) => {
+        const dotColor = f.status === "done" ? "bg-emerald-400" : f.status === "in_progress" ? "bg-indigo-400" : f.type === "bugfix" ? "bg-amber-400" : "bg-slate-500";
+        return `
+                <button type="button" 
+                        data-focus-node="${f.id}" 
+                        class="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-slate-800/80 transition-colors flex items-center justify-between group cursor-pointer">
+                  <div class="flex items-center gap-1.5 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>
+                    <span class="font-mono text-[11px] text-slate-300 group-hover:text-indigo-300">INT-${String(f.id).padStart(3, "0")}</span>
+                    <span class="truncate text-[11px] text-slate-400">${f.name}</span>
+                  </div>
+                </button>
+              `;
+      }).join("")}
+          </div>
+        </div>
+
+        <!-- HUD Tooltip Flotante 3D -->
+        <div id="three-tooltip-hud" class="absolute z-30 pointer-events-none hidden transition-opacity duration-150 transform -translate-x-1/2 -translate-y-full mb-3">
+          <div class="bg-slate-900/95 border border-indigo-500/60 rounded-xl p-3 shadow-2xl backdrop-blur-md text-xs text-slate-200 min-w-[220px] max-w-xs">
+            <div id="hud-content"></div>
+          </div>
+        </div>
+
+        <!-- Canvas 3D Root -->
+        <div id="three-canvas-root" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+      </div>
+    `;
+      const root = this.container.querySelector("#three-canvas-root");
+      this.hudElement = this.container.querySelector("#three-tooltip-hud");
+      this.initThree(root);
+    }
+    initThree(rootEl) {
+      const THREE = window.THREE;
+      const width = rootEl.clientWidth || 800;
+      const height = rootEl.clientHeight || 680;
+      this.scene = new THREE.Scene();
+      this.scene.fog = new THREE.FogExp2(132631, 15e-4);
+      this.camera = new THREE.PerspectiveCamera(50, width / height, 1, 3500);
+      this.camera.position.set(0, 40, 520);
+      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      this.renderer.setSize(width, height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      rootEl.appendChild(this.renderer.domElement);
+      const ambientLight = new THREE.AmbientLight(16777215, 0.9);
+      this.scene.add(ambientLight);
+      const pointLight = new THREE.PointLight(6514417, 2.5, 1200);
+      pointLight.position.set(150, 250, 200);
+      this.scene.add(pointLight);
+      const secondLight = new THREE.PointLight(440020, 1.8, 1e3);
+      secondLight.position.set(-200, -150, 100);
+      this.scene.add(secondLight);
+      this.createStarfield();
+      this.createNodes();
+      this.raycaster = new THREE.Raycaster();
+      this.mouse = new THREE.Vector2();
+      this.bindEvents(rootEl);
+      this.animate();
+    }
+    createStarfield() {
+      const THREE = window.THREE;
+      const starGeo = new THREE.BufferGeometry();
+      const starCount = 1200;
+      const posArray = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount * 3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 2200;
+      }
+      starGeo.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+      const starMat = new THREE.PointsMaterial({
+        size: 1.8,
+        color: 9741240,
+        transparent: true,
+        opacity: 0.65
+      });
+      const starField = new THREE.Points(starGeo, starMat);
+      this.scene.add(starField);
+    }
+    createNodes() {
+      const THREE = window.THREE;
+      const count = this.features.length;
+      this.nodes = [];
+      this.orbitRings = [];
+      this.flowParticles = [];
+      const radius = 190;
+      const featureMap = /* @__PURE__ */ new Map();
+      this.features.forEach((f) => featureMap.set(f.id, f));
+      this.features.forEach((f, idx) => {
+        const phi = Math.acos(-1 + 2 * idx / Math.max(count, 1));
+        const theta = Math.sqrt(count * Math.PI) * phi;
+        const x = radius * Math.cos(theta) * Math.sin(phi);
+        const y = radius * Math.sin(theta) * Math.sin(phi);
+        const z = radius * Math.cos(phi);
+        let sphereRadius = 8;
+        if (f.priority === "P0" || f.priority === "alta") sphereRadius = 14;
+        else if (f.priority === "P1" || f.priority === "media") sphereRadius = 10;
+        else if (f.priority === "P3" || f.priority === "baja") sphereRadius = 6;
+        let color = 6583435;
+        let emissive = 3359061;
+        const rawDeps = f.depends_on || f.dependencies || [];
+        const pendingDeps = rawDeps.filter((dId) => {
+          const dep = featureMap.get(dId);
+          return dep && dep.status !== "done";
+        });
+        const isBlocked = f.status !== "done" && pendingDeps.length > 0;
+        if (f.status === "done") {
+          color = 1096065;
+          emissive = 366185;
+        } else if (f.status === "in_progress") {
+          color = 6514417;
+          emissive = 5195493;
+        } else if (f.status === "spec_ready") {
+          color = 440020;
+          emissive = 561586;
+        } else if (isBlocked) {
+          color = 16007006;
+          emissive = 14753096;
+        } else if (f.type === "bugfix") {
+          color = 16096779;
+          emissive = 14251782;
+        }
+        const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+          color,
+          roughness: 0.25,
+          metalness: 0.35,
+          emissive,
+          emissiveIntensity: 0.5
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, y, z);
+        mesh.userData = { feature: f, baseRadius: sphereRadius, baseColor: color, baseEmissive: emissive };
+        this.scene.add(mesh);
+        this.nodes.push(mesh);
+        if (f.priority === "P0" || f.priority === "alta") {
+          const ringGeo = new THREE.RingGeometry(sphereRadius + 4, sphereRadius + 6, 32);
+          const ringMat = new THREE.MeshBasicMaterial({
+            color,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.6
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.position.set(x, y, z);
+          ring.rotation.x = Math.PI / 2.5;
+          this.scene.add(ring);
+          this.orbitRings.push(ring);
+        }
+      });
+      this.features.forEach((f) => {
+        const rawDeps = f.depends_on || f.dependencies || [];
+        if (!rawDeps.length) return;
+        const targetMesh = this.nodes.find((n) => n.userData.feature.id === f.id);
+        if (!targetMesh) return;
+        rawDeps.forEach((depId) => {
+          const sourceMesh = this.nodes.find((n) => n.userData.feature.id === depId);
+          if (!sourceMesh) return;
+          const sourceFeature = featureMap.get(depId);
+          const isResolved = sourceFeature && sourceFeature.status === "done";
+          const points = [sourceMesh.position, targetMesh.position];
+          const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+          const lineMat = new THREE.LineBasicMaterial({
+            color: isResolved ? 1096065 : 16007006,
+            transparent: true,
+            opacity: isResolved ? 0.6 : 0.4
+          });
+          const line = new THREE.Line(lineGeo, lineMat);
+          this.scene.add(line);
+          const pGeo = new THREE.SphereGeometry(2, 12, 12);
+          const pMat = new THREE.MeshBasicMaterial({
+            color: isResolved ? 3462041 : 16478597
+          });
+          const particle = new THREE.Mesh(pGeo, pMat);
+          particle.userData = {
+            start: sourceMesh.position,
+            end: targetMesh.position,
+            progress: Math.random()
+          };
+          this.scene.add(particle);
+          this.flowParticles.push(particle);
+        });
+      });
+    }
+    bindEvents(rootEl) {
+      const onMouseDown = (e) => {
+        this.isDragging = true;
+        this.prevMousePos = { x: e.clientX, y: e.clientY };
+      };
+      const onMouseMove = (e) => {
+        if (this.isDragging) {
+          const deltaX = e.clientX - this.prevMousePos.x;
+          const deltaY = e.clientY - this.prevMousePos.y;
+          this.targetRotation.y += deltaX * 5e-3;
+          this.targetRotation.x += deltaY * 5e-3;
+          this.prevMousePos = { x: e.clientX, y: e.clientY };
+        }
+        const rect = rootEl.getBoundingClientRect();
+        this.mouse.x = (e.clientX - rect.left) / rect.width * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        this.checkRaycast(e.clientX - rect.left, e.clientY - rect.top);
+      };
+      const onMouseUp = () => {
+        this.isDragging = false;
+      };
+      const onClick = (e) => {
+        if (!this.hoveredMesh) return;
+        const clickedFeature = this.hoveredMesh.userData.feature;
+        if (clickedFeature && this.onSelect) {
+          this.onSelect(clickedFeature);
+        }
+      };
+      rootEl.addEventListener("mousedown", onMouseDown);
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+      rootEl.addEventListener("click", onClick);
+      rootEl.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY > 0 ? 1.08 : 0.92;
+        this.camera.position.z = Math.min(Math.max(200, this.camera.position.z * zoomFactor), 1200);
+      }, { passive: false });
+      this.container.querySelectorAll("[data-focus-node]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = parseInt(btn.getAttribute("data-focus-node"), 10);
+          const nodeMesh = this.nodes.find((n) => n.userData.feature.id === id);
+          if (nodeMesh) {
+            this.focusOnNode(nodeMesh);
+          }
+        });
+      });
+      this._cleanupEvents = () => {
+        rootEl.removeEventListener("mousedown", onMouseDown);
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        rootEl.removeEventListener("click", onClick);
+      };
+    }
+    checkRaycast(screenX, screenY) {
+      if (!this.raycaster || !this.camera || !this.hudElement) return;
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      const intersects = this.raycaster.intersectObjects(this.nodes);
+      if (intersects.length > 0) {
+        const mesh = intersects[0].object;
+        if (this.hoveredMesh !== mesh) {
+          if (this.hoveredMesh) {
+            this.hoveredMesh.scale.set(1, 1, 1);
+          }
+          this.hoveredMesh = mesh;
+          mesh.scale.set(1.25, 1.25, 1.25);
+        }
+        const f = mesh.userData.feature;
+        const hudContent = this.container.querySelector("#hud-content");
+        if (hudContent && f) {
+          const branchName = f.branch || `${f.type || "feature"}/INT-${String(f.id).padStart(3, "0")}/${f.name}`;
+          const rawDeps = f.depends_on || f.dependencies || [];
+          hudContent.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-1.5 border-b border-slate-800 pb-1.5">
+            <span class="font-mono font-bold text-indigo-400">INT-${String(f.id).padStart(3, "0")}</span>
+            <span class="font-semibold px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-slate-300 uppercase">${f.status}</span>
+          </div>
+          <div class="font-bold text-slate-100 text-xs mb-1">${f.title || f.name}</div>
+          <div class="font-mono text-[10px] text-slate-400 truncate mb-1">\u{1F33F} ${branchName}</div>
+          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+            <span>Prioridad: <strong class="text-indigo-300">${f.priority || "P2"}</strong></span>
+            <span>${rawDeps.length ? `${rawDeps.length} deps` : "Ra\xEDz"}</span>
+          </div>
+        `;
+        }
+        this.hudElement.style.left = `${screenX}px`;
+        this.hudElement.style.top = `${screenY}px`;
+        this.hudElement.classList.remove("hidden");
+      } else {
+        if (this.hoveredMesh) {
+          this.hoveredMesh.scale.set(1, 1, 1);
+          this.hoveredMesh = null;
+        }
+        this.hudElement.classList.add("hidden");
+      }
+    }
+    focusOnNode(nodeMesh) {
+      if (!nodeMesh) return;
+      const pos = nodeMesh.position;
+      this.targetRotation.x = -pos.y * 3e-3;
+      this.targetRotation.y = Math.atan2(pos.x, pos.z);
+      if (this.onSelect) {
+        this.onSelect(nodeMesh.userData.feature);
+      }
+    }
+    animate() {
+      this.animationId = requestAnimationFrame(() => this.animate());
+      this.rotation.x += (this.targetRotation.x - this.rotation.x) * 0.08;
+      this.rotation.y += (this.targetRotation.y - this.rotation.y) * 0.08;
+      if (!this.isDragging) {
+        this.targetRotation.y += 1e-3;
+      }
+      if (this.scene) {
+        this.scene.rotation.y = this.rotation.y;
+        this.scene.rotation.x = this.rotation.x;
+      }
+      this.orbitRings.forEach((ring) => {
+        ring.rotation.z += 0.015;
+      });
+      this.flowParticles.forEach((p) => {
+        p.userData.progress = (p.userData.progress + 8e-3) % 1;
+        const { start, end, progress } = p.userData;
+        p.position.lerpVectors(start, end, progress);
+      });
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera);
+      }
+    }
+    unmount() {
+      if (this.animationId) {
+        cancelAnimationFrame(this.animationId);
+        this.animationId = null;
+      }
+      if (this._cleanupEvents) {
+        this._cleanupEvents();
+        this._cleanupEvents = null;
+      }
+      if (this.renderer) {
+        this.renderer.dispose();
+        this.renderer = null;
+      }
+      this.scene = null;
+      this.camera = null;
+      this.nodes = [];
+      this.orbitRings = [];
+      this.flowParticles = [];
+    }
+  };
+
+  // project-docs/src/features/history-timeline/HistoryTimeline.js
+  function renderHistoryTimeline({ history, features }) {
+    const records = history?.records || history || [];
+    if (!records || records.length === 0) {
+      return `
+      <div class="p-12 text-center bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-slate-600 flex items-center justify-center">
+          ${Icons.clock}
+        </div>
+        <h4 class="text-lg font-semibold text-slate-800 dark:text-slate-300 mb-1">Sin historial de ejecuciones a\xFAn</h4>
+        <p class="text-sm text-slate-500 max-w-md mx-auto">
+          A medida que las features y bugfixes completen el flujo SDD y pasen la revisi\xF3n del subagente <code class="text-indigo-600 dark:text-indigo-400">reviewer</code>, las entradas se registrar\xE1n aqu\xED autom\xE1ticamente desde <code class="text-indigo-600 dark:text-indigo-400">project-docs/progres/history.json</code>.
+        </p>
+      </div>
+    `;
+    }
+    const itemsHtml = records.map((rec, idx) => {
+      const isFirst = idx === 0;
+      const branchName = rec.branch || `${rec.type || "feature"}/INT-${String(rec.id).padStart(3, "0")}/${rec.name || "task"}`;
+      return `
+      <div class="relative pl-8 pb-8 group last:pb-0">
+        <!-- L\xEDnea conectora -->
+        <div class="absolute top-3 left-3 -ml-[1px] h-full w-0.5 bg-slate-200 dark:bg-slate-800 group-last:hidden"></div>
+
+        <!-- Punto en la l\xEDnea de tiempo -->
+        <div class="absolute top-1.5 left-1 w-4 h-4 rounded-full border-2 ${isFirst ? "bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/50" : "bg-white dark:bg-slate-900 border-indigo-500"} transition-transform group-hover:scale-125"></div>
+
+        <!-- Contenido de la tarjeta de historial -->
+        <div class="bg-white dark:bg-slate-900/70 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-slate-400 dark:hover:border-slate-700 transition-all shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">INT-${String(rec.id).padStart(3, "0")}</span>
+              ${renderBadge("type", rec.type || "feature")}
+              <span class="font-semibold text-slate-900 dark:text-slate-100 text-sm">${rec.title || rec.name}</span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">
+              ${rec.completed_at || rec.date || "Reciente"}
+            </div>
+          </div>
+
+          <!-- Rama y Commit -->
+          <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-3">
+            <span class="inline-flex items-center gap-1 font-mono text-[11px] bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+              <span class="text-indigo-600 dark:text-indigo-400">${Icons.gitBranch}</span>
+              ${branchName}
+            </span>
+
+            ${rec.commit ? `
+              <span class="inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                <span>SHA:</span>
+                <span class="text-indigo-600 dark:text-indigo-300 font-semibold">${rec.commit.substring(0, 7)}</span>
+              </span>
+            ` : ""}
+
+            ${rec.executor ? `
+              <span class="text-slate-500 text-xs">
+                Por: <span class="text-slate-700 dark:text-slate-300">${rec.executor}</span>
+              </span>
+            ` : ""}
+          </div>
+
+          <!-- Descripci\xF3n o notas -->
+          ${rec.summary ? `
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800/80">
+              ${rec.summary}
+            </p>
+          ` : ""}
+        </div>
+      </div>
+    `;
+    }).join("");
+    return `
+    <div class="max-w-3xl mx-auto py-4">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Bit\xE1cora de Cierres de Tareas</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Registro cronol\xF3gico de despliegues y trazabilidad SDD</p>
+        </div>
+        <span class="px-3 py-1 text-xs font-mono rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-xs">
+          Total: ${records.length}
+        </span>
+      </div>
+
+      <div class="relative">
+        ${itemsHtml}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/main.js
+  var App = class {
+    constructor() {
+      this.root = document.getElementById("app");
+      this.spaceView3D = new SpaceView3D();
+      this.currentTreeComponent = null;
+      this.activeTab = "features";
+      this.envInfo = null;
+    }
+    async init() {
+      router.init((tabId) => {
+        this.handleTabChange(tabId);
+      });
+      store.subscribe(() => {
+        this.render();
+      });
+      this.bindGlobalEvents();
+      await this.refreshData();
+    }
+    async refreshData() {
+      store.setLoading(true);
+      try {
+        const data = await api.fetchAll();
+        this.envInfo = await detectEnvironment(data);
+        store.setData(data);
+      } catch (err) {
+        console.error("Error cargando datos del arn\xE9s:", err);
+        store.setError(err.message || "Error al conectar con los datos del arn\xE9s");
+      } finally {
+        store.setLoading(false);
+      }
+    }
+    handleTabChange(tabId) {
+      if (this.activeTab === "three" && tabId !== "three") {
+        this.spaceView3D.unmount();
+      }
+      this.activeTab = tabId;
+      this.render();
+    }
+    render() {
+      if (!this.root) return;
+      const state = store.getState();
+      const stats = store.getStats();
+      const filteredFeatures = store.getFilteredFeatures();
+      const modules = store.getAvailableModules();
+      const isDark = state.theme === "dark";
+      const activeAgent = this.envInfo?.activeAgent || { name: "Google Antigravity", icon: "\u26A1" };
+      const stackInfo = this.envInfo?.stack || { name: "Multi-Stack Agnostico" };
+      if (state.loading && state.features.length === 0) {
+        this.root.innerHTML = `
+        <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
+          <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <h2 class="text-xl font-bold tracking-tight">Cargando Antigravity AI Harness...</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 font-mono">Sincronizando spec, tareas y branches</p>
+        </div>
+      `;
+        return;
+      }
+      if (state.error && state.features.length === 0) {
+        this.root.innerHTML = `
+        <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
+          <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mb-4">
+            ${Icons.clock}
+          </div>
+          <h2 class="text-xl font-bold text-rose-600 dark:text-rose-400">Error al inicializar el tablero</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-md text-center">${state.error}</p>
+          <button type="button" data-action="refresh" class="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all cursor-pointer">
+            Reintentar
+          </button>
+        </div>
+      `;
+        return;
+      }
+      this.root.innerHTML = `
+      <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
+        
+        <!-- Barra de Estado Superior -->
+        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 transition-colors">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- Logo & Info del Proyecto -->
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                <span class="font-mono font-black text-sm">AG</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml2(state.project)}</h1>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
+                    SDD 2.0
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span>Branch: <code class="text-indigo-600 dark:text-indigo-300 font-semibold">{type}/INT-{id}/{name}</code></span>
+                  <span class="text-slate-300 dark:text-slate-700">\u2022</span>
+                  <span class="hidden sm:inline">L\xEDmite: <strong class="text-slate-700 dark:text-slate-300">\u226480c</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chips de Agente Detectado y Stack Tecnol\xF3gico -->
+            <div class="hidden lg:flex items-center gap-2 text-xs">
+              <!-- Agente Detectado -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 shadow-xs"
+                   title="Agentes compatibles homologados: Google Antigravity, Open Code, GitHub Copilot, Claude Code, Codex">
+                <span class="text-sm">${activeAgent.icon}</span>
+                <span class="font-medium">${activeAgent.name}</span>
+              </div>
+
+              <!-- Stack Detectado -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs"
+                   title="Stack tecnol\xF3gico detectado por technical-audit">
+                <span class="text-slate-400">Stack:</span>
+                <span class="font-semibold">${escapeHtml2(stackInfo.name)}</span>
+              </div>
+            </div>
+
+            <!-- Controles: Modo Claro/Oscuro y Refrescar -->
+            <div class="flex items-center gap-2">
+              <!-- Switch Modo Claro/Oscuro -->
+              <button type="button" 
+                      data-action="toggle-theme" 
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer select-none"
+                      title="${isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}">
+                <span class="text-amber-500 shrink-0">
+                  ${isDark ? Icons.sun : Icons.moon}
+                </span>
+                <span class="hidden sm:inline">${isDark ? "Modo Claro" : "Modo Oscuro"}</span>
+              </button>
+
+              <!-- Bot\xF3n Refrescar -->
+              <button type="button" 
+                      data-action="refresh" 
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer"
+                      title="Refrescar datos del arn\xE9s">
+                <span class="shrink-0 ${state.loading ? "animate-spin" : ""}">${Icons.refresh}</span>
+                <span class="hidden sm:inline">Refrescar</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          <!-- 1. KPI Stats Summary -->
+          <section aria-labelledby="stats-heading">
+            <h2 id="stats-heading" class="sr-only">M\xE9tricas Generales</h2>
+            ${renderStatsSummary(stats)}
+          </section>
+
+          <!-- 2. AI Active Execution Card -->
+          <section aria-labelledby="active-spec-heading">
+            <h2 id="active-spec-heading" class="sr-only">Ejecuci\xF3n Activa del Agente</h2>
+            ${renderCurrentSpecCard(state.currentSpec)}
+          </section>
+
+          <!-- 3. Navegaci\xF3n por pesta\xF1as (Router) -->
+          <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
+            ${renderTabButton({ id: "features", label: "Tareas y Bugfixes", icon: Icons.folder, active: this.activeTab === "features", badge: String(state.features.length) })}
+            ${renderTabButton({ id: "graph", label: "Grafo Visual DAG", icon: Icons.gitBranch, active: this.activeTab === "graph" })}
+            ${renderTabButton({ id: "tree", label: "\xC1rbol Jer\xE1rquico", icon: Icons.check, active: this.activeTab === "tree" })}
+            ${renderTabButton({ id: "three", label: "Constelaci\xF3n 3D", icon: Icons.eye, active: this.activeTab === "three" })}
+            ${renderTabButton({ id: "history", label: "Bit\xE1cora Hist\xF3rica", icon: Icons.clock, active: this.activeTab === "history", badge: String(state.history?.records?.length || 0) })}
+          </nav>
+
+          <!-- 4. Contenido Din\xE1mico de la Pesta\xF1a -->
+          <section id="tab-content" class="min-h-[420px]">
+            ${this.renderActiveTabContent({ state, filteredFeatures, modules })}
+          </section>
+        </main>
+
+        <!-- Modal de Detalle -->
+        ${renderModal(state.selectedFeature)}
+      </div>
+    `;
+      this.postRender({ state, filteredFeatures });
+    }
+    renderActiveTabContent({ state, filteredFeatures, modules }) {
+      switch (this.activeTab) {
+        case "features":
+          return `
+          <div class="space-y-6">
+            ${renderFeatureFilters({ filters: state.filters, modules })}
+            ${renderFeatureTable({
+            features: filteredFeatures,
+            pagination: state.pagination,
+            onSelect: (f) => store.setSelectedFeature(f)
+          })}
+            ${renderFeaturePagination({
+            totalItems: filteredFeatures.length,
+            pagination: state.pagination
+          })}
+          </div>
+        `;
+        case "graph":
+          return renderDependencyGraph({
+            features: state.features
+          });
+        case "tree":
+          return `<div id="tree-mount-target" class="w-full"></div>`;
+        case "three":
+          return `<div id="three-mount-target" class="w-full"></div>`;
+        case "history":
+          return renderHistoryTimeline({
+            history: state.history,
+            features: state.features
+          });
+        default:
+          return `<div class="p-8 text-center text-slate-500">Pesta\xF1a no encontrada.</div>`;
+      }
+    }
+    postRender({ state, filteredFeatures }) {
+      if (this.activeTab === "tree") {
+        const treeTarget = document.getElementById("tree-mount-target");
+        if (treeTarget) {
+          this.currentTreeComponent = new DependencyTreeComponent(treeTarget, {
+            features: state.features,
+            onSelect: (f) => store.setSelectedFeature(f)
+          });
+          this.currentTreeComponent.render();
+        }
+      } else if (this.activeTab === "three") {
+        const threeTarget = document.getElementById("three-mount-target");
+        if (threeTarget) {
+          this.spaceView3D.mount(threeTarget, {
+            features: state.features,
+            onSelect: (f) => store.setSelectedFeature(f)
+          });
+        }
+      } else if (this.activeTab === "graph") {
+        this.bindGraphHoverEvents();
+      }
+    }
+    bindGraphHoverEvents() {
+      const nodes = document.querySelectorAll("[data-graph-node]");
+      const edges = document.querySelectorAll(".graph-edge");
+      nodes.forEach((node) => {
+        node.addEventListener("mouseenter", () => {
+          const nodeId = parseInt(node.getAttribute("data-graph-node"), 10);
+          const nodeDeps = (node.getAttribute("data-deps") || "").split(",").filter(Boolean).map(Number);
+          nodes.forEach((n) => n.classList.add("opacity-30"));
+          edges.forEach((e) => e.classList.add("opacity-10"));
+          node.classList.remove("opacity-30");
+          node.classList.add("scale-105", "ring-2", "ring-indigo-500");
+          nodeDeps.forEach((depId) => {
+            const depEl = document.querySelector(`[data-graph-node="${depId}"]`);
+            if (depEl) {
+              depEl.classList.remove("opacity-30");
+              depEl.classList.add("ring-2", "ring-amber-500");
+            }
+            const edge = document.querySelector(`[data-edge-from="${depId}"][data-edge-to="${nodeId}"]`);
+            if (edge) {
+              edge.classList.remove("opacity-10");
+              edge.setAttribute("stroke-width", "4");
+              edge.setAttribute("opacity", "1");
+            }
+          });
+          document.querySelectorAll(`.graph-edge[data-edge-from="${nodeId}"]`).forEach((edge) => {
+            edge.classList.remove("opacity-10");
+            edge.setAttribute("stroke-width", "4");
+            edge.setAttribute("opacity", "1");
+            const toId = edge.getAttribute("data-edge-to");
+            const toEl = document.querySelector(`[data-graph-node="${toId}"]`);
+            if (toEl) {
+              toEl.classList.remove("opacity-30");
+              toEl.classList.add("ring-2", "ring-cyan-500");
+            }
+          });
+        });
+        node.addEventListener("mouseleave", () => {
+          nodes.forEach((n) => n.classList.remove("opacity-30", "scale-105", "ring-2", "ring-indigo-500", "ring-amber-500", "ring-cyan-500"));
+          edges.forEach((e) => {
+            e.classList.remove("opacity-10");
+            e.setAttribute("stroke-width", "2");
+            e.setAttribute("opacity", "0.65");
+          });
+        });
+      });
+    }
+    bindGlobalEvents() {
+      document.addEventListener("click", (e) => {
+        const themeBtn = e.target.closest('[data-action="toggle-theme"]');
+        if (themeBtn) {
+          store.toggleTheme();
+          return;
+        }
+        const tabBtn = e.target.closest("[data-tab]");
+        if (tabBtn) {
+          const tabId = tabBtn.getAttribute("data-tab");
+          router.navigate(tabId);
+          return;
+        }
+        const refreshBtn = e.target.closest('[data-action="refresh"]');
+        if (refreshBtn) {
+          this.refreshData();
+          return;
+        }
+        const graphNode = e.target.closest("[data-graph-node]");
+        if (graphNode) {
+          const id = parseInt(graphNode.getAttribute("data-graph-node"), 10);
+          const feature = store.getState().features.find((f) => f.id === id);
+          if (feature) store.setSelectedFeature(feature);
+          return;
+        }
+        const viewDetailBtn = e.target.closest('[data-action="view-detail"]');
+        if (viewDetailBtn) {
+          const id = parseInt(viewDetailBtn.getAttribute("data-id"), 10);
+          const feature = store.getState().features.find((f) => f.id === id);
+          if (feature) store.setSelectedFeature(feature);
+          return;
+        }
+        const tableRow = e.target.closest("tr[data-feature-id]");
+        if (tableRow && !e.target.closest("button")) {
+          const id = parseInt(tableRow.getAttribute("data-feature-id"), 10);
+          const feature = store.getState().features.find((f) => f.id === id);
+          if (feature) store.setSelectedFeature(feature);
+          return;
+        }
+        const closeModalBtn = e.target.closest('[data-action="close-modal"]');
+        if (closeModalBtn) {
+          store.setSelectedFeature(null);
+          return;
+        }
+        const pageBtn = e.target.closest("[data-page]");
+        if (pageBtn) {
+          const page = parseInt(pageBtn.getAttribute("data-page"), 10);
+          if (!isNaN(page) && page > 0) {
+            store.setPage(page);
+          }
+          return;
+        }
+        const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
+        if (resetFiltersBtn) {
+          store.resetFilters();
+          return;
+        }
+      });
+      document.addEventListener("input", (e) => {
+        if (e.target.id === "feature-search-input") {
+          store.setFilter("search", e.target.value);
+        }
+      });
+      document.addEventListener("change", (e) => {
+        if (e.target.id === "filter-type") {
+          store.setFilter("type", e.target.value);
+        } else if (e.target.id === "filter-status") {
+          store.setFilter("status", e.target.value);
+        } else if (e.target.id === "filter-module") {
+          store.setFilter("module", e.target.value);
+        } else if (e.target.id === "filter-priority") {
+          store.setFilter("priority", e.target.value);
+        } else if (e.target.id === "page-size-select") {
+          store.setPageSize(parseInt(e.target.value, 10));
+        }
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && store.getState().selectedFeature) {
+          store.setSelectedFeature(null);
+        }
+      });
+    }
+  };
+  function escapeHtml2(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    const app = new App();
+    app.init();
+  });
+})();

@@ -2,26 +2,50 @@ import { renderBadge } from '../../shared/Badge.js';
 import { Icons } from '../../shared/Icons.js';
 
 /**
- * DependencyGraph: Matriz interactiva de dependencias, bloqueos y ruta crítica con soporte claro/oscuro.
- * @param {Object} props
- * @param {Array} props.features - Todas las features
- * @param {Function} props.onSelect - Callback al clickear una feature
- * @returns {string} HTML markup
+ * DependencyGraph: Grafo Visual Dirigido (DAG) interactivo con análisis de impacto y ruta crítica.
+ * Heurísticas UI/UX: visibilidad del estado de bloqueos, feedback inmediato al interactuar y atenuación de ruido.
  */
 export function renderDependencyGraph({ features }) {
   if (!features || features.length === 0) {
-    return `<div class="p-8 text-center text-slate-500">No hay datos de dependencias disponibles.</div>`;
+    return `<div class="p-12 text-center text-slate-500 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">No hay datos de dependencias disponibles.</div>`;
   }
 
   const featureMap = new Map();
   features.forEach(f => featureMap.set(f.id, f));
 
+  // 1. Análisis topológico y cálculo de columnas (Fases)
+  const nodeLevels = new Map();
+  
+  function getDepth(id, visited = new Set()) {
+    if (visited.has(id)) return 0;
+    visited.add(id);
+    const f = featureMap.get(id);
+    if (!f) return 0;
+    const deps = f.depends_on || f.dependencies || [];
+    if (!deps.length) return 0;
+    return 1 + Math.max(...deps.map(dId => getDepth(dId, new Set(visited))));
+  }
+
+  features.forEach(f => {
+    nodeLevels.set(f.id, getDepth(f.id));
+  });
+
+  const maxLevel = Math.max(...Array.from(nodeLevels.values()), 0);
+  const levels = [];
+  for (let i = 0; i <= maxLevel; i++) levels.push([]);
+  features.forEach(f => {
+    const lvl = nodeLevels.get(f.id) || 0;
+    levels[lvl].push(f);
+  });
+
+  // Métricas
   const analyzed = features.map(f => {
     const rawDeps = f.depends_on || f.dependencies || [];
-    const deps = rawDeps.map(depId => featureMap.get(depId)).filter(Boolean);
+    const deps = rawDeps.map(dId => featureMap.get(dId)).filter(Boolean);
     const pendingDeps = deps.filter(d => d.status !== 'done');
     const isBlocked = f.status !== 'done' && pendingDeps.length > 0;
     const isReady = f.status === 'pending' && pendingDeps.length === 0;
+    const dependents = features.filter(other => (other.depends_on || other.dependencies || []).includes(f.id));
 
     return {
       feature: f,
@@ -29,10 +53,7 @@ export function renderDependencyGraph({ features }) {
       pendingDeps,
       isBlocked,
       isReady,
-      dependents: features.filter(other => {
-        const otherDeps = other.depends_on || other.dependencies || [];
-        return otherDeps.includes(f.id);
-      })
+      dependents
     };
   });
 
@@ -40,138 +61,230 @@ export function renderDependencyGraph({ features }) {
   const readyCount = analyzed.filter(a => a.isReady).length;
   const doneCount = analyzed.filter(a => a.feature.status === 'done').length;
 
-  const cardsHtml = analyzed.map(({ feature, deps, pendingDeps, isBlocked, isReady, dependents }) => {
-    const branchName = feature.branch || `${feature.type || 'feature'}/INT-${String(feature.id).padStart(3, '0')}/${feature.name}`;
-    
-    let borderStatus = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60';
-    let statusPill = '';
-    if (feature.status === 'done') {
-      borderStatus = 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/10';
-      statusPill = `<span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 uppercase">Completada</span>`;
+  // 2. Coordenadas de Nodos para Renderizado en SVG Canvas
+  const colWidth = 260;
+  const nodeHeight = 85;
+  const gapY = 30;
+  const gapX = 80;
+
+  let maxRowInCol = 0;
+  levels.forEach(lvl => {
+    if (lvl.length > maxRowInCol) maxRowInCol = lvl.length;
+  });
+
+  const totalWidth = Math.max(920, levels.length * (colWidth + gapX) + 80);
+  const totalHeight = Math.max(480, maxRowInCol * (nodeHeight + gapY) + 100);
+
+  const coords = new Map();
+  levels.forEach((colFeatures, colIdx) => {
+    const x = colIdx * (colWidth + gapX) + 40;
+    const colHeight = colFeatures.length * (nodeHeight + gapY) - gapY;
+    const startY = Math.max(50, (totalHeight - colHeight) / 2);
+
+    colFeatures.forEach((f, rowIdx) => {
+      const y = startY + rowIdx * (nodeHeight + gapY);
+      coords.set(f.id, { x, y, width: colWidth, height: nodeHeight, colIdx, rowIdx });
+    });
+  });
+
+  // 3. Generar Flechas Dirigidas de Enlace
+  const edgesSvg = [];
+  features.forEach(f => {
+    const target = coords.get(f.id);
+    const rawDeps = f.depends_on || f.dependencies || [];
+    if (!target || !rawDeps.length) return;
+
+    rawDeps.forEach(depId => {
+      const source = coords.get(depId);
+      const sourceFeature = featureMap.get(depId);
+      if (!source || !sourceFeature) return;
+
+      const isResolved = sourceFeature.status === 'done';
+      const startX = source.x + source.width;
+      const startY = source.y + source.height / 2;
+      const endX = target.x;
+      const endY = target.y + target.height / 2;
+      const midX = (startX + endX) / 2;
+
+      const pathD = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+      
+      const strokeColor = isResolved ? '#10b981' : '#f43f5e';
+      const markerId = isResolved ? 'arrow-resolved' : 'arrow-blocked';
+
+      edgesSvg.push(`
+        <path d="${pathD}" 
+              data-edge-from="${depId}" 
+              data-edge-to="${f.id}" 
+              class="graph-edge transition-all duration-200" 
+              fill="none" 
+              stroke="${strokeColor}" 
+              stroke-width="2" 
+              stroke-dasharray="${isResolved ? 'none' : '4 4'}" 
+              opacity="0.65" 
+              marker-end="url(#${markerId})" />
+      `);
+    });
+  });
+
+  // 4. Generar Nodos SVG ForeignObject
+  const nodesSvg = features.map(f => {
+    const pos = coords.get(f.id);
+    if (!pos) return '';
+    const isDone = f.status === 'done';
+    const isProg = f.status === 'in_progress';
+    const rawDeps = f.depends_on || f.dependencies || [];
+    const pendingDeps = rawDeps.filter(dId => {
+      const dep = featureMap.get(dId);
+      return dep && dep.status !== 'done';
+    });
+    const isBlocked = f.status !== 'done' && pendingDeps.length > 0;
+    const isReady = f.status === 'pending' && pendingDeps.length === 0;
+
+    let borderClass = 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90';
+    let statusDot = 'bg-slate-400';
+
+    if (isDone) {
+      borderClass = 'border-emerald-500/60 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xs';
+      statusDot = 'bg-emerald-500';
+    } else if (isProg) {
+      borderClass = 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-md ring-2 ring-indigo-500/20';
+      statusDot = 'bg-indigo-500 animate-pulse';
     } else if (isBlocked) {
-      borderStatus = 'border-rose-300 dark:border-rose-500/50 bg-rose-50/40 dark:bg-rose-950/10';
-      statusPill = `<span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 uppercase">Bloqueada (${pendingDeps.length})</span>`;
+      borderClass = 'border-rose-400 dark:border-rose-500/60 bg-rose-50/50 dark:bg-rose-950/20';
+      statusDot = 'bg-rose-500';
     } else if (isReady) {
-      borderStatus = 'border-cyan-300 dark:border-cyan-500/50 bg-cyan-50/40 dark:bg-cyan-950/10 shadow-sm';
-      statusPill = `<span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-300 uppercase">Lista para iniciar</span>`;
-    } else {
-      borderStatus = 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/10';
-      statusPill = `<span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300 uppercase">${feature.status}</span>`;
+      borderClass = 'border-cyan-400 dark:border-cyan-500/60 bg-cyan-50/50 dark:bg-cyan-950/20 shadow-xs';
+      statusDot = 'bg-cyan-500';
     }
 
-    const depsHtml = deps.length > 0 ? `
-      <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80">
-        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-between">
-          <span>Depende de (${deps.length}):</span>
-          ${isBlocked ? '<span class="text-rose-600 dark:text-rose-400 font-normal">Faltan predecesores</span>' : '<span class="text-emerald-600 dark:text-emerald-400 font-normal">Requisitos listos</span>'}
-        </div>
-        <div class="flex flex-wrap gap-1.5">
-          ${deps.map(dep => {
-            const isDepDone = dep.status === 'done';
-            return `
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono ${
-                isDepDone 
-                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60' 
-                  : 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800/60'
-              }">
-                <span>${isDepDone ? '✓' : '✗'}</span>
-                <span>INT-${String(dep.id).padStart(3, '0')}</span>
-              </span>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    ` : `
-      <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500 italic">
-        Sin dependencias previas (Nodo raíz)
-      </div>
-    `;
-
-    const dependentsHtml = dependents.length > 0 ? `
-      <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-        <span class="text-slate-400 dark:text-slate-500">Desbloquea:</span>
-        <span class="font-mono text-slate-700 dark:text-slate-300">${dependents.map(d => `INT-${String(d.id).padStart(3, '0')}`).join(', ')}</span>
-      </div>
-    ` : '';
+    const branchName = f.branch || `${f.type || 'feature'}/INT-${String(f.id).padStart(3, '0')}/${f.name}`;
 
     return `
-      <div class="rounded-2xl border ${borderStatus} p-4 transition-all hover:scale-[1.01] hover:shadow-md backdrop-blur-md flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">INT-${String(feature.id).padStart(3, '0')}</span>
-              ${renderBadge('type', feature.type || 'feature')}
+      <foreignObject x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}">
+        <div xmlns="http://www.w3.org/1999/xhtml"
+             data-graph-node="${f.id}"
+             data-deps="${rawDeps.join(',')}"
+             class="graph-node p-2.5 w-full h-full rounded-xl border ${borderClass} backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer select-none flex flex-col justify-between hover:scale-[1.02] hover:shadow-md"
+             title="${branchName}">
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full ${statusDot}"></span>
+                <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">INT-${String(f.id).padStart(3, '0')}</span>
+                <span class="text-[10px] font-mono px-1 py-0.2 rounded font-semibold ${f.type === 'bugfix' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}">
+                  ${f.type || 'feat'}
+                </span>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                ${f.status}
+              </span>
             </div>
-            ${statusPill}
+            <div class="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate leading-tight">
+              ${f.title || f.name}
+            </div>
           </div>
-
-          <h4 class="font-semibold text-slate-900 dark:text-slate-100 text-sm mb-1 line-clamp-2">
-            ${feature.title || feature.name}
-          </h4>
-
-          <div class="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate mb-2" title="${branchName}">
-            <span class="text-indigo-600 dark:text-indigo-400 inline-block align-middle">${Icons.gitBranch}</span> ${branchName}
-          </div>
-
-          <div class="flex items-center gap-2 mb-2">
-            ${renderBadge('module', feature.module || 'Core')}
-            ${renderBadge('priority', feature.priority || 'P2')}
+          <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+            <span>${f.module || 'Core'}</span>
+            <span class="font-mono">${rawDeps.length ? `${rawDeps.length} dep${rawDeps.length > 1 ? 's' : ''}` : 'Raíz'}</span>
           </div>
         </div>
+      </foreignObject>
+    `;
+  }).join('');
 
-        <div>
-          ${depsHtml}
-          ${dependentsHtml}
-
-          <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-end">
-            <button type="button" 
-                    data-action="view-detail" 
-                    data-id="${feature.id}" 
-                    class="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-all cursor-pointer">
-              Ver detalle
-            </button>
-          </div>
-        </div>
+  // 5. Encabezados de Fase / Columnas
+  const phaseHeaders = levels.map((lvl, colIdx) => {
+    const x = colIdx * (colWidth + gapX) + 40;
+    const titles = ['Fase 1: Fundamentos', 'Fase 2: Core Services', 'Fase 3: APIs & Lógica', 'Fase 4: Consumo & Workers', 'Fase 5: Extensión'];
+    const title = titles[colIdx] || `Fase ${colIdx + 1}`;
+    return `
+      <div class="absolute top-2 font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-1 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-lg backdrop-blur-xs pointer-events-none"
+           style="left: ${x}px; width: ${colWidth}px;">
+        ${title} (${lvl.length})
       </div>
     `;
   }).join('');
 
   return `
     <div class="space-y-6">
+      <!-- Barra KPI de Grafo -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Tareas listas para ejecutar</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Listas para iniciar (Desbloqueadas)</div>
             <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-0.5">${readyCount}</div>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
             ${Icons.check}
           </div>
         </div>
 
-        <div class="p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Tareas bloqueadas</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Bloqueadas por predecesores</div>
             <div class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-0.5">${blockedCount}</div>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
             ${Icons.clock}
           </div>
         </div>
 
-        <div class="p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Completadas en el grafo</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Resueltas en el flujo</div>
             <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${doneCount}</div>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             ${Icons.checkCircle}
           </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        ${cardsHtml}
+      <!-- Lienzo SVG Interactivo del Grafo Dirigido -->
+      <div class="relative w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/80 shadow-md overflow-hidden">
+        
+        <!-- Controles y Leyenda Superior -->
+        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              ${Icons.gitBranch} Grafo de Dependencias (DAG)
+            </span>
+            <span class="text-slate-400 dark:text-slate-500">|</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px]">
+              Pasa el cursor sobre un nodo para aislar sus dependencias y dependientes
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3 text-[11px]">
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-emerald-500"></span> Resuelta</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 border-b border-dashed border-rose-500"></span> Bloqueo Activo</span>
+          </div>
+        </div>
+
+        <!-- Canvas con Scroll Horizontal Suave -->
+        <div id="graph-scroll-container" class="relative overflow-x-auto overflow-y-hidden p-6 min-h-[500px]">
+          ${phaseHeaders}
+          <svg width="${totalWidth}" height="${totalHeight}" class="w-full h-full block pt-6">
+            <defs>
+              <marker id="arrow-resolved" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+              </marker>
+              <marker id="arrow-blocked" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+              </marker>
+            </defs>
+
+            <!-- Aristas de Grafo -->
+            <g id="graph-edges-group">
+              ${edgesSvg.join('')}
+            </g>
+
+            <!-- Nodos de Grafo -->
+            <g id="graph-nodes-group">
+              ${nodesSvg}
+            </g>
+          </svg>
+        </div>
       </div>
     </div>
   `;
