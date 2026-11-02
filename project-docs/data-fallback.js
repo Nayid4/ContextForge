@@ -1,0 +1,110 @@
+window.__FALLBACK_DATA__ = {
+  "featureList": {
+    "project": "mi-proyecto-net",
+    "description": "Lista de features y bugfixes del proyecto para seguimiento del agente de IA.",
+    "version": "1.0.0",
+    "rules": {
+      "one_feature_at_a_time": true,
+      "require_tests_to_close": true,
+      "require_approved_spec_to_implement": true,
+      "branch_pattern": "{type}/INT-{id}/{name}",
+      "branch_types": [
+        "feature",
+        "bugfix"
+      ],
+      "max_branch_length": 80,
+      "valid_status": [
+        "pending",
+        "spec_ready",
+        "in_progress",
+        "done",
+        "blocked"
+      ]
+    },
+    "features": [
+      {
+        "id": 1,
+        "type": "feature",
+        "name": "example_scaffold",
+        "title": "[EJEMPLO] Package Scaffold",
+        "description": "Crear la estructura base del proyecto: solución .NET, proyectos por capa (Domain, Application, Infrastructure, Api), Directory.Build.props, .editorconfig.",
+        "module": "infra",
+        "branch": "feature/INT-001/example_scaffold",
+        "spec_folder": "specs/001_example_scaffold",
+        "status": "pending",
+        "priority": "alta",
+        "acceptance": [
+          "La solución compila con dotnet build /warnaserror sin errores ni warnings",
+          "Existen 4 proyectos: Domain, Application, Infrastructure y Api",
+          "Cada proyecto respeta las reglas de dependencia de Clean Architecture",
+          "El proyecto Api responde HTTP 200 en /health"
+        ],
+        "dependencies": [],
+        "documentation": [
+          "docs/architecture.md",
+          "docs/conventions.md"
+        ]
+      },
+      {
+        "id": 2,
+        "type": "feature",
+        "name": "example_user_registration",
+        "title": "[EJEMPLO] Registro de usuarios",
+        "description": "Implementar el caso de uso de registro de usuarios incluyendo validación de email, creación de entidad User, persistencia con EF Core y endpoint POST /api/users.",
+        "module": "backend",
+        "branch": "feature/INT-002/example_user_registration",
+        "spec_folder": "specs/002_example_user_registration",
+        "status": "pending",
+        "priority": "alta",
+        "acceptance": [
+          "POST /api/users con datos válidos retorna HTTP 201 con id del usuario",
+          "Email duplicado retorna HTTP 409 Conflict",
+          "Email inválido retorna HTTP 400 Bad Request con ProblemDetails",
+          "Cobertura de tests >= 85% en Domain y Application"
+        ],
+        "dependencies": [
+          1
+        ],
+        "documentation": [
+          "docs/specs.md",
+          "docs/architecture.md"
+        ]
+      },
+      {
+        "id": 3,
+        "type": "bugfix",
+        "name": "fix_jwt_token_expiration",
+        "title": "[EJEMPLO] Corrección de expiración de token JWT",
+        "description": "Corregir cálculo de expiración de token JWT en el middleware de autenticación cuando el timezone no es UTC.",
+        "module": "backend",
+        "branch": "bugfix/INT-003/fix_jwt_token_expiration",
+        "spec_folder": "specs/003_fix_jwt_token_expiration",
+        "status": "pending",
+        "priority": "media",
+        "acceptance": [
+          "Los tokens generados validan siempre en UTC",
+          "Test unitario que prueba expiración con desfases horarios pasa"
+        ],
+        "dependencies": [
+          2
+        ],
+        "documentation": [
+          "docs/verification.md"
+        ]
+      }
+    ],
+    "metadata": {
+      "total_features": 3,
+      "pending_count": 3,
+      "in_progress_count": 0,
+      "done_count": 0,
+      "blocked_count": 0,
+      "last_updated": "2026-11-02",
+      "updated_by": "leader"
+    }
+  },
+  "currentSpec": {},
+  "historyData": {
+    "records": []
+  }
+};

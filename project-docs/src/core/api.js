@@ -42,8 +42,19 @@ export async function fetchProjectData() {
     } catch (_) {}
   }
 
+  // Fallback si fetch es bloqueado por política CORS de file:///
+  if (!featureData && typeof window !== 'undefined' && window.__FALLBACK_DATA__) {
+    featureData = window.__FALLBACK_DATA__.featureList || null;
+    currentSpec = window.__FALLBACK_DATA__.currentSpec || {};
+    historyData = window.__FALLBACK_DATA__.historyData || { records: [] };
+  }
+
   if (!featureData) {
-    throw new Error('No se pudo cargar feature_list.json');
+    // Estado por defecto seguro para que la interfaz siempre se dibuje
+    featureData = {
+      project: 'Proyecto (Modo Local)',
+      features: []
+    };
   }
 
   return {
@@ -53,3 +64,7 @@ export async function fetchProjectData() {
     historyData
   };
 }
+
+export const api = {
+  fetchAll: fetchProjectData
+};

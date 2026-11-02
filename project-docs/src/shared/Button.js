@@ -2,6 +2,25 @@
  * Button UI Component
  */
 
+export function renderTabButton({ id, label, icon = '', active = false, badge = null }) {
+  const baseClasses = 'inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer';
+  const activeClasses = active
+    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent hover:border-slate-800';
+
+  const badgeHtml = badge !== null
+    ? `<span class="ml-1 px-1.5 py-0.2 text-[10px] font-mono rounded-full ${active ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-300'}">${badge}</span>`
+    : '';
+
+  return `
+    <button type="button" data-tab="${id}" class="${baseClasses} ${activeClasses}">
+      ${icon}
+      <span>${label}</span>
+      ${badgeHtml}
+    </button>
+  `;
+}
+
 export function TabButton({ id, label, icon = '', active = false, badge = null, onClick }) {
   const baseClasses = 'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
   const activeClasses = active

@@ -106,3 +106,11 @@ export function Badge({ type, value, extraClasses = '' }) {
     </span>
   `;
 }
+
+
+/**
+ * Helper renderBadge para compatibilidad con llamadas renderBadge(type, value, extraClasses)
+ */
+export function renderBadge(type, value, extraClasses = '') {
+  return Badge({ type, value, extraClasses });
+}

@@ -6,8 +6,9 @@ const initialState = {
   project: 'Proyecto',
   features: [],
   currentSpec: {},
+  history: { records: [] },
   historyData: { records: [] },
-  activeTab: 'list', // 'list' | 'graph' | 'tree' | 'three' | 'history'
+  activeTab: 'features', // 'features' | 'graph' | 'tree' | 'three' | 'history'
   filters: {
     search: '',
     status: '',
@@ -17,7 +18,10 @@ const initialState = {
   },
   pagination: {
     page: 1,
-    perPage: 10
+    currentPage: 1,
+    perPage: 10,
+    pageSize: 10,
+    totalPages: 1
   },
   selectedFeature: null,
   theme3D: 'dark',
@@ -52,20 +56,98 @@ class Store {
     }
   }
 
+  // --- Mutators ---
+
+  setLoading(loading) {
+    this.setState({ loading });
+  }
+
+  setData({ project, features, currentSpec, historyData }) {
+    const featList = Array.isArray(features) ? features : [];
+    const pageSize = this.state.pagination.pageSize || 10;
+    const totalPages = Math.ceil(featList.length / pageSize) || 1;
+
+    this.setState({
+      project: project || this.state.project,
+      features: featList,
+      currentSpec: currentSpec || {},
+      history: historyData || { records: [] },
+      historyData: historyData || { records: [] },
+      pagination: {
+        ...this.state.pagination,
+        totalPages
+      },
+      loading: false,
+      error: null
+    });
+  }
+
+  setError(error) {
+    this.setState({ error, loading: false });
+  }
+
+  setSelectedFeature(selectedFeature) {
+    this.setState({ selectedFeature });
+  }
+
+  setPage(page) {
+    this.setState({
+      pagination: { ...this.state.pagination, page, currentPage: page }
+    });
+  }
+
+  setPageSize(pageSize) {
+    const totalPages = Math.ceil(this.state.features.length / pageSize) || 1;
+    this.setState({
+      pagination: {
+        ...this.state.pagination,
+        perPage: pageSize,
+        pageSize,
+        page: 1,
+        currentPage: 1,
+        totalPages
+      }
+    });
+  }
+
+  setFilter(key, value) {
+    this.setState({
+      filters: { ...this.state.filters, [key]: value },
+      pagination: { ...this.state.pagination, page: 1, currentPage: 1 }
+    });
+  }
+
+  resetFilters() {
+    this.setState({
+      filters: { search: '', status: '', module: '', priority: '', type: '' },
+      pagination: { ...this.state.pagination, page: 1, currentPage: 1 }
+    });
+  }
+
   // --- Selectors ---
+
+  getAvailableModules() {
+    const modules = new Set();
+    this.state.features.forEach(f => {
+      if (f.module) modules.add(f.module);
+    });
+    return Array.from(modules);
+  }
 
   isReady(feature) {
     if (feature.status === 'done' || feature.status === 'in_progress') return false;
-    if (!feature.dependencies || !feature.dependencies.length) return true;
-    return feature.dependencies.every(depId => {
+    const deps = feature.depends_on || feature.dependencies || [];
+    if (!deps.length) return true;
+    return deps.every(depId => {
       const dep = this.state.features.find(f => f.id === depId);
       return dep && dep.status === 'done';
     });
   }
 
   getBlockedBy(feature) {
-    if (!feature.dependencies || !feature.dependencies.length) return [];
-    return feature.dependencies
+    const deps = feature.depends_on || feature.dependencies || [];
+    if (!deps.length) return [];
+    return deps
       .map(depId => this.state.features.find(f => f.id === depId))
       .filter(dep => dep && dep.status !== 'done');
   }
@@ -74,15 +156,14 @@ class Store {
     if (visited.has(feature.id)) return [];
     visited.add(feature.id);
     const chain = [feature];
-    if (feature.dependencies) {
-      feature.dependencies.forEach(depId => {
-        const dep = this.state.features.find(f => f.id === depId);
-        if (dep) {
-          const subChain = this.getDepChain(dep, visited);
-          chain.push(...subChain);
-        }
-      });
-    }
+    const deps = feature.depends_on || feature.dependencies || [];
+    deps.forEach(depId => {
+      const dep = this.state.features.find(f => f.id === depId);
+      if (dep) {
+        const subChain = this.getDepChain(dep, visited);
+        chain.push(...subChain);
+      }
+    });
     return chain;
   }
 
