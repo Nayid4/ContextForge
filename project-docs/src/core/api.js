@@ -9,6 +9,7 @@ export async function fetchProjectData(options = {}) {
   let currentSpec = {};
   let historyData = { records: [] };
   let projectSpec = null;
+  let knowledgeIndex = null;
 
   const cacheBuster = bypassCache ? `?_t=${Date.now()}` : '';
   const fetchOpts = bypassCache ? { cache: 'no-store' } : {};
@@ -35,6 +36,11 @@ export async function fetchProjectData(options = {}) {
     `project-spec.json${cacheBuster}`,
     `../project-spec.json${cacheBuster}`,
     `./project-docs/project-spec.json${cacheBuster}`
+  ];
+  const knowledgePaths = [
+    `knowledge/knowledge-index.json${cacheBuster}`,
+    `../knowledge/knowledge-index.json${cacheBuster}`,
+    `./project-docs/knowledge/knowledge-index.json${cacheBuster}`
   ];
 
   for (const path of featurePaths) {
@@ -77,16 +83,30 @@ export async function fetchProjectData(options = {}) {
     } catch (_) {}
   }
 
+  for (const path of knowledgePaths) {
+    try {
+      const res = await fetch(path, fetchOpts);
+      if (res.ok) {
+        knowledgeIndex = await res.json();
+        break;
+      }
+    } catch (_) {}
+  }
+
   // Fallback si fetch es bloqueado por política CORS de file:///
   if (!featureData && typeof window !== 'undefined' && window.__FALLBACK_DATA__) {
     featureData = window.__FALLBACK_DATA__.featureList || null;
     currentSpec = window.__FALLBACK_DATA__.currentSpec || {};
     historyData = window.__FALLBACK_DATA__.historyData || { records: [] };
     projectSpec = window.__FALLBACK_DATA__.projectSpec || null;
+    knowledgeIndex = window.__FALLBACK_DATA__.knowledgeIndex || null;
   }
 
   if (!projectSpec && typeof window !== 'undefined' && window.__FALLBACK_DATA__?.projectSpec) {
     projectSpec = window.__FALLBACK_DATA__.projectSpec;
+  }
+  if (!knowledgeIndex && typeof window !== 'undefined' && window.__FALLBACK_DATA__?.knowledgeIndex) {
+    knowledgeIndex = window.__FALLBACK_DATA__.knowledgeIndex;
   }
 
   if (!featureData) {
@@ -102,6 +122,7 @@ export async function fetchProjectData(options = {}) {
     currentSpec,
     historyData,
     projectSpec,
+    knowledgeIndex,
     protocol: typeof window !== 'undefined' ? window.location.protocol : 'http:'
   };
 }

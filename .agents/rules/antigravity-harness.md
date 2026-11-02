@@ -82,6 +82,7 @@ El tablero interactivo vive en `project-docs/index.html`:
 El proyecto expone 18 skills en `.agents/skills/` invocables con `/` o por detección semántica:
 
 - `/technical-audit` — Auditoría técnica del proyecto (`project-spec.yaml`).
+- `/project-knowledge` — Extracción de base de conocimiento (C4, UML, reglas de negocio, estándares).
 - `/generate-verify` — Generación de `verify.sh`.
 - `/requirements-analysis` — Generación o actualización de `project-docs/feature_list.json`.
 - `/generate-spec` — Generación de especificación técnica, decisiones y tareas.
@@ -93,3 +94,12 @@ El proyecto expone 18 skills en `.agents/skills/` invocables con `/` o por detec
 - `/api-test-plan` y `/execute-api-test-plan` — Pruebas de API REST.
 - `/sync-skills` — Sincronización masiva triple (`.opencode/skills/` → `.github/skills/` y `.agents/skills/`).
 - `/start-feature` y `/sdd-workflow` — Orquestación del ciclo SDD completo.
+
+---
+
+## 6. Consulta Obligatoria de la Base de Conocimiento (`project-docs/knowledge/`)
+
+Para eliminar el sesgo (bias) y evitar errores por falta de contexto:
+- **Antes de redactar o implementar**: Los subagentes `spec-author` e `implementer` deben consultar obligatoriamente los artefactos en `project-docs/knowledge/` (`c4-model.md`, `uml-diagrams.md`, `business-rules.md`, `external-services.md`, `coding-standards.md` y `modules/{modulo}/`).
+- **Respeto a las reglas de negocio**: Ninguna implementación puede violar las invariantes documentadas (`BR-*`).
+- **Respeto a las convenciones**: Debe seguirse la forma de programar, patrones de inyección y librerías canónicas registradas.

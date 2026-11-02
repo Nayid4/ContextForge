@@ -70,6 +70,7 @@ Todas mantienen el mismo contenido y frontmatter (`name` + `description`).
 | Skill | Descripción | Uso |
 |-------|-------------|-----|
 | `technical-audit` | Auditoría técnica de proyecto | Generar project-spec.yaml |
+| `project-knowledge` | Extracción de base de conocimiento y arquitectura | Generar modelo C4, UML, reglas de negocio y estándares anti-sesgo |
 | `generate-verify` | Generar verify.sh | Crear script de verificación |
 | `verification` | Documentación de verificación | Consultar estructura |
 | `api-test-plan` | Plan de pruebas API REST | Generar plan markdown + archivos .http |

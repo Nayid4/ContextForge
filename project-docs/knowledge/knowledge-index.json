@@ -1,0 +1,196 @@
+{
+  "system": {
+    "name": "CloudSaaS Platform",
+    "version": "2.0.0",
+    "architecture_style": "Clean Architecture (Hexagonal) + Event-Driven Architecture (EDA)",
+    "last_audit": "2026-11-02",
+    "audited_by": "skill:project-knowledge"
+  },
+  "diagrams": [
+    {
+      "id": "c4-context",
+      "type": "C4 Model",
+      "level": "C1 - System Context",
+      "title": "Diagrama de Contexto del Sistema (C1)",
+      "description": "Fronteras del sistema con clientes, administradores, pasarela Stripe, proveedores SMTP y Prometheus.",
+      "mermaid": "flowchart TD\n    Customer[\"👤 Cliente Comprador<br>[Web / Mobile]\"]\n    Admin[\"👤 Administrador<br>[Backoffice]\"]\n    SaaS[\"🚀 CloudSaaS Platform<br>[Core SaaS System]\"]\n    Stripe[\"💳 Stripe / PSE API<br>[Pagos & Webhooks]\"]\n    SES[\"✉️ Proveedor SMTP / SES<br>[Emails Transaccionales]\"]\n    Prom[\"📊 Prometheus Server<br>[Scraping /metrics]\"]\n\n    Customer -->|Navegación & Compras| SaaS\n    Admin -->|Gestión & Operaciones| SaaS\n    SaaS -->|Cobros & Reversiones| Stripe\n    Stripe -->|Webhooks Firmados HMAC| SaaS\n    SaaS -->|Despacho de Correos| SES\n    Prom -->|Consulta de Métricas| SaaS"
+    },
+    {
+      "id": "c4-containers",
+      "type": "C4 Model",
+      "level": "C2 - Containers",
+      "title": "Diagrama de Contenedores (C2)",
+      "description": "Aplicaciones ejecutables, APIs backend, PostgreSQL 16, Redis 7 y RabbitMQ 3.13.",
+      "mermaid": "flowchart TD\n    SPA[\"🌐 Tablero SPA<br>[Vanilla JS + Tailwind v4]\"]\n    Gateway[\"🛡️ API Gateway<br>[Reverse Proxy & Auth]\"]\n    API[\"⚡ Core Services API<br>[Node.js / Express / TypeScript]\"]\n    Worker[\"🔷 Order Fulfillment Worker<br>[.NET 10 Background Worker]\"]\n    PG[(\"🐘 PostgreSQL 16<br>[ACID Relacional :5432]\")]\n    Redis[(\"🔴 Redis 7.2<br>[Cache & Locks :6379]\")]\n    Rabbit[\"🐇 RabbitMQ 3.13<br>[Event Broker :5672]\"]\n\n    SPA -->|HTTPS| Gateway\n    Gateway --> API\n    API -->|Persistencia| PG\n    API -->|Cache & Sessions| Redis\n    API -->|Publica Eventos| Rabbit\n    Rabbit -->|Consume Eventos| Worker\n    Worker -->|Actualiza Estado| PG"
+    },
+    {
+      "id": "c4-components",
+      "type": "C4 Model",
+      "level": "C3 - Components",
+      "title": "Diagrama de Componentes Clean Architecture (C3)",
+      "description": "Desglose por capas de Controllers, Application Services, Domain Entities e Infrastructure Adapters.",
+      "mermaid": "flowchart TD\n    subgraph Entry [\"Capa 1: Controllers & Gateways\"]\n        AC[AuthController]\n        CC[CatalogController]\n        CartC[CartController]\n        PW[PaymentWebhookHandler]\n    end\n    subgraph App [\"Capa 2: Application Services\"]\n        AS[AuthService]\n        CS[CatalogService]\n        CartS[CartService]\n        PS[PaymentService]\n    end\n    subgraph Domain [\"Capa 3: Domain Core\"]\n        UserE[User & Role]\n        ProdE[Product Entity]\n        OrderE[Order & TaxCalculator]\n    end\n    subgraph Infra [\"Capa 4: Infrastructure\"]\n        PGRepo[PostgresRepository]\n        RedisA[RedisCacheAdapter]\n        StripeC[StripeApiClient]\n        EvtPub[RabbitMQEventPublisher]\n    end\n    AC --> AS\n    CC --> CS\n    CartC --> CartS\n    PW --> PS\n    AS --> UserE\n    CS --> ProdE\n    CartS --> ProdE\n    PS --> OrderE\n    AS --> PGRepo\n    CS --> RedisA\n    CS --> PGRepo\n    CartS --> RedisA\n    PS --> StripeC\n    PS --> PGRepo\n    PS --> EvtPub"
+    },
+    {
+      "id": "uml-classes",
+      "type": "UML",
+      "level": "Domain Class Diagram",
+      "title": "Diagrama UML de Clases de Dominio",
+      "description": "Entidades User, Role, Product, ShoppingCart, Order, PaymentTransaction y sus invariantes.",
+      "mermaid": "classDiagram\n    class User {\n        +UUID id\n        +string email\n        +Role role\n        +validatePassword(pass) bool\n    }\n    class Product {\n        +UUID id\n        +string name\n        +decimal price\n        +int stock\n        +reserveStock(qty) bool\n    }\n    class ShoppingCart {\n        +UUID id\n        +UUID userId\n        +DateTime expiresAt\n        +addItem(prod, qty) void\n    }\n    class Order {\n        +UUID id\n        +OrderStatus status\n        +decimal total\n        +string idempotencyKey\n        +markAsPaid() void\n    }\n    class PaymentTransaction {\n        +UUID id\n        +string chargeId\n        +decimal amount\n        +string hmacSignature\n    }\n    User \"1\" --> \"1\" Role\n    ShoppingCart \"1\" *-- \"many\" Product\n    Order \"1\" --> \"1\" ShoppingCart\n    Order \"1\" *-- \"many\" PaymentTransaction"
+    },
+    {
+      "id": "uml-sequence-checkout",
+      "type": "UML",
+      "level": "Sequence Diagram",
+      "title": "Diagrama UML de Secuencia: Checkout & Pago Idempotente",
+      "description": "Flujo transaccional con llave de idempotencia, verificación Redis, cobro Stripe y confirmación por webhook HMAC.",
+      "mermaid": "sequenceDiagram\n    actor Cliente as 👤 Cliente\n    participant API as ⚡ API Gateway\n    participant Pay as 💳 PaymentService\n    participant Redis as 🔴 Redis Cache\n    participant Stripe as 💳 Stripe API\n    participant DB as 🐘 PostgreSQL\n    participant Queue as 🐇 RabbitMQ\n\n    Cliente->>API: POST /cart/checkout (Idempotency-Key: idemp_123)\n    API->>Pay: Procesar Pago\n    Pay->>Redis: SETNX idempotency:idemp_123 (TTL: 120s)\n    Pay->>Stripe: POST /v1/payment_intents\n    Stripe-->>Pay: 200 OK (client_secret)\n    Pay->>DB: INSERT Order (PENDING_PAYMENT)\n    Pay-->>Cliente: client_secret para confirmación\n    Stripe->>API: POST /webhooks/stripe (Stripe-Signature)\n    API->>Pay: Validar firma HMAC-SHA256\n    Pay->>DB: UPDATE Order SET status='PAID'\n    Pay->>Queue: Publicar evento 'OrderPaid'\n    Pay-->>Stripe: 200 OK"
+    },
+    {
+      "id": "uml-usecases",
+      "type": "UML",
+      "level": "Use Case Diagram",
+      "title": "Diagrama UML de Casos de Uso del Sistema",
+      "description": "Interacciones de Cliente, Administrador y Background Worker con los casos de uso principales.",
+      "mermaid": "flowchart LR\n    Customer((👤 Cliente))\n    Admin((👤 Administrador))\n    Worker((⚙️ Worker))\n    UC1([UC-01: Autenticación JWT])\n    UC2([UC-02: Catálogo con Cursor])\n    UC3([UC-03: Carrito Atómico en Redis])\n    UC4([UC-04: Checkout con Idempotencia])\n    UC5([UC-05: Administración de Roles])\n    UC6([UC-06: Procesamiento de Órdenes con DLQ])\n    Customer --> UC1\n    Customer --> UC2\n    Customer --> UC3\n    Customer --> UC4\n    Admin --> UC1\n    Admin --> UC5\n    Worker --> UC6"
+    }
+  ],
+  "business_rules": [
+    {
+      "id": "BR-AUTH-001",
+      "module": "backend",
+      "title": "Validez de expiración de tokens exclusivamente en Epoch UTC",
+      "severity": "Crítica",
+      "description": "El cálculo de marcas iat y exp debe realizarse en Epoch Unix UTC para evitar desfases horarios entre servidores."
+    },
+    {
+      "id": "BR-AUTH-002",
+      "module": "backend",
+      "title": "Aislamiento y precedencia de roles RBAC",
+      "severity": "Alta",
+      "description": "Los roles ADMIN, OPERATOR y CUSTOMER cuentan con permisos estrictamente delimitados por middleware."
+    },
+    {
+      "id": "BR-CART-001",
+      "module": "backend",
+      "title": "Expiración de carritos anónimos a las 24 horas",
+      "severity": "Media",
+      "description": "Los carritos no autenticados en Redis tienen un TTL de 86,400s y se fusionan al iniciar sesión."
+    },
+    {
+      "id": "BR-CART-002",
+      "module": "backend",
+      "title": "Reserva atómica y prevención de sobreventa",
+      "severity": "Crítica",
+      "description": "Operaciones atómicas DECRBY en Redis previenen que se vendan más unidades de las disponibles en stock."
+    },
+    {
+      "id": "BR-BILL-001",
+      "module": "billing",
+      "title": "Obligatoriedad de llave de idempotencia en transacciones",
+      "severity": "Crítica",
+      "description": "Todo cobro exige Idempotency-Key. Las solicitudes duplicadas son cacheadas sin generar doble cargo."
+    },
+    {
+      "id": "BR-BILL-002",
+      "module": "billing",
+      "title": "Verificación de firma criptográfica HMAC en webhooks",
+      "severity": "Crítica",
+      "description": "Ningún webhook externo puede procesarse sin validar previamente su firma HMAC-SHA256."
+    },
+    {
+      "id": "BR-BILL-003",
+      "module": "billing",
+      "title": "Algoritmo contable Banker's Rounding (IEEE 754)",
+      "severity": "Alta",
+      "description": "El redondeo de impuestos e IVA aplica redondeo al entero par más cercano a dos decimales exactos."
+    },
+    {
+      "id": "BR-ORDR-001",
+      "module": "infra",
+      "title": "Aislamiento en Dead Letter Queue tras 3 reintentos",
+      "severity": "Alta",
+      "description": "Mensajes fallidos tras retroceso exponencial (1s, 2s, 4s) se desvían a orders.dlq sin frenar la cola."
+    },
+    {
+      "id": "BR-ANLT-001",
+      "module": "analytics",
+      "title": "Ingesta no bloqueante de analítica",
+      "severity": "Media",
+      "description": "La captura de métricas ocurre en un buffer en memoria en segundo plano sin impactar latencias HTTP."
+    },
+    {
+      "id": "BR-NOTF-001",
+      "module": "notifications",
+      "title": "Sanitización estricta contra XSS en plantillas de email",
+      "severity": "Alta",
+      "description": "Todas las variables inyectadas en plantillas de correo deben ser escapadas contra inyección HTML."
+    }
+  ],
+  "external_services": [
+    {
+      "name": "Stripe API",
+      "type": "Payment Gateway",
+      "protocol": "HTTPS REST",
+      "auth": "Bearer API Key",
+      "env_var": "STRIPE_SECRET_KEY",
+      "failover": "Circuit Breaker + Idempotency"
+    },
+    {
+      "name": "Stripe Webhooks",
+      "type": "Callback Ingestion",
+      "protocol": "HTTPS Webhook",
+      "auth": "HMAC-SHA256 Signature",
+      "env_var": "STRIPE_WEBHOOK_SECRET",
+      "failover": "Reintentos idempotentes 200 OK"
+    },
+    {
+      "name": "PostgreSQL 16",
+      "type": "Relational Database",
+      "protocol": "TCP / PostgreSQL :5432",
+      "auth": "Connection String / User-Pass",
+      "env_var": "DATABASE_URL",
+      "failover": "Connection Pool Healthchecks"
+    },
+    {
+      "name": "Redis 7.2",
+      "type": "In-Memory Cache & Lock",
+      "protocol": "TCP / RESP :6379",
+      "auth": "Auth Token",
+      "env_var": "REDIS_URL",
+      "failover": "Fallback graceful a PostgreSQL"
+    },
+    {
+      "name": "RabbitMQ 3.13",
+      "type": "Message Broker",
+      "protocol": "AMQP :5672",
+      "auth": "AMQP Credentials",
+      "env_var": "RABBITMQ_URL",
+      "failover": "Dead Letter Queue (DLQ)"
+    },
+    {
+      "name": "AWS SES / SMTP",
+      "type": "Transactional Email",
+      "protocol": "SMTP / TLS :587",
+      "auth": "SMTP User / Password",
+      "env_var": "SMTP_PASS",
+      "failover": "Cola diferida de reintento"
+    }
+  ],
+  "coding_standards": {
+    "naming_conventions": {
+      "files": "kebab-case o PascalCase según runtime",
+      "classes": "PascalCase",
+      "methods": "camelCase",
+      "git_branches": "{type}/INT-{numero}/{nombre_rama} (≤80 caracteres)",
+      "git_commits": "Conventional Commits (feat, fix, docs, refactor)"
+    },
+    "guardrails": [
+      "Prohibido instalar librerías redundantes para problemas ya resueltos con dependencias del proyecto.",
+      "Controladores HTTP jamás acceden directamente a SQL o Redis; pasan por Use Cases e interfaces.",
+      "Todo flujo debe usar tipos de resultado explícitos o excepciones de dominio capturadas en middleware.",
+      "Toda nueva lógica debe contar con tests unitarios y de integración guiados por TDD/SDD."
+    ]
+  }
+}

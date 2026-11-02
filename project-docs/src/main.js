@@ -15,6 +15,7 @@ import { DependencyTreeComponent } from './features/dependency-tree/DependencyTr
 import { SpaceView3D } from './features/space-view-3d/SpaceView3D.js';
 import { renderHistoryTimeline } from './features/history-timeline/HistoryTimeline.js';
 import { renderArchitectureDocs } from './features/architecture-docs/ArchitectureDocs.js';
+import { renderKnowledgeBase } from './features/knowledge-base/KnowledgeBase.js';
 
 class App {
   constructor() {
@@ -268,6 +269,7 @@ class App {
           <!-- 3. Navegación por pestañas (Router) -->
           <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: 'features', label: 'Tareas y Bugfixes', icon: Icons.folder, active: this.activeTab === 'features', badge: String(state.features.length) })}
+            ${renderTabButton({ id: 'knowledge', label: 'Base de Conocimiento', icon: Icons.book, active: this.activeTab === 'knowledge', badge: String(state.knowledgeIndex?.business_rules?.length || 10) })}
             ${renderTabButton({ id: 'architecture', label: 'Arquitectura & Stack', icon: Icons.layers, active: this.activeTab === 'architecture' })}
             ${renderTabButton({ id: 'graph', label: 'Grafo Visual DAG', icon: Icons.gitBranch, active: this.activeTab === 'graph' })}
             ${renderTabButton({ id: 'tree', label: 'Árbol Jerárquico', icon: Icons.check, active: this.activeTab === 'tree' })}
@@ -329,9 +331,17 @@ class App {
           </div>
         `;
 
+      case 'knowledge':
+        return renderKnowledgeBase({
+          knowledgeIndex: state.knowledgeIndex,
+          projectSpec: state.projectSpec,
+          features: state.features
+        });
+
       case 'architecture':
         return renderArchitectureDocs({ 
           projectSpec: state.projectSpec, 
+          knowledgeIndex: state.knowledgeIndex,
           features: state.features 
         });
 
@@ -514,6 +524,95 @@ class App {
         store.resetFilters();
         return;
       }
+
+      // Cambio de diagrama en Arquitectura & Stack
+      const archTabBtn = e.target.closest('[data-arch-tab]');
+      if (archTabBtn) {
+        const tabId = archTabBtn.getAttribute('data-arch-tab');
+        document.querySelectorAll('.arch-tab-btn').forEach(btn => {
+          btn.classList.remove('active', 'bg-indigo-600', 'text-white');
+          btn.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+        archTabBtn.classList.add('active', 'bg-indigo-600', 'text-white');
+        archTabBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+        document.querySelectorAll('.diagram-panel').forEach(panel => {
+          panel.classList.add('hidden');
+          panel.classList.remove('block');
+        });
+        const targetPanel = document.getElementById(`diagram-panel-${tabId}`);
+        if (targetPanel) {
+          targetPanel.classList.remove('hidden');
+          targetPanel.classList.add('block');
+        }
+        return;
+      }
+
+      // Copiar código Mermaid del diagrama activo
+      const copyActiveBtn = e.target.closest('#copy-active-mermaid-btn');
+      if (copyActiveBtn) {
+        const activePanel = document.querySelector('.diagram-panel:not(.hidden)');
+        const codeEl = activePanel?.querySelector('pre code');
+        const textToCopy = codeEl ? codeEl.textContent : 'Clean Architecture + Event-Driven Architecture Layers';
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            const origHtml = copyActiveBtn.innerHTML;
+            copyActiveBtn.innerHTML = '<span>✅</span> ¡Copiado!';
+            setTimeout(() => { copyActiveBtn.innerHTML = origHtml; }, 2000);
+          }).catch(() => {});
+        }
+        return;
+      }
+
+      // Copiar código Mermaid individual
+      const copyMermaidBtn = e.target.closest('[data-copy-mermaid]');
+      if (copyMermaidBtn) {
+        const mermaidText = copyMermaidBtn.getAttribute('data-copy-mermaid');
+        if (mermaidText && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(mermaidText).then(() => {
+            const origHtml = copyMermaidBtn.innerHTML;
+            copyMermaidBtn.innerHTML = '<span>✅</span> ¡Copiado!';
+            setTimeout(() => { copyMermaidBtn.innerHTML = origHtml; }, 2000);
+          }).catch(() => {});
+        }
+        return;
+      }
+
+      // Abrir modal de contexto IA
+      const openAiModalBtn = e.target.closest('[data-action="open-ai-context-modal"]');
+      if (openAiModalBtn) {
+        const modal = document.getElementById('ai-context-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+        return;
+      }
+
+      // Cerrar modal de contexto IA
+      const closeAiModalBtn = e.target.closest('[data-action="close-ai-context-modal"]');
+      if (closeAiModalBtn || e.target.id === 'ai-context-modal') {
+        const modal = document.getElementById('ai-context-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
+
+      // Copiar prompt de contexto para IA
+      const copyContextBtn = e.target.closest('#copy-context-btn');
+      if (copyContextBtn) {
+        const textarea = document.getElementById('ai-context-prompt-text');
+        if (textarea && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(textarea.value).then(() => {
+            const origHtml = copyContextBtn.innerHTML;
+            copyContextBtn.innerHTML = '¡Contexto Copiado! ✅';
+            setTimeout(() => { copyContextBtn.innerHTML = origHtml; }, 2000);
+          }).catch(() => {});
+        }
+        return;
+      }
     });
 
     // Búsqueda con Debouncing Inteligente (260ms) para no bloquear la escritura
@@ -538,12 +637,30 @@ class App {
         store.setFilter('priority', e.target.value);
       } else if (e.target.id === 'page-size-select') {
         store.setPageSize(parseInt(e.target.value, 10));
+      } else if (e.target.id === 'kb-rules-module-filter') {
+        const selectedMod = e.target.value.toLowerCase().trim();
+        const ruleCards = document.querySelectorAll('[data-rule-module]');
+        ruleCards.forEach(card => {
+          const cardMod = (card.getAttribute('data-rule-module') || '').toLowerCase().trim();
+          if (!selectedMod || cardMod === selectedMod) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
       }
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && store.getState().selectedFeature) {
-        store.setSelectedFeature(null);
+      if (e.key === 'Escape') {
+        if (store.getState().selectedFeature) {
+          store.setSelectedFeature(null);
+        }
+        const aiModal = document.getElementById('ai-context-modal');
+        if (aiModal && !aiModal.classList.contains('hidden')) {
+          aiModal.classList.add('hidden');
+          aiModal.classList.remove('flex');
+        }
       }
     });
   }

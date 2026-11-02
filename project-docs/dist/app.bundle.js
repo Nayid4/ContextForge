@@ -17,8 +17,9 @@
     history: { records: [] },
     historyData: { records: [] },
     projectSpec: null,
+    knowledgeIndex: null,
     activeTab: "features",
-    // 'features' | 'architecture' | 'graph' | 'tree' | 'three' | 'history'
+    // 'features' | 'architecture' | 'knowledge' | 'graph' | 'tree' | 'three' | 'history'
     theme: getInitialTheme(),
     filters: {
       search: "",
@@ -85,7 +86,7 @@
     setLoading(loading) {
       this.setState({ loading });
     }
-    setData({ project, features, currentSpec, historyData, projectSpec }) {
+    setData({ project, features, currentSpec, historyData, projectSpec, knowledgeIndex }) {
       const featList = Array.isArray(features) ? features : [];
       const pageSize = this.state.pagination.pageSize || 10;
       const totalPages = Math.ceil(featList.length / pageSize) || 1;
@@ -96,6 +97,7 @@
         history: historyData || { records: [] },
         historyData: historyData || { records: [] },
         projectSpec: projectSpec || this.state.projectSpec || null,
+        knowledgeIndex: knowledgeIndex || this.state.knowledgeIndex || null,
         pagination: {
           ...this.state.pagination,
           totalPages
@@ -241,6 +243,7 @@
     let currentSpec = {};
     let historyData = { records: [] };
     let projectSpec = null;
+    let knowledgeIndex = null;
     const cacheBuster = bypassCache ? `?_t=${Date.now()}` : "";
     const fetchOpts = bypassCache ? { cache: "no-store" } : {};
     const featurePaths = [
@@ -264,6 +267,11 @@
       `project-spec.json${cacheBuster}`,
       `../project-spec.json${cacheBuster}`,
       `./project-docs/project-spec.json${cacheBuster}`
+    ];
+    const knowledgePaths = [
+      `knowledge/knowledge-index.json${cacheBuster}`,
+      `../knowledge/knowledge-index.json${cacheBuster}`,
+      `./project-docs/knowledge/knowledge-index.json${cacheBuster}`
     ];
     for (const path of featurePaths) {
       try {
@@ -305,14 +313,28 @@
       } catch (_) {
       }
     }
+    for (const path of knowledgePaths) {
+      try {
+        const res = await fetch(path, fetchOpts);
+        if (res.ok) {
+          knowledgeIndex = await res.json();
+          break;
+        }
+      } catch (_) {
+      }
+    }
     if (!featureData && typeof window !== "undefined" && window.__FALLBACK_DATA__) {
       featureData = window.__FALLBACK_DATA__.featureList || null;
       currentSpec = window.__FALLBACK_DATA__.currentSpec || {};
       historyData = window.__FALLBACK_DATA__.historyData || { records: [] };
       projectSpec = window.__FALLBACK_DATA__.projectSpec || null;
+      knowledgeIndex = window.__FALLBACK_DATA__.knowledgeIndex || null;
     }
     if (!projectSpec && typeof window !== "undefined" && window.__FALLBACK_DATA__?.projectSpec) {
       projectSpec = window.__FALLBACK_DATA__.projectSpec;
+    }
+    if (!knowledgeIndex && typeof window !== "undefined" && window.__FALLBACK_DATA__?.knowledgeIndex) {
+      knowledgeIndex = window.__FALLBACK_DATA__.knowledgeIndex;
     }
     if (!featureData) {
       featureData = {
@@ -326,6 +348,7 @@
       currentSpec,
       historyData,
       projectSpec,
+      knowledgeIndex,
       protocol: typeof window !== "undefined" ? window.location.protocol : "http:"
     };
   }
@@ -2382,13 +2405,15 @@
   }
 
   // project-docs/src/features/architecture-docs/ArchitectureDocs.js
-  function renderArchitectureDocs({ projectSpec, features = [] }) {
+  function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
     const spec = projectSpec || getFallbackSpec();
+    const kData = knowledgeIndex || getFallbackKnowledge();
     const proj = spec.project || {};
     const tech = spec.tech_stack || {};
     const arch = spec.architecture || {};
     const modules = spec.modules || [];
     const goals = spec.business_goals || [];
+    const diagrams = kData.diagrams || [];
     const featureMap = /* @__PURE__ */ new Map();
     features.forEach((f) => featureMap.set(f.id, f));
     return `
@@ -2463,7 +2488,7 @@
         </div>
       </section>
 
-      <!-- 2. DIAGRAMA VISUAL INTERACTIVO DE ARQUITECTURA -->
+      <!-- 2. DIAGRAMAS GENERALES DE ARQUITECTURA (C4 & UML) -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -2471,248 +2496,310 @@
               <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                 ${Icons.layers}
               </span>
-              Diagrama de Arquitectura del Sistema
+              Diagramas Generales de Arquitectura (C4 & UML)
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Clean Architecture por capas con comunicaci\xF3n orientada a eventos (EDA) y persistencia distribuida
+              Visualiza el modelo C4 y los diagramas UML del proyecto con c\xF3digo Mermaid interactivo
             </p>
           </div>
 
-          <!-- Leyenda de Conexiones -->
-          <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono">
-            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-              <span class="w-3 h-0.5 bg-cyan-500 rounded"></span> S\xEDncrono (REST/HTTPS)
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-              <span class="w-3 h-0.5 bg-indigo-500 rounded"></span> As\xEDncrono (Events / Colas)
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-              <span class="w-3 h-0.5 bg-emerald-500 rounded"></span> Persistencia (ACID SQL)
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-              <span class="w-3 h-0.5 bg-amber-500 rounded"></span> Cache / Locks (Redis)
-            </span>
+          <div class="flex items-center gap-2">
+            <button type="button" 
+                    id="copy-active-mermaid-btn" 
+                    class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5">
+              <span>\u{1F4CB}</span> Copiar C\xF3digo Mermaid
+            </button>
           </div>
         </div>
 
-        <!-- Lienzo SVG del Diagrama de Arquitectura -->
-        <div class="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/90 p-4 shadow-inner">
-          <div class="min-w-[960px] max-w-5xl mx-auto py-4">
-            
-            <!-- CAPA 1: Clientes y Entrada Externa -->
-            <div class="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                  Capa 1: Clientes & Per\xEDmetro de Entrada
-                </span>
-                <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800">
-                  HTTPS / WSS / JSON
-                </span>
-              </div>
-              <div class="grid grid-cols-4 gap-3">
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <div class="text-base mb-1">\u{1F4BB}</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Web App (SPA)</div>
-                  <div class="text-[10px] text-slate-400">Dashboard & Cat\xE1logo</div>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <div class="text-base mb-1">\u{1F4F1}</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Mobile Client</div>
-                  <div class="text-[10px] text-slate-400">Checkout & Tracking</div>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <div class="text-base mb-1">\u{1F916}</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Agentes de IA</div>
-                  <div class="text-[10px] text-slate-400">Antigravity / SDD CLI</div>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <div class="text-base mb-1">\u{1F4B3}</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Webhooks Pasarela</div>
-                  <div class="text-[10px] text-slate-400">Stripe / PSE Callbacks</div>
-                </div>
-              </div>
-            </div>
+        <!-- Selector de Pesta\xF1as de Diagramas -->
+        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto text-xs font-medium" id="arch-diagram-nav">
+          <button type="button" 
+                  data-arch-tab="layers" 
+                  class="arch-tab-btn active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-semibold transition-all cursor-pointer">
+            \u{1F3D7}\uFE0F Capas del Sistema (Clean Core)
+          </button>
+          <button type="button" 
+                  data-arch-tab="c4-context" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            \u{1F4D0} C4: Contexto (C1)
+          </button>
+          <button type="button" 
+                  data-arch-tab="c4-containers" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            \u{1F4E6} C4: Contenedores (C2)
+          </button>
+          <button type="button" 
+                  data-arch-tab="c4-components" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            \u{1F9E9} C4: Componentes (C3)
+          </button>
+          <button type="button" 
+                  data-arch-tab="uml-classes" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            \u{1F3DB}\uFE0F UML: Clases
+          </button>
+          <button type="button" 
+                  data-arch-tab="uml-sequence" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            \u{1F504} UML: Secuencia Checkout
+          </button>
+          <button type="button" 
+                  data-arch-tab="uml-usecases" 
+                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+            \u{1F465} UML: Casos de Uso
+          </button>
+        </div>
 
-            <!-- Flecha de Flujo 1 -> 2 -->
-            <div class="flex justify-center -my-3 relative z-10">
-              <div class="px-3 py-1 rounded-full bg-cyan-600 text-white font-mono text-[10px] font-bold shadow-md flex items-center gap-1">
-                <span>\u2193 Tr\xE1fico HTTPS Seguro</span>
-              </div>
-            </div>
-
-            <!-- CAPA 2: API Gateway & Edge -->
-            <div class="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 shadow-xs my-6">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  Capa 2: API Gateway, Enrutamiento & Seguridad Perimetral
-                </span>
-                <span class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
-                  Reverse Proxy + Auth Middleware
-                </span>
-              </div>
-              <div class="grid grid-cols-3 gap-3 text-center">
-                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F6E1}\uFE0F Rate Limiting & SSL</div>
-                  <div class="text-[10px] text-slate-400">Protecci\xF3n DoS & TLS 1.3</div>
+        <!-- 2.1 PANEL: CAPAS GENERALES DEL SISTEMA -->
+        <div id="diagram-panel-layers" class="diagram-panel block mt-6">
+          <div class="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/90 p-4 shadow-inner">
+            <div class="min-w-[960px] max-w-5xl mx-auto py-4">
+              
+              <!-- CAPA 1: Clientes y Entrada Externa -->
+              <div class="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                    Capa 1: Clientes & Per\xEDmetro de Entrada
+                  </span>
+                  <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800">
+                    HTTPS / WSS / JSON
+                  </span>
                 </div>
-                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F511} JWT Auth & RBAC</div>
-                  <div class="text-[10px] text-slate-400">Middleware de firmas criptogr\xE1ficas</div>
-                </div>
-                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F500} Router & Circuit Breaker</div>
-                  <div class="text-[10px] text-slate-400">Despacho hacia microservicios</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Flecha de Flujo 2 -> 3 -->
-            <div class="flex justify-center -my-3 relative z-10">
-              <div class="px-3 py-1 rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-md flex items-center gap-1">
-                <span>\u2193 Casos de Uso & Clean Core</span>
-              </div>
-            </div>
-
-            <!-- CAPA 3: Dominios & Microservicios (Clean Core) -->
-            <div class="p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs my-6">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Capa 3: Dominios Funcionales & Microservicios (L\xF3gica de Negocio Pura)
-                </span>
-                <span class="text-[10px] font-mono text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
-                  Clean Architecture
-                </span>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">auth</span>
-                    <span class="text-[9px] font-mono bg-indigo-100 dark:bg-indigo-950/60 px-1 py-0.2 rounded text-indigo-700 dark:text-indigo-300">INT-002, 003</span>
+                <div class="grid grid-cols-4 gap-3">
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                    <div class="text-base mb-1">\u{1F4BB}</div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Web App (SPA)</div>
+                    <div class="text-[10px] text-slate-400">Dashboard & Cat\xE1logo</div>
                   </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Auth & Roles</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">JWT, RBAC y expiraci\xF3n UTC</div>
-                </div>
-
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-cyan-600 dark:text-cyan-400">catalog</span>
-                    <span class="text-[9px] font-mono bg-cyan-100 dark:bg-cyan-950/60 px-1 py-0.2 rounded text-cyan-700 dark:text-cyan-300">INT-004</span>
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                    <div class="text-base mb-1">\u{1F4F1}</div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Mobile Client</div>
+                    <div class="text-[10px] text-slate-400">Checkout & Tracking</div>
                   </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Product Catalog</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Cursor pagination & b\xFAsqueda</div>
-                </div>
-
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">cart</span>
-                    <span class="text-[9px] font-mono bg-emerald-100 dark:bg-emerald-950/60 px-1 py-0.2 rounded text-emerald-700 dark:text-emerald-300">INT-005</span>
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                    <div class="text-base mb-1">\u{1F916}</div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Agentes de IA</div>
+                    <div class="text-[10px] text-slate-400">Antigravity / SDD CLI</div>
                   </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Shopping Cart</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Operaciones at\xF3micas Redis</div>
-                </div>
-
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-amber-600 dark:text-amber-400">billing</span>
-                    <span class="text-[9px] font-mono bg-amber-100 dark:bg-amber-950/60 px-1 py-0.2 rounded text-amber-700 dark:text-amber-300">INT-006, 007</span>
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                    <div class="text-base mb-1">\u{1F4B3}</div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Webhooks Pasarela</div>
+                    <div class="text-[10px] text-slate-400">Stripe / PSE Callbacks</div>
                   </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Payment Gateway</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Stripe HMAC & redondeo contable</div>
-                </div>
-
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-purple-600 dark:text-purple-400">orders</span>
-                    <span class="text-[9px] font-mono bg-purple-100 dark:bg-purple-950/60 px-1 py-0.2 rounded text-purple-700 dark:text-purple-300">INT-008</span>
-                  </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Order Worker</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Consumidor de colas con DLQ</div>
-                </div>
-
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-rose-600 dark:text-rose-400">analytics</span>
-                    <span class="text-[9px] font-mono bg-rose-100 dark:bg-rose-950/60 px-1 py-0.2 rounded text-rose-700 dark:text-rose-300">INT-009</span>
-                  </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Event Stream</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">M\xE9tricas Prometheus /metrics</div>
-                </div>
-
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 sm:col-span-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400">notifications</span>
-                    <span class="text-[9px] font-mono bg-blue-100 dark:bg-blue-950/60 px-1 py-0.2 rounded text-blue-700 dark:text-blue-300">INT-010</span>
-                  </div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Notification Service</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Emails transaccionales HTML seguros & retries SMTP</div>
                 </div>
               </div>
-            </div>
 
-            <!-- Flecha de Flujo 3 -> 4 -->
-            <div class="flex justify-center -my-3 relative z-10">
-              <div class="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold shadow-md flex items-center gap-1">
-                <span>\u2193 Persistencia, Cache & Colas de Mensajes</span>
+              <!-- Flecha de Flujo 1 -> 2 -->
+              <div class="flex justify-center -my-3 relative z-10">
+                <div class="px-3 py-1 rounded-full bg-cyan-600 text-white font-mono text-[10px] font-bold shadow-md">
+                  \u2193 Tr\xE1fico HTTPS Seguro
+                </div>
               </div>
-            </div>
 
-            <!-- CAPA 4: Infraestructura, Datos & Mensajer\xEDa -->
-            <div class="p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-xs mt-6">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Capa 4: Servicios de Persistencia, Cache Distribuido & Event Broker
-                </span>
-                <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                  State & Messaging
-                </span>
+              <!-- CAPA 2: API Gateway & Edge -->
+              <div class="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 shadow-xs my-6">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    Capa 2: API Gateway, Enrutamiento & Seguridad Perimetral
+                  </span>
+                  <span class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                    Reverse Proxy + Auth Middleware
+                  </span>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-center">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F6E1}\uFE0F Rate Limiting & SSL</div>
+                    <div class="text-[10px] text-slate-400">Protecci\xF3n DoS & TLS 1.3</div>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F511} JWT Auth & RBAC</div>
+                    <div class="text-[10px] text-slate-400">Middleware de firmas criptogr\xE1ficas</div>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F500} Router & Circuit Breaker</div>
+                    <div class="text-[10px] text-slate-400">Despacho hacia microservicios</div>
+                  </div>
+                </div>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- PostgreSQL -->
-                <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="text-xl">\u{1F418}</span>
-                    <div>
-                      <div class="font-bold text-xs text-slate-900 dark:text-slate-100">PostgreSQL 16 Cluster</div>
-                      <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">Puerto 5432 \xB7 ACID Transaccional</div>
+
+              <!-- Flecha de Flujo 2 -> 3 -->
+              <div class="flex justify-center -my-3 relative z-10">
+                <div class="px-3 py-1 rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-md">
+                  \u2193 Casos de Uso & Clean Core
+                </div>
+              </div>
+
+              <!-- CAPA 3: Dominios & Microservicios (Clean Core) -->
+              <div class="p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs my-6">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Capa 3: Dominios Funcionales & Microservicios (L\xF3gica de Negocio Pura)
+                  </span>
+                  <span class="text-[10px] font-mono text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
+                    Clean Architecture
+                  </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">auth</span>
+                      <span class="text-[9px] font-mono bg-indigo-100 dark:bg-indigo-950/60 px-1 py-0.2 rounded text-indigo-700 dark:text-indigo-300">INT-002, 003</span>
                     </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Auth & Roles</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">JWT, RBAC y expiraci\xF3n UTC</div>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    \xD3rdenes, usuarios, tablas de roles y cat\xE1logo. Versionado con migraciones deterministas y pool de conexiones.
-                  </p>
-                </div>
 
-                <!-- Redis -->
-                <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="text-xl">\u{1F534}</span>
-                    <div>
-                      <div class="font-bold text-xs text-slate-900 dark:text-slate-100">Redis 7.2 Distributed Cache</div>
-                      <div class="text-[10px] font-mono text-amber-600 dark:text-amber-400">Puerto 6379 \xB7 In-Memory Key/Value</div>
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-cyan-600 dark:text-cyan-400">catalog</span>
+                      <span class="text-[9px] font-mono bg-cyan-100 dark:bg-cyan-950/60 px-1 py-0.2 rounded text-cyan-700 dark:text-cyan-300">INT-004</span>
                     </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Product Catalog</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">Cursor pagination & b\xFAsqueda</div>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    Cache de cat\xE1logo, sesiones vol\xE1tiles de carritos an\xF3nimos y cerrojos distribuidos (Redlock) para stock concurrente.
-                  </p>
-                </div>
 
-                <!-- RabbitMQ / Kafka -->
-                <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="text-xl">\u{1F407}</span>
-                    <div>
-                      <div class="font-bold text-xs text-slate-900 dark:text-slate-100">RabbitMQ / Kafka Broker</div>
-                      <div class="text-[10px] font-mono text-purple-600 dark:text-purple-400">Puerto 5672 \xB7 Event Bus & DLQ</div>
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">cart</span>
+                      <span class="text-[9px] font-mono bg-emerald-100 dark:bg-emerald-950/60 px-1 py-0.2 rounded text-emerald-700 dark:text-emerald-300">INT-005</span>
                     </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Shopping Cart</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">Operaciones at\xF3micas Redis</div>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    Colas as\xEDncronas para OrderFulfilled, webhooks entrantes y reintentos autom\xE1ticos con retroceso exponencial.
-                  </p>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-amber-600 dark:text-amber-400">billing</span>
+                      <span class="text-[9px] font-mono bg-amber-100 dark:bg-amber-950/60 px-1 py-0.2 rounded text-amber-700 dark:text-amber-300">INT-006, 007</span>
+                    </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Payment Gateway</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">Stripe HMAC & redondeo contable</div>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-purple-600 dark:text-purple-400">orders</span>
+                      <span class="text-[9px] font-mono bg-purple-100 dark:bg-purple-950/60 px-1 py-0.2 rounded text-purple-700 dark:text-purple-300">INT-008</span>
+                    </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Order Worker</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">Consumidor de colas con DLQ</div>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-rose-600 dark:text-rose-400">analytics</span>
+                      <span class="text-[9px] font-mono bg-rose-100 dark:bg-rose-950/60 px-1 py-0.2 rounded text-rose-700 dark:text-rose-300">INT-009</span>
+                    </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Event Stream</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">M\xE9tricas Prometheus /metrics</div>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 sm:col-span-2">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-blue-600 dark:text-blue-400">notifications</span>
+                      <span class="text-[9px] font-mono bg-blue-100 dark:bg-blue-950/60 px-1 py-0.2 rounded text-blue-700 dark:text-blue-300">INT-010</span>
+                    </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Notification Service</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">Emails transaccionales HTML seguros & retries SMTP</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
+              <!-- Flecha de Flujo 3 -> 4 -->
+              <div class="flex justify-center -my-3 relative z-10">
+                <div class="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold shadow-md">
+                  \u2193 Persistencia, Cache & Colas de Mensajes
+                </div>
+              </div>
+
+              <!-- CAPA 4: Infraestructura, Datos & Mensajer\xEDa -->
+              <div class="p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-xs mt-6">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Capa 4: Servicios de Persistencia, Cache Distribuido & Event Broker
+                  </span>
+                  <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                    State & Messaging
+                  </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- PostgreSQL -->
+                  <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xl">\u{1F418}</span>
+                      <div>
+                        <div class="font-bold text-xs text-slate-900 dark:text-slate-100">PostgreSQL 16 Cluster</div>
+                        <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">Puerto 5432 \xB7 ACID Transaccional</div>
+                      </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                      \xD3rdenes, usuarios, tablas de roles y cat\xE1logo. Versionado con migraciones deterministas y pool de conexiones.
+                    </p>
+                  </div>
+
+                  <!-- Redis -->
+                  <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xl">\u{1F534}</span>
+                      <div>
+                        <div class="font-bold text-xs text-slate-900 dark:text-slate-100">Redis 7.2 Distributed Cache</div>
+                        <div class="text-[10px] font-mono text-amber-600 dark:text-amber-400">Puerto 6379 \xB7 In-Memory Key/Value</div>
+                      </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                      Cache de cat\xE1logo, sesiones vol\xE1tiles de carritos an\xF3nimos y cerrojos distribuidos (Redlock) para stock concurrente.
+                    </p>
+                  </div>
+
+                  <!-- RabbitMQ / Kafka -->
+                  <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xl">\u{1F407}</span>
+                      <div>
+                        <div class="font-bold text-xs text-slate-900 dark:text-slate-100">RabbitMQ / Kafka Broker</div>
+                        <div class="text-[10px] font-mono text-purple-600 dark:text-purple-400">Puerto 5672 \xB7 Event Bus & DLQ</div>
+                      </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                      Colas as\xEDncronas para OrderFulfilled, webhooks entrantes y reintentos autom\xE1ticos con retroceso exponencial.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
+
+        <!-- 2.2 PANELES DE DIAGRAMAS C4 & UML (Generados desde knowledge-index.json) -->
+        ${diagrams.map((diag) => `
+          <div id="diagram-panel-${diag.id}" class="diagram-panel hidden mt-6 space-y-4">
+            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">
+                    ${diag.type}
+                  </span>
+                  <span class="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    ${diag.level}
+                  </span>
+                </div>
+                <button type="button" 
+                        data-copy-mermaid="${escapeAttr2(diag.mermaid)}"
+                        class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-700 dark:text-slate-300 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1">
+                  <span>\u{1F4CB}</span> Copiar Mermaid
+                </button>
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 mb-1">${diag.title}</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">${diag.description}</p>
+              
+              <!-- Visor de C\xF3digo Mermaid -->
+              <pre class="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800"><code>${escapeHtml3(diag.mermaid)}</code></pre>
+            </div>
+          </div>
+        `).join("")}
+
       </section>
 
       <!-- 3. STACK DE TECNOLOG\xCDAS Y LIBRER\xCDAS -->
@@ -2922,6 +3009,10 @@
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
+  function escapeAttr2(text) {
+    if (!text) return "";
+    return String(text).replace(/"/g, "&quot;");
+  }
   function getFallbackSpec() {
     if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.projectSpec) {
       return window.__FALLBACK_DATA__.projectSpec;
@@ -2950,6 +3041,344 @@
         patterns: []
       },
       modules: []
+    };
+  }
+  function getFallbackKnowledge() {
+    if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.knowledgeIndex) {
+      return window.__FALLBACK_DATA__.knowledgeIndex;
+    }
+    return {
+      diagrams: [],
+      business_rules: [],
+      external_services: [],
+      coding_standards: { guardrails: [], naming_conventions: {} }
+    };
+  }
+
+  // project-docs/src/features/knowledge-base/KnowledgeBase.js
+  function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
+    const kData = knowledgeIndex || getFallbackKnowledge2();
+    const rules = kData.business_rules || [];
+    const services = kData.external_services || [];
+    const standards = kData.coding_standards || {};
+    const guardrails = standards.guardrails || [];
+    const naming = standards.naming_conventions || {};
+    return `
+    <div class="space-y-8">
+      
+      <!-- 1. HEADER HERO: Base de Conocimiento Can\xF3nica -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                Single Source of Truth
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                Anti-Bias Context for AI
+              </span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+              <span>\u{1F4DA}</span> Base de Conocimiento del Proyecto
+            </h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+              Repositorio can\xF3nico de reglas de negocio, contratos de servicios externos, diagramas y est\xE1ndares de codificaci\xF3n.
+              Sirve de <strong>contexto can\xF3nico</strong> para alimentar a los agentes de IA (Google Antigravity, Claude Code, Open Code, Copilot, Codex) y evitar el sesgo o las alucinaciones por falta de informaci\xF3n.
+            </p>
+          </div>
+
+          <!-- Bot\xF3n Generador de Prompt de Contexto -->
+          <div class="shrink-0">
+            <button type="button" 
+                    data-action="open-ai-context-modal" 
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all cursor-pointer">
+              <span>\u{1F916}</span> Copiar Contexto para IA
+            </button>
+          </div>
+        </div>
+
+        <!-- M\xE9tricas R\xE1pidas de la Base de Conocimiento -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
+            <div class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${rules.length} catalogadas</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Identificadores BR-*</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
+            <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} integraciones</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Stripe, PG, Redis, RabbitMQ</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Guardrails Anti-Sesgo</div>
+            <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">${guardrails.length} directrices</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Reglas de no-alucinaci\xF3n</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Documentaci\xF3n Modular</div>
+            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">5 Bounded Contexts</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">infra, backend, billing...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. CAT\xC1LOGO DE REGLAS DE NEGOCIO (BR-*) -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                ${Icons.checkCircle}
+              </span>
+              Cat\xE1logo de Reglas de Negocio (Invariantes de Dominio)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Invariantes de cumplimiento estricto para no generar discrepancias contables ni vulnerabilidades
+            </p>
+          </div>
+
+          <!-- Selector de Filtro de M\xF3dulo -->
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-slate-400 font-mono text-[11px]">Filtrar:</span>
+            <select id="kb-rules-module-filter" 
+                    class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <option value="">Todos los M\xF3dulos</option>
+              <option value="backend">backend</option>
+              <option value="billing">billing</option>
+              <option value="infra">infra</option>
+              <option value="analytics">analytics</option>
+              <option value="notifications">notifications</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-3" id="kb-rules-list">
+          ${rules.map((rule) => {
+      const isCritical = rule.severity === "Cr\xEDtica";
+      const sevBadge = isCritical ? "bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800" : "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
+      return `
+              <div data-rule-module="${rule.module}" 
+                   class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-indigo-400 transition-all space-y-1.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
+                      ${rule.id}
+                    </span>
+                    <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                      [${rule.module}]
+                    </span>
+                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
+                      ${rule.title}
+                    </h4>
+                  </div>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
+                    ${rule.severity}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
+                  ${rule.description}
+                </p>
+              </div>
+            `;
+    }).join("")}
+        </div>
+      </section>
+
+      <!-- 3. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="mb-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
+              ${Icons.server}
+            </span>
+            Matriz de Servicios Externos & Protocolos
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Contratos, protocolos, autenticaci\xF3n y pol\xEDticas de contingencia de las dependencias externas
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${services.map((svc) => `
+            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${svc.name}</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
+                  ${svc.type}
+                </span>
+              </div>
+              <div class="space-y-1 text-[11px] font-mono">
+                <div class="text-slate-500 dark:text-slate-400">
+                  Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${svc.protocol}</span>
+                </div>
+                <div class="text-slate-500 dark:text-slate-400">
+                  Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${svc.auth}</span>
+                </div>
+                <div class="text-slate-500 dark:text-slate-400">
+                  Variable: <code class="text-indigo-600 dark:text-indigo-400">${svc.env_var}</code>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
+                <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${svc.failover}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+
+      <!-- 4. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="mb-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              ${Icons.code}
+            </span>
+            Directrices Anti-Sesgo & Forma de Programar
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Reglas de oro para evitar que los agentes de IA inventen dependencias o rompan la arquitectura
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Guardrails Estrictos para IA -->
+          <div class="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/15 space-y-3">
+            <h4 class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span>\u{1F6D1}</span> Guardrails de No-Alucinaci\xF3n (Obligatorios)
+            </h4>
+            <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
+              ${guardrails.map((g) => `
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-500 font-bold shrink-0 mt-0.5">\u2715</span>
+                  <span>${escapeHtml4(g)}</span>
+                </li>
+              `).join("")}
+            </ul>
+          </div>
+
+          <!-- Convenciones de Nomenclatura -->
+          <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
+            <h4 class="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>\u{1F4D0}</span> Convenciones de Nomenclatura del C\xF3digo
+            </h4>
+            <div class="space-y-2 text-xs font-mono">
+              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span class="text-slate-400">Archivos:</span>
+                <span class="text-slate-800 dark:text-slate-200 font-semibold">${naming.files || "kebab-case"}</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span class="text-slate-400">Clases / Tipos:</span>
+                <span class="text-slate-800 dark:text-slate-200 font-semibold">${naming.classes || "PascalCase"}</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span class="text-slate-400">Ramas Git:</span>
+                <code class="text-indigo-600 dark:text-indigo-400 font-bold">{type}/INT-{id}/{name} (\u226480c)</code>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span class="text-slate-400">Commits:</span>
+                <code class="text-indigo-600 dark:text-indigo-400 font-bold">feat(scope): desc / fix(...)</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. EXPLORADOR MODULAR DE DOCUMENTACI\xD3N -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+        <div class="mb-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+              ${Icons.folder}
+            </span>
+            Documentaci\xF3n Modular Generada (<code class="font-mono text-indigo-500">project-docs/knowledge/modules/</code>)
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Archivos estructurados por Bounded Context listos para referencia de agentes y desarrolladores
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          ${["infra", "backend", "billing", "analytics", "notifications"].map((modName) => `
+            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 space-y-2 text-xs">
+              <div class="flex items-center gap-2 font-bold font-mono text-indigo-600 dark:text-indigo-400">
+                <span>\u{1F4C1}</span>
+                <span>${modName}</span>
+              </div>
+              <div class="space-y-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+                  <span>\u{1F4C4}</span> <code>module-spec.md</code>
+                </div>
+                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+                  <span>\u{1F4C4}</span> <code>rules.md</code>
+                </div>
+                <div class="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+                  <span>\u{1F4C4}</span> <code>sequence.md</code>
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+
+      <!-- MODAL FLOTANTE DE CONTEXTO CAN\xD3NICO PARA IA -->
+      <div id="ai-context-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>\u{1F916}</span> Contexto Can\xF3nico para alimentar a la IA (System Prompt)
+            </h3>
+            <button type="button" data-action="close-ai-context-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+              \u2715
+            </button>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-400">
+            Copia este bloque de instrucciones para inicializar cualquier conversaci\xF3n con agentes o modelos (ChatGPT, Claude, Codex, Copilot) para que operen con cero sesgo y pleno conocimiento del proyecto:
+          </p>
+          <div class="relative">
+            <textarea id="ai-context-prompt-text" readonly rows="12" class="w-full p-3 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none">
+# Contexto Can\xF3nico del Proyecto \u2014 CloudSaaS Platform
+Arquitectura: Clean Architecture (Hexagonal) + Event-Driven Architecture (EDA)
+Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
+
+## Reglas de Negocio Clave:
+- BR-AUTH-001: Marcas de tiempo de expiraci\xF3n JWT calculadas exclusivamente en Epoch UTC.
+- BR-BILL-001: Cabecera Idempotency-Key obligatoria en checkout (Redis TTL 120s).
+- BR-BILL-002: Verificaci\xF3n criptogr\xE1fica HMAC-SHA256 obligatoria en webhooks de Stripe.
+- BR-BILL-003: Algoritmo Banker's Rounding (IEEE 754) a dos decimales exactos.
+- BR-CART-002: Operaciones at\xF3micas en Redis para reserva de inventario.
+- BR-ORDR-001: Desv\xEDo a orders.dlq tras 3 reintentos con backoff exponencial.
+
+## Est\xE1ndares de C\xF3digo:
+- Ramas Git: {type}/INT-{numero}/{nombre_rama} (m\xE1ximo 80 caracteres).
+- Commits: Conventional Commits (feat, fix, docs, refactor).
+- Estilo: Controladores HTTP pasan por Casos de Uso e interfaces de repositorio. Prohibido inventar librer\xEDas no aprobadas.
+            </textarea>
+          </div>
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button type="button" 
+                    id="copy-context-btn" 
+                    class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-colors cursor-pointer">
+              Copiar al Portapapeles
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+  }
+  function escapeHtml4(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function getFallbackKnowledge2() {
+    if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.knowledgeIndex) {
+      return window.__FALLBACK_DATA__.knowledgeIndex;
+    }
+    return {
+      business_rules: [],
+      external_services: [],
+      coding_standards: { guardrails: [], naming_conventions: {} }
     };
   }
 
@@ -3100,7 +3529,7 @@
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml4(state.project)}</h1>
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml5(state.project)}</h1>
                   <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
                     SDD 2.0
                   </span>
@@ -3134,7 +3563,7 @@
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs"
                    title="Stack tecnol\xF3gico detectado por technical-audit">
                 <span class="text-slate-400">Stack:</span>
-                <span class="font-semibold">${escapeHtml4(stackInfo.name)}</span>
+                <span class="font-semibold">${escapeHtml5(stackInfo.name)}</span>
               </div>
             </div>
 
@@ -3179,6 +3608,7 @@
           <!-- 3. Navegaci\xF3n por pesta\xF1as (Router) -->
           <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: "features", label: "Tareas y Bugfixes", icon: Icons.folder, active: this.activeTab === "features", badge: String(state.features.length) })}
+            ${renderTabButton({ id: "knowledge", label: "Base de Conocimiento", icon: Icons.book, active: this.activeTab === "knowledge", badge: String(state.knowledgeIndex?.business_rules?.length || 10) })}
             ${renderTabButton({ id: "architecture", label: "Arquitectura & Stack", icon: Icons.layers, active: this.activeTab === "architecture" })}
             ${renderTabButton({ id: "graph", label: "Grafo Visual DAG", icon: Icons.gitBranch, active: this.activeTab === "graph" })}
             ${renderTabButton({ id: "tree", label: "\xC1rbol Jer\xE1rquico", icon: Icons.check, active: this.activeTab === "tree" })}
@@ -3235,9 +3665,16 @@
             </div>
           </div>
         `;
+        case "knowledge":
+          return renderKnowledgeBase({
+            knowledgeIndex: state.knowledgeIndex,
+            projectSpec: state.projectSpec,
+            features: state.features
+          });
         case "architecture":
           return renderArchitectureDocs({
             projectSpec: state.projectSpec,
+            knowledgeIndex: state.knowledgeIndex,
             features: state.features
           });
         case "graph":
@@ -3385,6 +3822,91 @@
           store.resetFilters();
           return;
         }
+        const archTabBtn = e.target.closest("[data-arch-tab]");
+        if (archTabBtn) {
+          const tabId = archTabBtn.getAttribute("data-arch-tab");
+          document.querySelectorAll(".arch-tab-btn").forEach((btn) => {
+            btn.classList.remove("active", "bg-indigo-600", "text-white");
+            btn.classList.add("text-slate-600", "dark:text-slate-400");
+          });
+          archTabBtn.classList.add("active", "bg-indigo-600", "text-white");
+          archTabBtn.classList.remove("text-slate-600", "dark:text-slate-400");
+          document.querySelectorAll(".diagram-panel").forEach((panel) => {
+            panel.classList.add("hidden");
+            panel.classList.remove("block");
+          });
+          const targetPanel = document.getElementById(`diagram-panel-${tabId}`);
+          if (targetPanel) {
+            targetPanel.classList.remove("hidden");
+            targetPanel.classList.add("block");
+          }
+          return;
+        }
+        const copyActiveBtn = e.target.closest("#copy-active-mermaid-btn");
+        if (copyActiveBtn) {
+          const activePanel = document.querySelector(".diagram-panel:not(.hidden)");
+          const codeEl = activePanel?.querySelector("pre code");
+          const textToCopy = codeEl ? codeEl.textContent : "Clean Architecture + Event-Driven Architecture Layers";
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              const origHtml = copyActiveBtn.innerHTML;
+              copyActiveBtn.innerHTML = "<span>\u2705</span> \xA1Copiado!";
+              setTimeout(() => {
+                copyActiveBtn.innerHTML = origHtml;
+              }, 2e3);
+            }).catch(() => {
+            });
+          }
+          return;
+        }
+        const copyMermaidBtn = e.target.closest("[data-copy-mermaid]");
+        if (copyMermaidBtn) {
+          const mermaidText = copyMermaidBtn.getAttribute("data-copy-mermaid");
+          if (mermaidText && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(mermaidText).then(() => {
+              const origHtml = copyMermaidBtn.innerHTML;
+              copyMermaidBtn.innerHTML = "<span>\u2705</span> \xA1Copiado!";
+              setTimeout(() => {
+                copyMermaidBtn.innerHTML = origHtml;
+              }, 2e3);
+            }).catch(() => {
+            });
+          }
+          return;
+        }
+        const openAiModalBtn = e.target.closest('[data-action="open-ai-context-modal"]');
+        if (openAiModalBtn) {
+          const modal = document.getElementById("ai-context-modal");
+          if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+          }
+          return;
+        }
+        const closeAiModalBtn = e.target.closest('[data-action="close-ai-context-modal"]');
+        if (closeAiModalBtn || e.target.id === "ai-context-modal") {
+          const modal = document.getElementById("ai-context-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          return;
+        }
+        const copyContextBtn = e.target.closest("#copy-context-btn");
+        if (copyContextBtn) {
+          const textarea = document.getElementById("ai-context-prompt-text");
+          if (textarea && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(textarea.value).then(() => {
+              const origHtml = copyContextBtn.innerHTML;
+              copyContextBtn.innerHTML = "\xA1Contexto Copiado! \u2705";
+              setTimeout(() => {
+                copyContextBtn.innerHTML = origHtml;
+              }, 2e3);
+            }).catch(() => {
+            });
+          }
+          return;
+        }
       });
       document.addEventListener("input", (e) => {
         if (e.target.id === "feature-search-input") {
@@ -3406,16 +3928,34 @@
           store.setFilter("priority", e.target.value);
         } else if (e.target.id === "page-size-select") {
           store.setPageSize(parseInt(e.target.value, 10));
+        } else if (e.target.id === "kb-rules-module-filter") {
+          const selectedMod = e.target.value.toLowerCase().trim();
+          const ruleCards = document.querySelectorAll("[data-rule-module]");
+          ruleCards.forEach((card) => {
+            const cardMod = (card.getAttribute("data-rule-module") || "").toLowerCase().trim();
+            if (!selectedMod || cardMod === selectedMod) {
+              card.classList.remove("hidden");
+            } else {
+              card.classList.add("hidden");
+            }
+          });
         }
       });
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && store.getState().selectedFeature) {
-          store.setSelectedFeature(null);
+        if (e.key === "Escape") {
+          if (store.getState().selectedFeature) {
+            store.setSelectedFeature(null);
+          }
+          const aiModal = document.getElementById("ai-context-modal");
+          if (aiModal && !aiModal.classList.contains("hidden")) {
+            aiModal.classList.add("hidden");
+            aiModal.classList.remove("flex");
+          }
         }
       });
     }
   };
-  function escapeHtml4(text) {
+  function escapeHtml5(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }

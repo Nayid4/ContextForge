@@ -20,7 +20,8 @@ const initialState = {
   history: { records: [] },
   historyData: { records: [] },
   projectSpec: null,
-  activeTab: 'features', // 'features' | 'architecture' | 'graph' | 'tree' | 'three' | 'history'
+  knowledgeIndex: null,
+  activeTab: 'features', // 'features' | 'architecture' | 'knowledge' | 'graph' | 'tree' | 'three' | 'history'
   theme: getInitialTheme(),
   filters: {
     search: '',
@@ -97,7 +98,7 @@ class Store {
     this.setState({ loading });
   }
 
-  setData({ project, features, currentSpec, historyData, projectSpec }) {
+  setData({ project, features, currentSpec, historyData, projectSpec, knowledgeIndex }) {
     const featList = Array.isArray(features) ? features : [];
     const pageSize = this.state.pagination.pageSize || 10;
     const totalPages = Math.ceil(featList.length / pageSize) || 1;
@@ -109,6 +110,7 @@ class Store {
       history: historyData || { records: [] },
       historyData: historyData || { records: [] },
       projectSpec: projectSpec || this.state.projectSpec || null,
+      knowledgeIndex: knowledgeIndex || this.state.knowledgeIndex || null,
       pagination: {
         ...this.state.pagination,
         totalPages
