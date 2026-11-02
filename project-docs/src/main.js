@@ -22,6 +22,10 @@ class App {
     this.currentTreeComponent = null;
     this.activeTab = 'features';
     this.envInfo = null;
+    this.isAppMounted = false;
+    this.searchDebounceTimer = null;
+    this.autoSyncController = null;
+    this.lastSyncTime = new Date();
   }
 
   async init() {
@@ -29,20 +33,58 @@ class App {
       this.handleTabChange(tabId);
     });
 
-    store.subscribe(() => {
-      this.render();
+    store.subscribe((state) => {
+      this.handleStateChange(state);
     });
 
     this.bindGlobalEvents();
 
     await this.refreshData();
+
+    // Iniciar Auto-Sync reactivo para detectar cambios en los JSON en segundo plano
+    this.initAutoSync();
+  }
+
+  initAutoSync() {
+    if (this.autoSyncController) {
+      this.autoSyncController.stop();
+    }
+
+    this.autoSyncController = api.startAutoSync({
+      intervalMs: 2500,
+      onUpdate: (freshData) => {
+        this.lastSyncTime = new Date();
+        this.pulseSyncIndicator();
+        store.setData(freshData);
+      }
+    });
+  }
+
+  pulseSyncIndicator() {
+    const dot = document.getElementById('sync-status-dot');
+    const timeEl = document.getElementById('sync-last-time');
+    if (dot) {
+      dot.classList.remove('bg-emerald-500');
+      dot.classList.add('bg-cyan-400', 'scale-125');
+      setTimeout(() => {
+        dot.classList.remove('bg-cyan-400', 'scale-125');
+        dot.classList.add('bg-emerald-500');
+      }, 600);
+    }
+    if (timeEl) {
+      timeEl.textContent = 'Actualizado';
+      setTimeout(() => {
+        if (timeEl) timeEl.textContent = 'En vivo';
+      }, 1500);
+    }
   }
 
   async refreshData() {
     store.setLoading(true);
     try {
-      const data = await api.fetchAll();
+      const data = await api.fetchAll({ bypassCache: true });
       this.envInfo = await detectEnvironment(data);
+      this.lastSyncTime = new Date();
       store.setData(data);
     } catch (err) {
       console.error('Error cargando datos del arnés:', err);
@@ -60,8 +102,38 @@ class App {
     this.render();
   }
 
+  handleStateChange(state) {
+    // Si la aplicación ya está montada y estamos en la pestaña de features,
+    // actualizamos solo la tabla y paginación para no destruir el <input> de búsqueda
+    // ni perder el cursor o el foco del usuario.
+    const tableContainer = document.getElementById('feature-table-container');
+    const paginationContainer = document.getElementById('feature-pagination-container');
+    const isSearchFocused = document.activeElement && document.activeElement.id === 'feature-search-input';
+
+    if (this.isAppMounted && this.activeTab === 'features' && tableContainer && paginationContainer && isSearchFocused) {
+      const filteredFeatures = store.getFilteredFeatures();
+      tableContainer.innerHTML = renderFeatureTable({
+        features: filteredFeatures,
+        pagination: state.pagination,
+        onSelect: (f) => store.setSelectedFeature(f)
+      });
+      paginationContainer.innerHTML = renderFeaturePagination({
+        totalItems: filteredFeatures.length,
+        pagination: state.pagination
+      });
+      return;
+    }
+
+    this.render();
+  }
+
   render() {
     if (!this.root) return;
+
+    // Guardar foco de input si existe antes de renderizar
+    const activeElementId = document.activeElement?.id;
+    const selectionStart = document.activeElement?.selectionStart;
+    const selectionEnd = document.activeElement?.selectionEnd;
 
     const state = store.getState();
     const stats = store.getStats();
@@ -70,8 +142,9 @@ class App {
     const isDark = state.theme === 'dark';
     const activeAgent = this.envInfo?.activeAgent || { name: 'Google Antigravity', icon: '⚡' };
     const stackInfo = this.envInfo?.stack || { name: 'Multi-Stack Agnostico' };
+    const isLocalFile = typeof window !== 'undefined' && window.location.protocol === 'file:';
 
-    // 1. Loading State
+    // 1. Loading State Inicial
     if (state.loading && state.features.length === 0) {
       this.root.innerHTML = `
         <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
@@ -105,7 +178,7 @@ class App {
       <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
         
         <!-- Barra de Estado Superior -->
-        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 transition-colors">
+        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-30 transition-colors">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             
             <!-- Logo & Info del Proyecto -->
@@ -128,8 +201,16 @@ class App {
               </div>
             </div>
 
-            <!-- Chips de Agente Detectado y Stack Tecnológico -->
+            <!-- Chips de Agente, Stack y Auto-Sync -->
             <div class="hidden lg:flex items-center gap-2 text-xs">
+              
+              <!-- Badge de Auto-Sync Reactivo -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl ${isLocalFile ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'} shadow-xs"
+                   title="${isLocalFile ? 'Modo local file://. Usa abrir-tablero.bat para auto-sync HTTP.' : 'Auto-Sync activo: detecta cambios en feature_list.json y progres/ en vivo'}">
+                <span id="sync-status-dot" class="w-2 h-2 rounded-full ${isLocalFile ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'} transition-all"></span>
+                <span id="sync-last-time" class="font-mono text-[11px] font-semibold">${isLocalFile ? 'file:// local' : 'En vivo'}</span>
+              </div>
+
               <!-- Agente Detectado -->
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 shadow-xs"
                    title="Agentes compatibles homologados: Google Antigravity, Open Code, GitHub Copilot, Claude Code, Codex">
@@ -162,7 +243,7 @@ class App {
               <button type="button" 
                       data-action="refresh" 
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer"
-                      title="Refrescar datos del arnés">
+                      title="Refrescar datos del arnés ahora">
                 <span class="shrink-0 ${state.loading ? 'animate-spin' : ''}">${Icons.refresh}</span>
                 <span class="hidden sm:inline">Refrescar</span>
               </button>
@@ -199,11 +280,27 @@ class App {
         </main>
 
         <!-- Modal de Detalle -->
-        ${renderModal(state.selectedFeature)}
+        <div id="modal-container">
+          ${renderModal(state.selectedFeature)}
+        </div>
       </div>
     `;
 
+    this.isAppMounted = true;
     this.postRender({ state, filteredFeatures });
+
+    // Restaurar foco y cursor si el input de búsqueda estaba activo
+    if (activeElementId && activeElementId === 'feature-search-input') {
+      requestAnimationFrame(() => {
+        const input = document.getElementById('feature-search-input');
+        if (input) {
+          input.focus();
+          if (typeof selectionStart === 'number' && typeof selectionEnd === 'number') {
+            input.setSelectionRange(selectionStart, selectionEnd);
+          }
+        }
+      });
+    }
   }
 
   renderActiveTabContent({ state, filteredFeatures, modules }) {
@@ -211,16 +308,22 @@ class App {
       case 'features':
         return `
           <div class="space-y-6">
-            ${renderFeatureFilters({ filters: state.filters, modules })}
-            ${renderFeatureTable({ 
-              features: filteredFeatures, 
-              pagination: state.pagination,
-              onSelect: (f) => store.setSelectedFeature(f)
-            })}
-            ${renderFeaturePagination({ 
-              totalItems: filteredFeatures.length, 
-              pagination: state.pagination 
-            })}
+            <div id="feature-filters-container">
+              ${renderFeatureFilters({ filters: state.filters, modules })}
+            </div>
+            <div id="feature-table-container">
+              ${renderFeatureTable({ 
+                features: filteredFeatures, 
+                pagination: state.pagination,
+                onSelect: (f) => store.setSelectedFeature(f)
+              })}
+            </div>
+            <div id="feature-pagination-container">
+              ${renderFeaturePagination({ 
+                totalItems: filteredFeatures.length, 
+                pagination: state.pagination 
+              })}
+            </div>
           </div>
         `;
 
@@ -252,6 +355,7 @@ class App {
       if (treeTarget) {
         this.currentTreeComponent = new DependencyTreeComponent(treeTarget, {
           features: state.features,
+          currentSpec: state.currentSpec,
           onSelect: (f) => store.setSelectedFeature(f)
         });
         this.currentTreeComponent.render();
@@ -286,7 +390,7 @@ class App {
         node.classList.remove('opacity-30');
         node.classList.add('scale-105', 'ring-2', 'ring-indigo-500');
 
-        // Resaltar dependencias (predecesores)
+        // Resaltar dependencias (predecesores) en ámbar
         nodeDeps.forEach(depId => {
           const depEl = document.querySelector(`[data-graph-node="${depId}"]`);
           if (depEl) {
@@ -301,7 +405,7 @@ class App {
           }
         });
 
-        // Resaltar dependientes (sucesores)
+        // Resaltar dependientes (sucesores) en cian
         document.querySelectorAll(`.graph-edge[data-edge-from="${nodeId}"]`).forEach(edge => {
           edge.classList.remove('opacity-10');
           edge.setAttribute('stroke-width', '4');
@@ -319,8 +423,8 @@ class App {
         nodes.forEach(n => n.classList.remove('opacity-30', 'scale-105', 'ring-2', 'ring-indigo-500', 'ring-amber-500', 'ring-cyan-500'));
         edges.forEach(e => {
           e.classList.remove('opacity-10');
-          e.setAttribute('stroke-width', '2');
-          e.setAttribute('opacity', '0.65');
+          e.setAttribute('stroke-width', '2.2');
+          e.setAttribute('opacity', '0.75');
         });
       });
     });
@@ -343,7 +447,7 @@ class App {
         return;
       }
 
-      // Refrescar datos
+      // Refrescar datos manualmente
       const refreshBtn = e.target.closest('[data-action="refresh"]');
       if (refreshBtn) {
         this.refreshData();
@@ -397,14 +501,21 @@ class App {
       // Reset filtros
       const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
       if (resetFiltersBtn) {
+        const searchInput = document.getElementById('feature-search-input');
+        if (searchInput) searchInput.value = '';
         store.resetFilters();
         return;
       }
     });
 
+    // Búsqueda con Debouncing Inteligente (260ms) para no bloquear la escritura
     document.addEventListener('input', (e) => {
       if (e.target.id === 'feature-search-input') {
-        store.setFilter('search', e.target.value);
+        clearTimeout(this.searchDebounceTimer);
+        const val = e.target.value;
+        this.searchDebounceTimer = setTimeout(() => {
+          store.setFilter('search', val);
+        }, 260);
       }
     });
 

@@ -233,16 +233,33 @@
   var store = new Store();
 
   // project-docs/src/core/api.js
-  async function fetchProjectData() {
+  async function fetchProjectData(options = {}) {
+    const { bypassCache = false } = options;
     let featureData = null;
     let currentSpec = {};
     let historyData = { records: [] };
-    const featurePaths = ["feature_list.json", "../feature_list.json", "./project-docs/feature_list.json"];
-    const currentPaths = ["progres/current.json", "progress/current.json", "../progress/current.json", "../project-docs/progres/current.json"];
-    const historyPaths = ["progres/history.json", "progress/history.json", "../progress/history.json", "../project-docs/progres/history.json"];
+    const cacheBuster = bypassCache ? `?_t=${Date.now()}` : "";
+    const fetchOpts = bypassCache ? { cache: "no-store" } : {};
+    const featurePaths = [
+      `feature_list.json${cacheBuster}`,
+      `../feature_list.json${cacheBuster}`,
+      `./project-docs/feature_list.json${cacheBuster}`
+    ];
+    const currentPaths = [
+      `progres/current.json${cacheBuster}`,
+      `progress/current.json${cacheBuster}`,
+      `../progress/current.json${cacheBuster}`,
+      `../project-docs/progres/current.json${cacheBuster}`
+    ];
+    const historyPaths = [
+      `progres/history.json${cacheBuster}`,
+      `progress/history.json${cacheBuster}`,
+      `../progress/history.json${cacheBuster}`,
+      `../project-docs/progres/history.json${cacheBuster}`
+    ];
     for (const path of featurePaths) {
       try {
-        const res = await fetch(path);
+        const res = await fetch(path, fetchOpts);
         if (res.ok) {
           featureData = await res.json();
           break;
@@ -252,7 +269,7 @@
     }
     for (const path of currentPaths) {
       try {
-        const res = await fetch(path);
+        const res = await fetch(path, fetchOpts);
         if (res.ok) {
           currentSpec = await res.json();
           break;
@@ -262,7 +279,7 @@
     }
     for (const path of historyPaths) {
       try {
-        const res = await fetch(path);
+        const res = await fetch(path, fetchOpts);
         if (res.ok) {
           historyData = await res.json();
           break;
@@ -285,11 +302,59 @@
       project: featureData.project || "Proyecto",
       features: Array.isArray(featureData.features) ? featureData.features : [],
       currentSpec,
-      historyData
+      historyData,
+      protocol: typeof window !== "undefined" ? window.location.protocol : "http:"
+    };
+  }
+  function startAutoSync({ onUpdate, intervalMs = 2500 } = {}) {
+    let isRunning = true;
+    let lastFingerprint = "";
+    const checkUpdates = async () => {
+      if (!isRunning) return;
+      try {
+        const data = await fetchProjectData({ bypassCache: true });
+        const fingerprint = JSON.stringify({
+          project: data.project,
+          featuresCount: data.features.length,
+          features: data.features.map((f) => ({
+            id: f.id,
+            status: f.status,
+            priority: f.priority,
+            weight: f.weight,
+            branch: f.branch,
+            depends_on: f.depends_on || f.dependencies || []
+          })),
+          currentSpec: {
+            id: data.currentSpec?.id,
+            name: data.currentSpec?.name,
+            status: data.currentSpec?.status,
+            taskCount: (data.currentSpec?.tasks || []).length,
+            tasksDone: (data.currentSpec?.tasks || []).filter((t) => t.done || t.status === "done").length
+          },
+          historyCount: (data.historyData?.records || []).length
+        });
+        if (!lastFingerprint) {
+          lastFingerprint = fingerprint;
+        } else if (fingerprint !== lastFingerprint) {
+          lastFingerprint = fingerprint;
+          if (typeof onUpdate === "function") {
+            onUpdate(data);
+          }
+        }
+      } catch (_) {
+      }
+    };
+    const timerId = setInterval(checkUpdates, intervalMs);
+    return {
+      stop: () => {
+        isRunning = false;
+        clearInterval(timerId);
+      }
     };
   }
   var api = {
-    fetchAll: fetchProjectData
+    fetchAll: fetchProjectData,
+    startAutoSync
   };
 
   // project-docs/src/core/router.js
@@ -849,6 +914,8 @@
           id="feature-search-input"
           value="${escapeAttr(searchVal)}"
           placeholder="Buscar por ID, t\xEDtulo, nombre o rama..."
+          autocomplete="off"
+          spellcheck="false"
           class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-950/70 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
         />
       </div>
@@ -1115,8 +1182,12 @@
       const lvl = nodeLevels.get(f.id) || 0;
       levels[lvl].push(f);
     });
+    let totalEdges = 0;
+    let maxInDegree = 0;
     const analyzed = features.map((f) => {
       const rawDeps = f.depends_on || f.dependencies || [];
+      totalEdges += rawDeps.length;
+      if (rawDeps.length > maxInDegree) maxInDegree = rawDeps.length;
       const deps = rawDeps.map((dId) => featureMap.get(dId)).filter(Boolean);
       const pendingDeps = deps.filter((d) => d.status !== "done");
       const isBlocked = f.status !== "done" && pendingDeps.length > 0;
@@ -1134,21 +1205,24 @@
     const blockedCount = analyzed.filter((a) => a.isBlocked).length;
     const readyCount = analyzed.filter((a) => a.isReady).length;
     const doneCount = analyzed.filter((a) => a.feature.status === "done").length;
-    const colWidth = 260;
-    const nodeHeight = 85;
-    const gapY = 30;
-    const gapX = 80;
+    const colWidth = 270;
+    const nodeHeight = 98;
+    const gapY = 32;
+    const gapX = 110;
+    const paddingX = 60;
+    const paddingTop = 90;
+    const paddingBottom = 60;
     let maxRowInCol = 0;
     levels.forEach((lvl) => {
       if (lvl.length > maxRowInCol) maxRowInCol = lvl.length;
     });
-    const totalWidth = Math.max(920, levels.length * (colWidth + gapX) + 80);
-    const totalHeight = Math.max(480, maxRowInCol * (nodeHeight + gapY) + 100);
+    const canvasWidth = Math.max(1240, levels.length * (colWidth + gapX) + paddingX * 2);
+    const canvasHeight = Math.max(640, maxRowInCol * (nodeHeight + gapY) + paddingTop + paddingBottom);
     const coords = /* @__PURE__ */ new Map();
     levels.forEach((colFeatures, colIdx) => {
-      const x = colIdx * (colWidth + gapX) + 40;
+      const x = paddingX + colIdx * (colWidth + gapX);
       const colHeight = colFeatures.length * (nodeHeight + gapY) - gapY;
-      const startY = Math.max(50, (totalHeight - colHeight) / 2);
+      const startY = paddingTop + Math.max(0, (canvasHeight - paddingTop - paddingBottom - colHeight) / 2);
       colFeatures.forEach((f, rowIdx) => {
         const y = startY + rowIdx * (nodeHeight + gapY);
         coords.set(f.id, { x, y, width: colWidth, height: nodeHeight, colIdx, rowIdx });
@@ -1168,8 +1242,10 @@
         const startY = source.y + source.height / 2;
         const endX = target.x;
         const endY = target.y + target.height / 2;
-        const midX = (startX + endX) / 2;
-        const pathD = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+        const deltaX = endX - startX;
+        const ctrl1X = startX + deltaX * 0.45;
+        const ctrl2X = endX - deltaX * 0.45;
+        const pathD = `M ${startX} ${startY} C ${ctrl1X} ${startY}, ${ctrl2X} ${endY}, ${endX} ${endY}`;
         const strokeColor = isResolved ? "#10b981" : "#f43f5e";
         const markerId = isResolved ? "arrow-resolved" : "arrow-blocked";
         edgesSvg.push(`
@@ -1179,9 +1255,9 @@
               class="graph-edge transition-all duration-200" 
               fill="none" 
               stroke="${strokeColor}" 
-              stroke-width="2" 
-              stroke-dasharray="${isResolved ? "none" : "4 4"}" 
-              opacity="0.65" 
+              stroke-width="2.2" 
+              stroke-dasharray="${isResolved ? "none" : "5 4"}" 
+              opacity="0.75" 
               marker-end="url(#${markerId})" />
       `);
       });
@@ -1198,73 +1274,105 @@
       });
       const isBlocked = f.status !== "done" && pendingDeps.length > 0;
       const isReady = f.status === "pending" && pendingDeps.length === 0;
-      let borderClass = "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90";
+      let borderClass = "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/95";
       let statusDot = "bg-slate-400";
+      let glowClass = "";
       if (isDone) {
-        borderClass = "border-emerald-500/60 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xs";
+        borderClass = "border-emerald-500/70 bg-emerald-50/60 dark:bg-emerald-950/25";
         statusDot = "bg-emerald-500";
       } else if (isProg) {
-        borderClass = "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-md ring-2 ring-indigo-500/20";
+        borderClass = "border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/35 ring-2 ring-indigo-500/30";
         statusDot = "bg-indigo-500 animate-pulse";
+        glowClass = "shadow-md shadow-indigo-500/10";
       } else if (isBlocked) {
-        borderClass = "border-rose-400 dark:border-rose-500/60 bg-rose-50/50 dark:bg-rose-950/20";
+        borderClass = "border-rose-400 dark:border-rose-500/70 bg-rose-50/60 dark:bg-rose-950/25";
         statusDot = "bg-rose-500";
       } else if (isReady) {
-        borderClass = "border-cyan-400 dark:border-cyan-500/60 bg-cyan-50/50 dark:bg-cyan-950/20 shadow-xs";
+        borderClass = "border-cyan-400 dark:border-cyan-500/70 bg-cyan-50/60 dark:bg-cyan-950/25";
         statusDot = "bg-cyan-500";
       }
-      const branchName = f.branch || `${f.type || "feature"}/INT-${String(f.id).padStart(3, "0")}/${f.name}`;
+      const dependentsCount = features.filter((other) => (other.depends_on || other.dependencies || []).includes(f.id)).length;
+      const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
       return `
       <foreignObject x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}">
         <div xmlns="http://www.w3.org/1999/xhtml"
              data-graph-node="${f.id}"
              data-deps="${rawDeps.join(",")}"
-             class="graph-node p-2.5 w-full h-full rounded-xl border ${borderClass} backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer select-none flex flex-col justify-between hover:scale-[1.02] hover:shadow-md"
-             title="${branchName}">
+             class="graph-node p-3 w-full h-full rounded-2xl border ${borderClass} ${glowClass} backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer select-none flex flex-col justify-between hover:scale-[1.02] hover:shadow-lg"
+             title="Clic para ver detalle de ${f.branch || f.name}">
           <div>
             <div class="flex items-center justify-between gap-1 mb-1">
               <div class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full ${statusDot}"></span>
                 <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">INT-${String(f.id).padStart(3, "0")}</span>
-                <span class="text-[10px] font-mono px-1 py-0.2 rounded font-semibold ${f.type === "bugfix" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}">
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-semibold ${f.type === "bugfix" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}">
                   ${f.type || "feat"}
                 </span>
               </div>
-              <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
-                ${f.status}
-              </span>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1 py-0.2 rounded border border-amber-200 dark:border-amber-900/60">
+                  P:${weightVal}
+                </span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                  ${f.status}
+                </span>
+              </div>
             </div>
-            <div class="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate leading-tight">
+            <div class="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate leading-snug">
               ${f.title || f.name}
             </div>
           </div>
-          <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-            <span>${f.module || "Core"}</span>
-            <span class="font-mono">${rawDeps.length ? `${rawDeps.length} dep${rawDeps.length > 1 ? "s" : ""}` : "Ra\xEDz"}</span>
+          <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+            <span class="font-medium">${f.module || "Core"}</span>
+            <div class="flex items-center gap-2 font-mono text-[10px]">
+              <span title="Dependencias requeridas">\u2190 ${rawDeps.length} req</span>
+              <span title="Tareas que desbloquea">\u2192 ${dependentsCount} dep</span>
+            </div>
           </div>
         </div>
       </foreignObject>
     `;
     }).join("");
+    const phaseTitles = [
+      "Fase 1: Fundamentos (Ra\xEDces)",
+      "Fase 2: Arquitectura y Datos",
+      "Fase 3: L\xF3gica y Endpoints",
+      "Fase 4: Integraci\xF3n & Workers",
+      "Fase 5: Extensi\xF3n & BI"
+    ];
     const phaseHeaders = levels.map((lvl, colIdx) => {
-      const x = colIdx * (colWidth + gapX) + 40;
-      const titles = ["Fase 1: Fundamentos", "Fase 2: Core Services", "Fase 3: APIs & L\xF3gica", "Fase 4: Consumo & Workers", "Fase 5: Extensi\xF3n"];
-      const title = titles[colIdx] || `Fase ${colIdx + 1}`;
+      const x = paddingX + colIdx * (colWidth + gapX);
+      const title = phaseTitles[colIdx] || `Fase ${colIdx + 1}`;
       return `
-      <div class="absolute top-2 font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-1 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-lg backdrop-blur-xs pointer-events-none"
-           style="left: ${x}px; width: ${colWidth}px;">
-        ${title} (${lvl.length})
+      <div class="absolute font-mono text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider px-3 py-1.5 bg-white/85 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 rounded-xl backdrop-blur-md shadow-xs pointer-events-none"
+           style="left: ${x}px; top: 20px; width: ${colWidth}px;">
+        <div class="flex items-center justify-between">
+          <span>${title}</span>
+          <span class="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">${lvl.length}</span>
+        </div>
       </div>
     `;
     }).join("");
     return `
     <div class="space-y-6">
       <!-- Barra KPI de Grafo -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Listas para iniciar (Desbloqueadas)</div>
-            <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-0.5">${readyCount}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Estructura de Red</div>
+            <div class="text-sm font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 font-mono">Grafo DAG (Malla)</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${features.length} nodos \xB7 ${totalEdges} aristas</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            ${Icons.gitBranch}
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Listas para Iniciar</div>
+            <div class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 font-mono">${readyCount}</div>
+            <div class="text-[10px] text-cyan-600 dark:text-cyan-400 mt-0.5">Predecesores completos</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
             ${Icons.check}
@@ -1273,8 +1381,9 @@
 
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Bloqueadas por predecesores</div>
-            <div class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-0.5">${blockedCount}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Bloqueadas Activas</div>
+            <div class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-0.5 font-mono">${blockedCount}</div>
+            <div class="text-[10px] text-rose-600 dark:text-rose-400 mt-0.5">Esperando resoluci\xF3n</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
             ${Icons.clock}
@@ -1283,8 +1392,9 @@
 
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Resueltas en el flujo</div>
-            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${doneCount}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Tareas Resueltas</div>
+            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 font-mono">${doneCount}</div>
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">Flujo completado</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             ${Icons.checkCircle}
@@ -1292,50 +1402,65 @@
         </div>
       </div>
 
-      <!-- Lienzo SVG Interactivo del Grafo Dirigido -->
-      <div class="relative w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/80 shadow-md overflow-hidden">
+      <!-- Lienzo SVG Interactivo del Grafo Dirigido (Sin Recorte) -->
+      <div class="relative w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/90 shadow-md overflow-hidden">
         
-        <!-- Controles y Leyenda Superior -->
-        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs">
+        <!-- Barra de Herramientas y Leyenda Superior -->
+        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs">
           <div class="flex items-center gap-2">
-            <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-              ${Icons.gitBranch} Grafo de Dependencias (DAG)
+            <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              ${Icons.gitBranch} Grafo de Bloqueos y Dependencias (DAG)
             </span>
-            <span class="text-slate-400 dark:text-slate-500">|</span>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px]">
-              Pasa el cursor sobre un nodo para aislar sus dependencias y dependientes
+            <span class="text-slate-300 dark:text-slate-700">|</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] hidden sm:inline">
+              Pasa el cursor sobre un nodo para aislar sus dependientes y requerimientos
             </span>
           </div>
 
-          <div class="flex items-center gap-3 text-[11px]">
-            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-emerald-500"></span> Resuelta</span>
-            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 border-b border-dashed border-rose-500"></span> Bloqueo Activo</span>
+          <div class="flex items-center gap-4 text-[11px]">
+            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span class="w-3 h-0.5 bg-emerald-500 rounded"></span> Satisfecha
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span class="w-3 h-0.5 border-b-2 border-dashed border-rose-500"></span> Bloqueo Activo
+            </span>
+            <span class="inline-flex items-center gap-1 text-slate-400 font-mono text-[10px]">
+              [P:xx] = Peso
+            </span>
           </div>
         </div>
 
-        <!-- Canvas con Scroll Horizontal Suave -->
-        <div id="graph-scroll-container" class="relative overflow-x-auto overflow-y-hidden p-6 min-h-[500px]">
-          ${phaseHeaders}
-          <svg width="${totalWidth}" height="${totalHeight}" class="w-full h-full block pt-6">
-            <defs>
-              <marker id="arrow-resolved" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
-              </marker>
-              <marker id="arrow-blocked" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
-              </marker>
-            </defs>
+        <!-- Canvas con Desplazamiento Suave y Sin Recorte -->
+        <div id="graph-viewport-container" 
+             class="relative overflow-x-auto overflow-y-auto p-4 max-h-[720px] scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 cursor-grab active:cursor-grabbing">
+          
+          <div class="relative" style="width: ${canvasWidth}px; height: ${canvasHeight}px;">
+            ${phaseHeaders}
 
-            <!-- Aristas de Grafo -->
-            <g id="graph-edges-group">
-              ${edgesSvg.join("")}
-            </g>
+            <svg viewBox="0 0 ${canvasWidth} ${canvasHeight}" 
+                 width="${canvasWidth}" 
+                 height="${canvasHeight}" 
+                 class="block">
+              <defs>
+                <marker id="arrow-resolved" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#10b981" />
+                </marker>
+                <marker id="arrow-blocked" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f43f5e" />
+                </marker>
+              </defs>
 
-            <!-- Nodos de Grafo -->
-            <g id="graph-nodes-group">
-              ${nodesSvg}
-            </g>
-          </svg>
+              <!-- Aristas de Grafo (Conexiones de red) -->
+              <g id="graph-edges-group">
+                ${edgesSvg.join("")}
+              </g>
+
+              <!-- Nodos de Grafo -->
+              <g id="graph-nodes-group">
+                ${nodesSvg}
+              </g>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -1344,228 +1469,320 @@
 
   // project-docs/src/features/dependency-tree/DependencyTree.js
   var DependencyTreeComponent = class {
-    constructor(containerEl, { features, onSelect }) {
+    constructor(containerEl, { features, currentSpec, onSelect }) {
       this.container = containerEl;
       this.features = features || [];
+      this.currentSpec = currentSpec || {};
       this.onSelect = onSelect;
-      this.zoom = 1;
-      this.pan = { x: 40, y: 40 };
-      this.isDragging = false;
-      this.dragStart = { x: 0, y: 0 };
+      this.collapsedNodes = /* @__PURE__ */ new Set();
+    }
+    toggleNode(nodeKey) {
+      if (this.collapsedNodes.has(nodeKey)) {
+        this.collapsedNodes.delete(nodeKey);
+      } else {
+        this.collapsedNodes.add(nodeKey);
+      }
+      this.render();
+    }
+    expandAll() {
+      this.collapsedNodes.clear();
+      this.render();
+    }
+    collapseToModules() {
+      this.collapsedNodes.clear();
+      this.features.forEach((f) => {
+        this.collapsedNodes.add(`feature-${f.id}`);
+      });
+      this.render();
+    }
+    collapseAll() {
+      const modules = Array.from(new Set(this.features.map((f) => f.module || "core")));
+      modules.forEach((m) => this.collapsedNodes.add(`module-${m}`));
+      this.features.forEach((f) => this.collapsedNodes.add(`feature-${f.id}`));
+      this.render();
     }
     render() {
       if (!this.container) return;
-      const { levels, nodesMap } = this.calculateTopologicalLevels(this.features);
-      const nodeWidth = 260;
-      const nodeHeight = 110;
-      const gapX = 100;
-      const gapY = 40;
-      let maxNodesInLevel = 0;
-      levels.forEach((lvl) => {
-        if (lvl.length > maxNodesInLevel) maxNodesInLevel = lvl.length;
-      });
-      const totalWidth = Math.max(900, levels.length * (nodeWidth + gapX) + 120);
-      const totalHeight = Math.max(500, maxNodesInLevel * (nodeHeight + gapY) + 120);
-      levels.forEach((levelFeatures, colIndex) => {
-        const colX = colIndex * (nodeWidth + gapX) + 60;
-        const colHeight = levelFeatures.length * (nodeHeight + gapY) - gapY;
-        const startY = Math.max(60, (totalHeight - colHeight) / 2);
-        levelFeatures.forEach((f, rowIndex) => {
-          const x = colX;
-          const y = startY + rowIndex * (nodeHeight + gapY);
-          nodesMap.set(f.id, { ...f, x, y, width: nodeWidth, height: nodeHeight, colIndex, rowIndex });
-        });
-      });
-      const linksSvg = [];
+      const projectName = this.features[0]?.project || "CloudSaaS Platform";
+      const modulesMap = /* @__PURE__ */ new Map();
       this.features.forEach((f) => {
-        const targetNode = nodesMap.get(f.id);
-        const rawDeps = f.depends_on || f.dependencies || [];
-        if (!targetNode || !rawDeps.length) return;
-        rawDeps.forEach((sourceId) => {
-          const sourceNode = nodesMap.get(sourceId);
-          if (!sourceNode) return;
-          const startX = sourceNode.x + sourceNode.width;
-          const startY = sourceNode.y + sourceNode.height / 2;
-          const endX = targetNode.x;
-          const endY = targetNode.y + targetNode.height / 2;
-          const midX = (startX + endX) / 2;
-          const pathD = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
-          const isDone = sourceNode.status === "done";
-          linksSvg.push(`
-          <path d="${pathD}" 
-                fill="none" 
-                stroke="${isDone ? "#10b981" : "#6366f1"}" 
-                stroke-width="2" 
-                stroke-dasharray="${isDone ? "none" : "4 4"}" 
-                opacity="0.6"
-                class="transition-all hover:opacity-100 hover:stroke-width-3" />
-        `);
-        });
+        const mod = f.module || "core";
+        if (!modulesMap.has(mod)) {
+          modulesMap.set(mod, []);
+        }
+        modulesMap.get(mod).push(f);
       });
-      const nodesSvg = Array.from(nodesMap.values()).map((n) => {
-        const isDone = n.status === "done";
-        const isFeature = (n.type || "feature") === "feature";
-        const borderColor = isDone ? "border-emerald-500/60" : isFeature ? "border-indigo-500/40" : "border-rose-500/40";
-        return `
-        <foreignObject x="${n.x}" y="${n.y}" width="${n.width}" height="${n.height}">
-          <div xmlns="http://www.w3.org/1999/xhtml" 
-               data-node-id="${n.id}"
-               class="p-3 w-full h-full rounded-xl bg-white dark:bg-slate-900/95 backdrop-blur-md border ${borderColor} shadow-lg hover:border-slate-500 transition-all cursor-pointer flex flex-col justify-between text-left select-none">
-            <div>
-              <div class="flex items-center justify-between text-[11px] mb-1">
-                <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">INT-${String(n.id).padStart(3, "0")}</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isDone ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"}">
-                  ${n.status}
-                </span>
-              </div>
-              <div class="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">${n.title || n.name}</div>
+      const totalFeatures = this.features.length;
+      const totalModules = modulesMap.size;
+      const completedFeatures = this.features.filter((f) => f.status === "done").length;
+      let totalSubtasks = 0;
+      this.features.forEach((f) => {
+        if (f.id === this.currentSpec?.id && Array.isArray(this.currentSpec?.tasks)) {
+          totalSubtasks += this.currentSpec.tasks.length;
+        } else if (Array.isArray(f.acceptance)) {
+          totalSubtasks += Math.min(f.acceptance.length, 3);
+        }
+      });
+      const totalTreeNodes = 1 + totalModules + totalFeatures + totalSubtasks;
+      const totalTreeEdges = totalTreeNodes - 1;
+      const modulesHtml = Array.from(modulesMap.entries()).map(([moduleName, moduleFeatures], modIdx) => {
+        const modKey = `module-${moduleName}`;
+        const isModCollapsed = this.collapsedNodes.has(modKey);
+        const modDoneCount = moduleFeatures.filter((f) => f.status === "done").length;
+        const modTotal = moduleFeatures.length;
+        const modProgressPct = Math.round(modDoneCount / modTotal * 100);
+        const featuresHtml = moduleFeatures.map((f, featIdx) => {
+          const featKey = `feature-${f.id}`;
+          const isFeatCollapsed = this.collapsedNodes.has(featKey);
+          const isDone = f.status === "done";
+          const isProg = f.status === "in_progress";
+          const isBug = f.type === "bugfix";
+          const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
+          let subtasks = [];
+          if (f.id === this.currentSpec?.id && Array.isArray(this.currentSpec?.tasks)) {
+            subtasks = this.currentSpec.tasks.map((t) => ({
+              name: t.name || t.title,
+              done: t.done || t.status === "done"
+            }));
+          } else if (Array.isArray(f.acceptance)) {
+            subtasks = f.acceptance.slice(0, 3).map((a) => ({
+              name: a,
+              done: isDone
+            }));
+          }
+          const subtasksHtml = subtasks.map((sub, sIdx) => {
+            const isLastSub = sIdx === subtasks.length - 1;
+            return `
+            <div class="relative flex items-center gap-2 pl-6 py-1 text-xs group">
+              <!-- Conector Ortogonal de Hoja -->
+              <div class="absolute left-1.5 top-0 w-3 h-3.5 border-l-2 border-b-2 border-slate-300 dark:border-slate-700/80 rounded-bl-sm"></div>
+              
+              <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${sub.done ? "bg-emerald-500 text-white" : "border border-slate-400 dark:border-slate-600 text-slate-400"}">
+                ${sub.done ? "\u2713" : "\u25CB"}
+              </span>
+              <span class="truncate text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
+                ${escapeHtml2(sub.name)}
+              </span>
             </div>
-            <div class="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-500 dark:text-slate-400">
-              <span>${n.module || "Core"}</span>
-              <span class="font-mono text-slate-400 dark:text-slate-500">${n.type || "feature"}</span>
+          `;
+          }).join("");
+          const isLastFeat = featIdx === moduleFeatures.length - 1;
+          return `
+          <div class="relative pl-6 pt-2">
+            <!-- Gu\xEDa Vertical del Padre (M\xF3dulo) -->
+            ${!isLastFeat ? '<div class="absolute left-2 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-800"></div>' : ""}
+            <!-- Conector Ortogonal hacia la Feature -->
+            <div class="absolute left-2 top-5 w-4 h-0.5 bg-slate-200 dark:bg-slate-800"></div>
+
+            <!-- Tarjeta de Feature (Nivel 2) -->
+            <div class="rounded-xl border ${isProg ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-sm" : isDone ? "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/15" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80"} p-3 shadow-xs hover:border-indigo-400 transition-all">
+              
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <!-- Bot\xF3n Colapsar Subtareas -->
+                  <button type="button" 
+                          data-tree-toggle="${featKey}"
+                          class="w-5 h-5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center justify-center transition-colors cursor-pointer"
+                          title="${isFeatCollapsed ? "Expandir subtareas" : "Colapsar subtareas"}">
+                    ${isFeatCollapsed ? "+" : "\u2212"}
+                  </button>
+
+                  <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">INT-${String(f.id).padStart(3, "0")}</span>
+                  
+                  <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-semibold ${isBug ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}">
+                    ${f.type || "feat"}
+                  </span>
+
+                  <!-- Peso Entero -->
+                  <span class="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-900/60"
+                        title="Peso de importancia: ${weightVal}/100">
+                    Peso: ${weightVal}
+                  </span>
+
+                  <span class="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                    ${escapeHtml2(f.title || f.name)}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full ${isDone ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" : isProg ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 animate-pulse" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"}">
+                    ${f.status}
+                  </span>
+
+                  <button type="button" 
+                          data-action="view-detail" 
+                          data-id="${f.id}" 
+                          class="px-2 py-1 text-[11px] rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium transition-colors cursor-pointer">
+                    Ver Spec
+                  </button>
+                </div>
+              </div>
+
+              <!-- Hojas / Subtareas (Nivel 3) -->
+              ${!isFeatCollapsed && subtasks.length > 0 ? `
+                <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5">
+                  <div class="text-[10px] uppercase font-mono font-bold text-slate-400 mb-1 pl-6">
+                    Subtareas de Implementaci\xF3n (${subtasks.filter((s) => s.done).length}/${subtasks.length}):
+                  </div>
+                  ${subtasksHtml}
+                </div>
+              ` : ""}
             </div>
           </div>
-        </foreignObject>
+        `;
+        }).join("");
+        const isLastMod = modIdx === modulesMap.size - 1;
+        return `
+        <div class="relative pl-6 pt-4">
+          <!-- Gu\xEDa Vertical de la Ra\xEDz -->
+          ${!isLastMod ? '<div class="absolute left-2.5 top-0 bottom-0 w-0.5 bg-indigo-300 dark:bg-indigo-900/60"></div>' : ""}
+          <!-- Conector Ortogonal hacia el M\xF3dulo -->
+          <div class="absolute left-2.5 top-8 w-4 h-0.5 bg-indigo-300 dark:bg-indigo-900/60"></div>
+
+          <!-- Tarjeta de M\xF3dulo (Nivel 1) -->
+          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-md p-3.5 shadow-xs">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <button type="button" 
+                        data-tree-toggle="${modKey}"
+                        class="w-6 h-6 rounded-lg bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center transition-colors cursor-pointer"
+                        title="${isModCollapsed ? "Expandir m\xF3dulo" : "Colapsar m\xF3dulo"}">
+                  ${isModCollapsed ? "+" : "\u2212"}
+                </button>
+
+                <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold font-mono">
+                  \u{1F4C1}
+                </div>
+
+                <div>
+                  <div class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>M\xF3dulo: <span class="font-mono text-indigo-600 dark:text-indigo-400">${moduleName}</span></span>
+                    <span class="text-xs font-normal text-slate-400">(${modTotal} tareas subordinadas)</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                    Padre directo: <span class="font-semibold text-slate-700 dark:text-slate-300">Ra\xEDz del Proyecto</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progreso del M\xF3dulo -->
+              <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">${modDoneCount}/${modTotal} resueltas</div>
+                  <div class="text-[10px] text-slate-400">${modProgressPct}% progreso</div>
+                </div>
+                <div class="w-16 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div class="h-full bg-indigo-500 rounded-full" style="width: ${modProgressPct}%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ramas Hijas (Features del M\xF3dulo) -->
+            ${!isModCollapsed ? `
+              <div class="mt-2 space-y-1">
+                ${featuresHtml}
+              </div>
+            ` : ""}
+          </div>
+        </div>
       `;
       }).join("");
       this.container.innerHTML = `
-      <div class="relative w-full h-[650px] bg-slate-50 dark:bg-slate-950/70 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md flex flex-col">
-        <!-- Barra de herramientas superior -->
-        <div class="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/80 rounded-xl p-1.5 backdrop-blur-md shadow-lg">
-          <button type="button" data-tree-action="zoom-in" class="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-bold" title="Acercar">+</button>
-          <button type="button" data-tree-action="zoom-out" class="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-bold" title="Alejar">-</button>
-          <button type="button" data-tree-action="reset" class="px-2 py-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-semibold" title="Centrar">Reset</button>
+      <div class="space-y-6">
+        
+        <!-- Tarjeta Pedag\xF3gica: Grafo vs \xC1rbol Jer\xE1rquico -->
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/5 via-cyan-500/5 to-transparent border border-indigo-200/60 dark:border-indigo-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+              ${Icons.folder}
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                \xC1rbol Jer\xE1rquico Estricto (Taxonom\xEDa Padre \u2192 Hijos)
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-semibold">
+                  Estructura Conexa Ac\xEDclica
+                </span>
+              </h3>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
+                A diferencia del <strong>Grafo DAG</strong> (malla de bloqueos cruzados donde un nodo puede tener m\xFAltiples padres), 
+                el <strong>\xC1rbol Jer\xE1rquico</strong> impone que cada nodo tenga <strong>exactamente un \xFAnico padre</strong>: 
+                <span class="font-mono text-indigo-600 dark:text-indigo-400">Proyecto (Ra\xEDz) \u2192 M\xF3dulos \u2192 Tareas \u2192 Subtareas</span>. 
+                Posee exactamente <span class="font-mono font-bold">${totalTreeNodes - 1} aristas</span> para sus <span class="font-mono font-bold">${totalTreeNodes} nodos</span>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Botones de Acci\xF3n de \xC1rbol -->
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" 
+                    data-action="tree-expand-all" 
+                    class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
+              + Expandir Todo
+            </button>
+            <button type="button" 
+                    data-action="tree-collapse-modules" 
+                    class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
+              \u{1F4C1} Solo M\xF3dulos
+            </button>
+          </div>
         </div>
 
-        <div class="absolute top-4 left-4 z-20 pointer-events-none text-xs text-slate-500 dark:text-slate-400">
-          <span class="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-xs">
-            \u{1F4A1} Arrastra para desplazar el lienzo | Clic en un nodo para detalle
-          </span>
-        </div>
+        <!-- Contenedor del \xC1rbol Visual con Conexiones Ortogonales -->
+        <div class="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-md">
+          
+          <!-- NODO RA\xCDZ \xDANICO (NIVEL 0) -->
+          <div class="relative">
+            <div class="p-4 rounded-2xl bg-indigo-600 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-xl shadow-xs">
+                  \u{1F680}
+                </div>
+                <div>
+                  <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-200 font-bold">Nodo Ra\xEDz (Nivel 0)</div>
+                  <h2 class="text-lg font-bold tracking-tight">${escapeHtml2(projectName)}</h2>
+                </div>
+              </div>
 
-        <div id="tree-canvas-wrapper" class="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden">
-          <svg id="tree-svg" width="100%" height="100%" class="w-full h-full">
-            <g id="tree-viewport" transform="translate(${this.pan.x}, ${this.pan.y}) scale(${this.zoom})">
-              <defs>
-                <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-                  <circle cx="2" cy="2" r="1" class="fill-slate-300 dark:fill-slate-700" opacity="0.6"></circle>
-                </pattern>
-              </defs>
-              <rect x="-1000" y="-1000" width="5000" height="5000" fill="url(#dot-grid)"></rect>
+              <div class="flex items-center gap-4 text-xs font-mono">
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15">
+                  ${totalModules} M\xF3dulos
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15">
+                  ${totalFeatures} Tareas
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15">
+                  ${totalTreeEdges} Aristas (N - 1)
+                </span>
+              </div>
+            </div>
 
-              <g class="tree-links">
-                ${linksSvg.join("")}
-              </g>
-
-              <g class="tree-nodes">
-                ${nodesSvg}
-              </g>
-            </g>
-          </svg>
+            <!-- Sub\xE1rboles de M\xF3dulos (Nivel 1 y sucesivos) -->
+            <div class="mt-2 space-y-2">
+              ${modulesHtml}
+            </div>
+          </div>
         </div>
       </div>
     `;
-      this.bindEvents();
-    }
-    calculateTopologicalLevels(features) {
-      const nodesMap = /* @__PURE__ */ new Map();
-      const levels = [];
-      const inDegrees = /* @__PURE__ */ new Map();
-      const adj = /* @__PURE__ */ new Map();
-      features.forEach((f) => {
-        const rawDeps = f.depends_on || f.dependencies || [];
-        inDegrees.set(f.id, rawDeps.length);
-        adj.set(f.id, []);
-      });
-      features.forEach((f) => {
-        const rawDeps = f.depends_on || f.dependencies || [];
-        rawDeps.forEach((depId) => {
-          if (adj.has(depId)) {
-            adj.get(depId).push(f.id);
-          }
-        });
-      });
-      let currentQueue = features.filter((f) => {
-        const rawDeps = f.depends_on || f.dependencies || [];
-        return rawDeps.length === 0;
-      });
-      const visited = /* @__PURE__ */ new Set();
-      while (currentQueue.length > 0) {
-        levels.push(currentQueue);
-        currentQueue.forEach((f) => visited.add(f.id));
-        const nextQueue = [];
-        currentQueue.forEach((f) => {
-          const neighbors = adj.get(f.id) || [];
-          neighbors.forEach((nxtId) => {
-            if (!visited.has(nxtId)) {
-              const nxtFeature = features.find((item) => item.id === nxtId);
-              if (nxtFeature && !nextQueue.includes(nxtFeature)) {
-                nextQueue.push(nxtFeature);
-              }
-            }
-          });
-        });
-        currentQueue = nextQueue;
-      }
-      const unvisited = features.filter((f) => !visited.has(f.id));
-      if (unvisited.length > 0) {
-        levels.push(unvisited);
-      }
-      return { levels, nodesMap };
-    }
-    bindEvents() {
-      const wrapper = this.container.querySelector("#tree-canvas-wrapper");
-      const viewport = this.container.querySelector("#tree-viewport");
-      const updateTransform = () => {
-        if (viewport) {
-          viewport.setAttribute("transform", `translate(${this.pan.x}, ${this.pan.y}) scale(${this.zoom})`);
-        }
-      };
-      wrapper.addEventListener("mousedown", (e) => {
-        if (e.target.closest("[data-node-id]") || e.target.closest("button")) return;
-        this.isDragging = true;
-        this.dragStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
-      });
-      window.addEventListener("mousemove", (e) => {
-        if (!this.isDragging) return;
-        this.pan.x = e.clientX - this.dragStart.x;
-        this.pan.y = e.clientY - this.dragStart.y;
-        updateTransform();
-      });
-      window.addEventListener("mouseup", () => {
-        this.isDragging = false;
-      });
-      wrapper.addEventListener("wheel", (e) => {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        this.zoom = Math.min(Math.max(0.3, this.zoom * delta), 2.5);
-        updateTransform();
-      }, { passive: false });
-      this.container.querySelector('[data-tree-action="zoom-in"]')?.addEventListener("click", () => {
-        this.zoom = Math.min(2.5, this.zoom * 1.2);
-        updateTransform();
-      });
-      this.container.querySelector('[data-tree-action="zoom-out"]')?.addEventListener("click", () => {
-        this.zoom = Math.max(0.3, this.zoom * 0.8);
-        updateTransform();
-      });
-      this.container.querySelector('[data-tree-action="reset"]')?.addEventListener("click", () => {
-        this.zoom = 1;
-        this.pan = { x: 40, y: 40 };
-        updateTransform();
-      });
-      this.container.querySelectorAll("[data-node-id]").forEach((el) => {
-        el.addEventListener("click", (e) => {
+      this.container.querySelectorAll("[data-tree-toggle]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
           e.stopPropagation();
-          const id = parseInt(el.getAttribute("data-node-id"), 10);
-          const feature = this.features.find((f) => f.id === id);
-          if (feature && this.onSelect) {
-            this.onSelect(feature);
-          }
+          const key = btn.getAttribute("data-tree-toggle");
+          this.toggleNode(key);
         });
+      });
+      this.container.querySelectorAll('[data-action="tree-expand-all"]').forEach((btn) => {
+        btn.addEventListener("click", () => this.expandAll());
+      });
+      this.container.querySelectorAll('[data-action="tree-collapse-modules"]').forEach((btn) => {
+        btn.addEventListener("click", () => this.collapseToModules());
       });
     }
   };
+  function escapeHtml2(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
 
   // project-docs/src/features/space-view-3d/SpaceView3D.js
   var SpaceView3D = class {
@@ -1580,6 +1797,7 @@
       this.nodes = [];
       this.orbitRings = [];
       this.flowParticles = [];
+      this.labelSprites = [];
       this.raycaster = null;
       this.mouse = null;
       this.isDragging = false;
@@ -1602,42 +1820,49 @@
         return;
       }
       this.container.innerHTML = `
-      <div class="relative w-full h-[680px] bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl select-none">
+      <div class="relative w-full h-[700px] bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl select-none">
         
         <!-- HUD Superior -->
         <div class="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2">
-          <span class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-slate-200 text-xs backdrop-blur-md shadow-lg flex items-center gap-2">
+          <span class="px-3.5 py-1.5 rounded-xl bg-slate-900/85 border border-slate-700/80 text-slate-200 text-xs backdrop-blur-md shadow-lg flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            Constelaci\xF3n 3D de Tareas | Arrastra para orbitar | Clic para inspeccionar
+            Constelaci\xF3n 3D | Bolitas proporcionales al Peso | Arrastra para orbitar
           </span>
         </div>
 
-        <!-- Leyenda de Estados y Tama\xF1os -->
-        <div class="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex flex-wrap items-center gap-3 text-[11px] bg-slate-900/85 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md shadow-lg text-slate-300">
+        <!-- Leyenda de Estados, Tama\xF1os y Pesos -->
+        <div class="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex flex-wrap items-center gap-3 text-[11px] bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-xl backdrop-blur-md shadow-lg text-slate-300">
           <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400"></span> Resuelto</span>
           <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 shadow-xs shadow-indigo-500"></span> En Progreso</span>
           <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cyan-400 shadow-xs shadow-cyan-400"></span> Spec Listo</span>
           <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 shadow-xs shadow-rose-500"></span> Bloqueado</span>
           <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 shadow-xs shadow-amber-400"></span> Bugfix</span>
           <span class="text-slate-600">|</span>
-          <span class="text-slate-400">Tama\xF1o del planeta = Prioridad (P0 grande, P2 est\xE1ndar)</span>
+          <span class="font-mono text-amber-400 font-bold">Tama\xF1o de Bolita \u221D Peso (20 a 100)</span>
         </div>
 
-        <!-- Panel Lateral de Selecci\xF3n R\xE1pida 3D -->
-        <div class="absolute top-4 right-4 z-20 w-52 max-h-[620px] bg-slate-900/85 border border-slate-800 rounded-xl p-2.5 backdrop-blur-md shadow-xl overflow-y-auto hidden md:block">
-          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Nodos en Orbita (${this.features.length})</div>
-          <div class="space-y-1" id="three-node-list">
+        <!-- Panel Lateral de Nodos en \xD3rbita -->
+        <div class="absolute top-4 right-4 z-20 w-56 max-h-[640px] bg-slate-900/90 border border-slate-800 rounded-2xl p-3 backdrop-blur-md shadow-2xl overflow-y-auto hidden md:block">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 px-1 flex items-center justify-between">
+            <span>Nodos 3D (${this.features.length})</span>
+            <span class="text-[10px] text-indigo-400 font-mono">Peso</span>
+          </div>
+          <div class="space-y-1.5" id="three-node-list">
             ${this.features.map((f) => {
         const dotColor = f.status === "done" ? "bg-emerald-400" : f.status === "in_progress" ? "bg-indigo-400" : f.type === "bugfix" ? "bg-amber-400" : "bg-slate-500";
+        const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
         return `
                 <button type="button" 
                         data-focus-node="${f.id}" 
-                        class="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-slate-800/80 transition-colors flex items-center justify-between group cursor-pointer">
+                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs hover:bg-slate-800/90 transition-colors flex items-center justify-between group cursor-pointer border border-transparent hover:border-slate-700/60">
                   <div class="flex items-center gap-1.5 truncate">
-                    <span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>
-                    <span class="font-mono text-[11px] text-slate-300 group-hover:text-indigo-300">INT-${String(f.id).padStart(3, "0")}</span>
+                    <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+                    <span class="font-mono text-[11px] font-bold text-slate-200 group-hover:text-indigo-300">INT-${String(f.id).padStart(3, "0")}</span>
                     <span class="truncate text-[11px] text-slate-400">${f.name}</span>
                   </div>
+                  <span class="font-mono text-[10px] font-bold text-amber-400 bg-amber-950/40 px-1 py-0.2 rounded border border-amber-900/50">
+                    ${weightVal}
+                  </span>
                 </button>
               `;
       }).join("")}
@@ -1645,8 +1870,8 @@
         </div>
 
         <!-- HUD Tooltip Flotante 3D -->
-        <div id="three-tooltip-hud" class="absolute z-30 pointer-events-none hidden transition-opacity duration-150 transform -translate-x-1/2 -translate-y-full mb-3">
-          <div class="bg-slate-900/95 border border-indigo-500/60 rounded-xl p-3 shadow-2xl backdrop-blur-md text-xs text-slate-200 min-w-[220px] max-w-xs">
+        <div id="three-tooltip-hud" class="absolute z-30 pointer-events-none hidden transition-opacity duration-150 transform -translate-x-1/2 -translate-y-full mb-4">
+          <div class="bg-slate-900/95 border border-indigo-500/70 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md text-xs text-slate-200 min-w-[240px] max-w-xs">
             <div id="hud-content"></div>
           </div>
         </div>
@@ -1662,19 +1887,19 @@
     initThree(rootEl) {
       const THREE = window.THREE;
       const width = rootEl.clientWidth || 800;
-      const height = rootEl.clientHeight || 680;
+      const height = rootEl.clientHeight || 700;
       this.scene = new THREE.Scene();
-      this.scene.fog = new THREE.FogExp2(132631, 15e-4);
+      this.scene.fog = new THREE.FogExp2(132631, 14e-4);
       this.camera = new THREE.PerspectiveCamera(50, width / height, 1, 3500);
-      this.camera.position.set(0, 40, 520);
+      this.camera.position.set(0, 45, 540);
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       rootEl.appendChild(this.renderer.domElement);
-      const ambientLight = new THREE.AmbientLight(16777215, 0.9);
+      const ambientLight = new THREE.AmbientLight(16777215, 1);
       this.scene.add(ambientLight);
       const pointLight = new THREE.PointLight(6514417, 2.5, 1200);
-      pointLight.position.set(150, 250, 200);
+      pointLight.position.set(160, 260, 220);
       this.scene.add(pointLight);
       const secondLight = new THREE.PointLight(440020, 1.8, 1e3);
       secondLight.position.set(-200, -150, 100);
@@ -1689,10 +1914,10 @@
     createStarfield() {
       const THREE = window.THREE;
       const starGeo = new THREE.BufferGeometry();
-      const starCount = 1200;
+      const starCount = 1300;
       const posArray = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 2200;
+        posArray[i] = (Math.random() - 0.5) * 2400;
       }
       starGeo.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
       const starMat = new THREE.PointsMaterial({
@@ -1704,13 +1929,60 @@
       const starField = new THREE.Points(starGeo, starMat);
       this.scene.add(starField);
     }
+    /**
+     * Crea una etiqueta 3D (Sprite) con texto nítido renderizado en Canvas 2D
+     * Muestra: INT-numero y Peso: xx
+     */
+    createLabelSprite(taskId, weight, priority, colorHex) {
+      const THREE = window.THREE;
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 128;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
+      ctx.strokeStyle = colorHex || "#6366f1";
+      ctx.lineWidth = 5;
+      const r = 24;
+      ctx.beginPath();
+      ctx.moveTo(r, 6);
+      ctx.lineTo(256 - r, 6);
+      ctx.quadraticCurveTo(256 - 6, 6, 256 - 6, r);
+      ctx.lineTo(256 - 6, 128 - r);
+      ctx.quadraticCurveTo(256 - 6, 128 - 6, 256 - r, 128 - 6);
+      ctx.lineTo(r, 128 - 6);
+      ctx.quadraticCurveTo(6, 128 - 6, 6, 128 - r);
+      ctx.lineTo(6, r);
+      ctx.quadraticCurveTo(6, 6, r, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "bold 36px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(taskId, 128, 46);
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 26px monospace";
+      ctx.fillText(`Peso: ${weight}`, 128, 92);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      const spriteMat = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false
+      });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(40, 20, 1);
+      return sprite;
+    }
     createNodes() {
       const THREE = window.THREE;
       const count = this.features.length;
       this.nodes = [];
       this.orbitRings = [];
       this.flowParticles = [];
-      const radius = 190;
+      this.labelSprites = [];
+      const radius = 200;
       const featureMap = /* @__PURE__ */ new Map();
       this.features.forEach((f) => featureMap.set(f.id, f));
       this.features.forEach((f, idx) => {
@@ -1719,12 +1991,11 @@
         const x = radius * Math.cos(theta) * Math.sin(phi);
         const y = radius * Math.sin(theta) * Math.sin(phi);
         const z = radius * Math.cos(phi);
-        let sphereRadius = 8;
-        if (f.priority === "P0" || f.priority === "alta") sphereRadius = 14;
-        else if (f.priority === "P1" || f.priority === "media") sphereRadius = 10;
-        else if (f.priority === "P3" || f.priority === "baja") sphereRadius = 6;
+        const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
+        const sphereRadius = 6 + weightVal / 100 * 16;
         let color = 6583435;
         let emissive = 3359061;
+        let colorHex = "#6366f1";
         const rawDeps = f.depends_on || f.dependencies || [];
         const pendingDeps = rawDeps.filter((dId) => {
           const dep = featureMap.get(dId);
@@ -1734,39 +2005,55 @@
         if (f.status === "done") {
           color = 1096065;
           emissive = 366185;
+          colorHex = "#10b981";
         } else if (f.status === "in_progress") {
           color = 6514417;
           emissive = 5195493;
+          colorHex = "#6366f1";
         } else if (f.status === "spec_ready") {
           color = 440020;
           emissive = 561586;
+          colorHex = "#06b6d4";
         } else if (isBlocked) {
           color = 16007006;
           emissive = 14753096;
+          colorHex = "#f43f5e";
         } else if (f.type === "bugfix") {
           color = 16096779;
           emissive = 14251782;
+          colorHex = "#f59e0b";
         }
         const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
         const material = new THREE.MeshStandardMaterial({
           color,
-          roughness: 0.25,
+          roughness: 0.22,
           metalness: 0.35,
           emissive,
-          emissiveIntensity: 0.5
+          emissiveIntensity: 0.55
         });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(x, y, z);
-        mesh.userData = { feature: f, baseRadius: sphereRadius, baseColor: color, baseEmissive: emissive };
+        mesh.userData = {
+          feature: f,
+          weight: weightVal,
+          baseRadius: sphereRadius,
+          baseColor: color,
+          baseEmissive: emissive
+        };
         this.scene.add(mesh);
         this.nodes.push(mesh);
-        if (f.priority === "P0" || f.priority === "alta") {
-          const ringGeo = new THREE.RingGeometry(sphereRadius + 4, sphereRadius + 6, 32);
+        const taskId = `INT-${String(f.id).padStart(3, "0")}`;
+        const sprite = this.createLabelSprite(taskId, weightVal, f.priority, colorHex);
+        sprite.position.set(x, y + sphereRadius + 15, z);
+        this.scene.add(sprite);
+        this.labelSprites.push(sprite);
+        if (weightVal >= 80) {
+          const ringGeo = new THREE.RingGeometry(sphereRadius + 4, sphereRadius + 6.5, 32);
           const ringMat = new THREE.MeshBasicMaterial({
             color,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.6
+            opacity: 0.65
           });
           const ring = new THREE.Mesh(ringGeo, ringMat);
           ring.position.set(x, y, z);
@@ -1790,11 +2077,11 @@
           const lineMat = new THREE.LineBasicMaterial({
             color: isResolved ? 1096065 : 16007006,
             transparent: true,
-            opacity: isResolved ? 0.6 : 0.4
+            opacity: isResolved ? 0.65 : 0.45
           });
           const line = new THREE.Line(lineGeo, lineMat);
           this.scene.add(line);
-          const pGeo = new THREE.SphereGeometry(2, 12, 12);
+          const pGeo = new THREE.SphereGeometry(2.4, 12, 12);
           const pMat = new THREE.MeshBasicMaterial({
             color: isResolved ? 3462041 : 16478597
           });
@@ -1815,6 +2102,11 @@
         this.prevMousePos = { x: e.clientX, y: e.clientY };
       };
       const onMouseMove = (e) => {
+        const rect = rootEl.getBoundingClientRect();
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        this.mouse.x = screenX / rootEl.clientWidth * 2 - 1;
+        this.mouse.y = -(screenY / rootEl.clientHeight) * 2 + 1;
         if (this.isDragging) {
           const deltaX = e.clientX - this.prevMousePos.x;
           const deltaY = e.clientY - this.prevMousePos.y;
@@ -1822,36 +2114,26 @@
           this.targetRotation.x += deltaY * 5e-3;
           this.prevMousePos = { x: e.clientX, y: e.clientY };
         }
-        const rect = rootEl.getBoundingClientRect();
-        this.mouse.x = (e.clientX - rect.left) / rect.width * 2 - 1;
-        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        this.checkRaycast(e.clientX - rect.left, e.clientY - rect.top);
+        this.checkRaycast(screenX, screenY);
       };
       const onMouseUp = () => {
         this.isDragging = false;
       };
-      const onClick = (e) => {
-        if (!this.hoveredMesh) return;
-        const clickedFeature = this.hoveredMesh.userData.feature;
-        if (clickedFeature && this.onSelect) {
-          this.onSelect(clickedFeature);
+      const onClick = () => {
+        if (this.hoveredMesh) {
+          this.focusOnNode(this.hoveredMesh);
         }
       };
       rootEl.addEventListener("mousedown", onMouseDown);
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("mouseup", onMouseUp);
       rootEl.addEventListener("click", onClick);
-      rootEl.addEventListener("wheel", (e) => {
-        e.preventDefault();
-        const zoomFactor = e.deltaY > 0 ? 1.08 : 0.92;
-        this.camera.position.z = Math.min(Math.max(200, this.camera.position.z * zoomFactor), 1200);
-      }, { passive: false });
       this.container.querySelectorAll("[data-focus-node]").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           const id = parseInt(btn.getAttribute("data-focus-node"), 10);
-          const nodeMesh = this.nodes.find((n) => n.userData.feature.id === id);
-          if (nodeMesh) {
-            this.focusOnNode(nodeMesh);
+          const targetNode = this.nodes.find((n) => n.userData.feature.id === id);
+          if (targetNode) {
+            this.focusOnNode(targetNode);
           }
         });
       });
@@ -1873,23 +2155,36 @@
             this.hoveredMesh.scale.set(1, 1, 1);
           }
           this.hoveredMesh = mesh;
-          mesh.scale.set(1.25, 1.25, 1.25);
+          mesh.scale.set(1.22, 1.22, 1.22);
         }
         const f = mesh.userData.feature;
+        const weightVal = mesh.userData.weight;
         const hudContent = this.container.querySelector("#hud-content");
         if (hudContent && f) {
           const branchName = f.branch || `${f.type || "feature"}/INT-${String(f.id).padStart(3, "0")}/${f.name}`;
           const rawDeps = f.depends_on || f.dependencies || [];
           hudContent.innerHTML = `
-          <div class="flex items-center justify-between gap-2 mb-1.5 border-b border-slate-800 pb-1.5">
-            <span class="font-mono font-bold text-indigo-400">INT-${String(f.id).padStart(3, "0")}</span>
-            <span class="font-semibold px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-slate-300 uppercase">${f.status}</span>
+          <div class="flex items-center justify-between gap-2 mb-2 border-b border-slate-800 pb-2">
+            <span class="font-mono font-bold text-indigo-400 text-sm">INT-${String(f.id).padStart(3, "0")}</span>
+            <span class="font-semibold px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 uppercase">${f.status}</span>
           </div>
-          <div class="font-bold text-slate-100 text-xs mb-1">${f.title || f.name}</div>
-          <div class="font-mono text-[10px] text-slate-400 truncate mb-1">\u{1F33F} ${branchName}</div>
+          <div class="font-bold text-slate-100 text-xs mb-1.5 leading-snug">${f.title || f.name}</div>
+          <div class="font-mono text-[10px] text-slate-400 truncate mb-2">\u{1F33F} ${branchName}</div>
+          
+          <!-- Barra de Peso -->
+          <div class="mb-2 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
+            <div class="flex items-center justify-between text-[10px] mb-1">
+              <span class="text-amber-400 font-bold font-mono">Peso de Importancia:</span>
+              <span class="font-mono font-bold text-amber-300">${weightVal} / 100</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full" style="width: ${weightVal}%"></div>
+            </div>
+          </div>
+
           <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
             <span>Prioridad: <strong class="text-indigo-300">${f.priority || "P2"}</strong></span>
-            <span>${rawDeps.length ? `${rawDeps.length} deps` : "Ra\xEDz"}</span>
+            <span>${rawDeps.length ? `${rawDeps.length} dependencias` : "Ra\xEDz sin bloqueos"}</span>
           </div>
         `;
         }
@@ -1918,7 +2213,7 @@
       this.rotation.x += (this.targetRotation.x - this.rotation.x) * 0.08;
       this.rotation.y += (this.targetRotation.y - this.rotation.y) * 0.08;
       if (!this.isDragging) {
-        this.targetRotation.y += 1e-3;
+        this.targetRotation.y += 12e-4;
       }
       if (this.scene) {
         this.scene.rotation.y = this.rotation.y;
@@ -1945,15 +2240,16 @@
         this._cleanupEvents();
         this._cleanupEvents = null;
       }
-      if (this.renderer) {
-        this.renderer.dispose();
-        this.renderer = null;
+      if (this.renderer && this.renderer.domElement && this.renderer.domElement.parentNode) {
+        this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
       }
-      this.scene = null;
-      this.camera = null;
       this.nodes = [];
       this.orbitRings = [];
       this.flowParticles = [];
+      this.labelSprites = [];
+      this.scene = null;
+      this.camera = null;
+      this.renderer = null;
     }
   };
 
@@ -2055,22 +2351,59 @@
       this.currentTreeComponent = null;
       this.activeTab = "features";
       this.envInfo = null;
+      this.isAppMounted = false;
+      this.searchDebounceTimer = null;
+      this.autoSyncController = null;
+      this.lastSyncTime = /* @__PURE__ */ new Date();
     }
     async init() {
       router.init((tabId) => {
         this.handleTabChange(tabId);
       });
-      store.subscribe(() => {
-        this.render();
+      store.subscribe((state) => {
+        this.handleStateChange(state);
       });
       this.bindGlobalEvents();
       await this.refreshData();
+      this.initAutoSync();
+    }
+    initAutoSync() {
+      if (this.autoSyncController) {
+        this.autoSyncController.stop();
+      }
+      this.autoSyncController = api.startAutoSync({
+        intervalMs: 2500,
+        onUpdate: (freshData) => {
+          this.lastSyncTime = /* @__PURE__ */ new Date();
+          this.pulseSyncIndicator();
+          store.setData(freshData);
+        }
+      });
+    }
+    pulseSyncIndicator() {
+      const dot = document.getElementById("sync-status-dot");
+      const timeEl = document.getElementById("sync-last-time");
+      if (dot) {
+        dot.classList.remove("bg-emerald-500");
+        dot.classList.add("bg-cyan-400", "scale-125");
+        setTimeout(() => {
+          dot.classList.remove("bg-cyan-400", "scale-125");
+          dot.classList.add("bg-emerald-500");
+        }, 600);
+      }
+      if (timeEl) {
+        timeEl.textContent = "Actualizado";
+        setTimeout(() => {
+          if (timeEl) timeEl.textContent = "En vivo";
+        }, 1500);
+      }
     }
     async refreshData() {
       store.setLoading(true);
       try {
-        const data = await api.fetchAll();
+        const data = await api.fetchAll({ bypassCache: true });
         this.envInfo = await detectEnvironment(data);
+        this.lastSyncTime = /* @__PURE__ */ new Date();
         store.setData(data);
       } catch (err) {
         console.error("Error cargando datos del arn\xE9s:", err);
@@ -2086,8 +2419,30 @@
       this.activeTab = tabId;
       this.render();
     }
+    handleStateChange(state) {
+      const tableContainer = document.getElementById("feature-table-container");
+      const paginationContainer = document.getElementById("feature-pagination-container");
+      const isSearchFocused = document.activeElement && document.activeElement.id === "feature-search-input";
+      if (this.isAppMounted && this.activeTab === "features" && tableContainer && paginationContainer && isSearchFocused) {
+        const filteredFeatures = store.getFilteredFeatures();
+        tableContainer.innerHTML = renderFeatureTable({
+          features: filteredFeatures,
+          pagination: state.pagination,
+          onSelect: (f) => store.setSelectedFeature(f)
+        });
+        paginationContainer.innerHTML = renderFeaturePagination({
+          totalItems: filteredFeatures.length,
+          pagination: state.pagination
+        });
+        return;
+      }
+      this.render();
+    }
     render() {
       if (!this.root) return;
+      const activeElementId = document.activeElement?.id;
+      const selectionStart = document.activeElement?.selectionStart;
+      const selectionEnd = document.activeElement?.selectionEnd;
       const state = store.getState();
       const stats = store.getStats();
       const filteredFeatures = store.getFilteredFeatures();
@@ -2095,6 +2450,7 @@
       const isDark = state.theme === "dark";
       const activeAgent = this.envInfo?.activeAgent || { name: "Google Antigravity", icon: "\u26A1" };
       const stackInfo = this.envInfo?.stack || { name: "Multi-Stack Agnostico" };
+      const isLocalFile = typeof window !== "undefined" && window.location.protocol === "file:";
       if (state.loading && state.features.length === 0) {
         this.root.innerHTML = `
         <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
@@ -2124,7 +2480,7 @@
       <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
         
         <!-- Barra de Estado Superior -->
-        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 transition-colors">
+        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-30 transition-colors">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             
             <!-- Logo & Info del Proyecto -->
@@ -2134,7 +2490,7 @@
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml2(state.project)}</h1>
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml3(state.project)}</h1>
                   <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
                     SDD 2.0
                   </span>
@@ -2147,8 +2503,16 @@
               </div>
             </div>
 
-            <!-- Chips de Agente Detectado y Stack Tecnol\xF3gico -->
+            <!-- Chips de Agente, Stack y Auto-Sync -->
             <div class="hidden lg:flex items-center gap-2 text-xs">
+              
+              <!-- Badge de Auto-Sync Reactivo -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl ${isLocalFile ? "bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300" : "bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300"} shadow-xs"
+                   title="${isLocalFile ? "Modo local file://. Usa abrir-tablero.bat para auto-sync HTTP." : "Auto-Sync activo: detecta cambios en feature_list.json y progres/ en vivo"}">
+                <span id="sync-status-dot" class="w-2 h-2 rounded-full ${isLocalFile ? "bg-amber-500" : "bg-emerald-500 animate-pulse"} transition-all"></span>
+                <span id="sync-last-time" class="font-mono text-[11px] font-semibold">${isLocalFile ? "file:// local" : "En vivo"}</span>
+              </div>
+
               <!-- Agente Detectado -->
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 shadow-xs"
                    title="Agentes compatibles homologados: Google Antigravity, Open Code, GitHub Copilot, Claude Code, Codex">
@@ -2160,7 +2524,7 @@
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs"
                    title="Stack tecnol\xF3gico detectado por technical-audit">
                 <span class="text-slate-400">Stack:</span>
-                <span class="font-semibold">${escapeHtml2(stackInfo.name)}</span>
+                <span class="font-semibold">${escapeHtml3(stackInfo.name)}</span>
               </div>
             </div>
 
@@ -2181,7 +2545,7 @@
               <button type="button" 
                       data-action="refresh" 
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-xs cursor-pointer"
-                      title="Refrescar datos del arn\xE9s">
+                      title="Refrescar datos del arn\xE9s ahora">
                 <span class="shrink-0 ${state.loading ? "animate-spin" : ""}">${Icons.refresh}</span>
                 <span class="hidden sm:inline">Refrescar</span>
               </button>
@@ -2218,26 +2582,46 @@
         </main>
 
         <!-- Modal de Detalle -->
-        ${renderModal(state.selectedFeature)}
+        <div id="modal-container">
+          ${renderModal(state.selectedFeature)}
+        </div>
       </div>
     `;
+      this.isAppMounted = true;
       this.postRender({ state, filteredFeatures });
+      if (activeElementId && activeElementId === "feature-search-input") {
+        requestAnimationFrame(() => {
+          const input = document.getElementById("feature-search-input");
+          if (input) {
+            input.focus();
+            if (typeof selectionStart === "number" && typeof selectionEnd === "number") {
+              input.setSelectionRange(selectionStart, selectionEnd);
+            }
+          }
+        });
+      }
     }
     renderActiveTabContent({ state, filteredFeatures, modules }) {
       switch (this.activeTab) {
         case "features":
           return `
           <div class="space-y-6">
-            ${renderFeatureFilters({ filters: state.filters, modules })}
-            ${renderFeatureTable({
+            <div id="feature-filters-container">
+              ${renderFeatureFilters({ filters: state.filters, modules })}
+            </div>
+            <div id="feature-table-container">
+              ${renderFeatureTable({
             features: filteredFeatures,
             pagination: state.pagination,
             onSelect: (f) => store.setSelectedFeature(f)
           })}
-            ${renderFeaturePagination({
+            </div>
+            <div id="feature-pagination-container">
+              ${renderFeaturePagination({
             totalItems: filteredFeatures.length,
             pagination: state.pagination
           })}
+            </div>
           </div>
         `;
         case "graph":
@@ -2263,6 +2647,7 @@
         if (treeTarget) {
           this.currentTreeComponent = new DependencyTreeComponent(treeTarget, {
             features: state.features,
+            currentSpec: state.currentSpec,
             onSelect: (f) => store.setSelectedFeature(f)
           });
           this.currentTreeComponent.render();
@@ -2319,8 +2704,8 @@
           nodes.forEach((n) => n.classList.remove("opacity-30", "scale-105", "ring-2", "ring-indigo-500", "ring-amber-500", "ring-cyan-500"));
           edges.forEach((e) => {
             e.classList.remove("opacity-10");
-            e.setAttribute("stroke-width", "2");
-            e.setAttribute("opacity", "0.65");
+            e.setAttribute("stroke-width", "2.2");
+            e.setAttribute("opacity", "0.75");
           });
         });
       });
@@ -2379,13 +2764,19 @@
         }
         const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
         if (resetFiltersBtn) {
+          const searchInput = document.getElementById("feature-search-input");
+          if (searchInput) searchInput.value = "";
           store.resetFilters();
           return;
         }
       });
       document.addEventListener("input", (e) => {
         if (e.target.id === "feature-search-input") {
-          store.setFilter("search", e.target.value);
+          clearTimeout(this.searchDebounceTimer);
+          const val = e.target.value;
+          this.searchDebounceTimer = setTimeout(() => {
+            store.setFilter("search", val);
+          }, 260);
         }
       });
       document.addEventListener("change", (e) => {
@@ -2408,7 +2799,7 @@
       });
     }
   };
-  function escapeHtml2(text) {
+  function escapeHtml3(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }

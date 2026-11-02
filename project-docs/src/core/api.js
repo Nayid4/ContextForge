@@ -1,20 +1,39 @@
 /**
  * API Data Service to load feature_list.json, current.json and history.json
+ * Incluye soporte de Auto-Sync (detección en vivo de cambios sin refrescar).
  */
 
-export async function fetchProjectData() {
+export async function fetchProjectData(options = {}) {
+  const { bypassCache = false } = options;
   let featureData = null;
   let currentSpec = {};
   let historyData = { records: [] };
 
-  // Try relative and parent paths
-  const featurePaths = ['feature_list.json', '../feature_list.json', './project-docs/feature_list.json'];
-  const currentPaths = ['progres/current.json', 'progress/current.json', '../progress/current.json', '../project-docs/progres/current.json'];
-  const historyPaths = ['progres/history.json', 'progress/history.json', '../progress/history.json', '../project-docs/progres/history.json'];
+  const cacheBuster = bypassCache ? `?_t=${Date.now()}` : '';
+  const fetchOpts = bypassCache ? { cache: 'no-store' } : {};
+
+  // Rutas relativas compatibles con ejecución local y raíz
+  const featurePaths = [
+    `feature_list.json${cacheBuster}`,
+    `../feature_list.json${cacheBuster}`,
+    `./project-docs/feature_list.json${cacheBuster}`
+  ];
+  const currentPaths = [
+    `progres/current.json${cacheBuster}`,
+    `progress/current.json${cacheBuster}`,
+    `../progress/current.json${cacheBuster}`,
+    `../project-docs/progres/current.json${cacheBuster}`
+  ];
+  const historyPaths = [
+    `progres/history.json${cacheBuster}`,
+    `progress/history.json${cacheBuster}`,
+    `../progress/history.json${cacheBuster}`,
+    `../project-docs/progres/history.json${cacheBuster}`
+  ];
 
   for (const path of featurePaths) {
     try {
-      const res = await fetch(path);
+      const res = await fetch(path, fetchOpts);
       if (res.ok) {
         featureData = await res.json();
         break;
@@ -24,7 +43,7 @@ export async function fetchProjectData() {
 
   for (const path of currentPaths) {
     try {
-      const res = await fetch(path);
+      const res = await fetch(path, fetchOpts);
       if (res.ok) {
         currentSpec = await res.json();
         break;
@@ -34,7 +53,7 @@ export async function fetchProjectData() {
 
   for (const path of historyPaths) {
     try {
-      const res = await fetch(path);
+      const res = await fetch(path, fetchOpts);
       if (res.ok) {
         historyData = await res.json();
         break;
@@ -50,7 +69,6 @@ export async function fetchProjectData() {
   }
 
   if (!featureData) {
-    // Estado por defecto seguro para que la interfaz siempre se dibuje
     featureData = {
       project: 'Proyecto (Modo Local)',
       features: []
@@ -61,10 +79,70 @@ export async function fetchProjectData() {
     project: featureData.project || 'Proyecto',
     features: Array.isArray(featureData.features) ? featureData.features : [],
     currentSpec,
-    historyData
+    historyData,
+    protocol: typeof window !== 'undefined' ? window.location.protocol : 'http:'
+  };
+}
+
+/**
+ * Inicia el monitoreo reactivo de cambios en los JSON.
+ * Detecta automáticamente cuando un agente o humano actualiza feature_list.json o current.json.
+ */
+export function startAutoSync({ onUpdate, intervalMs = 2500 } = {}) {
+  let isRunning = true;
+  let lastFingerprint = '';
+
+  const checkUpdates = async () => {
+    if (!isRunning) return;
+    try {
+      const data = await fetchProjectData({ bypassCache: true });
+      
+      // Fingerprint ligero y determinista
+      const fingerprint = JSON.stringify({
+        project: data.project,
+        featuresCount: data.features.length,
+        features: data.features.map(f => ({
+          id: f.id,
+          status: f.status,
+          priority: f.priority,
+          weight: f.weight,
+          branch: f.branch,
+          depends_on: f.depends_on || f.dependencies || []
+        })),
+        currentSpec: {
+          id: data.currentSpec?.id,
+          name: data.currentSpec?.name,
+          status: data.currentSpec?.status,
+          taskCount: (data.currentSpec?.tasks || []).length,
+          tasksDone: (data.currentSpec?.tasks || []).filter(t => t.done || t.status === 'done').length
+        },
+        historyCount: (data.historyData?.records || []).length
+      });
+
+      if (!lastFingerprint) {
+        lastFingerprint = fingerprint;
+      } else if (fingerprint !== lastFingerprint) {
+        lastFingerprint = fingerprint;
+        if (typeof onUpdate === 'function') {
+          onUpdate(data);
+        }
+      }
+    } catch (_) {
+      // Ignorar fallos de red silenciosamente
+    }
+  };
+
+  const timerId = setInterval(checkUpdates, intervalMs);
+
+  return {
+    stop: () => {
+      isRunning = false;
+      clearInterval(timerId);
+    }
   };
 }
 
 export const api = {
-  fetchAll: fetchProjectData
+  fetchAll: fetchProjectData,
+  startAutoSync
 };
