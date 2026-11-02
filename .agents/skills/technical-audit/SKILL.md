@@ -14,7 +14,9 @@ Se debe proporcionar:
 - **Referencia previa** (opcional) - Archivo YAML/JSON existente para complementar
 
 ## Salida
-Archivo `project-spec.yaml` en la raíz del proyecto.
+1. Archivo `project-spec.yaml` en la raíz del proyecto (para verify.sh, Docker y tooling CLI).
+2. Archivo `project-docs/project-spec.json` (versión JSON estructurada para el visualizador del tablero de seguimiento).
+3. Sincronización en `project-docs/data-fallback.js` (ejecutar `node project-docs/sync-data.js` para asegurar compatibilidad offline con doble clic).
 
 ## Estructura del YAML
 
@@ -131,6 +133,10 @@ scripts:
    - Dockerfile presente
    - docker-compose.yml
    - Servicios definidos
+
+7. **Sincronización con el Tablero Visual (project-docs/)**
+   - Generar el gemelo en formato JSON en `project-docs/project-spec.json`.
+   - Ejecutar `node project-docs/sync-data.js` (o actualizar `project-docs/data-fallback.js`) para que el visor de Arquitectura & Stack refleje el stack de inmediato sin necesidad de recargar.
 
 ## Referencia Previa
 Si se proporciona un archivo YAML/JSON existente:
