@@ -1,136 +1,78 @@
-# Modelo C4 de Arquitectura — CloudSaaS Platform
+# Modelo C4 — AI Agentic SDD Engineering Harness
 
-Este documento define la arquitectura del sistema en tres niveles del modelo C4 (Contexto, Contenedores y Componentes), permitiendo a los desarrolladores y agentes de IA comprender las fronteras, responsabilidades y protocolos de comunicación sin ambigüedad.
+> [!NOTE]
+> Arquitectura de Sistema, Contenedores y Componentes del Arnés de Ingeniería Dirigida por Especificaciones (SDD).
 
 ---
 
-## Nivel 1: Diagrama de Contexto del Sistema (System Context - C1)
+## Nivel 1: Diagrama de Contexto del Sistema (C1)
 
-Muestra cómo el sistema `CloudSaaS Platform` interactúa con los usuarios y los sistemas externos.
+Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:
 
 ```mermaid
 flowchart TD
-    subgraph Users ["Actores & Usuarios"]
-        Customer["👤 Cliente Comprador<br>[Web / Mobile]"]
-        Admin["👤 Administrador de Operaciones<br>[Backoffice]"]
-        AIAgent["🤖 Agente de IA SDD<br>[Google Antigravity / Copilot / OpenCode]"]
-    end
+  userDeveloper["👤 Desarrollador / Ingeniero de Software"]
+  agentLeader["⚡ Agente Principal (Leader)"]
+  harnessSystem["🛡️ AI Agentic SDD Engineering Harness"]
+  gitSystem["🐙 Sistema de Control de Versiones (Git / GitHub)"]
+  browserUser["🌐 Navegador Web (Dashboard / Tablero Visual)"]
 
-    subgraph System ["Límite del Sistema"]
-        SaaS["🚀 CloudSaaS Platform<br>[E-Commerce & Microservicios Cloud]<br>Catálogo, carrito, órdenes, facturación y analítica"]
-    end
-
-    subgraph External ["Sistemas Externos"]
-        Stripe["💳 Pasarela de Pagos<br>[Stripe / PSE API]<br>Cobros y Webhooks"]
-        EmailService["✉️ Proveedor SMTP / SES<br>[AWS SES / SendGrid]<br>Emails transaccionales"]
-        Prometheus["📊 Sistema de Monitoreo<br>[Prometheus Server]<br>Scraping de métricas /metrics"]
-    end
-
-    Customer -->|"Navega productos, gestiona carrito y realiza compras (HTTPS)"| SaaS
-    Admin -->|"Gestiona inventario, órdenes y roles RBAC (HTTPS)"| SaaS
-    AIAgent -->|"Ejecuta specs, implementa código y audita verify.sh"| SaaS
-
-    SaaS -->|"Autoriza pagos y procesa devoluciones (HTTPS REST)"| Stripe
-    Stripe -->|"Envía confirmación de cobro por webhook firmado HMAC"| SaaS
-    SaaS -->|"Despacha emails de bienvenida y facturas (SMTP/TLS)"| EmailService
-    Prometheus -->|"Consulta métricas operativas y latencias /metrics"| SaaS
+  userDeveloper -->|"Define requerimientos y aprueba specs"| harnessSystem
+  agentLeader -->|"Orquesta tareas e invoca subagentes"| harnessSystem
+  harnessSystem -->|"Crea ramas INT-* y commits semánticos"| gitSystem
+  harnessSystem -->|"Genera y sincroniza datos en tiempo real"| browserUser
+  browserUser -->|"Permite lectura editorial y edición dual"| userDeveloper
 ```
 
 ---
 
-## Nivel 2: Diagrama de Contenedores (Container Diagram - C2)
+## Nivel 2: Diagrama de Contenedores (C2)
 
-Muestra las aplicaciones ejecutables, APIs, almacenes de datos y brokers de mensajería que componen la solución.
+Descompone el arnés en sus subsistemas y aplicaciones principales:
 
 ```mermaid
 flowchart TD
-    subgraph Clients ["Clientes"]
-        SPA["🌐 Single Page Application<br>[Vanilla JS + Tailwind v4]<br>Tablero de Seguimiento & UI"]
-        Mobile["📱 Mobile App<br>[iOS / Android]<br>Catálogo & Checkout"]
-    end
+  subgraph HarnessContainers["Contenedores del Arnés SDD"]
+    containerOrchestrator["⚡ Orquestador Multi-Agente<br/>(Leader, Spec-Author, Implementer, Reviewer)"]
+    containerTripleSync["🔄 Motor de Sincronización Triple<br/>(.opencode / .github / .agents)"]
+    containerKnowledge["📚 Motor de Base de Conocimiento<br/>(Docs-as-Code, C4, UML, BR-*, ADRs)"]
+    containerDashboard["💻 Tablero de Seguimiento Interactivo<br/>(Tailwind v4, Three.js, Editor Dual)"]
+    containerTestRunner["🧪 Suite de Pruebas Automatizadas<br/>(Node.js Test Runner, Smoke Tests)"]
+  end
 
-    subgraph GatewayBoundary ["Perímetro"]
-        Gateway["🛡️ API Gateway & Reverse Proxy<br>[Node.js / Reverse Proxy]<br>Rate Limiting, TLS 1.3, Auth Middleware"]
-    end
+  gitRepo["🐙 Repositorio Git Local"]
+  userView["🌐 Navegador (file:/// o HTTP)"]
 
-    subgraph BackendBoundary ["Contenedores de Backend & Workers"]
-        CoreAPI["⚡ Core Services API<br>[Node.js v20 / Express / TypeScript]<br>Auth JWT, Catálogo, Carrito y Pagos"]
-        OrderWorker["🔷 Order Fulfillment Worker<br>[.NET 10 / C# Background Worker]<br>Procesamiento asíncrono de órdenes y reservas"]
-        AnalyticsWorker["📊 Analytics Stream Collector<br>[Node.js Buffer Worker]<br>Agregación de eventos y métricas Prometheus"]
-    end
-
-    subgraph StorageBoundary ["Almacenamiento & Mensajería"]
-        Postgres[("🐘 PostgreSQL 16 Database<br>[ACID Relacional · Puerto 5432]<br>Usuarios, roles, órdenes, transacciones y catálogo")]
-        Redis[("🔴 Redis 7.2 Distributed Cache<br>[In-Memory · Puerto 6379]<br>Cache de catálogo, sesiones volátiles y Redlock")]
-        RabbitMQ["🐇 RabbitMQ 3.13 Event Broker<br>[AMQP · Puerto 5672]<br>Colas OrderFulfilled, Dead Letter Queue (DLQ)"]
-    end
-
-    SPA -->|"HTTPS / JSON"| Gateway
-    Mobile -->|"HTTPS / JSON"| Gateway
-
-    Gateway -->|"Enruta tráfico autenticado"| CoreAPI
-
-    CoreAPI -->|"Lecturas rápidas y locks de carrito"| Redis
-    CoreAPI -->|"Persistencia transaccional de usuarios y pagos"| Postgres
-    CoreAPI -->|"Emite eventos OrderPlaced / PaymentReceived"| RabbitMQ
-
-    RabbitMQ -->|"Consume eventos de órdenes"| OrderWorker
-    OrderWorker -->|"Actualiza estado de orden y reserva inventario"| Postgres
-
-    RabbitMQ -->|"Consume eventos de navegación y compra"| AnalyticsWorker
-    AnalyticsWorker -->|"Métricas en memoria expuestas para Prometheus"| StorageBoundary
+  containerOrchestrator -->|"Escribe specs y código"| gitRepo
+  containerTripleSync -->|"Mantiene paridad de 18 skills"| containerOrchestrator
+  containerKnowledge -->|"Alimenta contexto anti-sesgo"| containerOrchestrator
+  containerDashboard -->|"Lee metadatos de specs y progreso"| gitRepo
+  containerDashboard -->|"Renderiza vistas interactivas"| userView
+  containerTestRunner -->|"Verifica build, tests y convenciones"| containerOrchestrator
 ```
 
 ---
 
-## Nivel 3: Diagrama de Componentes del Core API (Component Diagram - C3)
+## Nivel 3: Diagrama de Componentes del Tablero Web (C3)
 
-Detalla la arquitectura limpia (Clean Architecture) dentro del contenedor principal `Core Services API`.
+Desglose interno de la aplicación web en `project-docs/`:
 
 ```mermaid
-flowchart TD
-    subgraph Controllers ["Capa 1: Controllers & Webhooks (HTTP Entry)"]
-        AuthController["AuthController<br>[Endpoints /auth/login, /auth/refresh]"]
-        CatalogController["CatalogController<br>[Endpoints /products, búsqueda cursor]"]
-        CartController["CartController<br>[Endpoints /cart, checkout]"]
-        PaymentWebhook["PaymentWebhookHandler<br>[Endpoint /webhooks/stripe, HMAC check]"]
-    end
+flowchart LR
+  subgraph DashboardComponents["project-docs/src/"]
+    compRouter["Enrutador por Pestañas<br/>(router.js)"]
+    compStore["Store Reactivo Central<br/>(store.js)"]
+    compDetector["Detector de Entorno & Agente<br/>(detector.js)"]
+    compMarkdown["Lector Editorial & Parser Bloques<br/>(MarkdownViewer.js)"]
+    compThree["Constelación 3D Piramidal<br/>(SpaceView3D.js)"]
+    compMermaid["Visor & Editor Draw.io<br/>(MermaidViewer.js)"]
+    compOmnibox["Buscador Global Ctrl+K<br/>(Omnibox Modal)"]
+  end
 
-    subgraph Application ["Capa 2: Application Services (Use Cases)"]
-        AuthService["AuthService<br>Emisión JWT, RBAC, hash bcrypt"]
-        CatalogService["CatalogService<br>Filtros, cache invalidation"]
-        CartService["CartService<br>Operaciones atómicas, cálculo total"]
-        PaymentService["PaymentService<br>Idempotency control, cobro Stripe"]
-    end
-
-    subgraph Domain ["Capa 3: Domain Core (Invariantes & Reglas)"]
-        UserAggregate["User & Role Entities<br>Validación invariante"]
-        ProductEntity["Product Entity<br>Precios, stock mínimo"]
-        OrderAggregate["Order & Tax Calculator<br>Banker's rounding rules"]
-    end
-
-    subgraph Infrastructure ["Capa 4: Infrastructure Adapters"]
-        PostgresRepo["PostgresRepository<br>Pool transaccional SQL"]
-        RedisAdapter["RedisCacheAdapter<br>TTL, Redlock distribuido"]
-        StripeClient["StripeApiClient<br>Circuit breaker, reintentos"]
-        EventPublisher["RabbitMQEventPublisher<br>Publicador de eventos AMQP"]
-    end
-
-    AuthController --> AuthService
-    CatalogController --> CatalogService
-    CartController --> CartService
-    PaymentWebhook --> PaymentService
-
-    AuthService --> UserAggregate
-    CatalogService --> ProductEntity
-    CartService --> ProductEntity
-    PaymentService --> OrderAggregate
-
-    AuthService --> PostgresRepo
-    CatalogService --> RedisAdapter
-    CatalogService --> PostgresRepo
-    CartService --> RedisAdapter
-    PaymentService --> StripeClient
-    PaymentService --> PostgresRepo
-    PaymentService --> EventPublisher
+  compRouter --> compStore
+  compDetector --> compStore
+  compStore --> compMarkdown
+  compStore --> compThree
+  compStore --> compMermaid
+  compStore --> compOmnibox
 ```

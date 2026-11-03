@@ -1,56 +1,81 @@
-# Catálogo de Reglas de Negocio — CloudSaaS Platform
+# Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)
 
-Las siguientes reglas de negocio son **invariantes de dominio de cumplimiento obligatorio**. Todo agente de IA o desarrollador debe asegurarse de que cualquier código, migración o prueba escrita respete estas reglas sin excepción.
-
----
-
-## Índice de Reglas por Dominio
-
-| ID | Módulo | Título | Severidad |
-|---|---|---|---|
-| `BR-AUTH-001` | `backend` | Validez de expiración de tokens exclusivamente en Epoch UTC | Crítica |
-| `BR-AUTH-002` | `backend` | Aislamiento y precedencia de roles RBAC | Alta |
-| `BR-CART-001` | `backend` | Expiración de carritos anónimos a las 24 horas | Media |
-| `BR-CART-002` | `backend` | Reserva atómica y prevención de sobreventa | Crítica |
-| `BR-BILL-001` | `billing` | Obligatoriedad de llave de idempotencia en transacciones | Crítica |
-| `BR-BILL-002` | `billing` | Verificación de firma criptográfica HMAC en webhooks | Crítica |
-| `BR-BILL-003` | `billing` | Algoritmo contable Banker's Rounding (IEEE 754) | Alta |
-| `BR-ORDR-001` | `infra` | Aislamiento de mensajes fallidos en Dead Letter Queue tras 3 reintentos | Alta |
-| `BR-ANLT-001` | `analytics` | Ingesta no bloqueante de analítica sin afectar latencia transaccional | Media |
-| `BR-NOTF-001` | `notifications` | Sanitización estricta contra XSS/inyección en plantillas de email | Alta |
+> [!IMPORTANT]
+> Invariantes de cumplimiento estricto para desarrolladores y agentes de IA. Ninguna implementación, spec o refactorización puede violar estas reglas.
 
 ---
 
-## Detalle de Reglas de Negocio
+## Módulo: agent-orchestrator
 
-### `BR-AUTH-001`: Validez de Expiración JWT en Epoch UTC
-* **Contexto:** Mitigación del bug `INT-003`.
-* **Regla:** El cálculo de las marcas de tiempo `iat` (issued at) y `exp` (expires at) debe realizarse exclusivamente a partir de marcas Epoch Unix en UTC (`DateTime.UtcNow.ToUnixTimeSeconds()` o `Math.floor(Date.now() / 1000)`).
-* **Prohibición:** Está terminantemente prohibido utilizar `DateTime.Now` o husos horarios locales del servidor.
+### BR-ORCH-001: Formato y Longitud Estricta de Ramas Git
+- **Severidad**: Crítica
+- **Fórmula**: `length({type}/INT-{numero}/{nombre_rama}) <= 80`
+- **Valores permitidos de type**: Exclusivamente `feature` o `bugfix`.
+- **Descripción**: Toda rama de trabajo debe crearse desde la rama base, tener un prefijo `INT-` con número de ticket y no superar 80 caracteres.
+- **Comportamiento ante Violación**: La rama es rechazada y el agente debe solicitar corrección al humano.
 
-### `BR-AUTH-002`: Aislamiento de Roles RBAC
-* **Regla:** Un usuario solo puede acceder a recursos que coincidan con sus permisos asignados. Los roles `ADMIN` tienen acceso global; los roles `OPERATOR` tienen acceso limitado a catálogo y órdenes; los usuarios `CUSTOMER` solo pueden leer su propio carrito y órdenes.
+### BR-ORCH-002: Puerta Humana Obligatoria para Aprobación de Spec
+- **Severidad**: Crítica
+- **Descripción**: Queda estrictamente prohibido pasar una tarea a `in_progress` o iniciar implementación sin aprobación explícita del humano mediante la herramienta `ask_question`.
+- **Comportamiento ante Violación**: Detención inmediata del ciclo SDD.
 
-### `BR-CART-001`: Ciclo de Vida de Carritos Anónimos
-* **Regla:** Los carritos de compras no asociados a un usuario autenticado deben almacenarse en Redis con un Time-To-Live (TTL) estricto de 24 horas (86,400 segundos). Si el usuario inicia sesión, el carrito anónimo se fusiona automáticamente con el carrito persistente del usuario en PostgreSQL.
+### BR-ORCH-003: Subagente Revisor No Modifica Código
+- **Severidad**: Crítica
+- **Descripción**: El subagente `reviewer` evalúa de forma independiente e imparcial la trazabilidad, build y tests. Bajo ninguna circunstancia edita código de producción o pruebas.
+- **Comportamiento ante Violación**: Se anula el veredicto y se reasigna al `implementer`.
 
-### `BR-CART-002`: Atomicidad en Control de Inventario
-* **Regla:** La adición de un producto al carrito o el inicio de checkout debe ejecutar una operación atómica (`DECRBY` en Redis o `SELECT FOR UPDATE` en SQL). Si el stock disponible es menor a la cantidad solicitada, la operación debe ser rechazada inmediatamente retornando `INSUFFICIENT_STOCK`.
+---
 
-### `BR-BILL-001`: Idempotencia Obligatoria en Pagos
-* **Regla:** Todo endpoint de cobro (`POST /cart/checkout`, `POST /payments`) exige la cabecera `Idempotency-Key`. La primera solicitud procesa el cobro y guarda el resultado en Redis por 120 segundos. Solicitudes duplicadas concurrentes son rechazadas con `409 Conflict` o devuelven el resultado previamente cacheado sin generar doble cargo.
+## Módulo: triple-sync-engine
 
-### `BR-BILL-002`: Validación Criptográfica de Webhooks
-* **Regla:** Ningún evento de pasarela externa (ej. `payment_intent.succeeded` de Stripe) puede marcar una orden como `PAID` sin antes validar la firma criptográfica enviada en la cabecera `Stripe-Signature` utilizando HMAC-SHA256 y la clave secreta `STRIPE_WEBHOOK_SECRET`.
+### BR-SYNC-001: Fuente de Verdad Inviolable en .opencode/
+- **Severidad**: Crítica
+- **Descripción**: La carpeta `.opencode/skills/` es la única fuente de verdad para las 18 skills del arnés. Los cambios se propagan de forma unidireccional a `.github/skills/` y `.agents/skills/`.
+- **Comportamiento ante Violación**: Cualquier cambio aislado en espejos se sobrescribe al sincronizar.
 
-### `BR-BILL-003`: Redondeo Financiero Banker's Rounding (IEEE 754)
-* **Regla:** El cálculo de impuestos e IVA debe aplicar redondeo al entero par más cercano (*Banker's Rounding* o redondeo bancario) a dos decimales exactos. Queda prohibido el truncamiento directo o `Math.round()` tradicional que genera discrepancias acumulativas de centavos en facturación masiva.
+### BR-SYNC-002: Paridad Estricta de Frontmatter
+- **Severidad**: Alta
+- **Descripción**: Todo archivo `SKILL.md` debe contener exactamente el mismo bloque YAML `name` y `description` en las tres plataformas.
+- **Comportamiento ante Violación**: Reporte de inconsistencia en `/sync-skills`.
 
-### `BR-ORDR-001`: Resiliencia en Colas de Órdenes (DLQ)
-* **Regla:** Los consumidores de mensajería (RabbitMQ/Kafka) disponen de un máximo de 3 reintentos con retroceso exponencial (1s, 2s, 4s). Si tras 3 intentos el procesamiento falla, el mensaje debe ser enrutado automáticamente a la Dead Letter Queue (`orders.dlq`) y generar una alerta operativa sin detener el hilo principal de procesamiento.
+---
 
-### `BR-ANLT-001`: Aislamiento de Ingesta de Analítica
-* **Regla:** La captura de eventos de navegación o telemetría debe realizarse en un buffer en memoria en segundo plano. Bajo ninguna circunstancia un fallo o demora en la ingesta de analítica debe aumentar la latencia o interrumpir las peticiones HTTP del usuario.
+## Módulo: knowledge-engine
 
-### `BR-NOTF-001`: Sanitización de Plantillas de Notificación
-* **Regla:** Los valores inyectados en las plantillas HTML de correo transaccional (nombre de usuario, productos, direcciones) deben ser sanitizados y escapados para prevenir ataques de inyección HTML o enlaces maliciosos.
+### BR-KNOW-001: Sintaxis Mermaid Ultra-Estricta
+- **Severidad**: Crítica
+- **Descripción**: Para garantizar que los diagramas se rendericen sin errores en cualquier parser web o visor markdown, todo ID de nodo debe ser estrictamente alfanumérico sin guiones (`nodeAuth`) y todo texto descriptivo debe estar entre comillas dobles (`["Texto seguro"]`).
+- **Comportamiento ante Violación**: Diagrama marcado como inválido en tiempo de validación.
+
+### BR-KNOW-002: Consulta Obligatoria Anti-Sesgo de la Base de Conocimiento
+- **Severidad**: Crítica
+- **Descripción**: Antes de proponer nuevas historias, redactar requerimientos o implementar código, los agentes DEBEN consultar `project-docs/knowledge/` para evitar reinventar capacidades o violar directrices.
+- **Comportamiento ante Violación**: Prohibición estricta de alucinar librerías externas o duplicar endpoints.
+
+---
+
+## Módulo: dashboard-visualizer
+
+### BR-DASH-001: Compatibilidad Offline Total (Protocolo file:///)
+- **Severidad**: Crítica
+- **Descripción**: El visor en `project-docs/index.html` debe ser 100% navegable con doble clic directo sin servidor local mediante la carga inmediata de `data-fallback.js`.
+- **Comportamiento ante Violación**: El script `sync-data.js` actualiza automáticamente el fallback tras cada compilación.
+
+### BR-DASH-002: Scroll Sincronizado Proporcional Anti-Bloqueo
+- **Severidad**: Alta
+- **Descripción**: La sincronización de scroll entre el editor Markdown y la vista previa utiliza flags de exclusión mutua para impedir bucles infinitos de eventos de scroll.
+- **Comportamiento ante Violación**: Desactivación temporal del listener para restaurar fluidez.
+
+---
+
+## Módulo: testing-qa-suite
+
+### BR-TEST-001: 100% de Tests en Verde para Cierre de Spec
+- **Severidad**: Crítica
+- **Descripción**: Ninguna feature o bugfix puede cerrarse como `done` si existe un solo test fallando en la suite de pruebas del proyecto.
+- **Comportamiento ante Violación**: `verify-spec` rechaza el cierre y exige corrección.
+
+### BR-TEST-002: Ejecutor de Pruebas Nativo sin Bloat
+- **Severidad**: Alta
+- **Descripción**: Las pruebas unitarias del arnés se ejecutan mediante `node --test` para asegurar tiempos de respuesta inferiores a 500ms y cero dependencias externas en testing.
+- **Comportamiento ante Violación**: Se rechaza la inclusión de dependencias redundantes.

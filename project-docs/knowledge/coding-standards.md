@@ -1,69 +1,35 @@
-# Estándares de Programación & Directrices Anti-Sesgo — CloudSaaS Platform
-
-Este documento define las convenciones de código observadas y obligatorias en el proyecto. Su objetivo es asegurar que los agentes de IA no introduzcan librerías no deseadas, mantengan el estilo de codificación existente y respeten los patrones arquitecturales establecidos.
-
----
-
-## 1. Directrices Anti-Sesgo para Agentes de IA (AI Guardrails)
-
-Para evitar que los modelos de lenguaje (LLMs) apliquen patrones genéricos o bibliotecas obsoletas aprendidas en su pre-entrenamiento:
+# Estándares de Codificación & Guardrails Anti-Sesgo
 
 > [!IMPORTANT]
-> 1. **No inventar librerías**: Si una funcionalidad ya está resuelta con dependencias del proyecto (ej. `node:crypto`, `Zod`, `pg`), está prohibido instalar bibliotecas redundantes (como `crypto-js`, `joi`, etc.).
-> 2. **Respetar la arquitectura en capas**: Ningún controlador HTTP puede acceder directamente a consultas SQL o al cliente de Redis; debe pasar por la capa de Casos de Uso (`Application Service`) e interfaces de repositorio.
-> 3. **Manejo de Errores con Result Pattern o Excepciones de Dominio**: No retornar objetos vacíos ni `null` ante errores. Usar tipos explícitos de error o lanzar excepciones tipadas capturadas por el middleware de errores global.
-> 4. **Tests Primero o Acompañados**: Toda lógica nueva debe contar con su correspondiente suite de pruebas unitarias cubriendo casos de éxito y caminos de fallo.
+> Directrices obligatorias para desarrolladores y agentes de IA. Diseñadas para eliminar el sesgo algorítmico, prevenir alucinaciones de paquetes y mantener una arquitectura limpia.
 
 ---
 
-## 2. Convenciones de Nomenclatura
+## 1. Convenciones de Nomenclatura y Control de Versiones
 
-| Elemento | Convención | Ejemplo |
-|---|---|---|
-| Archivos de código | `kebab-case` o `PascalCase` según lenguaje | `cart-service.ts`, `OrderWorker.cs` |
-| Clases e Interfaces | `PascalCase` | `PaymentService`, `IOrderRepository` |
-| Funciones y Métodos | `camelCase` | `calculateTaxAmount()`, `reserveStock()` |
-| Variables y Parámetros | `camelCase` | `orderId`, `idempotencyKey` |
-| Constantes | `UPPER_SNAKE_CASE` | `DEFAULT_CACHE_TTL`, `MAX_RETRIES` |
-| Ramas Git | `{type}/INT-{numero}/{nombre_rama}` (≤80c) | `feature/INT-004/product_catalog_api` |
-| Commits | Convencionales (`feat`, `fix`, `docs`, `refactor`) | `feat(billing): implement idempotency check` |
-
----
-
-## 3. Patrones de Diseño Implementados
-
-### A. Repository & Unit of Work Pattern
-* La interfaz `IRepository<T>` se define en la capa de Dominio o Aplicación.
-* La implementación concreta (`PostgresOrderRepository`) reside en `Infrastructure`.
-* Permite reemplazar o simular (mock) la base de datos en pruebas unitarias con facilidad.
-
-### B. Clean Use Cases (Single Responsibility)
-* Cada caso de uso complejo se implementa en su propia clase u orquestador con un método `execute(command)` o `handle(query)`.
-* Esto evita controladores "gordos" (*Fat Controllers*) y facilita la prueba aislada.
-
-### C. DTOs Inmutables y Validación con Zod
-* Toda entrada a un endpoint debe ser validada contra un schema de validación estricto antes de llegar a la lógica de negocio:
-  ```typescript
-  export const CheckoutRequestSchema = z.object({
-    idempotencyKey: z.string().uuid(),
-    currency: z.enum(['USD', 'COP', 'EUR']),
-    paymentMethodId: z.string().min(1)
-  });
-  ```
+- **Ramas Git**:
+  - Exclusivamente dos tipos: `feature` y `bugfix`.
+  - Estructura obligatoria: `{type}/INT-{numero}/{nombre_rama_de_lo_realizado}`.
+  - Longitud máxima estricta: **80 caracteres**.
+  - Ejemplo: `feature/INT-001/refactor_harness_architecture`.
+- **Commits Semánticos**:
+  - Formato: `feat(scope): descripción` o `fix(scope): descripción`.
+  - Tipos válidos: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+  - Idioma: Inglés para commits y código fuente; español para documentación técnica y comentarios explicativos.
 
 ---
 
-## 4. Estructura Estándar de Carpetas (Clean Architecture)
+## 2. Guardrails Anti-Alucinación (Inviolables para Agentes de IA)
 
-```
-src/
-├── core/                  # Entidades de dominio, tipos base y constantes globales
-├── modules/
-│   ├── {modulo}/
-│   │   ├── controllers/   # Handlers HTTP, rutas OpenAPI y validadores
-│   │   ├── services/      # Lógica de aplicación y casos de uso
-│   │   ├── domain/        # Entidades puras y reglas de negocio
-│   │   ├── dtos/          # Esquemas de entrada/salida y contratos
-│   │   └── repositories/  # Acceso a datos e integraciones externas
-└── shared/                # Middlewares comunes, logging y utilidades
-```
+1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `package.json` o `project-spec.yaml`.
+2. **Invariante de Conocimiento Previo**: Antes de implementar una solución, el agente debe verificar si ya existe una función, componente o regla en `project-docs/knowledge/`.
+3. **Respeto a las Reglas de Negocio (BR-*)**: Ningún código puede modificar o relajar una regla de negocio sin una actualización previa y aprobada de la especificación.
+4. **Cero Código Muerto**: Prohibido dejar código comentado, banderas de depuración (`console.log`, `debugger`) o secretos hardcodeados.
+
+---
+
+## 3. Arquitectura del Código Frontend (`project-docs/src/`)
+
+- **Vanilla JS Modular**: Usar ES Modules puros (`import` / `export`) organizados por dominios en `src/features/`.
+- **Separación de Responsabilidades**: Las funciones de renderizado devuelven cadenas HTML puras; los controladores de eventos se enlazan mediante selectores o `data-action`.
+- **Inmutabilidad en el Store**: El estado global (`store.js`) se actualiza mediante acciones atómicas notificando a los suscriptores.

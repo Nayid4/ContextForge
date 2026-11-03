@@ -1,226 +1,173 @@
-# Diagramas UML del Sistema — CloudSaaS Platform
-
-Este documento recopila los diagramas UML formales para modelar entidades, transacciones críticas y casos de uso del sistema.
+# Diagramas UML — AI Agentic SDD Engineering Harness
 
 ---
 
-## 1. Diagrama de Clases de Dominio (Domain Class Diagram)
+## 1. Diagrama de Clases del Dominio SDD
 
-Modela las entidades de negocio, sus relaciones y contratos de dominio aislados de frameworks.
+Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:
 
 ```mermaid
 classDiagram
-    class User {
-        +UUID id
-        +string email
-        +string passwordHash
-        +Role role
-        +DateTime createdAt
-        +validatePassword(plainText) bool
-        +hasPermission(permission) bool
-    }
+  class Feature {
+    +int id
+    +string type
+    +string name
+    +string title
+    +string description
+    +string module
+    +string priority
+    +string branch
+    +string status
+    +List~string~ acceptance
+    +markCompleted()
+  }
 
-    class Role {
-        <<enumeration>>
-        ADMIN
-        OPERATOR
-        CUSTOMER
-    }
+  class Subagent {
+    +string name
+    +string role
+    +List~string~ tools
+    +executeTask(Task task)
+  }
 
-    class Product {
-        +UUID id
-        +string sku
-        +string name
-        +decimal price
-        +int stock
-        +bool isActive
-        +reserveStock(quantity) bool
-        +releaseStock(quantity) void
-    }
+  class KnowledgeDocument {
+    +string key
+    +string filename
+    +string title
+    +string shelf
+    +int readingTime
+    +int wordCount
+    +int ruleCount
+    +extractTOC() List~Heading~
+  }
 
-    class ShoppingCart {
-        +UUID id
-        +UUID userId
-        +string sessionId
-        +DateTime expiresAt
-        +List~CartItem~ items
-        +addItem(product, qty) void
-        +removeItem(productId) void
-        +calculateSubtotal() decimal
-    }
+  class BusinessRule {
+    +string id
+    +string title
+    +string module
+    +string severity
+    +string description
+    +validate() bool
+  }
 
-    class CartItem {
-        +UUID productId
-        +string name
-        +decimal unitPrice
-        +int quantity
-        +decimal getTotal()
-    }
+  class ArchitecturalDecisionRecord {
+    +string id
+    +string title
+    +string status
+    +string context
+    +string decision
+    +string consequences
+  }
 
-    class Order {
-        +UUID id
-        +UUID customerId
-        +OrderStatus status
-        +decimal subtotal
-        +decimal taxAmount
-        +decimal total
-        +string idempotencyKey
-        +DateTime createdAt
-        +applyTaxCalculation(taxResult) void
-        +markAsPaid() void
-    }
-
-    class OrderStatus {
-        <<enumeration>>
-        PENDING_PAYMENT
-        PAID
-        FULFILLING
-        FULFILLED
-        CANCELLED
-    }
-
-    class PaymentTransaction {
-        +UUID id
-        +UUID orderId
-        +string gatewayProvider
-        +string chargeId
-        +decimal amount
-        +string currency
-        +PaymentStatus status
-        +string hmacSignature
-        +DateTime processedAt
-    }
-
-    class PaymentStatus {
-        <<enumeration>>
-        INITIATED
-        SUCCESS
-        FAILED
-        REFUNDED
-    }
-
-    User "1" --> "1" Role : tiene
-    ShoppingCart "1" *-- "many" CartItem : contiene
-    CartItem --> "1" Product : referencia
-    Order "1" --> "1" ShoppingCart : genera desde
-    Order "1" *-- "many" PaymentTransaction : registra
-    Order --> "1" OrderStatus : estado
-    PaymentTransaction --> "1" PaymentStatus : estado
+  Feature "1" --> "*" BusinessRule : "satisface"
+  Feature "1" --> "1" Subagent : "asignada a"
+  KnowledgeDocument "*" --> "*" BusinessRule : "documenta"
+  KnowledgeDocument "*" --> "*" ArchitecturalDecisionRecord : "registra"
 ```
 
 ---
 
-## 2. Diagrama de Secuencia: Checkout & Pago Idempotente con Webhook
-
-Ilustra la interacción entre Cliente, API Gateway, CartService, PaymentService, Redis, Stripe y RabbitMQ.
+## 2. Diagrama de Secuencia: Ciclo de Vida Completo SDD
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor Cliente as 👤 Cliente Comprador
-    participant Gateway as 🛡️ API Gateway
-    participant Cart as 🛒 CartService
-    participant Pay as 💳 PaymentService
-    participant Redis as 🔴 Redis Cache
-    participant Stripe as 💳 Stripe API
-    participant DB as 🐘 PostgreSQL
-    participant Queue as 🐇 RabbitMQ
+  autonumber
+  actor User as "👤 Usuario (Humano)"
+  participant Leader as "⚡ Leader Agent"
+  participant Git as "🐙 Git System"
+  participant SpecAuthor as "📝 Spec-Author"
+  participant Implementer as "🔨 Implementer"
+  participant Reviewer as "🔍 Reviewer"
 
-    Cliente->>Gateway: POST /cart/checkout (Idempotency-Key: idemp_123)
-    Gateway->>Pay: Procesar Intento de Pago
-    Pay->>Redis: SETNX idempotency:idemp_123 (TTL: 120s)
-    
-    alt Llave ya existe (Solicitud duplicada concurrente)
-        Redis-->>Pay: Llave bloqueada
-        Pay-->>Cliente: 409 Conflict / 200 con respuesta cacheada
-    else Llave adquirida con éxito
-        Redis-->>Pay: Bloqueo OK
-        Pay->>Cart: Obtener y validar carrito
-        Cart->>Redis: Verificar stock atómico
-        Redis-->>Cart: Stock bloqueado OK
-        Pay->>Stripe: POST /v1/payment_intents (amount, currency)
-        Stripe-->>Pay: 200 OK (intent_id, client_secret)
-        Pay->>DB: INSERT Order (status: PENDING_PAYMENT)
-        Pay-->>Cliente: Retorna client_secret para confirmación
+  User->>Leader: "Iniciar tarea INT-001"
+  Leader->>Git: "git checkout -b feature/INT-001/{name}"
+  Leader->>SpecAuthor: "Redactar requerimientos y tasks"
+  SpecAuthor-->>Leader: "specs/001/ completado (spec_ready)"
+  Leader->>User: "ask_question: Aprobar spec al 100%?"
+  alt Spec Aprobado
+    User-->>Leader: "Aprobado (in_progress)"
+    Leader->>Implementer: "Implementar código y tests"
+    Implementer->>Implementer: "Ejecutar checks.test y checks.build"
+    Implementer-->>Leader: "Trazabilidad R<->Tests completa"
+    Leader->>Reviewer: "Auditar calidad y consistencia"
+    alt Reviewer Aprueba
+      Reviewer-->>Leader: "APROBADO (0 errores)"
+      Leader->>User: "ask_question: Integrar a rama base?"
+    else Reviewer Rechaza
+      Reviewer-->>Leader: "RECHAZADO (hallazgos)"
+      Leader->>Implementer: "Corregir observaciones"
     end
-
-    Note over Cliente, Stripe: El cliente confirma el pago en su navegador
-
-    Stripe->>Gateway: POST /webhooks/stripe (Stripe-Signature)
-    Gateway->>Pay: Validar webhook
-    Pay->>Pay: Validar firma HMAC-SHA256 con webhook_secret
-    
-    alt Firma Inválida
-        Pay-->>Stripe: 401 Unauthorized (Rechazo de evento)
-    else Firma Válida
-        Pay->>DB: UPDATE Order SET status='PAID' WHERE id=order_id
-        Pay->>DB: INSERT PaymentTransaction (charge_id, SUCCESS)
-        Pay->>Queue: Publicar evento 'OrderPaid'
-        Pay-->>Stripe: 200 OK (Evento confirmado)
-    end
+  else Spec Rechazado
+    User-->>Leader: "Rechazar o solicitar cambios"
+    Leader->>SpecAuthor: "Ajustar especificación"
+  end
 ```
 
 ---
 
-## 3. Diagrama de Secuencia: Autenticación JWT con Desfase UTC
-
-Demuestra la mitigación del bug `INT-003` para servidores con husos horarios dispares mediante tiempo Epoch UTC.
+## 3. Diagrama de Secuencia: Editor Dual ContextForge con Scroll Sincronizado
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor Usuario as 👤 Usuario
-    participant Auth as ⚡ AuthService
-    participant DB as 🐘 PostgreSQL
-    participant Clock as ⏱️ UTC System Clock
+  autonumber
+  actor User as "👤 Desarrollador"
+  participant UI as "💻 Tablero Web (main.js)"
+  participant Textarea as "📝 Panel Editor Markdown"
+  participant Preview as "👁️ Panel Live Preview"
+  participant Blocks as "🧱 Panel Bloques Visuales"
+  participant Storage as "💾 sync-data.js / data-fallback.js"
 
-    Usuario->>Auth: POST /auth/login (email, password)
-    Auth->>DB: SELECT * FROM users WHERE email = ?
-    DB-->>Auth: Record con passwordHash y roles
-    Auth->>Auth: bcrypt.compare(password, passwordHash)
-    
-    alt Credenciales Incorrectas
-        Auth-->>Usuario: 401 Invalid Credentials
-    else Credenciales Válidas
-        Auth->>Clock: Obtener DateTime.UtcNow.ToUnixTimeSeconds()
-        Clock-->>Auth: epoch_now (ej: 1718000000)
-        Auth->>Auth: Generar Access Token (exp: epoch_now + 3600)
-        Auth->>Auth: Generar Refresh Token (exp: epoch_now + 604800)
-        Auth->>DB: Guardar RefreshToken hash
-        Auth-->>Usuario: 200 OK { access_token, refresh_token, expires_in: 3600 }
-    end
+  User->>UI: "Pulsar [ ✏️ Modo Editor ]"
+  UI->>Textarea: "Cargar markdown actual"
+  UI->>Preview: "renderMarkdown(content)"
+  
+  alt Usuario edita en Textarea (Markdown)
+    User->>Textarea: "Escribir texto y hacer scroll"
+    Textarea->>Preview: "Sincronizar scroll proporcionalmente (isScrollingFromEditor)"
+    Textarea->>Preview: "Actualizar HTML en vivo"
+  else Usuario conmuta a [ 🧱 Modo Bloques ]
+    User->>UI: "Pulsar [ 🧱 Modo Bloques Visuales ]"
+    UI->>Blocks: "parseMarkdownToBlocks(markdown)"
+    Blocks-->>User: "Renderizar tarjetas interactivas (H1, BR, Callouts)"
+    User->>Blocks: "Reordenar bloques (🔼/🔽) o añadir bloque"
+    Blocks->>Textarea: "blocksToMarkdown(blocks)"
+    Blocks->>Preview: "Actualizar previsualización en vivo"
+  end
+
+  User->>UI: "Pulsar [ 💾 Guardar Cambios ]"
+  UI->>Storage: "store.saveDoc(key, content) + sync-data.js"
+  Storage-->>User: "Documento persistido local y offline"
 ```
 
 ---
 
-## 4. Diagrama de Casos de Uso (Use Case Diagram)
+## 4. Diagrama de Casos de Uso del Arnés SDD
 
 ```mermaid
-flowchart LR
-    Customer((👤 Cliente))
-    Admin((👤 Administrador))
-    Worker((⚙️ Background Worker))
+flowchart TD
+  actorDev["👤 Desarrollador"]
+  actorAgent["⚡ Agente de IA"]
 
-    subgraph CasosDeUso ["Casos de Uso del Sistema"]
-        UC1([UC-01: Iniciar Sesión / Registro JWT])
-        UC2([UC-02: Consultar Catálogo con Cursor])
-        UC3([UC-03: Gestionar Carrito en Memoria])
-        UC4([UC-04: Realizar Pago con Idempotencia])
-        UC5([UC-05: Gestionar Roles RBAC])
-        UC6([UC-06: Procesar Cola de Despacho con DLQ])
-        UC7([UC-07: Ingestar Stream de Analítica])
-        UC8([UC-08: Enviar Emails Transaccionales])
-    end
+  subgraph UseCases["Casos de Uso del Arnés de Ingeniería"]
+    ucAudit["Auditar Stack Técnico (/technical-audit)"]
+    ucKnowledge["Extraer Base de Conocimiento (/project-knowledge)"]
+    ucSpec["Redactar Requerimientos EARS (/generate-spec)"]
+    ucHumanGate["Aprobar Puerta Humana (ask_question)"]
+    ucImplement["Implementar Código & Tests (/implement)"]
+    ucReview["Auditar Calidad & Trazabilidad (/review)"]
+    ucViewDash["Navegar Tablero & Constelación 3D"]
+    ucOmnibox["Búsqueda Global Omnibox (Ctrl+K)"]
+    ucEditDual["Edición Dual Markdown / Bloques"]
+  end
 
-    Customer --> UC1
-    Customer --> UC2
-    Customer --> UC3
-    Customer --> UC4
+  actorDev --> ucAudit
+  actorDev --> ucKnowledge
+  actorDev --> ucHumanGate
+  actorDev --> ucViewDash
+  actorDev --> ucOmnibox
+  actorDev --> ucEditDual
 
-    Admin --> UC1
-    Admin --> UC5
-
-    Worker --> UC6
-    Worker --> UC7
-    Worker --> UC8
+  actorAgent --> ucSpec
+  actorAgent --> ucImplement
+  actorAgent --> ucReview
+  actorAgent --> ucKnowledge
 ```
