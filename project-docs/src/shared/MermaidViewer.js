@@ -51,7 +51,7 @@ export function renderMermaidViewer(diagram) {
                   data-action="expand-diagram" 
                   data-diagram-id="${id}"
                   class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  title="Expandir a Pantalla Completa">
+                  title="Expandir a Pantalla Completa con Zoom y Paneo">
             ${Icons.eye('w-3.5 h-3.5')}
           </button>
 
@@ -62,6 +62,15 @@ export function renderMermaidViewer(diagram) {
                   title="Copiar código Mermaid">
             <span class="text-xs">📋</span>
           </button>
+
+          <!-- Botón Abrir / Editar en Draw.io -->
+          <a href="https://app.diagrams.net/?splash=0#R${encodeURIComponent(code)}" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             class="px-2 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1 text-xs font-mono font-semibold"
+             title="Abrir e interactuar con este diagrama en Draw.io (diagrams.net)">
+            <span>✏️</span> <span class="hidden sm:inline">Draw.io</span>
+          </a>
         </div>
       </div>
 

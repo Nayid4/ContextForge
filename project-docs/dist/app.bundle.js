@@ -1899,14 +1899,15 @@
       this.animationId = null;
       this.nodes = [];
       this.orbitRings = [];
+      this.pyramidGuides = [];
       this.flowParticles = [];
       this.labelSprites = [];
       this.raycaster = null;
       this.mouse = null;
       this.isDragging = false;
       this.prevMousePos = { x: 0, y: 0 };
-      this.rotation = { x: 0.25, y: 0.5 };
-      this.targetRotation = { x: 0.25, y: 0.5 };
+      this.rotation = { x: 0.22, y: 0.45 };
+      this.targetRotation = { x: 0.22, y: 0.45 };
       this.hoveredMesh = null;
       this.hudElement = null;
     }
@@ -1916,55 +1917,68 @@
       this.onSelect = onSelect;
       if (!window.THREE) {
         this.container.innerHTML = `
-        <div class="h-[600px] flex items-center justify-center bg-slate-900 text-slate-400 rounded-2xl border border-slate-800">
-          <p>Librer\xEDa Three.js no disponible.</p>
+        <div class="h-[650px] flex items-center justify-center bg-slate-900 text-slate-400 rounded-3xl border border-slate-800">
+          <p class="font-mono text-sm">Librer\xEDa Three.js no disponible.</p>
         </div>
       `;
         return;
       }
       this.container.innerHTML = `
-      <div class="relative w-full h-[700px] bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl select-none">
+      <div class="relative w-full h-[720px] bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl select-none">
         
-        <!-- HUD Superior -->
-        <div class="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2">
-          <span class="px-3.5 py-1.5 rounded-xl bg-slate-900/85 border border-slate-700/80 text-slate-200 text-xs backdrop-blur-md shadow-lg flex items-center gap-2">
+        <!-- HUD Superior: Indicador Piramidal -->
+        <div class="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2">
+          <span class="px-3.5 py-1.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-xs backdrop-blur-md shadow-xl flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            Constelaci\xF3n 3D | Bolitas proporcionales al Peso | Arrastra para orbitar
+            <strong>Jerarqu\xEDa Piramidal 3D</strong> \u2022 \xC1pice (Entrada) \u2192 Base (Persistencia)
+          </span>
+          <span class="px-3 py-1 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] font-mono text-slate-400">
+            Arrastra para orbitar la pir\xE1mide \u2022 Clic en nodo para enfocar
           </span>
         </div>
 
-        <!-- Leyenda de Estados, Tama\xF1os y Pesos -->
-        <div class="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex flex-wrap items-center gap-3 text-[11px] bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-xl backdrop-blur-md shadow-lg text-slate-300">
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400"></span> Resuelto</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 shadow-xs shadow-indigo-500"></span> En Progreso</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cyan-400 shadow-xs shadow-cyan-400"></span> Spec Listo</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 shadow-xs shadow-rose-500"></span> Bloqueado</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 shadow-xs shadow-amber-400"></span> Bugfix</span>
-          <span class="text-slate-600">|</span>
-          <span class="font-mono text-amber-400 font-bold">Tama\xF1o de Bolita \u221D Peso (20 a 100)</span>
+        <!-- Leyenda de Niveles Piramidales y Estados -->
+        <div class="absolute bottom-4 left-4 z-20 pointer-events-none hidden lg:flex flex-col gap-2 text-[11px] bg-slate-900/90 border border-slate-800 p-3 rounded-2xl backdrop-blur-md shadow-2xl text-slate-300">
+          <div class="font-mono font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1">
+            Niveles de la Pir\xE1mide Arquitect\xF3nica
+          </div>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1.5">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Nivel 1: \xC1pice (Clientes & Auth)</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> Nivel 2: Core de Dominio</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Nivel 3: Features & Casos de Uso</span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Nivel 4: Base (Infra & BD)</span>
+          </div>
+          <div class="flex items-center gap-3 pt-1 border-t border-slate-800/80 text-[10px] font-mono">
+            <span class="text-emerald-400 font-semibold">\u25CF Resuelto</span>
+            <span class="text-indigo-400 font-semibold">\u25CF En Progreso</span>
+            <span class="text-cyan-400 font-semibold">\u25CF Spec Listo</span>
+            <span class="text-rose-400 font-semibold">\u25CF Bloqueado</span>
+            <span class="text-amber-400 font-semibold">\u25CF Bugfix</span>
+          </div>
         </div>
 
-        <!-- Panel Lateral de Nodos en \xD3rbita -->
-        <div class="absolute top-4 right-4 z-20 w-56 max-h-[640px] bg-slate-900/90 border border-slate-800 rounded-2xl p-3 backdrop-blur-md shadow-2xl overflow-y-auto hidden md:block">
+        <!-- Panel Lateral de Nodos Clasificados -->
+        <div class="absolute top-4 right-4 z-20 w-60 max-h-[660px] bg-slate-900/90 border border-slate-800 rounded-2xl p-3 backdrop-blur-md shadow-2xl overflow-y-auto hidden md:block">
           <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 px-1 flex items-center justify-between">
-            <span>Nodos 3D (${this.features.length})</span>
-            <span class="text-[10px] text-indigo-400 font-mono">Peso</span>
+            <span>Nodos Piramidales (${this.features.length})</span>
+            <span class="text-[10px] text-indigo-400 font-mono">Nivel</span>
           </div>
-          <div class="space-y-1.5" id="three-node-list">
+          <div class="space-y-1" id="three-node-list">
             ${this.features.map((f) => {
+        const tier = this.getNodeTier(f);
+        const tierColors = { 1: "text-sky-400", 2: "text-indigo-400", 3: "text-purple-400", 4: "text-emerald-400" };
         const dotColor = f.status === "done" ? "bg-emerald-400" : f.status === "in_progress" ? "bg-indigo-400" : f.type === "bugfix" ? "bg-amber-400" : "bg-slate-500";
-        const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
         return `
                 <button type="button" 
                         data-focus-node="${f.id}" 
-                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs hover:bg-slate-800/90 transition-colors flex items-center justify-between group cursor-pointer border border-transparent hover:border-slate-700/60">
+                        class="w-full text-left px-2 py-1.5 rounded-xl text-xs hover:bg-slate-800/90 transition-colors flex items-center justify-between group cursor-pointer border border-transparent hover:border-slate-700/60">
                   <div class="flex items-center gap-1.5 truncate">
-                    <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+                    <span class="w-2 h-2 rounded-full ${dotColor} shrink-0"></span>
                     <span class="font-mono text-[11px] font-bold text-slate-200 group-hover:text-indigo-300">INT-${String(f.id).padStart(3, "0")}</span>
-                    <span class="truncate text-[11px] text-slate-400">${f.name}</span>
+                    <span class="truncate text-[10px] text-slate-400">${f.name}</span>
                   </div>
-                  <span class="font-mono text-[10px] font-bold text-amber-400 bg-amber-950/40 px-1 py-0.2 rounded border border-amber-900/50">
-                    ${weightVal}
+                  <span class="font-mono text-[10px] font-bold ${tierColors[tier]} bg-slate-950 px-1 py-0.2 rounded border border-slate-800">
+                    L${tier}
                   </span>
                 </button>
               `;
@@ -1974,75 +1988,148 @@
 
         <!-- HUD Tooltip Flotante 3D -->
         <div id="three-tooltip-hud" class="absolute z-30 pointer-events-none hidden transition-opacity duration-150 transform -translate-x-1/2 -translate-y-full mb-4">
-          <div class="bg-slate-900/95 border border-indigo-500/70 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md text-xs text-slate-200 min-w-[240px] max-w-xs">
+          <div class="bg-slate-900/95 border border-indigo-500/70 rounded-2xl p-4 shadow-2xl backdrop-blur-md text-xs text-slate-200 min-w-[260px] max-w-xs space-y-2">
             <div id="hud-content"></div>
           </div>
         </div>
 
-        <!-- Canvas 3D Root -->
         <div id="three-canvas-root" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
       </div>
     `;
-      const root = this.container.querySelector("#three-canvas-root");
+      const canvasRoot = this.container.querySelector("#three-canvas-root");
       this.hudElement = this.container.querySelector("#three-tooltip-hud");
-      this.initThree(root);
+      this.initThree(canvasRoot);
+    }
+    getNodeTier(feature) {
+      const mod = (feature.module || "").toLowerCase();
+      const title = (feature.title || feature.name || "").toLowerCase();
+      if (mod.includes("infra") || mod.includes("analytics") || mod.includes("notification") || title.includes("database") || title.includes("worker") || title.includes("dlq")) {
+        return 4;
+      }
+      if (mod.includes("auth") || mod.includes("gateway") || mod.includes("ui") || mod.includes("client") || feature.priority === "P0" && (!feature.depends_on || !feature.depends_on.length)) {
+        return 1;
+      }
+      if (mod.includes("catalog") || mod.includes("cart") || mod.includes("core") || mod.includes("domain")) {
+        return 2;
+      }
+      return 3;
+    }
+    getTierName(tier) {
+      switch (tier) {
+        case 1:
+          return "Nivel 1: \xC1pice (Per\xEDmetro & Auth)";
+        case 2:
+          return "Nivel 2: Core de Dominio";
+        case 3:
+          return "Nivel 3: Features & Casos de Uso";
+        case 4:
+          return "Nivel 4: Base (Persistencia & Infra)";
+        default:
+          return `Nivel ${tier}`;
+      }
     }
     initThree(rootEl) {
       const THREE = window.THREE;
       const width = rootEl.clientWidth || 800;
       const height = rootEl.clientHeight || 700;
       this.scene = new THREE.Scene();
-      this.scene.fog = new THREE.FogExp2(132631, 14e-4);
-      this.camera = new THREE.PerspectiveCamera(50, width / height, 1, 3500);
-      this.camera.position.set(0, 45, 540);
+      this.scene.fog = new THREE.FogExp2(132631, 11e-4);
+      this.camera = new THREE.PerspectiveCamera(45, width / height, 1, 3e3);
+      this.camera.position.set(0, 70, 560);
+      this.camera.lookAt(0, 0, 0);
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       rootEl.appendChild(this.renderer.domElement);
-      const ambientLight = new THREE.AmbientLight(16777215, 1);
+      const ambientLight = new THREE.AmbientLight(16777215, 0.7);
       this.scene.add(ambientLight);
-      const pointLight = new THREE.PointLight(6514417, 2.5, 1200);
-      pointLight.position.set(160, 260, 220);
-      this.scene.add(pointLight);
-      const secondLight = new THREE.PointLight(440020, 1.8, 1e3);
-      secondLight.position.set(-200, -150, 100);
-      this.scene.add(secondLight);
-      this.createStarfield();
-      this.createNodes();
+      const dirLight1 = new THREE.DirectionalLight(6514417, 1.2);
+      dirLight1.position.set(200, 400, 200);
+      this.scene.add(dirLight1);
+      const dirLight2 = new THREE.DirectionalLight(3718648, 0.8);
+      dirLight2.position.set(-200, -300, -200);
+      this.scene.add(dirLight2);
       this.raycaster = new THREE.Raycaster();
       this.mouse = new THREE.Vector2();
+      this.createStarfield();
+      this.createPyramidalGuides();
+      this.createNodes();
       this.bindEvents(rootEl);
       this.animate();
     }
     createStarfield() {
       const THREE = window.THREE;
       const starGeo = new THREE.BufferGeometry();
-      const starCount = 1300;
+      const starCount = 1400;
       const posArray = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 2400;
+        posArray[i] = (Math.random() - 0.5) * 2600;
       }
       starGeo.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
       const starMat = new THREE.PointsMaterial({
-        size: 1.8,
+        size: 1.6,
         color: 9741240,
         transparent: true,
-        opacity: 0.65
+        opacity: 0.6
       });
       const starField = new THREE.Points(starGeo, starMat);
       this.scene.add(starField);
     }
     /**
-     * Crea una etiqueta 3D (Sprite) con texto nítido renderizado en Canvas 2D
-     * Muestra: INT-numero y Peso: xx
+     * Crea los anillos guía y planos traslúcidos que dibujan la silueta de la pirámide
      */
-    createLabelSprite(taskId, weight, priority, colorHex) {
+    createPyramidalGuides() {
+      const THREE = window.THREE;
+      this.pyramidGuides = [];
+      const tierLevels = [
+        { tier: 1, y: 165, radius: 70, color: 3718648 },
+        { tier: 2, y: 55, radius: 150, color: 8490232 },
+        { tier: 3, y: -55, radius: 230, color: 11032055 },
+        { tier: 4, y: -165, radius: 310, color: 1096065 }
+      ];
+      tierLevels.forEach((tl) => {
+        const ringGeo = new THREE.RingGeometry(tl.radius - 1, tl.radius + 1, 64);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: tl.color,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.22
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2;
+        ringMesh.position.y = tl.y;
+        this.scene.add(ringMesh);
+        this.pyramidGuides.push(ringMesh);
+      });
+      const apexRadius = 70;
+      const baseRadius = 310;
+      const apexY = 165;
+      const baseY = -165;
+      for (let i = 0; i < 4; i++) {
+        const angle = Math.PI / 2 * i + Math.PI / 4;
+        const topPt = new THREE.Vector3(apexRadius * Math.cos(angle), apexY, apexRadius * Math.sin(angle));
+        const btmPt = new THREE.Vector3(baseRadius * Math.cos(angle), baseY, baseRadius * Math.sin(angle));
+        const lineGeo = new THREE.BufferGeometry().setFromPoints([topPt, btmPt]);
+        const lineMat = new THREE.LineDashedMaterial({
+          color: 6514417,
+          dashSize: 10,
+          gapSize: 6,
+          transparent: true,
+          opacity: 0.25
+        });
+        const edgeLine = new THREE.Line(lineGeo, lineMat);
+        edgeLine.computeLineDistances();
+        this.scene.add(edgeLine);
+        this.pyramidGuides.push(edgeLine);
+      }
+    }
+    createLabelSprite(taskId, weight, tier, colorHex) {
       const THREE = window.THREE;
       const canvas = document.createElement("canvas");
       canvas.width = 256;
       canvas.height = 128;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
+      ctx.fillStyle = "rgba(2, 6, 23, 0.9)";
       ctx.strokeStyle = colorHex || "#6366f1";
       ctx.lineWidth = 5;
       const r = 24;
@@ -2063,10 +2150,10 @@
       ctx.font = "bold 36px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(taskId, 128, 46);
+      ctx.fillText(taskId, 128, 44);
       ctx.fillStyle = "#fbbf24";
-      ctx.font = "bold 26px monospace";
-      ctx.fillText(`Peso: ${weight}`, 128, 92);
+      ctx.font = "bold 24px monospace";
+      ctx.fillText(`P:${weight} | L${tier}`, 128, 92);
       const texture = new THREE.CanvasTexture(canvas);
       texture.minFilter = THREE.LinearFilter;
       const spriteMat = new THREE.SpriteMaterial({
@@ -2075,95 +2162,111 @@
         depthWrite: false
       });
       const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(40, 20, 1);
+      sprite.scale.set(38, 19, 1);
       return sprite;
     }
     createNodes() {
       const THREE = window.THREE;
-      const count = this.features.length;
       this.nodes = [];
       this.orbitRings = [];
       this.flowParticles = [];
       this.labelSprites = [];
-      const radius = 200;
       const featureMap = /* @__PURE__ */ new Map();
       this.features.forEach((f) => featureMap.set(f.id, f));
-      this.features.forEach((f, idx) => {
-        const phi = Math.acos(-1 + 2 * idx / Math.max(count, 1));
-        const theta = Math.sqrt(count * Math.PI) * phi;
-        const x = radius * Math.cos(theta) * Math.sin(phi);
-        const y = radius * Math.sin(theta) * Math.sin(phi);
-        const z = radius * Math.cos(phi);
-        const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
-        const sphereRadius = 6 + weightVal / 100 * 16;
-        let color = 6583435;
-        let emissive = 3359061;
-        let colorHex = "#6366f1";
-        const rawDeps = f.depends_on || f.dependencies || [];
-        const pendingDeps = rawDeps.filter((dId) => {
-          const dep = featureMap.get(dId);
-          return dep && dep.status !== "done";
-        });
-        const isBlocked = f.status !== "done" && pendingDeps.length > 0;
-        if (f.status === "done") {
-          color = 1096065;
-          emissive = 366185;
-          colorHex = "#10b981";
-        } else if (f.status === "in_progress") {
-          color = 6514417;
-          emissive = 5195493;
-          colorHex = "#6366f1";
-        } else if (f.status === "spec_ready") {
-          color = 440020;
-          emissive = 561586;
-          colorHex = "#06b6d4";
-        } else if (isBlocked) {
-          color = 16007006;
-          emissive = 14753096;
-          colorHex = "#f43f5e";
-        } else if (f.type === "bugfix") {
-          color = 16096779;
-          emissive = 14251782;
-          colorHex = "#f59e0b";
-        }
-        const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
-        const material = new THREE.MeshStandardMaterial({
-          color,
-          roughness: 0.22,
-          metalness: 0.35,
-          emissive,
-          emissiveIntensity: 0.55
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, z);
-        mesh.userData = {
-          feature: f,
-          weight: weightVal,
-          baseRadius: sphereRadius,
-          baseColor: color,
-          baseEmissive: emissive
-        };
-        this.scene.add(mesh);
-        this.nodes.push(mesh);
-        const taskId = `INT-${String(f.id).padStart(3, "0")}`;
-        const sprite = this.createLabelSprite(taskId, weightVal, f.priority, colorHex);
-        sprite.position.set(x, y + sphereRadius + 15, z);
-        this.scene.add(sprite);
-        this.labelSprites.push(sprite);
-        if (weightVal >= 80) {
-          const ringGeo = new THREE.RingGeometry(sphereRadius + 4, sphereRadius + 6.5, 32);
-          const ringMat = new THREE.MeshBasicMaterial({
-            color,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.65
+      const tierGroups = { 1: [], 2: [], 3: [], 4: [] };
+      this.features.forEach((f) => {
+        const tier = this.getNodeTier(f);
+        tierGroups[tier].push(f);
+      });
+      const tierSettings = {
+        1: { y: 165, radius: 70, offsetAngle: 0 },
+        2: { y: 55, radius: 150, offsetAngle: Math.PI / 6 },
+        3: { y: -55, radius: 230, offsetAngle: Math.PI / 4 },
+        4: { y: -165, radius: 310, offsetAngle: Math.PI / 3 }
+      };
+      Object.keys(tierGroups).forEach((tierStr) => {
+        const tier = parseInt(tierStr, 10);
+        const items = tierGroups[tier];
+        const count = items.length;
+        const cfg = tierSettings[tier];
+        items.forEach((f, idx) => {
+          const angle = cfg.offsetAngle + (count > 1 ? Math.PI * 2 * idx / count : 0);
+          const yOffset = Math.sin(idx * 1.5) * 6;
+          const x = cfg.radius * Math.cos(angle);
+          const y = cfg.y + yOffset;
+          const z = cfg.radius * Math.sin(angle);
+          const weightVal = f.weight || (f.priority === "P0" ? 95 : f.priority === "P1" ? 75 : 50);
+          const sphereRadius = 7 + weightVal / 100 * 15;
+          let color = 6583435;
+          let emissive = 3359061;
+          let colorHex = "#6366f1";
+          const rawDeps = f.depends_on || f.dependencies || [];
+          const pendingDeps = rawDeps.filter((dId) => {
+            const dep = featureMap.get(dId);
+            return dep && dep.status !== "done";
           });
-          const ring = new THREE.Mesh(ringGeo, ringMat);
-          ring.position.set(x, y, z);
-          ring.rotation.x = Math.PI / 2.5;
-          this.scene.add(ring);
-          this.orbitRings.push(ring);
-        }
+          const isBlocked = f.status !== "done" && pendingDeps.length > 0;
+          if (f.status === "done") {
+            color = 1096065;
+            emissive = 366185;
+            colorHex = "#10b981";
+          } else if (f.status === "in_progress") {
+            color = 6514417;
+            emissive = 5195493;
+            colorHex = "#6366f1";
+          } else if (f.status === "spec_ready") {
+            color = 440020;
+            emissive = 561586;
+            colorHex = "#06b6d4";
+          } else if (isBlocked) {
+            color = 16007006;
+            emissive = 14753096;
+            colorHex = "#f43f5e";
+          } else if (f.type === "bugfix") {
+            color = 16096779;
+            emissive = 14251782;
+            colorHex = "#f59e0b";
+          }
+          const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
+          const material = new THREE.MeshStandardMaterial({
+            color,
+            roughness: 0.2,
+            metalness: 0.35,
+            emissive,
+            emissiveIntensity: 0.6
+          });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(x, y, z);
+          mesh.userData = {
+            feature: f,
+            tier,
+            weight: weightVal,
+            baseRadius: sphereRadius,
+            baseColor: color,
+            baseEmissive: emissive
+          };
+          this.scene.add(mesh);
+          this.nodes.push(mesh);
+          const taskId = `INT-${String(f.id).padStart(3, "0")}`;
+          const sprite = this.createLabelSprite(taskId, weightVal, tier, colorHex);
+          sprite.position.set(x, y + sphereRadius + 14, z);
+          this.scene.add(sprite);
+          this.labelSprites.push(sprite);
+          if (weightVal >= 75) {
+            const ringGeo = new THREE.RingGeometry(sphereRadius + 3.5, sphereRadius + 5.5, 32);
+            const ringMat = new THREE.MeshBasicMaterial({
+              color,
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: 0.65
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.set(x, y, z);
+            ring.rotation.x = Math.PI / 2.3;
+            this.scene.add(ring);
+            this.orbitRings.push(ring);
+          }
+        });
       });
       this.features.forEach((f) => {
         const rawDeps = f.depends_on || f.dependencies || [];
@@ -2175,23 +2278,26 @@
           if (!sourceMesh) return;
           const sourceFeature = featureMap.get(depId);
           const isResolved = sourceFeature && sourceFeature.status === "done";
-          const points = [sourceMesh.position, targetMesh.position];
-          const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+          const midPoint = new THREE.Vector3().lerpVectors(sourceMesh.position, targetMesh.position, 0.5);
+          midPoint.y += 12;
+          const curve = new THREE.QuadraticBezierCurve3(sourceMesh.position, midPoint, targetMesh.position);
+          const curvePoints = curve.getPoints(24);
+          const lineGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
           const lineMat = new THREE.LineBasicMaterial({
             color: isResolved ? 1096065 : 16007006,
             transparent: true,
-            opacity: isResolved ? 0.65 : 0.45
+            opacity: isResolved ? 0.7 : 0.45,
+            linewidth: 2
           });
           const line = new THREE.Line(lineGeo, lineMat);
           this.scene.add(line);
-          const pGeo = new THREE.SphereGeometry(2.4, 12, 12);
+          const pGeo = new THREE.SphereGeometry(2.5, 12, 12);
           const pMat = new THREE.MeshBasicMaterial({
             color: isResolved ? 3462041 : 16478597
           });
           const particle = new THREE.Mesh(pGeo, pMat);
           particle.userData = {
-            start: sourceMesh.position,
-            end: targetMesh.position,
+            curve,
             progress: Math.random()
           };
           this.scene.add(particle);
@@ -2232,7 +2338,7 @@
       window.addEventListener("mouseup", onMouseUp);
       rootEl.addEventListener("click", onClick);
       this.container.querySelectorAll("[data-focus-node]").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
+        btn.addEventListener("click", () => {
           const id = parseInt(btn.getAttribute("data-focus-node"), 10);
           const targetNode = this.nodes.find((n) => n.userData.feature.id === id);
           if (targetNode) {
@@ -2258,24 +2364,32 @@
             this.hoveredMesh.scale.set(1, 1, 1);
           }
           this.hoveredMesh = mesh;
-          mesh.scale.set(1.22, 1.22, 1.22);
+          mesh.scale.set(1.25, 1.25, 1.25);
         }
         const f = mesh.userData.feature;
         const weightVal = mesh.userData.weight;
+        const tierVal = mesh.userData.tier;
+        const tierName = this.getTierName(tierVal);
         const hudContent = this.container.querySelector("#hud-content");
         if (hudContent && f) {
           const branchName = f.branch || `${f.type || "feature"}/INT-${String(f.id).padStart(3, "0")}/${f.name}`;
           const rawDeps = f.depends_on || f.dependencies || [];
           hudContent.innerHTML = `
-          <div class="flex items-center justify-between gap-2 mb-2 border-b border-slate-800 pb-2">
+          <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
             <span class="font-mono font-bold text-indigo-400 text-sm">INT-${String(f.id).padStart(3, "0")}</span>
             <span class="font-semibold px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 uppercase">${f.status}</span>
           </div>
-          <div class="font-bold text-slate-100 text-xs mb-1.5 leading-snug">${f.title || f.name}</div>
-          <div class="font-mono text-[10px] text-slate-400 truncate mb-2">\u{1F33F} ${branchName}</div>
+          <div class="font-bold text-slate-100 text-xs leading-snug">${f.title || f.name}</div>
+          <div class="font-mono text-[10px] text-slate-400 truncate">\u{1F33F} ${branchName}</div>
           
+          <!-- Nivel Piramidal -->
+          <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px]">
+            <div class="text-[10px] uppercase font-bold text-indigo-400">Jerarqu\xEDa Arquitect\xF3nica:</div>
+            <div class="font-bold text-slate-200 mt-0.5">${tierName}</div>
+          </div>
+
           <!-- Barra de Peso -->
-          <div class="mb-2 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
+          <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800">
             <div class="flex items-center justify-between text-[10px] mb-1">
               <span class="text-amber-400 font-bold font-mono">Peso de Importancia:</span>
               <span class="font-mono font-bold text-amber-300">${weightVal} / 100</span>
@@ -2285,7 +2399,7 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
             <span>Prioridad: <strong class="text-indigo-300">${f.priority || "P2"}</strong></span>
             <span>${rawDeps.length ? `${rawDeps.length} dependencias` : "Ra\xEDz sin bloqueos"}</span>
           </div>
@@ -2316,19 +2430,19 @@
       this.rotation.x += (this.targetRotation.x - this.rotation.x) * 0.08;
       this.rotation.y += (this.targetRotation.y - this.rotation.y) * 0.08;
       if (!this.isDragging) {
-        this.targetRotation.y += 12e-4;
+        this.targetRotation.y += 1e-3;
       }
       if (this.scene) {
         this.scene.rotation.y = this.rotation.y;
         this.scene.rotation.x = this.rotation.x;
       }
       this.orbitRings.forEach((ring) => {
-        ring.rotation.z += 0.015;
+        ring.rotation.z += 0.012;
       });
       this.flowParticles.forEach((p) => {
         p.userData.progress = (p.userData.progress + 8e-3) % 1;
-        const { start, end, progress } = p.userData;
-        p.position.lerpVectors(start, end, progress);
+        const pt = p.userData.curve.getPoint(p.userData.progress);
+        p.position.copy(pt);
       });
       if (this.renderer && this.scene && this.camera) {
         this.renderer.render(this.scene, this.camera);
@@ -2348,6 +2462,7 @@
       }
       this.nodes = [];
       this.orbitRings = [];
+      this.pyramidGuides = [];
       this.flowParticles = [];
       this.labelSprites = [];
       this.scene = null;
@@ -2486,7 +2601,7 @@
                   data-action="expand-diagram" 
                   data-diagram-id="${id}"
                   class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  title="Expandir a Pantalla Completa">
+                  title="Expandir a Pantalla Completa con Zoom y Paneo">
             ${Icons.eye("w-3.5 h-3.5")}
           </button>
 
@@ -2497,6 +2612,15 @@
                   title="Copiar c\xF3digo Mermaid">
             <span class="text-xs">\u{1F4CB}</span>
           </button>
+
+          <!-- Bot\xF3n Abrir / Editar en Draw.io -->
+          <a href="https://app.diagrams.net/?splash=0#R${encodeURIComponent(code)}" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             class="px-2 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1 text-xs font-mono font-semibold"
+             title="Abrir e interactuar con este diagrama en Draw.io (diagrams.net)">
+            <span>\u270F\uFE0F</span> <span class="hidden sm:inline">Draw.io</span>
+          </a>
         </div>
       </div>
 
@@ -2543,100 +2667,117 @@
 
   // project-docs/src/features/architecture-docs/ArchitectureDocs.js
   function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
-    const spec = projectSpec || getFallbackSpec();
-    const kData = knowledgeIndex || getFallbackKnowledge();
+    const spec = projectSpec || {};
+    const kData = knowledgeIndex || {};
     const proj = spec.project || {};
     const tech = spec.tech_stack || {};
     const arch = spec.architecture || {};
     const modules = spec.modules || [];
     const goals = spec.business_goals || [];
     const diagrams = kData.diagrams || [];
+    const layers = arch.layers || [];
+    const databases = tech.databases || [];
+    const messaging = tech.messaging || [];
+    const runtimes = tech.runtimes || [];
+    const libraries = tech.libraries || [];
+    const patterns = arch.patterns || [];
     const featureMap = /* @__PURE__ */ new Map();
     features.forEach((f) => featureMap.set(f.id, f));
+    const hasProjectData = proj.name || modules.length > 0 || runtimes.length > 0;
     return `
     <div class="space-y-10">
       
-      <!-- 1. HEADER: \xBFDe qu\xE9 se trata el proyecto? -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- 1. HEADER: Prop\xF3sito, Alcance y Metadatos del Sistema -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                ${proj.type || "Cloud Architecture"}
+                ${proj.type || "Sistema de Software"}
               </span>
               <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                v${proj.version || "2.0.0"}
+                v${proj.version || "1.0.0"}
               </span>
               <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                ${proj.maturity || "SDD 2.0"}
+                ${proj.maturity || "Harness SDD"}
               </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              ${escapeHtml4(proj.name || "CloudSaaS Platform")}
+              ${escapeHtml4(proj.name || "Proyecto de Software")}
             </h2>
             <p class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mt-1">
-              ${escapeHtml4(proj.tagline || "E-Commerce & Microservicios Cloud")}
+              ${escapeHtml4(proj.tagline || "Arquitectura Can\xF3nica y Especificaci\xF3n T\xE9cnica")}
             </p>
           </div>
 
           <!-- M\xE9tricas de Auditor\xEDa R\xE1pida -->
-          <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-mono">
+          <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-mono">
             <div>
               <div class="text-[10px] text-slate-400 uppercase tracking-wider">M\xF3dulos</div>
               <div class="font-bold text-slate-800 dark:text-slate-200 text-base">${modules.length}</div>
             </div>
             <div class="h-8 w-px bg-slate-200 dark:bg-slate-800"></div>
             <div>
-              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Servicios Base</div>
-              <div class="font-bold text-slate-800 dark:text-slate-200 text-base">3 (DB, Cache, Queue)</div>
+              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Servicios Middleware</div>
+              <div class="font-bold text-slate-800 dark:text-slate-200 text-base">${databases.length + messaging.length}</div>
             </div>
             <div class="h-8 w-px bg-slate-200 dark:bg-slate-800"></div>
             <div>
-              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Auditor\xEDa</div>
-              <div class="font-bold text-emerald-600 dark:text-emerald-400 text-base">verify.sh OK</div>
+              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Diagramas</div>
+              <div class="font-bold text-indigo-600 dark:text-indigo-400 text-base">${diagrams.length}</div>
             </div>
           </div>
         </div>
 
-        <!-- Descripci\xF3n del Proyecto y Objetivos -->
+        <!-- Descripci\xF3n y Objetivos -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
           <div class="lg:col-span-2 space-y-3">
             <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               ${Icons.folder} Prop\xF3sito y Alcance del Sistema
             </h3>
-            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-              ${escapeHtml4(proj.description || "")}
-            </p>
+            ${proj.description ? `
+              <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                ${escapeHtml4(proj.description)}
+              </p>
+            ` : `
+              <div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-slate-400 text-xs">
+                No hay descripci\xF3n registrada en <code>project-spec.json</code>. Ejecuta <code>/technical-audit</code> para generarla.
+              </div>
+            `}
           </div>
 
           <div class="space-y-3 lg:border-l lg:border-slate-200 lg:dark:border-slate-800 lg:pl-6">
             <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               ${Icons.check} Objetivos T\xE9cnicos & de Negocio
             </h3>
-            <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-              ${goals.map((g) => `
-                <li class="flex items-start gap-2">
-                  <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u25AA</span>
-                  <span>${escapeHtml4(g)}</span>
-                </li>
-              `).join("")}
-            </ul>
+            ${goals.length > 0 ? `
+              <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                ${goals.map((g) => `
+                  <li class="flex items-start gap-2">
+                    <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u25AA</span>
+                    <span>${escapeHtml4(g)}</span>
+                  </li>
+                `).join("")}
+              </ul>
+            ` : `
+              <p class="text-xs text-slate-400 italic">No se han registrado objetivos expl\xEDcitos en el spec.</p>
+            `}
           </div>
         </div>
       </section>
 
-      <!-- 2. DIAGRAMAS GENERALES DE ARQUITECTURA (C4 & UML) -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- 2. DIAGRAMAS GENERALES DE ARQUITECTURA (C4, UML & ERD) -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                 ${Icons.layers}
               </span>
-              Diagramas Generales de Arquitectura (C4 & UML)
+              Diagramas de Arquitectura, UML & Persistencia
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Visualiza el modelo C4 y los diagramas UML del proyecto con c\xF3digo Mermaid interactivo
+              Visualiza modelos C4, secuencias y el esquema relacional con renderizado interactivo y soporte de Draw.io
             </p>
           </div>
 
@@ -2644,7 +2785,7 @@
             <button type="button" 
                     id="copy-active-mermaid-btn" 
                     class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5">
-              <span>\u{1F4CB}</span> Copiar C\xF3digo Mermaid
+              <span>\u{1F4CB}</span> Copiar Mermaid / XML
             </button>
           </div>
         </div>
@@ -2654,267 +2795,23 @@
           <button type="button" 
                   data-arch-tab="layers" 
                   class="arch-tab-btn active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-semibold transition-all cursor-pointer">
-            \u{1F3D7}\uFE0F Capas del Sistema (Clean Core)
+            \u{1F3D7}\uFE0F Capas del Sistema
           </button>
-          <button type="button" 
-                  data-arch-tab="c4-context" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F4D0} C4: Contexto (C1)
-          </button>
-          <button type="button" 
-                  data-arch-tab="c4-containers" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F4E6} C4: Contenedores (C2)
-          </button>
-          <button type="button" 
-                  data-arch-tab="c4-components" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F9E9} C4: Componentes (C3)
-          </button>
-          <button type="button" 
-                  data-arch-tab="uml-classes" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F3DB}\uFE0F UML: Clases
-          </button>
-          <button type="button" 
-                  data-arch-tab="uml-sequence-checkout" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F504} UML: Secuencia Checkout
-          </button>
-          <button type="button" 
-                  data-arch-tab="uml-usecases" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F465} UML: Casos de Uso
-          </button>
-          <button type="button" 
-                  data-arch-tab="erd-database" 
-                  class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-            \u{1F5C4}\uFE0F ERD: Base de Datos
-          </button>
+          ${diagrams.map((diag) => `
+            <button type="button" 
+                    data-arch-tab="${diag.id}" 
+                    class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer whitespace-nowrap">
+              ${diag.type === "C4 Model" ? "\u{1F4D0}" : diag.type === "Database ERD" ? "\u{1F5C4}\uFE0F" : "\u{1F465}"} ${diag.title || diag.id}
+            </button>
+          `).join("")}
         </div>
 
-        <!-- 2.1 PANEL: CAPAS GENERALES DEL SISTEMA -->
+        <!-- 2.1 PANEL: CAPAS DIN\xC1MICAS DEL SISTEMA -->
         <div id="diagram-panel-layers" class="diagram-panel block mt-6">
-          <div class="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/90 p-4 shadow-inner">
-            <div class="min-w-[960px] max-w-5xl mx-auto py-4">
-              
-              <!-- CAPA 1: Clientes y Entrada Externa -->
-              <div class="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                    Capa 1: Clientes & Per\xEDmetro de Entrada
-                  </span>
-                  <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800">
-                    HTTPS / WSS / JSON
-                  </span>
-                </div>
-                <div class="grid grid-cols-4 gap-3">
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                    <div class="text-base mb-1">\u{1F4BB}</div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Web App (SPA)</div>
-                    <div class="text-[10px] text-slate-400">Dashboard & Cat\xE1logo</div>
-                  </div>
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                    <div class="text-base mb-1">\u{1F4F1}</div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Mobile Client</div>
-                    <div class="text-[10px] text-slate-400">Checkout & Tracking</div>
-                  </div>
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                    <div class="text-base mb-1">\u{1F916}</div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Agentes de IA</div>
-                    <div class="text-[10px] text-slate-400">Antigravity / SDD CLI</div>
-                  </div>
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                    <div class="text-base mb-1">\u{1F4B3}</div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Webhooks Pasarela</div>
-                    <div class="text-[10px] text-slate-400">Stripe / PSE Callbacks</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Flecha de Flujo 1 -> 2 -->
-              <div class="flex justify-center -my-3 relative z-10">
-                <div class="px-3 py-1 rounded-full bg-cyan-600 text-white font-mono text-[10px] font-bold shadow-md">
-                  \u2193 Tr\xE1fico HTTPS Seguro
-                </div>
-              </div>
-
-              <!-- CAPA 2: API Gateway & Edge -->
-              <div class="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 shadow-xs my-6">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    Capa 2: API Gateway, Enrutamiento & Seguridad Perimetral
-                  </span>
-                  <span class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
-                    Reverse Proxy + Auth Middleware
-                  </span>
-                </div>
-                <div class="grid grid-cols-3 gap-3 text-center">
-                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F6E1}\uFE0F Rate Limiting & SSL</div>
-                    <div class="text-[10px] text-slate-400">Protecci\xF3n DoS & TLS 1.3</div>
-                  </div>
-                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F511} JWT Auth & RBAC</div>
-                    <div class="text-[10px] text-slate-400">Middleware de firmas criptogr\xE1ficas</div>
-                  </div>
-                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50">
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">\u{1F500} Router & Circuit Breaker</div>
-                    <div class="text-[10px] text-slate-400">Despacho hacia microservicios</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Flecha de Flujo 2 -> 3 -->
-              <div class="flex justify-center -my-3 relative z-10">
-                <div class="px-3 py-1 rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-md">
-                  \u2193 Casos de Uso & Clean Core
-                </div>
-              </div>
-
-              <!-- CAPA 3: Dominios & Microservicios (Clean Core) -->
-              <div class="p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs my-6">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Capa 3: Dominios Funcionales & Microservicios (L\xF3gica de Negocio Pura)
-                  </span>
-                  <span class="text-[10px] font-mono text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
-                    Clean Architecture
-                  </span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">auth</span>
-                      <span class="text-[9px] font-mono bg-indigo-100 dark:bg-indigo-950/60 px-1 py-0.2 rounded text-indigo-700 dark:text-indigo-300">INT-002, 003</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Auth & Roles</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">JWT, RBAC y expiraci\xF3n UTC</div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-cyan-600 dark:text-cyan-400">catalog</span>
-                      <span class="text-[9px] font-mono bg-cyan-100 dark:bg-cyan-950/60 px-1 py-0.2 rounded text-cyan-700 dark:text-cyan-300">INT-004</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Product Catalog</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">Cursor pagination & b\xFAsqueda</div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">cart</span>
-                      <span class="text-[9px] font-mono bg-emerald-100 dark:bg-emerald-950/60 px-1 py-0.2 rounded text-emerald-700 dark:text-emerald-300">INT-005</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Shopping Cart</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">Operaciones at\xF3micas Redis</div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-amber-600 dark:text-amber-400">billing</span>
-                      <span class="text-[9px] font-mono bg-amber-100 dark:bg-amber-950/60 px-1 py-0.2 rounded text-amber-700 dark:text-amber-300">INT-006, 007</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Payment Gateway</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">Stripe HMAC & redondeo contable</div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-purple-600 dark:text-purple-400">orders</span>
-                      <span class="text-[9px] font-mono bg-purple-100 dark:bg-purple-950/60 px-1 py-0.2 rounded text-purple-700 dark:text-purple-300">INT-008</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Order Worker</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">Consumidor de colas con DLQ</div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-rose-600 dark:text-rose-400">analytics</span>
-                      <span class="text-[9px] font-mono bg-rose-100 dark:bg-rose-950/60 px-1 py-0.2 rounded text-rose-700 dark:text-rose-300">INT-009</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Event Stream</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">M\xE9tricas Prometheus /metrics</div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 sm:col-span-2">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-blue-600 dark:text-blue-400">notifications</span>
-                      <span class="text-[9px] font-mono bg-blue-100 dark:bg-blue-950/60 px-1 py-0.2 rounded text-blue-700 dark:text-blue-300">INT-010</span>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Notification Service</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">Emails transaccionales HTML seguros & retries SMTP</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Flecha de Flujo 3 -> 4 -->
-              <div class="flex justify-center -my-3 relative z-10">
-                <div class="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold shadow-md">
-                  \u2193 Persistencia, Cache & Colas de Mensajes
-                </div>
-              </div>
-
-              <!-- CAPA 4: Infraestructura, Datos & Mensajer\xEDa -->
-              <div class="p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-xs mt-6">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Capa 4: Servicios de Persistencia, Cache Distribuido & Event Broker
-                  </span>
-                  <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                    State & Messaging
-                  </span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <!-- PostgreSQL -->
-                  <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="text-xl">\u{1F418}</span>
-                      <div>
-                        <div class="font-bold text-xs text-slate-900 dark:text-slate-100">PostgreSQL 16 Cluster</div>
-                        <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">Puerto 5432 \xB7 ACID Transaccional</div>
-                      </div>
-                    </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                      \xD3rdenes, usuarios, tablas de roles y cat\xE1logo. Versionado con migraciones deterministas y pool de conexiones.
-                    </p>
-                  </div>
-
-                  <!-- Redis -->
-                  <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="text-xl">\u{1F534}</span>
-                      <div>
-                        <div class="font-bold text-xs text-slate-900 dark:text-slate-100">Redis 7.2 Distributed Cache</div>
-                        <div class="text-[10px] font-mono text-amber-600 dark:text-amber-400">Puerto 6379 \xB7 In-Memory Key/Value</div>
-                      </div>
-                    </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                      Cache de cat\xE1logo, sesiones vol\xE1tiles de carritos an\xF3nimos y cerrojos distribuidos (Redlock) para stock concurrente.
-                    </p>
-                  </div>
-
-                  <!-- RabbitMQ / Kafka -->
-                  <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="text-xl">\u{1F407}</span>
-                      <div>
-                        <div class="font-bold text-xs text-slate-900 dark:text-slate-100">RabbitMQ / Kafka Broker</div>
-                        <div class="text-[10px] font-mono text-purple-600 dark:text-purple-400">Puerto 5672 \xB7 Event Bus & DLQ</div>
-                      </div>
-                    </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                      Colas as\xEDncronas para OrderFulfilled, webhooks entrantes y reintentos autom\xE1ticos con retroceso exponencial.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
+          ${renderDynamicLayersPanel({ layers, modules, databases, messaging, runtimes, featureMap })}
         </div>
 
-        <!-- 2.2 PANELES DE DIAGRAMAS C4 & UML (Renderizado Visual Interactivo) -->
+        <!-- 2.2 PANELES DE DIAGRAMAS MERMAID / DRAW.IO -->
         ${diagrams.map((diag) => `
           <div id="diagram-panel-${diag.id}" class="diagram-panel hidden mt-6">
             ${renderMermaidViewer(diag)}
@@ -2923,119 +2820,139 @@
 
       </section>
 
-      <!-- 3. STACK DE TECNOLOG\xCDAS Y LIBRER\xCDAS -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- 3. STACK DE TECNOLOG\xCDAS Y RUNTIMES (100% DIN\xC1MICO) -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
               ${Icons.cpu}
             </span>
-            Stack de Tecnolog\xEDas y Dependencias Identificadas
+            Stack Tecnol\xF3gico, Runtimes & Dependencias
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Informaci\xF3n t\xE9cnica recolectada por la skill <code class="font-mono text-indigo-500">/technical-audit</code>
+            Informaci\xF3n recolectada din\xE1micamente por la skill <code class="font-mono text-indigo-500">/technical-audit</code>
           </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
           <!-- Runtimes & Lenguajes -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <span>\u26A1</span> Runtimes & Lenguajes
+              <span>\u26A1</span> Runtimes & Lenguajes (${runtimes.length})
             </div>
-            <div class="space-y-2.5">
-              ${(tech.runtimes || []).map((r) => `
-                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                  <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-                    <span class="flex items-center gap-1.5">${r.icon || "\u25AA"} ${r.name}</span>
-                    <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${r.version}</span>
+            ${runtimes.length > 0 ? `
+              <div class="space-y-2.5">
+                ${runtimes.map((r) => `
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                      <span class="flex items-center gap-1.5">${r.icon || "\u25AA"} ${r.name}</span>
+                      <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${r.version || ""}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${r.purpose || ""}</div>
                   </div>
-                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${r.purpose}</div>
-                </div>
-              `).join("")}
-            </div>
+                `).join("")}
+              </div>
+            ` : `
+              <p class="text-xs text-slate-400 italic">No hay runtimes registrados.</p>
+            `}
           </div>
 
-          <!-- Servicios & Bases de Datos -->
+          <!-- Bases de Datos & Middleware -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <span>\u{1F418}</span> Bases de Datos & Middleware
+              <span>\u{1F418}</span> Bases de Datos & Middleware (${databases.length + messaging.length})
             </div>
-            <div class="space-y-2.5">
-              ${(tech.databases || []).map((db) => `
-                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                  <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-                    <span class="flex items-center gap-1.5">${db.icon || "\u25AA"} ${db.name}</span>
-                    <span class="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">:${db.port}</span>
+            ${databases.length + messaging.length > 0 ? `
+              <div class="space-y-2.5">
+                ${databases.map((db) => `
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                      <span class="flex items-center gap-1.5">${db.icon || "\u25AA"} ${db.name}</span>
+                      <span class="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">${db.port ? `:${db.port}` : ""}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${db.purpose || db.type || ""}</div>
                   </div>
-                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${db.purpose}</div>
-                </div>
-              `).join("")}
-              ${(tech.messaging || []).map((msg) => `
-                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                  <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-                    <span class="flex items-center gap-1.5">${msg.icon || "\u25AA"} ${msg.name}</span>
-                    <span class="font-mono text-[10px] text-purple-600 dark:text-purple-400">:${msg.port}</span>
+                `).join("")}
+                ${messaging.map((msg) => `
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                      <span class="flex items-center gap-1.5">${msg.icon || "\u25AA"} ${msg.name}</span>
+                      <span class="font-mono text-[10px] text-purple-600 dark:text-purple-400">${msg.port ? `:${msg.port}` : ""}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${msg.purpose || ""}</div>
                   </div>
-                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${msg.purpose}</div>
-                </div>
-              `).join("")}
-            </div>
+                `).join("")}
+              </div>
+            ` : `
+              <p class="text-xs text-slate-400 italic">No hay bases de datos registradas.</p>
+            `}
           </div>
 
-          <!-- Librer\xEDas & Paquetes Clave -->
+          <!-- Librer\xEDas Clave -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3 md:col-span-2 lg:col-span-1">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <span>\u{1F4E6}</span> Librer\xEDas & Frameworks Clave
+              <span>\u{1F4E6}</span> Librer\xEDas & Paquetes Clave (${libraries.length})
             </div>
-            <div class="space-y-2 max-h-[310px] overflow-y-auto pr-1">
-              ${(tech.libraries || []).map((lib) => `
-                <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-800 dark:text-slate-200">${lib.name}</span>
-                    <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">${lib.category}</span>
+            ${libraries.length > 0 ? `
+              <div class="space-y-2 max-h-[310px] overflow-y-auto pr-1">
+                ${libraries.map((lib) => `
+                  <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-slate-800 dark:text-slate-200">${lib.name}</span>
+                      <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">${lib.category || ""}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${lib.purpose || ""}</div>
                   </div>
-                  <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${lib.purpose}</div>
-                </div>
-              `).join("")}
-            </div>
+                `).join("")}
+              </div>
+            ` : `
+              <p class="text-xs text-slate-400 italic">No hay librer\xEDas registradas.</p>
+            `}
           </div>
+
         </div>
       </section>
 
-      <!-- 4. ARQUITECTURA Y PATRONES DE DISE\xD1O -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- 4. PATRONES DE DISE\xD1O Y ARQUITECTURA -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
               ${Icons.cube}
             </span>
-            Patrones de Dise\xF1o & Decisiones Arquitecturales
+            Patrones de Dise\xF1o & Estilo de Arquitectura
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Estilo principal: <strong class="text-indigo-600 dark:text-indigo-400">${arch.style || "Clean Architecture + EDA"}</strong>
+            Estilo principal: <strong class="text-indigo-600 dark:text-indigo-400">${arch.style || "L\xF3gica desacoplada"}</strong>
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${(arch.patterns || []).map((pat) => `
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2">
-              <div class="flex items-center justify-between">
-                <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${pat.name}</h4>
-                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                  ${pat.type}
-                </span>
+        ${patterns.length > 0 ? `
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${patterns.map((pat) => `
+              <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${pat.name}</h4>
+                  <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                    ${pat.type || "Patr\xF3n"}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  ${pat.description || ""}
+                </p>
               </div>
-              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                ${pat.description}
-              </p>
-            </div>
-          `).join("")}
-        </div>
+            `).join("")}
+          </div>
+        ` : `
+          <div class="p-6 text-center text-slate-400 text-xs rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+            No se han registrado patrones expl\xEDcitos en <code>project-spec.json</code>.
+          </div>
+        `}
       </section>
 
-      <!-- 5. M\xD3DULOS IDENTIFICADOS -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- 5. M\xD3DULOS DEL SISTEMA IDENTIFICADOS -->
+      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
@@ -3044,85 +2961,234 @@
             M\xF3dulos del Sistema Identificados (${modules.length})
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            L\xEDmites de contexto (Bounded Contexts) y responsabilidades asignadas a cada m\xF3dulo
+            L\xEDmites de contexto (Bounded Contexts) con trazabilidad hacia tareas INT-*
           </p>
         </div>
 
-        <div class="space-y-4">
-          ${modules.map((mod) => {
+        ${modules.length > 0 ? `
+          <div class="space-y-4">
+            ${modules.map((mod) => {
       const modFeatures = (mod.features || []).map((fIdStr) => {
-        const numId = parseInt(fIdStr.replace("INT-", ""), 10);
+        const numId = parseInt(String(fIdStr).replace("INT-", ""), 10);
         return featureMap.get(numId);
       }).filter(Boolean);
       const doneFeatures = modFeatures.filter((f) => f.status === "done").length;
       const progressPct = modFeatures.length ? Math.round(doneFeatures / modFeatures.length * 100) : 0;
       return `
-              <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-mono font-bold text-xs">
-                      \u{1F4C1}
-                    </span>
+                <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-mono font-bold text-xs">
+                        \u{1F4C1}
+                      </span>
+                      <div>
+                        <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                          <span>${mod.name}</span>
+                          <code class="text-xs font-mono text-indigo-600 dark:text-indigo-400">[${mod.id}]</code>
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${mod.purpose || ""}</p>
+                      </div>
+                    </div>
+
+                    <!-- Progreso del M\xF3dulo -->
+                    <div class="flex items-center gap-3">
+                      <div class="text-right">
+                        <div class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">${doneFeatures}/${modFeatures.length} tareas resueltas</div>
+                        <div class="text-[10px] text-slate-400">${progressPct}% completado</div>
+                      </div>
+                      <div class="w-16 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                        <div class="h-full bg-indigo-500 rounded-full" style="width: ${progressPct}%"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Responsabilidades -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800/80 text-xs">
                     <div>
-                      <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                        <span>${mod.name}</span>
-                        <code class="text-xs font-mono text-indigo-600 dark:text-indigo-400">[${mod.id}]</code>
-                      </h4>
-                      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${mod.purpose}</p>
+                      <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Responsabilidades Principales:</span>
+                      <ul class="mt-1 space-y-1 text-slate-600 dark:text-slate-300">
+                        ${(mod.responsibilities || []).map((r) => `
+                          <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u203A</span>
+                            <span>${escapeHtml4(r)}</span>
+                          </li>
+                        `).join("")}
+                      </ul>
                     </div>
-                  </div>
 
-                  <!-- Progreso del M\xF3dulo -->
-                  <div class="flex items-center gap-3">
-                    <div class="text-right">
-                      <div class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">${doneFeatures}/${modFeatures.length} tareas resueltas</div>
-                      <div class="text-[10px] text-slate-400">${progressPct}% completado</div>
-                    </div>
-                    <div class="w-16 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div class="h-full bg-indigo-500 rounded-full" style="width: ${progressPct}%"></div>
+                    <div>
+                      <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Stack Tecnol\xF3gico & Tareas Asignadas:</span>
+                      <div class="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 mb-2">
+                        ${escapeHtml4(mod.tech || "")}
+                      </div>
+                      <div class="flex flex-wrap gap-1.5">
+                        ${modFeatures.map((f) => `
+                          <button type="button" 
+                                  data-action="view-detail" 
+                                  data-id="${f.id}" 
+                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                                  title="${f.title || f.name}">
+                            <span class="w-1.5 h-1.5 rounded-full ${f.status === "done" ? "bg-emerald-400" : f.status === "in_progress" ? "bg-indigo-400" : "bg-slate-400"}"></span>
+                            INT-${String(f.id).padStart(3, "0")}
+                          </button>
+                        `).join("")}
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                <!-- Responsabilidades -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800/80 text-xs">
-                  <div>
-                    <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Responsabilidades Principales:</span>
-                    <ul class="mt-1 space-y-1 text-slate-600 dark:text-slate-300">
-                      ${(mod.responsibilities || []).map((r) => `
-                        <li class="flex items-start gap-1.5">
-                          <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u203A</span>
-                          <span>${escapeHtml4(r)}</span>
-                        </li>
-                      `).join("")}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Stack Tecnol\xF3gico & Tareas Asignadas:</span>
-                    <div class="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 mb-2">
-                      ${escapeHtml4(mod.tech || "")}
-                    </div>
-                    <div class="flex flex-wrap gap-1.5">
-                      ${modFeatures.map((f) => `
-                        <button type="button" 
-                                data-action="view-detail" 
-                                data-id="${f.id}" 
-                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                                title="${f.title || f.name}">
-                          <span class="w-1.5 h-1.5 rounded-full ${f.status === "done" ? "bg-emerald-400" : f.status === "in_progress" ? "bg-indigo-400" : "bg-slate-400"}"></span>
-                          INT-${String(f.id).padStart(3, "0")}
-                        </button>
-                      `).join("")}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
+              `;
     }).join("")}
-        </div>
+          </div>
+        ` : `
+          <div class="p-8 text-center text-slate-400 text-xs rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+            No se han registrado m\xF3dulos a\xFAn. Ejecuta <code>/project-knowledge</code> para extraer los Bounded Contexts.
+          </div>
+        `}
       </section>
 
+    </div>
+  `;
+  }
+  function renderDynamicLayersPanel({ layers, modules, databases, messaging, runtimes, featureMap }) {
+    if (!layers.length && !modules.length) {
+      return `
+      <div class="p-8 text-center text-slate-500 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+        <div class="text-3xl mb-2">\u26A1</div>
+        <div class="text-sm font-bold text-slate-800 dark:text-slate-200">No hay capas de arquitectura configuradas a\xFAn</div>
+        <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">Ejecuta la skill <code>/technical-audit</code> o <code>/project-knowledge</code> para extraer la arquitectura real del proyecto.</p>
+      </div>
+    `;
+    }
+    return `
+    <div class="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/90 p-4 shadow-inner">
+      <div class="min-w-[960px] max-w-5xl mx-auto py-4 space-y-6">
+        
+        <!-- Capa 1: Entrada & Per\xEDmetro -->
+        <div class="p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+              Capa 1: Clientes & Per\xEDmetro de Entrada
+            </span>
+            <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800">
+              HTTPS / WSS / API Contracts
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <div class="text-base mb-1">\u{1F4BB}</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Web App (SPA)</div>
+              <div class="text-[10px] text-slate-400">Dashboard & Clientes</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <div class="text-base mb-1">\u{1F916}</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Agentes de IA</div>
+              <div class="text-[10px] text-slate-400">Antigravity / SDD CLI</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <div class="text-base mb-1">\u{1F4F1}</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Mobile / External</div>
+              <div class="text-[10px] text-slate-400">Consumidores REST</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <div class="text-base mb-1">\u{1F6E1}\uFE0F</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">API Gateway</div>
+              <div class="text-[10px] text-slate-400">Auth & Rate Limiting</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flecha de Flujo 1 -> 2 -->
+        <div class="flex justify-center -my-3 relative z-10">
+          <div class="px-3 py-1 rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-md">
+            \u2193 Casos de Uso & L\xF3gica de Negocio
+          </div>
+        </div>
+
+        <!-- Capa 2: Dominios & Microservicios Din\xE1micos -->
+        <div class="p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Capa de Dominio: Bounded Contexts (${modules.length} m\xF3dulos)
+            </span>
+            <span class="text-[10px] font-mono text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
+              Clean Architecture Core
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            ${modules.map((mod) => {
+      const modFeatures = (mod.features || []).map((fIdStr) => {
+        const numId = parseInt(String(fIdStr).replace("INT-", ""), 10);
+        return featureMap.get(numId);
+      }).filter(Boolean);
+      return `
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">${mod.id}</span>
+                    <span class="text-[9px] font-mono bg-indigo-100 dark:bg-indigo-950/60 px-1 py-0.2 rounded text-indigo-700 dark:text-indigo-300">
+                      ${modFeatures.length} tareas
+                    </span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${mod.name}</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 line-clamp-2">${mod.purpose || ""}</div>
+                </div>
+              `;
+    }).join("")}
+          </div>
+        </div>
+
+        <!-- Flecha de Flujo 2 -> 3 -->
+        <div class="flex justify-center -my-3 relative z-10">
+          <div class="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold shadow-md">
+            \u2193 Estado, Persistencia & Mensajer\xEDa
+          </div>
+        </div>
+
+        <!-- Capa 3: Persistencia, Cache & Brokers Din\xE1micos -->
+        <div class="p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Capa de Infraestructura & Estado (${databases.length + messaging.length} servicios)
+            </span>
+            <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+              State & Broker Adapters
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            ${databases.map((db) => `
+              <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xl">${db.icon || "\u{1F418}"}</span>
+                  <div>
+                    <div class="font-bold text-xs text-slate-900 dark:text-slate-100">${db.name}</div>
+                    <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">${db.type} ${db.port ? `\xB7 :${db.port}` : ""}</div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  ${db.purpose || ""}
+                </p>
+              </div>
+            `).join("")}
+
+            ${messaging.map((msg) => `
+              <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xl">${msg.icon || "\u{1F407}"}</span>
+                  <div>
+                    <div class="font-bold text-xs text-slate-900 dark:text-slate-100">${msg.name}</div>
+                    <div class="text-[10px] font-mono text-purple-600 dark:text-purple-400">${msg.type} ${msg.port ? `\xB7 :${msg.port}` : ""}</div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  ${msg.purpose || ""}
+                </p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+      </div>
     </div>
   `;
   }
@@ -3130,87 +3196,45 @@
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
-  function getFallbackSpec() {
-    if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.projectSpec) {
-      return window.__FALLBACK_DATA__.projectSpec;
-    }
-    return {
-      project: {
-        name: "CloudSaaS Platform",
-        tagline: "E-Commerce & Microservicios Cloud",
-        description: "Plataforma SaaS integral de microservicios con arquitectura limpia y eventos.",
-        version: "2.0.0",
-        type: "Fullstack Microservices"
-      },
-      business_goals: [
-        "Garantizar transacciones consistentes y at\xF3micas.",
-        "Aislamiento estricto de dominios con Clean Architecture."
-      ],
-      tech_stack: {
-        runtimes: [],
-        databases: [],
-        messaging: [],
-        libraries: []
-      },
-      architecture: {
-        style: "Clean Architecture + Event-Driven",
-        layers: [],
-        patterns: []
-      },
-      modules: []
-    };
-  }
-  function getFallbackKnowledge() {
-    if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.knowledgeIndex) {
-      return window.__FALLBACK_DATA__.knowledgeIndex;
-    }
-    return {
-      diagrams: [],
-      business_rules: [],
-      external_services: [],
-      coding_standards: { guardrails: [], naming_conventions: {} }
-    };
-  }
 
   // project-docs/src/shared/MarkdownViewer.js
   function renderMarkdown(content = "") {
     if (!content) return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
-    if (typeof window !== "undefined" && window.marked && typeof window.marked.parse === "function") {
-      try {
-        const rawHtml = window.marked.parse(content);
-        return postProcessMarkdownHtml(rawHtml);
-      } catch (_) {
-      }
-    }
     return parseMarkdownNative(content);
   }
-  function postProcessMarkdownHtml(html) {
-    return html.replace(/<blockquote>\s*<p>\s*\[!NOTE\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
-      <div class="my-4 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-950 dark:text-indigo-200 flex items-start gap-3 shadow-xs">
-        <span class="text-indigo-600 dark:text-indigo-400 text-base shrink-0 mt-0.5">\u2139\uFE0F</span>
-        <div class="leading-relaxed flex-1">${text}</div>
-      </div>
-    `).replace(/<blockquote>\s*<p>\s*\[!TIP\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
-      <div class="my-4 p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-3 shadow-xs">
-        <span class="text-emerald-600 dark:text-emerald-400 text-base shrink-0 mt-0.5">\u{1F4A1}</span>
-        <div class="leading-relaxed flex-1">${text}</div>
-      </div>
-    `).replace(/<blockquote>\s*<p>\s*\[!WARNING\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
-      <div class="my-4 p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-950 dark:text-amber-200 flex items-start gap-3 shadow-xs">
-        <span class="text-amber-600 dark:text-amber-400 text-base shrink-0 mt-0.5">\u26A0\uFE0F</span>
-        <div class="leading-relaxed flex-1">${text}</div>
-      </div>
-    `).replace(/<blockquote>\s*<p>\s*\[!IMPORTANT\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
-      <div class="my-4 p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 text-xs text-purple-950 dark:text-purple-200 flex items-start gap-3 shadow-xs">
-        <span class="text-purple-600 dark:text-purple-400 text-base shrink-0 mt-0.5">\u26A1</span>
-        <div class="leading-relaxed flex-1">${text}</div>
-      </div>
-    `).replace(/<blockquote>\s*<p>\s*\[!CAUTION\]\s*([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (_, text) => `
-      <div class="my-4 p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-950 dark:text-rose-200 flex items-start gap-3 shadow-xs">
-        <span class="text-rose-600 dark:text-rose-400 text-base shrink-0 mt-0.5">\u{1F6D1}</span>
-        <div class="leading-relaxed flex-1">${text}</div>
-      </div>
-    `);
+  function extractTableOfContents(md = "") {
+    const lines = md.split(/\r?\n/);
+    const toc = [];
+    let inCode = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        inCode = !inCode;
+        continue;
+      }
+      if (inCode) continue;
+      if (trimmed.startsWith("# ") || trimmed.startsWith("## ") || trimmed.startsWith("### ")) {
+        let level = 1;
+        let text = "";
+        if (trimmed.startsWith("### ")) {
+          level = 3;
+          text = trimmed.replace(/^###\s+/, "");
+        } else if (trimmed.startsWith("## ")) {
+          level = 2;
+          text = trimmed.replace(/^##\s+/, "");
+        } else if (trimmed.startsWith("# ")) {
+          level = 1;
+          text = trimmed.replace(/^#\s+/, "");
+        }
+        const cleanText = text.replace(/`([^`]+)`/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").trim();
+        const slug = slugify(cleanText);
+        toc.push({ id: slug, level, text: cleanText });
+      }
+    }
+    return toc;
+  }
+  function slugify(text = "") {
+    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") || "section";
   }
   function parseMarkdownNative(md) {
     const lines = md.split(/\r?\n/);
@@ -3220,32 +3244,73 @@
     let codeBuffer = [];
     let inTable = false;
     let tableHeaderParsed = false;
+    let tableRows = [];
+    let tableHeaders = [];
     let inList = false;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (line.trim().startsWith("```")) {
         if (inCodeBlock) {
           const codeText = codeBuffer.join("\n");
-          if (codeLang.toLowerCase() === "mermaid") {
+          const langLower = (codeLang || "").toLowerCase().trim();
+          if (langLower === "mermaid" || langLower === "drawio") {
+            const isDrawio = langLower === "drawio";
+            const diagId = "diag_" + Math.random().toString(36).substring(2, 9);
+            const encodedForDrawio = encodeURIComponent(codeText);
+            const drawioUrl = `https://app.diagrams.net/?splash=0#R${encodedForDrawio}`;
             html.push(`
-            <div class="my-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 overflow-hidden shadow-xs">
-              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 text-[11px] font-mono font-semibold text-slate-500">
-                <span class="flex items-center gap-1.5 text-indigo-500">\u{1F4CA} Diagrama Mermaid</span>
-                <button type="button" data-copy-mermaid="${escapeAttr3(codeText)}" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">Copiar</button>
+            <div class="my-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 shadow-md overflow-hidden transition-all duration-200" id="diag-card-${diagId}">
+              <div class="flex flex-wrap items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 text-[11px] font-mono">
+                <span class="flex items-center gap-2 font-bold ${isDrawio ? "text-amber-500" : "text-indigo-500"}">
+                  <span>${isDrawio ? "\u{1F3A8} Draw.io / mxGraph" : "\u{1F4CA} Diagrama Mermaid"}</span>
+                </span>
+                
+                <div class="flex items-center gap-1.5">
+                  <button type="button" 
+                          data-action="expand-diagram-code" 
+                          data-diag-target="${diagId}"
+                          class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1"
+                          title="Ver en pantalla completa con zoom y paneo">
+                    <span>\u{1F50D}</span> Zoom
+                  </button>
+                  <button type="button" 
+                          data-copy-mermaid="${escapeAttr3(codeText)}" 
+                          class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1"
+                          title="Copiar c\xF3digo fuente del diagrama">
+                    <span>\u{1F4CB}</span> Copiar
+                  </button>
+                  <a href="${drawioUrl}" 
+                     target="_blank" 
+                     rel="noopener noreferrer" 
+                     class="px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors font-semibold flex items-center gap-1"
+                     title="Abrir este diagrama para editar interactivamente en diagrams.net">
+                    <span>\u270F\uFE0F</span> Draw.io
+                  </a>
+                </div>
               </div>
-              <div class="p-4 overflow-x-auto flex justify-center">
-                <pre class="mermaid text-xs font-mono text-slate-300">${escapeHtml5(codeText)}</pre>
+
+              <div class="p-6 overflow-x-auto flex justify-center items-center bg-slate-50/40 dark:bg-slate-950/40 min-h-[160px]" id="${diagId}">
+                <div class="mermaid-render-target w-full flex justify-center items-center" data-mermaid-code="${escapeAttr3(codeText)}">
+                  <pre class="mermaid text-xs font-mono text-slate-400">${escapeHtml5(codeText)}</pre>
+                </div>
               </div>
             </div>
           `);
           } else {
+            const codeLines = codeText.split("\n");
             html.push(`
-            <div class="my-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-900 text-slate-100 overflow-hidden shadow-xs">
-              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-950/60 text-[11px] font-mono text-slate-400">
-                <span>${codeLang || "text"}</span>
-                <button type="button" data-action="copy-code-block" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer text-[10px]">Copiar</button>
+            <div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md">
+              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/80 text-[11px] font-mono text-slate-400">
+                <span class="flex items-center gap-1.5 font-bold text-indigo-400">
+                  <span>\u26A1</span> ${codeLang || "text"}
+                </span>
+                <button type="button" data-action="copy-code-block" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer text-[10px] font-semibold">
+                  Copiar C\xF3digo
+                </button>
               </div>
-              <pre class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><code>${escapeHtml5(codeText)}</code></pre>
+              <div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed">
+                <pre><code>${codeLines.map((l, idx) => `<span class="inline-block w-6 select-none opacity-30 text-right mr-3">${idx + 1}</span>${escapeHtml5(l)}`).join("\n")}</code></pre>
+              </div>
             </div>
           `);
           }
@@ -3272,84 +3337,85 @@
         if (!inTable) {
           inTable = true;
           tableHeaderParsed = false;
-          html.push('<div class="my-4 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs"><table class="w-full text-left text-xs border-collapse">');
+          tableHeaders = [];
+          tableRows = [];
         }
         if (!tableHeaderParsed) {
-          html.push('<thead class="bg-slate-100 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800"><tr>');
-          cells.forEach((c) => html.push(`<th class="px-3.5 py-2.5">${formatInline(c)}</th>`));
-          html.push('</tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 bg-white dark:bg-slate-950/50">');
+          tableHeaders = cells;
         } else {
-          html.push('<tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">');
-          cells.forEach((c) => html.push(`<td class="px-3.5 py-2.5 text-slate-700 dark:text-slate-300 leading-relaxed">${formatInline(c)}</td>`));
-          html.push("</tr>");
+          tableRows.push(cells);
         }
         continue;
       } else if (inTable) {
-        html.push("</tbody></table></div>");
+        html.push(renderInteractiveTableHtml(tableHeaders, tableRows));
         inTable = false;
         tableHeaderParsed = false;
+        tableHeaders = [];
+        tableRows = [];
       }
       if (line.startsWith("# ")) {
-        html.push(`<h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-8 mb-4 tracking-tight border-b border-slate-200 dark:border-slate-800 pb-2">${formatInline(line.slice(2))}</h1>`);
+        const text = line.slice(2);
+        const slug = slugify(text);
+        html.push(`<h1 id="${slug}" class="scroll-mt-24 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-10 mb-4 tracking-tight border-b border-slate-200 dark:border-slate-800/80 pb-3 flex items-center justify-between group">
+        <span>${formatInline(text)}</span>
+        <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-base transition-opacity">#</a>
+      </h1>`);
         continue;
       }
       if (line.startsWith("## ")) {
-        html.push(`<h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-6 mb-3 tracking-tight">${formatInline(line.slice(3))}</h2>`);
+        const text = line.slice(3);
+        const slug = slugify(text);
+        html.push(`<h2 id="${slug}" class="scroll-mt-24 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-100 dark:border-slate-800/40 pb-2 flex items-center justify-between group">
+        <span>${formatInline(text)}</span>
+        <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-sm transition-opacity">#</a>
+      </h2>`);
         continue;
       }
       if (line.startsWith("### ")) {
-        html.push(`<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 mt-5 mb-2">${formatInline(line.slice(4))}</h3>`);
+        const text = line.slice(4);
+        const slug = slugify(text);
+        html.push(`<h3 id="${slug}" class="scroll-mt-24 text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 mt-6 mb-2 flex items-center justify-between group">
+        <span>${formatInline(text)}</span>
+        <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-xs transition-opacity">#</a>
+      </h3>`);
         continue;
       }
       if (line.startsWith("#### ")) {
-        html.push(`<h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mt-4 mb-1.5">${formatInline(line.slice(5))}</h4>`);
+        const text = line.slice(5);
+        const slug = slugify(text);
+        html.push(`<h4 id="${slug}" class="scroll-mt-24 text-sm font-bold text-slate-800 dark:text-slate-200 mt-5 mb-1.5">${formatInline(text)}</h4>`);
         continue;
       }
       if (/^(\*\*\*|---|___)$/.test(line.trim())) {
-        html.push('<hr class="my-6 border-slate-200 dark:border-slate-800" />');
+        html.push('<hr class="my-8 border-slate-200 dark:border-slate-800/80" />');
         continue;
       }
-      if (line.startsWith("> [!NOTE]")) {
-        const rest = line.replace("> [!NOTE]", "").trim();
+      if (line.startsWith("> [!NOTE]") || line.startsWith("> [!TIP]") || line.startsWith("> [!WARNING]") || line.startsWith("> [!IMPORTANT]") || line.startsWith("> [!CAUTION]") || line.startsWith("> [!DANGER]")) {
+        const alertType = line.match(/> \[!([A-Z]+)\]/)[1];
+        const alertConfig = getAlertTheme(alertType);
+        const rest = line.replace(/> \[![A-Z]+\]\s*/, "").trim();
         html.push(`
-        <div class="my-3 p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-950 dark:text-indigo-200 flex items-start gap-2.5">
-          <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u2139\uFE0F</span>
-          <div class="leading-relaxed flex-1">${formatInline(rest)}</div>
-        </div>
-      `);
-        continue;
-      }
-      if (line.startsWith("> [!TIP]")) {
-        const rest = line.replace("> [!TIP]", "").trim();
-        html.push(`
-        <div class="my-3 p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-2.5">
-          <span class="text-emerald-500 font-bold shrink-0 mt-0.5">\u{1F4A1}</span>
-          <div class="leading-relaxed flex-1">${formatInline(rest)}</div>
-        </div>
-      `);
-        continue;
-      }
-      if (line.startsWith("> [!WARNING]")) {
-        const rest = line.replace("> [!WARNING]", "").trim();
-        html.push(`
-        <div class="my-3 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 flex items-start gap-2.5">
-          <span class="text-amber-500 font-bold shrink-0 mt-0.5">\u26A0\uFE0F</span>
-          <div class="leading-relaxed flex-1">${formatInline(rest)}</div>
+        <div class="my-4 p-4 rounded-2xl ${alertConfig.bg} border ${alertConfig.border} ${alertConfig.text} text-xs sm:text-sm flex items-start gap-3 shadow-xs">
+          <span class="text-base shrink-0 mt-0.5">${alertConfig.icon}</span>
+          <div class="leading-relaxed flex-1">
+            <strong class="font-bold block mb-0.5">${alertConfig.title}</strong>
+            ${formatInline(rest)}
+          </div>
         </div>
       `);
         continue;
       }
       if (line.startsWith("> ")) {
-        html.push(`<blockquote class="my-3 pl-4 border-l-2 border-indigo-500 text-slate-600 dark:text-slate-400 italic text-xs leading-relaxed">${formatInline(line.slice(2))}</blockquote>`);
+        html.push(`<blockquote class="my-4 pl-4 border-l-4 border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 py-1.5 pr-3 rounded-r-xl text-slate-600 dark:text-slate-400 italic text-xs sm:text-sm leading-relaxed">${formatInline(line.slice(2))}</blockquote>`);
         continue;
       }
       if (/^[\*\-]\s/.test(line)) {
         if (!inList) {
-          html.push('<ul class="my-3 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">');
+          html.push('<ul class="my-3 space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300">');
           inList = true;
         }
         const itemText = line.replace(/^[\*\-]\s/, "");
-        html.push(`<li class="flex items-start gap-2"><span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u25AA</span><span>${formatInline(itemText)}</span></li>`);
+        html.push(`<li class="flex items-start gap-2.5"><span class="text-indigo-500 font-bold shrink-0 mt-1">\u25AA</span><span>${formatInline(itemText)}</span></li>`);
         continue;
       } else if (inList) {
         html.push("</ul>");
@@ -3358,14 +3424,66 @@
       if (!line.trim()) {
         continue;
       }
-      html.push(`<p class="my-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${formatInline(line)}</p>`);
+      html.push(`<p class="my-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-[1.75em]">${formatInline(line)}</p>`);
     }
-    if (inTable) html.push("</tbody></table></div>");
+    if (inTable) {
+      html.push(renderInteractiveTableHtml(tableHeaders, tableRows));
+    }
     if (inList) html.push("</ul>");
     return html.join("");
   }
+  function renderInteractiveTableHtml(headers, rows) {
+    const tableId = "tbl_" + Math.random().toString(36).substring(2, 9);
+    const showFilter = rows.length > 5;
+    return `
+    <div class="my-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-xs overflow-hidden" id="${tableId}-container">
+      ${showFilter ? `
+        <div class="px-4 py-2 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+          <span class="font-mono text-[11px] text-slate-500">Filas: ${rows.length}</span>
+          <input type="text" 
+                 placeholder="Filtrar tabla..." 
+                 oninput="filterTableRows('${tableId}', this.value)"
+                 class="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+        </div>
+      ` : ""}
+      <div class="overflow-x-auto max-h-[500px]">
+        <table class="w-full text-left text-xs border-collapse" id="${tableId}">
+          <thead class="sticky top-0 z-10 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-xs text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              ${headers.map((h) => `<th class="px-4 py-3 whitespace-nowrap">${formatInline(h)}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900/50">
+            ${rows.map((r) => `
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                ${r.map((c) => `<td class="px-4 py-3 text-slate-700 dark:text-slate-300 leading-relaxed">${formatInline(c)}</td>`).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  }
+  function getAlertTheme(type) {
+    switch (type) {
+      case "NOTE":
+        return { icon: "\u2139\uFE0F", title: "Nota Informativa", bg: "bg-indigo-50/80 dark:bg-indigo-950/30", border: "border-indigo-200 dark:border-indigo-800/60", text: "text-indigo-950 dark:text-indigo-200" };
+      case "TIP":
+        return { icon: "\u{1F4A1}", title: "Recomendaci\xF3n / Tip", bg: "bg-emerald-50/80 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800/60", text: "text-emerald-950 dark:text-emerald-200" };
+      case "WARNING":
+        return { icon: "\u26A0\uFE0F", title: "Advertencia", bg: "bg-amber-50/80 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800/60", text: "text-amber-950 dark:text-amber-200" };
+      case "IMPORTANT":
+        return { icon: "\u26A1", title: "Requerimiento Importante", bg: "bg-purple-50/80 dark:bg-purple-950/30", border: "border-purple-200 dark:border-purple-800/60", text: "text-purple-950 dark:text-purple-200" };
+      case "CAUTION":
+      case "DANGER":
+        return { icon: "\u{1F6D1}", title: "Punto Cr\xEDtico / Riesgo", bg: "bg-rose-50/80 dark:bg-rose-950/30", border: "border-rose-200 dark:border-rose-800/60", text: "text-rose-950 dark:text-rose-200" };
+      default:
+        return { icon: "\u2139\uFE0F", title: "Nota", bg: "bg-slate-50 dark:bg-slate-900", border: "border-slate-200 dark:border-slate-800", text: "text-slate-800 dark:text-slate-200" };
+    }
+  }
   function formatInline(text = "") {
-    return text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-indigo-600 dark:text-indigo-400 text-[11px] border border-slate-200 dark:border-slate-700">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>').replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 underline underline-offset-2 hover:text-indigo-500 font-medium">$1</a>');
+    return text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-indigo-600 dark:text-indigo-400 text-[11px] border border-slate-200 dark:border-slate-700 font-semibold">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>').replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 underline underline-offset-2 hover:text-indigo-500 font-semibold">$1</a>');
   }
   function escapeHtml5(text) {
     if (!text) return "";
@@ -3375,328 +3493,697 @@
     if (!text) return "";
     return String(text).replace(/"/g, "&quot;");
   }
+  function parseMarkdownToBlocks(md = "") {
+    const lines = md.split(/\r?\n/);
+    const blocks = [];
+    let currentBlock = null;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        if (currentBlock && currentBlock.type === "code") {
+          blocks.push(currentBlock);
+          currentBlock = null;
+          continue;
+        }
+        if (currentBlock) {
+          blocks.push(currentBlock);
+        }
+        currentBlock = {
+          id: "blk_" + Math.random().toString(36).substring(2, 9),
+          type: "code",
+          lang: trimmed.replace(/^```/, "").trim() || "text",
+          content: []
+        };
+        continue;
+      }
+      if (currentBlock && currentBlock.type === "code") {
+        currentBlock.content.push(line);
+        continue;
+      }
+      if (trimmed.startsWith("# ") || trimmed.startsWith("## ") || trimmed.startsWith("### ")) {
+        if (currentBlock) blocks.push(currentBlock);
+        let level = 1;
+        let text = trimmed.replace(/^#\s+/, "");
+        if (trimmed.startsWith("### ")) {
+          level = 3;
+          text = trimmed.replace(/^###\s+/, "");
+        } else if (trimmed.startsWith("## ")) {
+          level = 2;
+          text = trimmed.replace(/^##\s+/, "");
+        }
+        blocks.push({
+          id: "blk_" + Math.random().toString(36).substring(2, 9),
+          type: "header",
+          level,
+          text
+        });
+        currentBlock = null;
+        continue;
+      }
+      if (trimmed.startsWith("> [!")) {
+        if (currentBlock) blocks.push(currentBlock);
+        const match = trimmed.match(/> \[!([A-Z]+)\]\s*(.*)/);
+        blocks.push({
+          id: "blk_" + Math.random().toString(36).substring(2, 9),
+          type: "callout",
+          kind: match ? match[1] : "NOTE",
+          text: match ? match[2] : ""
+        });
+        currentBlock = null;
+        continue;
+      }
+      if (trimmed.startsWith("### BR-") || (trimmed.startsWith("- **BR-") || trimmed.startsWith("**BR-"))) {
+        if (currentBlock) blocks.push(currentBlock);
+        const brIdMatch = trimmed.match(/BR-[A-Z]+-[0-9]+/);
+        const brId = brIdMatch ? brIdMatch[0] : "BR-GEN-001";
+        blocks.push({
+          id: "blk_" + Math.random().toString(36).substring(2, 9),
+          type: "business_rule",
+          ruleId: brId,
+          text: trimmed
+        });
+        currentBlock = null;
+        continue;
+      }
+      if (/^(\*\*\*|---|___)$/.test(trimmed)) {
+        if (currentBlock) blocks.push(currentBlock);
+        blocks.push({
+          id: "blk_" + Math.random().toString(36).substring(2, 9),
+          type: "divider"
+        });
+        currentBlock = null;
+        continue;
+      }
+      if (trimmed) {
+        if (!currentBlock || currentBlock.type !== "paragraph") {
+          if (currentBlock) blocks.push(currentBlock);
+          currentBlock = {
+            id: "blk_" + Math.random().toString(36).substring(2, 9),
+            type: "paragraph",
+            lines: [line]
+          };
+        } else {
+          currentBlock.lines.push(line);
+        }
+      } else {
+        if (currentBlock) {
+          blocks.push(currentBlock);
+          currentBlock = null;
+        }
+      }
+    }
+    if (currentBlock) blocks.push(currentBlock);
+    return blocks;
+  }
+  function blocksToMarkdown(blocks = []) {
+    const parts = [];
+    for (const b of blocks) {
+      switch (b.type) {
+        case "header": {
+          const prefix = "#".repeat(b.level || 1);
+          parts.push(`${prefix} ${b.text || ""}`);
+          break;
+        }
+        case "callout": {
+          parts.push(`> [!${b.kind || "NOTE"}]
+> ${b.text || ""}`);
+          break;
+        }
+        case "code": {
+          const codeText = Array.isArray(b.content) ? b.content.join("\n") : b.content || "";
+          parts.push(`\`\`\`${b.lang || "text"}
+${codeText}
+\`\`\``);
+          break;
+        }
+        case "business_rule": {
+          parts.push(b.text || `### ${b.ruleId}
+${b.description || ""}`);
+          break;
+        }
+        case "divider": {
+          parts.push("---");
+          break;
+        }
+        case "paragraph": {
+          const text = Array.isArray(b.lines) ? b.lines.join("\n") : b.text || "";
+          parts.push(text);
+          break;
+        }
+        default:
+          if (b.raw) parts.push(b.raw);
+          break;
+      }
+    }
+    return parts.join("\n\n");
+  }
+  if (typeof window !== "undefined") {
+    window.filterTableRows = function(tableId, query) {
+      const table = document.getElementById(tableId);
+      if (!table) return;
+      const q = (query || "").toLowerCase().trim();
+      const rows = table.querySelectorAll("tbody tr");
+      rows.forEach((r) => {
+        const text = r.textContent.toLowerCase();
+        if (!q || text.includes(q)) {
+          r.style.display = "";
+        } else {
+          r.style.display = "none";
+        }
+      });
+    };
+  }
 
   // project-docs/src/features/knowledge-base/KnowledgeBase.js
   function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
-    const kData = knowledgeIndex || getFallbackKnowledge2();
+    const kData = knowledgeIndex || getFallbackKnowledge();
     const rules = kData.business_rules || [];
     const services = kData.external_services || [];
     const standards = kData.coding_standards || {};
     const guardrails = standards.guardrails || [];
     const naming = standards.naming_conventions || {};
     const docs = kData.docs || getDefaultDocs();
+    const docMetadata = kData.docMetadata || buildDocMetadataFallback(docs);
+    const shelvesData = kData.shelves || buildShelvesFallback(docMetadata);
     const docKeys = Object.keys(docs);
-    const activeDocKey = docKeys.includes("coding-standards.md") ? "coding-standards.md" : docKeys[0] || "c4-model.md";
+    const activeDocKey = docKeys.includes("c4-model.md") ? "c4-model.md" : docKeys.includes("coding-standards.md") ? "coding-standards.md" : docKeys[0] || "";
     const activeDocContent = docs[activeDocKey] || "# Documento no disponible";
-    const generalDocs = [];
-    const moduleDocsMap = {};
-    docKeys.forEach((key) => {
-      if (key.startsWith("modules/")) {
-        const parts = key.split("/");
-        const modName = parts[1] || "general";
-        const fileName = parts.slice(2).join("/") || parts[1];
-        if (!moduleDocsMap[modName]) moduleDocsMap[modName] = [];
-        moduleDocsMap[modName].push({ key, fileName, modName });
-      } else {
-        generalDocs.push({ key, fileName: key });
-      }
-    });
-    const availableModules = Object.keys(moduleDocsMap);
+    const activeDocMeta = docMetadata[activeDocKey] || {
+      title: activeDocKey,
+      shelf: "general",
+      readingTime: 3,
+      wordCount: 450,
+      ruleCount: 0,
+      reqCount: 0,
+      adrCount: 0
+    };
+    const moduleNames = Array.from(/* @__PURE__ */ new Set([
+      ...projectSpec?.modules?.map((m) => m.name) || [],
+      ...Object.values(docMetadata).filter((d) => d.moduleName).map((d) => d.moduleName),
+      ...rules.map((r) => r.module)
+    ])).filter(Boolean);
+    const heroDocKey = docKeys.includes("c4-model.md") ? "c4-model.md" : docKeys.includes("coding-standards.md") ? "coding-standards.md" : docKeys[0] || "";
+    const heroDocMeta = docMetadata[heroDocKey] || activeDocMeta;
+    const activeDocToc = extractTableOfContents(activeDocContent);
+    const dynamicAiPrompt = buildAiSystemPrompt({ projectSpec, kData, rules, services, guardrails, naming });
     return `
-    <div class="space-y-10">
+    <div class="space-y-10" id="kb-container">
       
-      <!-- 1. HEADER HERO: ContextForge Sovereign Knowledge Base -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                Docs-as-Code
-              </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-                Sovereign Engineering Knowledge
-              </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                Anti-Bias Context
-              </span>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-              <span>\u{1F4DA}</span> Base de Conocimiento de Ingenier\xEDa (ContextForge)
-            </h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-              Repositorio soberano de arquitectura, requerimientos, reglas de negocio y documentaci\xF3n viva en Markdown.
-              Permite auditar, crear y editar documentos t\xE9cnicos para transferir contexto libre de sesgos a desarrolladores e inteligencias artificiales.
-            </p>
-          </div>
-
-          <!-- Barra de Acciones Principales -->
-          <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Nuevo Documento -->
-            <button type="button" 
-                    data-action="open-new-doc-modal"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
-              <span>\u2795</span> Nuevo Doc
-            </button>
-
-            <!-- Importar Archivo -->
-            <button type="button" 
-                    data-action="trigger-import-doc"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                    title="Importar archivo .md o .json local">
-              <span>\u{1F4E5}</span> Importar
-            </button>
-            <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
-
-            <!-- Exportar Todo -->
-            <button type="button" 
-                    data-action="export-all-knowledge"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                    title="Descargar paquete JSON con toda la Base de Conocimiento">
-              <span>\u{1F4E4}</span> Exportar
-            </button>
-
-            <!-- Prompt Bundler para LLM -->
-            <button type="button" 
-                    data-action="open-ai-context-modal" 
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
-              <span>\u{1F916}</span> Contexto IA
-            </button>
-          </div>
-        </div>
-
-        <!-- M\xE9tricas R\xE1pidas -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Documentos Vivos</div>
-            <div id="kb-stats-doc-count" class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${docKeys.length} indexados</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Docs-as-Code (.md)</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Bounded Contexts</div>
-            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${availableModules.length} m\xF3dulos</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">DDD estrat\xE9gicos</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
-            <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-0.5">${rules.length} catalogadas</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Identificadores BR-*</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
-            <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} integraciones</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Stripe, PG, Redis...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 2. EXPLORADOR & LECTOR EDITORIAL DOCS-AS-CODE (Estilo ContextForge) -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- ============================================================== -->
+      <!-- VISTA 1: BIBLIOTECA EDITORIAL (HUB POR ESTANTES)               -->
+      <!-- ============================================================== -->
+      <div id="kb-view-library" class="space-y-8">
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          <!-- 2.1 SIDEBAR DE NAVEGACI\xD3N Y B\xDASQUEDA (4 de 12 columnas) -->
-          <div class="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 space-y-4">
+        <!-- 1.1 Header Hero de la Biblioteca -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+          <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  Docs-as-Code
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                  Biblioteca Editorial
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Anti-Bias Context
+                </span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+                <span>\u{1F4DA}</span> Base de Conocimiento de Ingenier\xEDa Soberana
+              </h2>
+              <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                Repositorio can\xF3nico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), reglas de negocio (BR-*), 
+                decisiones t\xE9cnicas (ADR) y bounded contexts. Permite auditar, crear y editar documentos con editor dual para guiar a desarrolladores y agentes de IA.
+              </p>
+            </div>
+
+            <!-- Botones de Acci\xF3n Globales -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button type="button" 
+                      data-action="open-new-doc-modal"
+                      class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
+                <span>\u2795</span> Nuevo Doc
+              </button>
+
+              <button type="button" 
+                      data-action="trigger-import-doc"
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                      title="Importar archivo .md o .json local">
+                <span>\u{1F4E5}</span> Importar
+              </button>
+              <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
+
+              <button type="button" 
+                      data-action="export-all-knowledge"
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                      title="Descargar paquete JSON con toda la Base de Conocimiento">
+                <span>\u{1F4E4}</span> Exportar
+              </button>
+
+              <button type="button" 
+                      data-action="open-ai-context-modal" 
+                      class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+                <span>\u{1F916}</span> Contexto IA
+              </button>
+            </div>
+          </div>
+
+          <!-- M\xE9tricas Din\xE1micas Reales -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Documentos Vivos</div>
+              <div class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${docKeys.length} indexados</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Docs-as-Code (.md)</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Bounded Contexts</div>
+              <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${moduleNames.length} m\xF3dulos</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Estrat\xE9gicos DDD</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
+              <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-0.5">${rules.length} catalogadas</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Invariantes BR-*</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
+              <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} contratos</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Integraciones auditadas</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 1.2 Hero Featured Card (Art\xEDculo Destacado de la Biblioteca) -->
+        ${heroDocKey ? `
+          <section class="rounded-3xl border border-indigo-200/60 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden shadow-sm">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div class="space-y-3 max-w-3xl">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
+                    \u2B50 Documento Destacado
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    \u23F1\uFE0F ${heroDocMeta.readingTime} min de lectura
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    \u{1F4DD} ${heroDocMeta.wordCount} palabras
+                  </span>
+                  ${heroDocMeta.ruleCount ? `
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      \u2696\uFE0F ${heroDocMeta.ruleCount} Reglas BR
+                    </span>
+                  ` : ""}
+                </div>
+
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  ${escapeHtml6(heroDocMeta.title || heroDocKey)}
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  ${escapeHtml6(heroDocMeta.summary || "Especificaci\xF3n formal del sistema con diagramas de contexto, contenedores y componentes.")}
+                </p>
+                <div class="font-mono text-[11px] text-slate-400">
+                  Ruta can\xF3nica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
+                </div>
+              </div>
+
+              <div class="flex sm:flex-col items-stretch gap-2.5 shrink-0 w-full sm:w-auto">
+                <button type="button" 
+                        data-action="open-article-read"
+                        data-doc-key="${escapeAttr4(heroDocKey)}"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
+                  <span>\u{1F4D6}</span> Leer Art\xEDculo Completo
+                </button>
+                <button type="button" 
+                        data-action="open-article-edit"
+                        data-doc-key="${escapeAttr4(heroDocKey)}"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                  <span>\u270F\uFE0F</span> Editar en Vivo
+                </button>
+              </div>
+            </div>
+          </section>
+        ` : ""}
+
+        <!-- 1.3 Barra de Filtros por Estante Tem\xE1tico y Buscador con Debouncing -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-5 shadow-sm space-y-4">
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             
+            <!-- P\xEDldoras de Filtro por Estante -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono" id="kb-shelf-filter-pills">
+              <button type="button" 
+                      data-shelf-filter="" 
+                      class="kb-shelf-pill active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0 shadow-xs">
+                Todos (${docKeys.length})
+              </button>
+              ${Object.values(shelvesData).map((sh) => `
+                <button type="button" 
+                        data-shelf-filter="${sh.id}" 
+                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium">
+                  <span>${sh.icon}</span> ${sh.title.split(" ")[0]} (${sh.docs.length})
+                </button>
+              `).join("")}
+            </div>
+
             <!-- Buscador con Debouncing -->
-            <div class="relative">
+            <div class="relative min-w-[280px]">
               <input type="text" 
-                     id="kb-doc-search-input" 
-                     placeholder="Buscar documento o m\xF3dulo..." 
-                     class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
+                     id="kb-library-search-input" 
+                     placeholder="Buscar en la biblioteca (t\xEDtulo, m\xF3dulo, BR-*)..." 
+                     class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
               <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none text-xs">
                 ${Icons.search("w-3.5 h-3.5")}
               </span>
             </div>
 
-            <!-- Filtro r\xE1pido por M\xF3dulo (Pills) -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-mono" id="kb-module-pill-filters">
+          </div>
+        </section>
+
+        <!-- 1.4 Estantes Tem\xE1ticos (Shelves Grid) -->
+        <div class="space-y-10" id="kb-shelves-container">
+          ${Object.values(shelvesData).map((sh) => {
+      if (!sh.docs || sh.docs.length === 0) return "";
+      return `
+              <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-xl">${sh.icon}</span>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                      ${escapeHtml6(sh.title)}
+                    </h3>
+                  </div>
+                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    ${sh.docs.length} documentos
+                  </span>
+                </div>
+
+                <!-- Cuadr\xEDcula de Tarjetas de Documentos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  ${sh.docs.map((key) => {
+        const meta = docMetadata[key] || {
+          title: key,
+          summary: "Documento t\xE9cnico.",
+          readingTime: 2,
+          ruleCount: 0,
+          reqCount: 0,
+          adrCount: 0
+        };
+        return `
+                      <div class="kb-shelf-doc-card rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex flex-col justify-between group"
+                           data-doc-key="${escapeAttr4(key)}"
+                           data-doc-shelf="${escapeAttr4(sh.id)}"
+                           data-doc-title="${escapeAttr4(meta.title)}"
+                           data-doc-module="${escapeAttr4(meta.moduleName || "")}">
+                        
+                        <div class="space-y-3">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? "bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"} truncate">
+                              ${meta.moduleName ? `\u{1F4E6} ${meta.moduleName}` : `\u{1F3DB}\uFE0F ${sh.title.split(" ")[0]}`}
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-400 shrink-0">
+                              \u23F1\uFE0F ${meta.readingTime} min
+                            </span>
+                          </div>
+
+                          <div>
+                            <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                              ${escapeHtml6(meta.title)}
+                            </h4>
+                            <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
+                              ${escapeHtml6(key)}
+                            </div>
+                          </div>
+
+                          <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                            ${escapeHtml6(meta.summary)}
+                          </p>
+                        </div>
+
+                        <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                          <div class="flex items-center gap-1.5">
+                            ${meta.ruleCount ? `
+                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
+                                \u2696\uFE0F ${meta.ruleCount} BR
+                              </span>
+                            ` : ""}
+                            ${meta.reqCount ? `
+                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
+                                \u{1F4CB} ${meta.reqCount} RF
+                              </span>
+                            ` : ""}
+                            ${meta.adrCount ? `
+                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
+                                \u{1F3DB}\uFE0F ${meta.adrCount} ADR
+                              </span>
+                            ` : ""}
+                          </div>
+
+                          <div class="flex items-center gap-1.5">
+                            <button type="button" 
+                                    data-action="open-article-read"
+                                    data-doc-key="${escapeAttr4(key)}"
+                                    class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
+                              <span>\u{1F4D6}</span> Leer
+                            </button>
+                            <button type="button" 
+                                    data-action="open-article-edit"
+                                    data-doc-key="${escapeAttr4(key)}"
+                                    class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                    title="Editar directamente este documento">
+                              <span>\u270F\uFE0F</span>
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    `;
+      }).join("")}
+                </div>
+              </section>
+            `;
+    }).join("")}
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- VISTA 2: LECTOR & EDITOR EDITORIAL (ARTICLE MODE)              -->
+      <!-- ============================================================== -->
+      <div id="kb-view-article" class="hidden space-y-6">
+        
+        <!-- 2.1 Breadcrumb de Navegaci\xF3n & Barra de Herramientas Flotante -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 shadow-sm sticky top-20 z-20 transition-all">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Breadcrumbs -->
+            <div class="flex items-center gap-2 text-xs font-mono">
               <button type="button" 
-                      data-kb-filter-module="" 
-                      class="kb-mod-pill active px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0">
-                Todos
+                      data-action="back-to-library"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold transition-all cursor-pointer">
+                <span>\u2190</span> Biblioteca
               </button>
-              ${availableModules.map((m) => `
-                <button type="button" 
-                        data-kb-filter-module="${m}" 
-                        class="kb-mod-pill px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0">
-                  ${m}
-                </button>
-              `).join("")}
+              <span class="text-slate-300 dark:text-slate-700">/</span>
+              <span id="article-shelf-badge" class="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                ${activeDocMeta.shelf || "Can\xF3nico"}
+              </span>
+              <span class="text-slate-300 dark:text-slate-700">/</span>
+              <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 truncate max-w-xs sm:max-w-md">
+                ${activeDocKey}
+              </span>
             </div>
 
-            <!-- Lista Jer\xE1rquica de Documentos -->
-            <div class="space-y-4 max-h-[560px] overflow-y-auto pr-1" id="kb-docs-list-tree">
-              
-              <!-- Documentos Can\xF3nicos Generales -->
-              <div class="space-y-1 kb-doc-group" data-group-type="general">
-                <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 py-1 flex items-center justify-between">
-                  <span>\u{1F3DB}\uFE0F Can\xF3nicos Generales</span>
-                  <span class="text-[9px] opacity-70">${generalDocs.length}</span>
-                </div>
-                <div class="space-y-0.5">
-                  ${generalDocs.map((doc) => `
-                    <button type="button" 
-                            data-doc-key="${escapeAttr4(doc.key)}"
-                            data-doc-name="${escapeAttr4(doc.fileName)}"
-                            class="doc-nav-item w-full text-left px-3 py-2 rounded-xl flex items-center justify-between font-mono text-xs transition-all cursor-pointer ${doc.key === activeDocKey ? "active bg-indigo-600 text-white font-bold shadow-xs" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60"}">
-                      <span class="flex items-center gap-2 truncate">
-                        <span class="text-xs opacity-75">\u{1F4C4}</span>
-                        <span class="truncate">${doc.fileName}</span>
-                      </span>
-                    </button>
-                  `).join("")}
-                </div>
+            <!-- Acciones del Documento -->
+            <div class="flex items-center gap-2">
+              <span id="article-reading-time-badge" class="hidden sm:inline-flex px-2 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
+                \u23F1\uFE0F ${activeDocMeta.readingTime} min
+              </span>
+
+              <!-- Bot\xF3n Conmutar Modo Edici\xF3n / Lectura -->
+              <button type="button" 
+                      id="btn-toggle-doc-editor" 
+                      class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                      title="Alternar entre Lector Editorial y Editor Dual">
+                <span id="btn-toggle-doc-icon">\u270F\uFE0F</span>
+                <span id="btn-toggle-doc-text">Modo Editor</span>
+              </button>
+
+              <!-- Bot\xF3n Copiar Markdown -->
+              <button type="button" 
+                      id="copy-active-doc-btn" 
+                      class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      title="Copiar contenido Markdown completo">
+                <span class="text-xs">\u{1F4CB}</span>
+              </button>
+
+              <!-- Bot\xF3n Descargar Archivo .md -->
+              <button type="button" 
+                      data-action="download-active-doc" 
+                      class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      title="Descargar este archivo .md a tu equipo">
+                <span class="text-xs">\u{1F4BE}</span>
+              </button>
+
+              <!-- Bot\xF3n Eliminar Documento -->
+              <button type="button" 
+                      data-action="delete-active-doc" 
+                      class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                      title="Eliminar este documento de la Base de Conocimiento">
+                <span class="text-xs">\u{1F5D1}\uFE0F</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada 780px + TOC flotante) -->
+        <div id="doc-reader-view-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Contenido Principal del Art\xEDculo (Columna de Lectura) -->
+          <div class="lg:col-span-9 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px]">
+            <article id="doc-active-body" class="prose dark:prose-invert max-w-3xl mx-auto text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
+              ${renderMarkdown(activeDocContent)}
+            </article>
+          </div>
+
+          <!-- Barra Lateral Flotante: Tabla de Contenidos (TOC) On-This-Page -->
+          <div class="hidden lg:block lg:col-span-3 sticky top-36 space-y-4">
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
+              <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
+                <span>\u{1F4D1}</span> En esta p\xE1gina
+              </div>
+              <div id="doc-active-toc" class="max-h-[460px] overflow-y-auto pr-1">
+                ${renderTableOfContentsHtml(activeDocToc)}
+              </div>
+            </div>
+
+            <!-- Meta Box -->
+            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-[11px] font-mono text-slate-500 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span>Palabras:</span>
+                <strong id="article-meta-words" class="text-slate-800 dark:text-slate-200">${activeDocMeta.wordCount || 0}</strong>
+              </div>
+              <div class="flex items-center justify-between">
+                <span>Invariantes BR:</span>
+                <strong id="article-meta-br" class="text-amber-600 dark:text-amber-400">${activeDocMeta.ruleCount || 0}</strong>
+              </div>
+              <div class="flex items-center justify-between">
+                <span>Requerimientos RF:</span>
+                <strong id="article-meta-rf" class="text-emerald-600 dark:text-emerald-400">${activeDocMeta.reqCount || 0}</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2.3 MODO EDITOR DUAL (Markdown vs Bloques Visuales con Scroll Sincronizado) -->
+        <div id="doc-editor-view-container" class="hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-6 sm:p-8 shadow-sm space-y-6">
+          
+          <!-- Barra de Control del Editor Dual -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
+                <button type="button" 
+                        id="btn-editor-mode-md" 
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
+                  \u{1F4DD} Modo Markdown
+                </button>
+                <button type="button" 
+                        id="btn-editor-mode-blocks" 
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
+                  \u{1F9F1} Modo Bloques Visuales
+                </button>
               </div>
 
-              <!-- M\xF3dulos / Bounded Contexts -->
-              <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800" id="kb-modules-container">
-                <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center justify-between">
-                  <span>\u{1F4E6} Bounded Contexts</span>
-                  <span class="text-[9px] opacity-70">${availableModules.length}</span>
-                </div>
+              <span id="editor-sync-indicator" class="text-xs text-slate-500 font-mono hidden sm:inline">
+                Sincronizaci\xF3n activa (Docs-as-Code)
+              </span>
+            </div>
 
-                ${availableModules.map((modName) => `
-                  <div class="space-y-1 kb-module-item" data-module-name="${modName}">
-                    <div class="flex items-center justify-between px-2 py-0.5 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                      <span class="flex items-center gap-1.5">
-                        <span>\u{1F4C1}</span>
-                        <span>${modName}</span>
-                      </span>
-                      <span class="text-[9px] font-normal text-slate-400">${moduleDocsMap[modName].length} docs</span>
-                    </div>
-                    <div class="pl-2 space-y-0.5 text-xs font-mono">
-                      ${moduleDocsMap[modName].map((doc) => `
-                        <button type="button" 
-                                data-doc-key="${escapeAttr4(doc.key)}"
-                                data-doc-name="${escapeAttr4(doc.fileName)}"
-                                data-doc-module="${escapeAttr4(modName)}"
-                                class="doc-nav-item w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-all cursor-pointer ${doc.key === activeDocKey ? "active bg-indigo-600 text-white font-bold shadow-xs" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60"}">
-                          <span class="flex items-center gap-1.5 truncate">
-                            <span class="text-[10px] opacity-70">\u{1F4C4}</span>
-                            <span class="truncate text-[11px]">${doc.fileName}</span>
-                          </span>
-                        </button>
-                      `).join("")}
-                    </div>
-                  </div>
-                `).join("")}
+            <!-- Botones Guardar / Cancelar -->
+            <div class="flex items-center gap-2">
+              <button type="button" 
+                      id="btn-cancel-doc-edit" 
+                      class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                Cancelar
+              </button>
+              <button type="button" 
+                      id="btn-save-doc-edit" 
+                      class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
+                <span>\u{1F4BE}</span> Guardar Cambios
+              </button>
+            </div>
+          </div>
+
+          <!-- PANEL 1: MODO MARKDOWN CON SCROLL SINCRONIZADO -->
+          <div id="editor-pane-markdown" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
+                <span>C\xF3digo Fuente Markdown (.md)</span>
+                <span>Atajos: Alertas GitHub, Tablas, Mermaid</span>
               </div>
+              <textarea id="doc-editor-textarea" 
+                        rows="24" 
+                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml6(activeDocContent)}</textarea>
+            </div>
 
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
+                <span>Previsualizaci\xF3n Renderizada en Vivo</span>
+                <span class="text-emerald-500 font-semibold">\u25CF Scroll Sincronizado</span>
+              </div>
+              <div id="doc-editor-live-preview" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 overflow-y-auto h-[560px] prose dark:prose-invert max-w-none text-xs">
+                ${renderMarkdown(activeDocContent)}
+              </div>
             </div>
 
           </div>
 
-          <!-- 2.2 LECTOR & EDITOR EDITORIAL (8 de 12 columnas) -->
-          <div class="lg:col-span-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-8 min-h-[560px] shadow-sm flex flex-col justify-between">
+          <!-- PANEL 2: MODO BLOQUES VISUALES (ESTILO CONTEXTFORGE) -->
+          <div id="editor-pane-blocks" class="hidden space-y-4">
             
-            <div>
-              <!-- Barra Superior del Documento -->
-              <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80">
-                <div class="flex items-center gap-2 text-xs font-mono">
-                  <span class="text-slate-400">Documento:</span>
-                  <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
-                    ${activeDocKey}
-                  </span>
-                </div>
-
-                <!-- Herramientas del Documento Activo -->
-                <div class="flex items-center gap-2">
-                  <!-- Bot\xF3n Conmutar Modo Edici\xF3n / Lectura -->
-                  <button type="button" 
-                          id="btn-toggle-doc-editor" 
-                          class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
-                          title="Editar el contenido de este documento">
-                    <span id="btn-toggle-doc-icon">\u270F\uFE0F</span>
-                    <span id="btn-toggle-doc-text">Editar</span>
-                  </button>
-
-                  <!-- Bot\xF3n Copiar Markdown -->
-                  <button type="button" 
-                          id="copy-active-doc-btn" 
-                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                          title="Copiar contenido Markdown completo">
-                    <span class="text-xs">\u{1F4CB}</span>
-                  </button>
-
-                  <!-- Bot\xF3n Descargar Archivo .md -->
-                  <button type="button" 
-                          data-action="download-active-doc" 
-                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                          title="Descargar este archivo .md a tu equipo">
-                    <span class="text-xs">\u{1F4BE}</span>
-                  </button>
-
-                  <!-- Bot\xF3n Eliminar Documento -->
-                  <button type="button" 
-                          data-action="delete-active-doc" 
-                          class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
-                          title="Eliminar este documento de la Base de Conocimiento">
-                    <span class="text-xs">\u{1F5D1}\uFE0F</span>
-                  </button>
-                </div>
+            <!-- Barra para Agregar Bloques Nuevos -->
+            <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono">
+              <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <span>\u{1F9F1}</span> A\xF1adir Bloque Visual:
+              </span>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" data-add-block="header" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  \u2795 Encabezado
+                </button>
+                <button type="button" data-add-block="paragraph" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  \u2795 P\xE1rrafo
+                </button>
+                <button type="button" data-add-block="business_rule" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
+                  \u2795 Regla BR
+                </button>
+                <button type="button" data-add-block="callout" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
+                  \u2795 Alerta/Callout
+                </button>
+                <button type="button" data-add-block="code" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
+                  \u2795 Diagrama/C\xF3digo
+                </button>
+                <button type="button" data-add-block="divider" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
+                  \u2795 Separador
+                </button>
               </div>
-
-              <!-- MODO 1: LECTOR EDITORIAL (ACTIVO) -->
-              <div id="doc-reader-view-container" class="space-y-4">
-                <div id="doc-active-body" class="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200">
-                  ${renderMarkdown(activeDocContent)}
-                </div>
-              </div>
-
-              <!-- MODO 2: EDITOR MARKDOWN EN VIVO (OCULTO POR DEFECTO) -->
-              <div id="doc-editor-view-container" class="hidden space-y-4">
-                <div class="flex items-center justify-between text-xs text-slate-500 font-mono">
-                  <span>Modo Editor Directo (Markdown)</span>
-                  <span>Soporta tablas, alertas GitHub y diagramas Mermaid</span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Textarea de Edici\xF3n -->
-                  <textarea id="doc-editor-textarea" 
-                            rows="18" 
-                            class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">${escapeHtml6(activeDocContent)}</textarea>
-
-                  <!-- Previsualizaci\xF3n en Vivo -->
-                  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 overflow-y-auto max-h-[460px]">
-                    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
-                      Vista Previa en Vivo
-                    </div>
-                    <div id="doc-editor-live-preview" class="prose dark:prose-invert max-w-none text-xs">
-                      ${renderMarkdown(activeDocContent)}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Botones de Guardar / Cancelar Edici\xF3n -->
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <button type="button" 
-                          id="btn-cancel-doc-edit" 
-                          class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                    Cancelar
-                  </button>
-                  <button type="button" 
-                          id="btn-save-doc-edit" 
-                          class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
-                    <span>\u{1F4BE}</span> Guardar Cambios
-                  </button>
-                </div>
-              </div>
-
             </div>
 
-            <!-- Pie del Lector -->
-            <div class="pt-6 mt-8 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>Soberan\xEDa: Docs-as-Code</span>
-              <span>Guardado local persistente</span>
+            <!-- Lista de Bloques Visuales Editables -->
+            <div id="doc-editor-blocks-container" class="space-y-4 max-h-[580px] overflow-y-auto pr-1">
+              <!-- Renderizado din\xE1micamente con parseMarkdownToBlocks -->
             </div>
 
           </div>
 
         </div>
 
-      </section>
+      </div>
 
-      <!-- 3. CAT\xC1LOGO DE REGLAS DE NEGOCIO (BR-*) -->
+      <!-- ============================================================== -->
+      <!-- 3. CAT\xC1LOGO DIN\xC1MICO DE REGLAS DE NEGOCIO (INVARIANTES BR-*)   -->
+      <!-- ============================================================== -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -3707,58 +4194,68 @@
               Cat\xE1logo de Reglas de Negocio (Invariantes de Dominio)
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Invariantes de cumplimiento estricto para no generar discrepancias contables ni vulnerabilidades
+              Invariantes de estricto cumplimiento para evitar alucinaciones, fallos contables y vulnerabilidades
             </p>
           </div>
 
-          <!-- Selector de Filtro de M\xF3dulo -->
+          <!-- Selector de Filtro de M\xF3dulo Din\xE1mico -->
           <div class="flex items-center gap-2 text-xs">
-            <span class="text-slate-400 font-mono text-[11px]">Filtrar:</span>
+            <span class="text-slate-400 font-mono text-[11px]">Filtrar por M\xF3dulo:</span>
             <select id="kb-rules-module-filter" 
                     class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500">
-              <option value="">Todos los M\xF3dulos</option>
-              <option value="backend">backend</option>
-              <option value="billing">billing</option>
-              <option value="infra">infra</option>
-              <option value="analytics">analytics</option>
-              <option value="notifications">notifications</option>
+              <option value="">Todos los M\xF3dulos (${rules.length})</option>
+              ${moduleNames.map((m) => `
+                <option value="${escapeAttr4(m)}">${m}</option>
+              `).join("")}
             </select>
           </div>
         </div>
 
-        <div class="space-y-3" id="kb-rules-list">
-          ${rules.map((rule) => {
-      const isCritical = rule.severity === "Cr\xEDtica";
+        ${rules.length > 0 ? `
+          <div class="space-y-3" id="kb-rules-list">
+            ${rules.map((rule) => {
+      const isCritical = rule.severity === "Cr\xEDtica" || rule.severity === "Critica" || rule.severity === "Alta";
       const sevBadge = isCritical ? "bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800" : "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
       return `
-              <div data-rule-module="${rule.module}" 
-                   class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-indigo-400 transition-all space-y-1.5">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <div class="flex items-center gap-2">
-                    <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
-                      ${rule.id}
+                <div data-rule-module="${escapeAttr4(rule.module || "general")}" 
+                     class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all space-y-2">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
+                        ${rule.id}
+                      </span>
+                      <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                        [${rule.module || "general"}]
+                      </span>
+                      <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
+                        ${escapeHtml6(rule.title)}
+                      </h4>
+                    </div>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
+                      ${rule.severity || "Normal"}
                     </span>
-                    <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
-                      [${rule.module}]
-                    </span>
-                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
-                      ${rule.title}
-                    </h4>
                   </div>
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
-                    ${rule.severity}
-                  </span>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
+                    ${escapeHtml6(rule.description)}
+                  </p>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
-                  ${rule.description}
-                </p>
-              </div>
-            `;
+              `;
     }).join("")}
-        </div>
+          </div>
+        ` : `
+          <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+            <span class="text-2xl">\u2696\uFE0F</span>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300">No hay reglas de negocio registradas a\xFAn</div>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Ejecuta la skill <code class="font-mono text-indigo-500">/project-knowledge</code> para extraer autom\xE1ticamente las reglas e invariantes de tu proyecto.
+            </p>
+          </div>
+        `}
       </section>
 
-      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
+      <!-- ============================================================== -->
+      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS                   -->
+      <!-- ============================================================== -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -3768,60 +4265,76 @@
             Matriz de Servicios Externos & Protocolos
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Contratos, protocolos, autenticaci\xF3n y pol\xEDticas de contingencia de las dependencias externas
+            Contratos, protocolos de red, esquemas de autenticaci\xF3n y pol\xEDticas de contingencia
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${services.map((svc) => `
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${svc.name}</span>
-                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
-                  ${svc.type}
-                </span>
-              </div>
-              <div class="space-y-1 text-[11px] font-mono">
-                <div class="text-slate-500 dark:text-slate-400">
-                  Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${svc.protocol}</span>
+        ${services.length > 0 ? `
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${services.map((svc) => `
+              <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml6(svc.name)}</span>
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
+                    ${escapeHtml6(svc.type)}
+                  </span>
                 </div>
-                <div class="text-slate-500 dark:text-slate-400">
-                  Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${svc.auth}</span>
+                <div class="space-y-1 text-[11px] font-mono">
+                  <div class="text-slate-500 dark:text-slate-400">
+                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml6(svc.protocol)}</span>
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400">
+                    Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml6(svc.auth)}</span>
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400">
+                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml6(svc.env_var)}</code>
+                  </div>
                 </div>
-                <div class="text-slate-500 dark:text-slate-400">
-                  Variable: <code class="text-indigo-600 dark:text-indigo-400">${svc.env_var}</code>
+                <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
+                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml6(svc.failover)}
                 </div>
               </div>
-              <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
-                <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${svc.failover}
-              </div>
-            </div>
-          `).join("")}
-        </div>
+            `).join("")}
+          </div>
+        ` : `
+          <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+            <span class="text-2xl">\u{1F310}</span>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300">Sin integraciones externas documentadas</div>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Si tu sistema consume APIs externas, bases de datos o brokers de mensajer\xEDa, documenta sus contratos para auditar su contingencia.
+            </p>
+          </div>
+        `}
       </section>
 
-      <!-- 5. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
+      <!-- ============================================================== -->
+      <!-- 5. GUARDRAILS ANTI-SESGO & DIRECTRICES DE C\xD3DIGO               -->
+      <!-- ============================================================== -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
               ${Icons.code}
             </span>
-            Directrices Anti-Sesgo & Forma de Programar
+            Directrices Anti-Sesgo & Convenciones de Ingenier\xEDa
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Reglas de oro para evitar que los agentes de IA inventen dependencias o rompan la arquitectura
+            Reglas de oro para asegurar que agentes de IA y desarrolladores respeten la arquitectura del proyecto
           </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Guardrails Estrictos para IA -->
+          <!-- Guardrails Anti-Alucinaci\xF3n -->
           <div class="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/15 space-y-3">
             <h4 class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span>\u{1F6D1}</span> Guardrails de No-Alucinaci\xF3n (Obligatorios)
+              <span>\u{1F6D1}</span> Guardrails de No-Alucinaci\xF3n (Inviolables)
             </h4>
             <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
-              ${guardrails.map((g) => `
+              ${(guardrails.length > 0 ? guardrails : [
+      "Prohibido instalar paquetes o bibliotecas redundantes no can\xF3nicas.",
+      "Toda regla de negocio BR-* debe implementarse con tests automatizados.",
+      "Inversi\xF3n de dependencias obligatoria en controladores y servicios."
+    ]).map((g) => `
                 <li class="flex items-start gap-2">
                   <span class="text-rose-500 font-bold shrink-0 mt-0.5">\u2715</span>
                   <span>${escapeHtml6(g)}</span>
@@ -3833,7 +4346,7 @@
           <!-- Convenciones de Nomenclatura -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
             <h4 class="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>\u{1F4D0}</span> Convenciones de Nomenclatura del C\xF3digo
+              <span>\u{1F4D0}</span> Convenciones de Nomenclatura & Control de Versiones
             </h4>
             <div class="space-y-2 text-xs font-mono">
               <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -3857,7 +4370,9 @@
         </div>
       </section>
 
-      <!-- MODAL PARA NUEVO DOCUMENTO (\u2795) -->
+      <!-- ============================================================== -->
+      <!-- MODAL: CREAR NUEVO DOCUMENTO (\u2795)                              -->
+      <!-- ============================================================== -->
       <div id="new-doc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -3872,7 +4387,7 @@
           <form id="new-doc-form" class="space-y-3 text-xs">
             <div>
               <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">M\xF3dulo o Categor\xEDa:</label>
-              <input type="text" id="new-doc-module" placeholder="general, infra, backend, billing..." value="general" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
+              <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
             </div>
 
             <div>
@@ -3897,7 +4412,9 @@
         </div>
       </div>
 
-      <!-- MODAL FLOTANTE DE CONTEXTO CAN\xD3NICO PARA IA (PROMPT BUNDLER) -->
+      <!-- ============================================================== -->
+      <!-- MODAL: PROMPT BUNDLER DIN\xC1MICO PARA IA (SYSTEM PROMPT)          -->
+      <!-- ============================================================== -->
       <div id="ai-context-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -3909,27 +4426,10 @@
             </button>
           </div>
           <p class="text-xs text-slate-600 dark:text-slate-400">
-            Copia este bloque de instrucciones para inicializar cualquier conversaci\xF3n con agentes o modelos (ChatGPT, Claude, Codex, Copilot) para que operen con cero sesgo y pleno conocimiento del proyecto:
+            Copia estas instrucciones generadas en vivo desde los metadatos reales del arn\xE9s para inicializar cualquier modelo (Claude, Gemini, ChatGPT, Codex) sin sesgo:
           </p>
           <div class="relative">
-            <textarea id="ai-context-prompt-text" readonly rows="12" class="w-full p-3 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none">
-# Contexto Can\xF3nico del Proyecto \u2014 CloudSaaS Platform
-Arquitectura: Clean Architecture (Hexagonal) + Event-Driven Architecture (EDA)
-Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
-
-## Reglas de Negocio Clave:
-- BR-AUTH-001: Marcas de tiempo de expiraci\xF3n JWT calculadas exclusivamente en Epoch UTC.
-- BR-BILL-001: Cabecera Idempotency-Key obligatoria en checkout (Redis TTL 120s).
-- BR-BILL-002: Verificaci\xF3n criptogr\xE1fica HMAC-SHA256 obligatoria en webhooks de Stripe.
-- BR-BILL-003: Algoritmo Banker's Rounding (IEEE 754) a dos decimales exactos.
-- BR-CART-002: Operaciones at\xF3micas en Redis para reserva de inventario.
-- BR-ORDR-001: Desv\xEDo a orders.dlq tras 3 reintentos con backoff exponencial.
-
-## Est\xE1ndares de C\xF3digo:
-- Ramas Git: {type}/INT-{numero}/{nombre_rama} (m\xE1ximo 80 caracteres).
-- Commits: Conventional Commits (feat, fix, docs, refactor).
-- Estilo: Controladores HTTP pasan por Casos de Uso e interfaces de repositorio. Prohibido inventar librer\xEDas no aprobadas.
-            </textarea>
+            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml6(dynamicAiPrompt)}</textarea>
           </div>
           <div class="flex items-center justify-end gap-3 pt-2">
             <button type="button" 
@@ -3941,7 +4441,9 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         </div>
       </div>
 
-      <!-- MODAL PARA EXPANDIR DIAGRAMAS A PANTALLA COMPLETA -->
+      <!-- ============================================================== -->
+      <!-- MODAL: EXPANDIR DIAGRAMAS A PANTALLA COMPLETA                   -->
+      <!-- ============================================================== -->
       <div id="diagram-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
         <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -3961,6 +4463,50 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
     </div>
   `;
   }
+  function renderTableOfContentsHtml(toc = []) {
+    if (!toc || toc.length === 0) {
+      return `<div class="text-[11px] text-slate-400 italic py-2">Sin encabezados en este documento.</div>`;
+    }
+    return `
+    <nav class="space-y-1 text-xs font-mono">
+      ${toc.map((item) => `
+        <a href="#${item.id}" 
+           class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
+           title="${escapeAttr4(item.text)}">
+          ${escapeHtml6(item.text)}
+        </a>
+      `).join("")}
+    </nav>
+  `;
+  }
+  function buildAiSystemPrompt({ projectSpec, kData, rules = [], services = [], guardrails = [], naming = {} }) {
+    const pName = projectSpec?.project?.name || projectSpec?.name || "Sistema de Ingenier\xEDa Soberana";
+    const archStyle = projectSpec?.architecture?.style || "Clean Architecture (Hexagonal)";
+    const patterns = (projectSpec?.architecture?.patterns || []).join(", ");
+    const stack = projectSpec?.tech_stack ? Object.entries(projectSpec.tech_stack).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v?.name || v}`).join(" | ") : "Agn\xF3stico";
+    const rulesText = rules.slice(0, 10).map((r) => `- ${r.id} (${r.module || "general"}): ${r.title}. ${r.description}`).join("\n");
+    const servicesText = services.map((s) => `- ${s.name} (${s.type}): Protocolo ${s.protocol}, Auth: ${s.auth}, Var: ${s.env_var}`).join("\n");
+    const guardrailsText = guardrails.map((g) => `- \u{1F6D1} ${g}`).join("\n");
+    return `# Contexto Can\xF3nico del Proyecto \u2014 ${pName}
+Arquitectura: ${archStyle} ${patterns ? `(${patterns})` : ""}
+Stack Tecnol\xF3gico: ${stack}
+
+## Reglas de Negocio Clave (Invariantes Obligatorias):
+${rulesText || "- Sin reglas de negocio registradas a\xFAn."}
+
+## Integraciones y Servicios Externos:
+${servicesText || "- Sin servicios externos registrados a\xFAn."}
+
+## Guardrails Anti-Sesgo & Est\xE1ndares:
+${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenci\xF3n de ramas {type}/INT-{id}/{name} (\u226480c)."}
+
+## Convenciones de Nomenclatura:
+- Archivos: ${naming.files || "kebab-case"}
+- Clases / Tipos: ${naming.classes || "PascalCase"}
+- Ramas Git: {type}/INT-{id}/{name} (\u226480c)
+- Commits: Conventional Commits (feat, fix, docs, refactor)
+`;
+  }
   function escapeHtml6(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -3969,7 +4515,7 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
     if (!text) return "";
     return String(text).replace(/"/g, "&quot;");
   }
-  function getFallbackKnowledge2() {
+  function getFallbackKnowledge() {
     if (typeof window !== "undefined" && window.__FALLBACK_DATA__?.knowledgeIndex) {
       return window.__FALLBACK_DATA__.knowledgeIndex;
     }
@@ -3981,10 +4527,44 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
       docs: getDefaultDocs()
     };
   }
+  function buildDocMetadataFallback(docs) {
+    const meta = {};
+    for (const [k, c] of Object.entries(docs)) {
+      const words = c.trim().split(/\s+/).length;
+      meta[k] = {
+        key: k,
+        title: k.replace(/\.md$/, "").replace(/[-_]/g, " "),
+        summary: c.slice(0, 140) + "...",
+        shelf: k.startsWith("modules/") ? "modules" : "architecture",
+        readingTime: Math.max(1, Math.ceil(words / 200)),
+        wordCount: words,
+        ruleCount: (c.match(/BR-[A-Z]+-[0-9]+/g) || []).length,
+        reqCount: (c.match(/RF-[A-Z]+-[0-9]+/g) || []).length,
+        adrCount: (c.match(/ADR-[0-9]+/g) || []).length,
+        moduleName: k.startsWith("modules/") ? k.split("/")[1] : null
+      };
+    }
+    return meta;
+  }
+  function buildShelvesFallback(docMetadata) {
+    const shelves = {
+      architecture: { id: "architecture", title: "Arquitectura & Modelado C4", icon: "\u{1F4D0}", docs: [] },
+      business_rules: { id: "business_rules", title: "Reglas de Negocio & Dominio", icon: "\u2696\uFE0F", docs: [] },
+      requirements: { id: "requirements", title: "Requerimientos & Metodolog\xEDa \xC1gil", icon: "\u{1F4CB}", docs: [] },
+      adrs: { id: "adrs", title: "Decisiones de Arquitectura (ADRs)", icon: "\u{1F3DB}\uFE0F", docs: [] },
+      standards: { id: "standards", title: "Est\xE1ndares, Capacidades & Servicios", icon: "\u{1F6E1}\uFE0F", docs: [] },
+      modules: { id: "modules", title: "M\xF3dulos & Bounded Contexts", icon: "\u{1F4E6}", docs: [] }
+    };
+    for (const [k, m] of Object.entries(docMetadata)) {
+      const s = m.shelf && shelves[m.shelf] ? m.shelf : k.startsWith("modules/") ? "modules" : "architecture";
+      shelves[s].docs.push(k);
+    }
+    return shelves;
+  }
   function getDefaultDocs() {
     return {
-      "coding-standards.md": "# Est\xE1ndares de Codificaci\xF3n & Guardrails Anti-Sesgo\n\n> [!NOTE]\n> Este documento define las directrices obligatorias para desarrolladores y agentes de IA.\n\n## Convenciones\n- **Ramas**: `{type}/INT-{id}/{name}` (\u226480c)\n- **Commits**: `feat(scope): desc` o `fix(scope): desc`\n\n## Guardrails Estrictos\n1. No instalar librer\xEDas redundantes.\n2. Inversi\xF3n de dependencias estricta en controladores.",
-      "modules/billing/module-spec.md": "# M\xF3dulo: billing (Facturaci\xF3n & Pagos)\n\n> [!IMPORTANT]\n> M\xF3dulo cr\xEDtico que gestiona cobros e impuestos.\n\n## Tareas Asignadas\n- `INT-006`: `payment_gateway_integration` (Stripe HMAC e idempotencia).\n- `INT-007`: `fix_cart_tax_rounding` (Banker's rounding a 2 decimales)."
+      "c4-model.md": "# Modelo C4 \u2014 Arquitectura de Sistema y Contenedores\n\n> [!NOTE]\n> Especificaci\xF3n de contexto y contenedores del sistema.\n\n## Componentes\n- API Gateway\n- Microservicios de Dominio\n- Bases de datos transaccionales",
+      "coding-standards.md": "# Est\xE1ndares de Codificaci\xF3n & Guardrails Anti-Sesgo\n\n> [!NOTE]\n> Este documento define las directrices obligatorias para desarrolladores y agentes de IA.\n\n## Convenciones\n- **Ramas**: `{type}/INT-{id}/{name}` (\u226480c)\n- **Commits**: `feat(scope): desc` o `fix(scope): desc`\n\n## Guardrails Estrictos\n1. No instalar librer\xEDas redundantes.\n2. Inversi\xF3n de dependencias estricta en controladores."
     };
   }
 
@@ -3999,8 +4579,17 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
       this.isAppMounted = false;
       this.searchDebounceTimer = null;
       this.kbSearchDebounceTimer = null;
+      this.omniboxDebounceTimer = null;
       this.autoSyncController = null;
       this.lastSyncTime = /* @__PURE__ */ new Date();
+      this.currentActiveDocKey = "c4-model.md";
+      this.editorMode = "markdown";
+      this.currentBlocks = [];
+      this.omniboxResults = [];
+      this.activeOmniboxIndex = -1;
+      this.isScrollingFromEditor = false;
+      this.isScrollingFromPreview = false;
+      this.scrollResetTimer = null;
     }
     async init() {
       router.init((tabId) => {
@@ -4149,9 +4738,18 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
               </div>
             </div>
 
-            <!-- Chips de Agente, Stack y Auto-Sync -->
+            <!-- Chips de Agente, Omnibox, Stack y Auto-Sync -->
             <div class="hidden lg:flex items-center gap-2 text-xs">
               
+              <!-- Omnibox Trigger Button (Ctrl+K) -->
+              <button type="button" 
+                      data-action="open-omnibox"
+                      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-xs"
+                      title="B\xFAsqueda global omnibox (Ctrl+K)">
+                <span>\u{1F50D} Buscar...</span>
+                <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold">Ctrl K</kbd>
+              </button>
+
               <!-- Badge de Auto-Sync Reactivo -->
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl ${isLocalFile ? "bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300" : "bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300"} shadow-xs"
                    title="${isLocalFile ? "Modo local file://. Usa abrir-tablero.bat para auto-sync HTTP." : "Auto-Sync activo: detecta cambios en feature_list.json y progres/ en vivo"}">
@@ -4215,7 +4813,7 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
           <!-- 3. Navegaci\xF3n por pesta\xF1as (Router) -->
           <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: "features", label: "Tareas y Bugfixes", icon: Icons.folder, active: this.activeTab === "features", badge: String(state.features.length) })}
-            ${renderTabButton({ id: "knowledge", label: "Base de Conocimiento", icon: Icons.book, active: this.activeTab === "knowledge", badge: String(state.knowledgeIndex?.business_rules?.length || 10) })}
+            ${renderTabButton({ id: "knowledge", label: "Base de Conocimiento", icon: Icons.book, active: this.activeTab === "knowledge", badge: String(Object.keys(state.knowledgeIndex?.docs || {}).length || 22) })}
             ${renderTabButton({ id: "architecture", label: "Arquitectura & Stack", icon: Icons.layers, active: this.activeTab === "architecture" })}
             ${renderTabButton({ id: "graph", label: "Grafo Visual DAG", icon: Icons.gitBranch, active: this.activeTab === "graph" })}
             ${renderTabButton({ id: "tree", label: "\xC1rbol Jer\xE1rquico", icon: Icons.check, active: this.activeTab === "tree" })}
@@ -4229,10 +4827,34 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
           </section>
         </main>
 
-        <!-- Modal de Detalle -->
+        <!-- Modal de Detalle de Feature -->
         <div id="modal-container">
           ${renderModal(state.selectedFeature)}
         </div>
+
+        <!-- MODAL OMNIBOX GLOBAL SEARCH (Ctrl+K / Cmd+K) -->
+        <div id="omnibox-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-start justify-center pt-16 sm:pt-24 px-4">
+          <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              <span class="text-slate-400 text-sm">\u{1F50D}</span>
+              <input type="text" 
+                     id="omnibox-input" 
+                     placeholder="Buscar tareas (INT-*), docs, reglas (BR-*), m\xF3dulos..." 
+                     class="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 text-sm font-mono placeholder-slate-400" 
+                     autocomplete="off" />
+              <kbd class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">ESC</kbd>
+            </div>
+            <div id="omnibox-results" class="p-3 overflow-y-auto space-y-3 flex-1 text-xs font-mono max-h-[460px]">
+              <!-- Resultados generados en vivo -->
+            </div>
+            <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+              <span>Navegar: <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">\u2191</kbd> <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">\u2193</kbd></span>
+              <span>Seleccionar: <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">Enter</kbd></span>
+              <span>Cerrar: <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">ESC</kbd></span>
+            </div>
+          </div>
+        </div>
+
       </div>
     `;
       this.isAppMounted = true;
@@ -4326,6 +4948,42 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
       if (this.activeTab === "architecture" || this.activeTab === "knowledge") {
         this.initMermaidDiagrams();
       }
+      if (this.activeTab === "knowledge") {
+        this.setupSynchronizedScroll();
+      }
+    }
+    setupSynchronizedScroll() {
+      const textarea = document.getElementById("doc-editor-textarea");
+      const preview = document.getElementById("doc-editor-live-preview");
+      if (!textarea || !preview) return;
+      textarea.onscroll = () => {
+        if (this.isScrollingFromPreview) return;
+        this.isScrollingFromEditor = true;
+        const scrollMaxTextarea = textarea.scrollHeight - textarea.clientHeight;
+        const scrollMaxPreview = preview.scrollHeight - preview.clientHeight;
+        if (scrollMaxTextarea > 0 && scrollMaxPreview > 0) {
+          const ratio = textarea.scrollTop / scrollMaxTextarea;
+          preview.scrollTop = ratio * scrollMaxPreview;
+        }
+        clearTimeout(this.scrollResetTimer);
+        this.scrollResetTimer = setTimeout(() => {
+          this.isScrollingFromEditor = false;
+        }, 60);
+      };
+      preview.onscroll = () => {
+        if (this.isScrollingFromEditor) return;
+        this.isScrollingFromPreview = true;
+        const scrollMaxTextarea = textarea.scrollHeight - textarea.clientHeight;
+        const scrollMaxPreview = preview.scrollHeight - preview.clientHeight;
+        if (scrollMaxTextarea > 0 && scrollMaxPreview > 0) {
+          const ratio = preview.scrollTop / scrollMaxPreview;
+          textarea.scrollTop = ratio * scrollMaxTextarea;
+        }
+        clearTimeout(this.scrollResetTimer);
+        this.scrollResetTimer = setTimeout(() => {
+          this.isScrollingFromPreview = false;
+        }, 60);
+      };
     }
     async initMermaidDiagrams() {
       if (typeof window === "undefined" || !window.mermaid) return;
@@ -4453,6 +5111,318 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         });
       });
     }
+    // Abre el visor de artículo con el documento indicado
+    openArticleView(docKey, openInEditor = false) {
+      this.currentActiveDocKey = docKey;
+      const state = store.getState();
+      const docs = state.knowledgeIndex?.docs || {};
+      const meta = state.knowledgeIndex?.docMetadata?.[docKey] || {
+        title: docKey,
+        shelf: "general",
+        readingTime: 3,
+        wordCount: 400
+      };
+      const content = docs[docKey] || "# Documento no disponible";
+      const libView = document.getElementById("kb-view-library");
+      const artView = document.getElementById("kb-view-article");
+      const pathEl = document.getElementById("doc-active-path");
+      const shelfBadge = document.getElementById("article-shelf-badge");
+      const readingTimeBadge = document.getElementById("article-reading-time-badge");
+      const bodyEl = document.getElementById("doc-active-body");
+      const tocEl = document.getElementById("doc-active-toc");
+      const wordsEl = document.getElementById("article-meta-words");
+      const brEl = document.getElementById("article-meta-br");
+      const rfEl = document.getElementById("article-meta-rf");
+      const readerContainer = document.getElementById("doc-reader-view-container");
+      const editorContainer = document.getElementById("doc-editor-view-container");
+      const btnText = document.getElementById("btn-toggle-doc-text");
+      const btnIcon = document.getElementById("btn-toggle-doc-icon");
+      const textarea = document.getElementById("doc-editor-textarea");
+      const livePreview = document.getElementById("doc-editor-live-preview");
+      if (pathEl) pathEl.textContent = docKey;
+      if (shelfBadge) shelfBadge.textContent = meta.shelf || "Can\xF3nico";
+      if (readingTimeBadge) readingTimeBadge.textContent = `\u23F1\uFE0F ${meta.readingTime || 3} min`;
+      if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
+      if (brEl) brEl.textContent = meta.ruleCount || 0;
+      if (rfEl) rfEl.textContent = meta.reqCount || 0;
+      if (bodyEl) bodyEl.innerHTML = renderMarkdown(content);
+      if (tocEl) {
+        const toc = extractTableOfContents(content);
+        tocEl.innerHTML = renderTocHtml(toc);
+      }
+      if (textarea) textarea.value = content;
+      if (livePreview) livePreview.innerHTML = renderMarkdown(content);
+      if (openInEditor) {
+        readerContainer?.classList.add("hidden");
+        editorContainer?.classList.remove("hidden");
+        if (btnText) btnText.textContent = "Modo Lectura";
+        if (btnIcon) btnIcon.textContent = "\u{1F441}\uFE0F";
+        this.setupSynchronizedScroll();
+      } else {
+        editorContainer?.classList.add("hidden");
+        readerContainer?.classList.remove("hidden");
+        if (btnText) btnText.textContent = "Modo Editor";
+        if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+      }
+      libView?.classList.add("hidden");
+      artView?.classList.remove("hidden");
+      this.initMermaidDiagrams();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    // Abre el Omnibox Global Search
+    openOmnibox() {
+      const modal = document.getElementById("omnibox-modal");
+      const input = document.getElementById("omnibox-input");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        if (input) {
+          input.value = "";
+          input.focus();
+          this.renderOmniboxResults("");
+        }
+      }
+    }
+    closeOmnibox() {
+      const modal = document.getElementById("omnibox-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+    renderOmniboxResults(query = "") {
+      const resultsContainer = document.getElementById("omnibox-results");
+      if (!resultsContainer) return;
+      const q = (query || "").toLowerCase().trim();
+      const state = store.getState();
+      const features = state.features || [];
+      const docs = state.knowledgeIndex?.docMetadata || {};
+      const rules = state.knowledgeIndex?.business_rules || [];
+      const modules = store.getAvailableModules() || [];
+      const matchedFeatures = features.filter(
+        (f) => !q || f.title.toLowerCase().includes(q) || f.name.toLowerCase().includes(q) || f.module.toLowerCase().includes(q) || `int-${f.id}`.includes(q)
+      ).slice(0, 5);
+      const matchedDocs = Object.values(docs).filter(
+        (d) => !q || d.key.toLowerCase().includes(q) || d.title && d.title.toLowerCase().includes(q) || d.summary && d.summary.toLowerCase().includes(q)
+      ).slice(0, 5);
+      const matchedRules = rules.filter(
+        (r) => !q || r.id.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)
+      ).slice(0, 5);
+      const matchedModules = modules.filter(
+        (m) => !q || m.toLowerCase().includes(q)
+      ).slice(0, 4);
+      let html = "";
+      if (matchedFeatures.length > 0) {
+        html += `
+        <div class="space-y-1">
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">\u{1F4CB} Tareas & Specs</div>
+          ${matchedFeatures.map((f, i) => `
+            <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
+                 data-omnibox-type="feature"
+                 data-feature-id="${f.id}">
+              <div class="flex items-center gap-2 truncate">
+                <span class="font-bold text-indigo-500">[INT-${f.id}]</span>
+                <span class="truncate">${escapeHtml7(f.title)}</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">${f.status}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      }
+      if (matchedDocs.length > 0) {
+        html += `
+        <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">\u{1F4DA} Base de Conocimiento</div>
+          ${matchedDocs.map((d) => `
+            <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
+                 data-omnibox-type="doc"
+                 data-doc-key="${escapeAttr5(d.key)}">
+              <div class="flex items-center gap-2 truncate">
+                <span>\u{1F4C4}</span>
+                <span class="font-bold truncate">${escapeHtml7(d.title)}</span>
+                <span class="text-[10px] text-slate-400 font-mono truncate">(${escapeHtml7(d.key)})</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">\u23F1\uFE0F ${d.readingTime || 2}m</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      }
+      if (matchedRules.length > 0) {
+        html += `
+        <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">\u2696\uFE0F Reglas de Negocio (BR-*)</div>
+          ${matchedRules.map((r) => `
+            <div class="omnibox-item p-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/50 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center justify-between transition-colors"
+                 data-omnibox-type="rule"
+                 data-rule-id="${escapeAttr5(r.id)}"
+                 data-rule-module="${escapeAttr5(r.module || "")}">
+              <div class="flex items-center gap-2 truncate">
+                <span class="font-bold text-amber-500">${r.id}</span>
+                <span class="truncate">${escapeHtml7(r.title)}</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400">[${r.module || "general"}]</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      }
+      if (!matchedFeatures.length && !matchedDocs.length && !matchedRules.length) {
+        html = `<div class="p-6 text-center text-slate-400">No se encontraron resultados para "${escapeHtml7(q)}"</div>`;
+      }
+      resultsContainer.innerHTML = html;
+    }
+    // Renderiza los bloques interactivos en el editor de bloques visuales
+    renderVisualBlocks(blocks = []) {
+      const container = document.getElementById("doc-editor-blocks-container");
+      if (!container) return;
+      if (!blocks || blocks.length === 0) {
+        container.innerHTML = `
+        <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-400 text-xs">
+          Sin bloques de contenido a\xFAn. A\xF1ade uno con la barra superior de acciones.
+        </div>
+      `;
+        return;
+      }
+      container.innerHTML = blocks.map((b, idx) => {
+        const typeLabel = getBlockTypeLabel(b.type);
+        return `
+        <div class="visual-block-card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs space-y-3"
+             data-block-id="${b.id}"
+             data-block-index="${idx}">
+          <div class="flex items-center justify-between text-xs font-mono pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+                ${typeLabel}
+              </span>
+              <span class="text-slate-400 text-[10px]">Bloque #${idx + 1}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button type="button" data-block-action="move-up" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover arriba" ${idx === 0 ? 'disabled style="opacity:0.3"' : ""}>\u{1F53C}</button>
+              <button type="button" data-block-action="move-down" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover abajo" ${idx === blocks.length - 1 ? 'disabled style="opacity:0.3"' : ""}>\u{1F53D}</button>
+              <button type="button" data-block-action="delete" class="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer text-xs" title="Eliminar bloque">\u{1F5D1}\uFE0F</button>
+            </div>
+          </div>
+          ${this.renderBlockInputControls(b)}
+        </div>
+      `;
+      }).join("");
+    }
+    renderBlockInputControls(b) {
+      switch (b.type) {
+        case "header":
+          return `
+          <div class="flex items-center gap-2">
+            <select class="block-input-header-level px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono">
+              <option value="1" ${b.level === 1 ? "selected" : ""}>H1 (#)</option>
+              <option value="2" ${b.level === 2 ? "selected" : ""}>H2 (##)</option>
+              <option value="3" ${b.level === 3 ? "selected" : ""}>H3 (###)</option>
+            </select>
+            <input type="text" class="block-input-header-text flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-900 dark:text-slate-100" value="${escapeAttr5(b.text || "")}" placeholder="T\xEDtulo del encabezado" />
+          </div>
+        `;
+        case "paragraph":
+          return `
+          <textarea class="block-input-paragraph-text w-full p-3 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y leading-relaxed" rows="3" placeholder="P\xE1rrafo o contenido descriptivo...">${escapeHtml7(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || "")}</textarea>
+        `;
+        case "callout":
+          return `
+          <div class="space-y-2">
+            <select class="block-input-callout-kind px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold">
+              <option value="NOTE" ${b.kind === "NOTE" ? "selected" : ""}>NOTE (Nota informativa)</option>
+              <option value="TIP" ${b.kind === "TIP" ? "selected" : ""}>TIP (Consejo/Buenas pr\xE1cticas)</option>
+              <option value="IMPORTANT" ${b.kind === "IMPORTANT" ? "selected" : ""}>IMPORTANT (Importante)</option>
+              <option value="WARNING" ${b.kind === "WARNING" ? "selected" : ""}>WARNING (Advertencia)</option>
+              <option value="CAUTION" ${b.kind === "CAUTION" ? "selected" : ""}>CAUTION (Precauci\xF3n)</option>
+              <option value="DANGER" ${b.kind === "DANGER" ? "selected" : ""}>DANGER (Riesgo Cr\xEDtico)</option>
+            </select>
+            <textarea class="block-input-callout-text w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Mensaje de la alerta...">${escapeHtml7(b.text || "")}</textarea>
+          </div>
+        `;
+        case "business_rule":
+          return `
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <input type="text" class="block-input-rule-id w-36 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold text-amber-600 dark:text-amber-400" value="${escapeAttr5(b.ruleId || "BR-GEN-001")}" placeholder="BR-XXX-001" />
+              <input type="text" class="block-input-rule-title flex-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-800 dark:text-slate-100 font-semibold" value="${escapeAttr5(b.title || "")}" placeholder="T\xEDtulo de la regla de negocio" />
+            </div>
+            <textarea class="block-input-rule-desc w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Descripci\xF3n detallada de la invariante...">${escapeHtml7(b.text || b.description || "")}</textarea>
+          </div>
+        `;
+        case "code":
+          return `
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400">Lenguaje:</span>
+              <select class="block-input-code-lang px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold text-purple-600 dark:text-purple-400">
+                <option value="mermaid" ${b.lang === "mermaid" ? "selected" : ""}>mermaid</option>
+                <option value="drawio" ${b.lang === "drawio" ? "selected" : ""}>drawio</option>
+                <option value="csharp" ${b.lang === "csharp" ? "selected" : ""}>csharp (.NET)</option>
+                <option value="javascript" ${b.lang === "javascript" ? "selected" : ""}>javascript</option>
+                <option value="typescript" ${b.lang === "typescript" ? "selected" : ""}>typescript</option>
+                <option value="json" ${b.lang === "json" ? "selected" : ""}>json</option>
+                <option value="sql" ${b.lang === "sql" ? "selected" : ""}>sql</option>
+                <option value="bash" ${b.lang === "bash" ? "selected" : ""}>bash</option>
+                <option value="yaml" ${b.lang === "yaml" ? "selected" : ""}>yaml</option>
+              </select>
+            </div>
+            <textarea class="block-input-code-content w-full p-3 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-900 text-indigo-300 resize-y" rows="6" placeholder="C\xF3digo o sintaxis del diagrama...">${escapeHtml7(Array.isArray(b.content) ? b.content.join("\n") : b.content || "")}</textarea>
+          </div>
+        `;
+        case "divider":
+          return `
+          <div class="py-2 text-center text-xs font-mono text-slate-400 flex items-center gap-2">
+            <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+            <span>--- Separador de Secci\xF3n ---</span>
+            <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+          </div>
+        `;
+        default:
+          return `
+          <textarea class="block-input-raw-text w-full p-2.5 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950" rows="3">${escapeHtml7(b.raw || "")}</textarea>
+        `;
+      }
+    }
+    // Extrae y sincroniza bloques visuales desde el DOM
+    syncBlocksFromDom() {
+      const cards = document.querySelectorAll(".visual-block-card");
+      const newBlocks = [];
+      cards.forEach((card) => {
+        const bId = card.getAttribute("data-block-id");
+        const origBlock = this.currentBlocks.find((b) => b.id === bId) || {};
+        const type = origBlock.type || "paragraph";
+        if (type === "header") {
+          const level = parseInt(card.querySelector(".block-input-header-level")?.value || "1", 10);
+          const text = card.querySelector(".block-input-header-text")?.value || "";
+          newBlocks.push({ ...origBlock, level, text });
+        } else if (type === "paragraph") {
+          const text = card.querySelector(".block-input-paragraph-text")?.value || "";
+          newBlocks.push({ ...origBlock, lines: text.split("\n") });
+        } else if (type === "callout") {
+          const kind = card.querySelector(".block-input-callout-kind")?.value || "NOTE";
+          const text = card.querySelector(".block-input-callout-text")?.value || "";
+          newBlocks.push({ ...origBlock, kind, text });
+        } else if (type === "business_rule") {
+          const ruleId = card.querySelector(".block-input-rule-id")?.value || "BR-GEN-001";
+          const title = card.querySelector(".block-input-rule-title")?.value || "";
+          const text = card.querySelector(".block-input-rule-desc")?.value || "";
+          newBlocks.push({ ...origBlock, ruleId, title, text });
+        } else if (type === "code") {
+          const lang = card.querySelector(".block-input-code-lang")?.value || "mermaid";
+          const content = card.querySelector(".block-input-code-content")?.value || "";
+          newBlocks.push({ ...origBlock, lang, content: content.split("\n") });
+        } else if (type === "divider") {
+          newBlocks.push({ ...origBlock, type: "divider" });
+        }
+      });
+      this.currentBlocks = newBlocks;
+      const serializedMd = blocksToMarkdown(this.currentBlocks);
+      const textarea = document.getElementById("doc-editor-textarea");
+      const preview = document.getElementById("doc-editor-live-preview");
+      if (textarea) textarea.value = serializedMd;
+      if (preview) preview.innerHTML = renderMarkdown(serializedMd);
+    }
     bindGlobalEvents() {
       document.addEventListener("click", (e) => {
         const themeBtn = e.target.closest('[data-action="toggle-theme"]');
@@ -4472,97 +5442,262 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
           this.refreshData();
           return;
         }
-        const graphNode = e.target.closest("[data-graph-node]");
-        if (graphNode) {
-          const id = parseInt(graphNode.getAttribute("data-graph-node"), 10);
-          const feature = store.getState().features.find((f) => f.id === id);
-          if (feature) store.setSelectedFeature(feature);
+        const openOmniboxBtn = e.target.closest('[data-action="open-omnibox"]');
+        if (openOmniboxBtn) {
+          this.openOmnibox();
           return;
         }
-        const viewDetailBtn = e.target.closest('[data-action="view-detail"]');
-        if (viewDetailBtn) {
-          const id = parseInt(viewDetailBtn.getAttribute("data-id"), 10);
-          const feature = store.getState().features.find((f) => f.id === id);
-          if (feature) store.setSelectedFeature(feature);
-          return;
-        }
-        const tableRow = e.target.closest("tr[data-feature-id]");
-        if (tableRow && !e.target.closest("button")) {
-          const id = parseInt(tableRow.getAttribute("data-feature-id"), 10);
-          const feature = store.getState().features.find((f) => f.id === id);
-          if (feature) store.setSelectedFeature(feature);
-          return;
-        }
-        const closeModalBtn = e.target.closest('[data-action="close-modal"]');
-        if (closeModalBtn) {
-          store.setSelectedFeature(null);
-          return;
-        }
-        const pageBtn = e.target.closest("[data-page]");
-        if (pageBtn) {
-          const page = parseInt(pageBtn.getAttribute("data-page"), 10);
-          if (!isNaN(page) && page > 0) {
-            store.setPage(page);
+        const omniboxItem = e.target.closest(".omnibox-item");
+        if (omniboxItem) {
+          const type = omniboxItem.getAttribute("data-omnibox-type");
+          this.closeOmnibox();
+          if (type === "feature") {
+            const id = parseInt(omniboxItem.getAttribute("data-feature-id"), 10);
+            const feature = store.getState().features.find((f) => f.id === id);
+            if (feature) store.setSelectedFeature(feature);
+          } else if (type === "doc") {
+            const docKey = omniboxItem.getAttribute("data-doc-key");
+            router.navigate("knowledge");
+            setTimeout(() => this.openArticleView(docKey, false), 50);
+          } else if (type === "rule") {
+            router.navigate("knowledge");
+            setTimeout(() => {
+              const rulesEl = document.getElementById("kb-rules-list");
+              if (rulesEl) rulesEl.scrollIntoView({ behavior: "smooth" });
+            }, 80);
           }
           return;
         }
-        const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
-        if (resetFiltersBtn) {
-          const searchInput = document.getElementById("feature-search-input");
-          if (searchInput) searchInput.value = "";
-          store.resetFilters();
+        if (e.target.id === "omnibox-modal") {
+          this.closeOmnibox();
           return;
         }
-        const archTabBtn = e.target.closest("[data-arch-tab]");
-        if (archTabBtn) {
-          const tabId = archTabBtn.getAttribute("data-arch-tab");
-          document.querySelectorAll(".arch-tab-btn").forEach((btn) => {
-            btn.classList.remove("active", "bg-indigo-600", "text-white");
-            btn.classList.add("text-slate-600", "dark:text-slate-400");
+        const backToLibBtn = e.target.closest('[data-action="back-to-library"]');
+        if (backToLibBtn) {
+          document.getElementById("kb-view-article")?.classList.add("hidden");
+          document.getElementById("kb-view-library")?.classList.remove("hidden");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        const openReadBtn = e.target.closest('[data-action="open-article-read"]');
+        if (openReadBtn) {
+          const docKey = openReadBtn.getAttribute("data-doc-key");
+          if (docKey) this.openArticleView(docKey, false);
+          return;
+        }
+        const openEditBtn = e.target.closest('[data-action="open-article-edit"]');
+        if (openEditBtn) {
+          const docKey = openEditBtn.getAttribute("data-doc-key");
+          if (docKey) this.openArticleView(docKey, true);
+          return;
+        }
+        const shelfPill = e.target.closest(".kb-shelf-pill");
+        if (shelfPill) {
+          const targetShelf = shelfPill.getAttribute("data-shelf-filter");
+          document.querySelectorAll(".kb-shelf-pill").forEach((p) => {
+            p.classList.remove("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
+            p.classList.add("bg-slate-100", "dark:bg-slate-800", "text-slate-600", "dark:text-slate-400");
           });
-          archTabBtn.classList.add("active", "bg-indigo-600", "text-white");
-          archTabBtn.classList.remove("text-slate-600", "dark:text-slate-400");
-          document.querySelectorAll(".diagram-panel").forEach((panel) => {
-            panel.classList.add("hidden");
-            panel.classList.remove("block");
+          shelfPill.classList.add("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
+          shelfPill.classList.remove("bg-slate-100", "dark:bg-slate-800", "text-slate-600", "dark:text-slate-400");
+          document.querySelectorAll(".kb-shelf-section").forEach((sec) => {
+            const sId = sec.getAttribute("data-shelf-id");
+            if (!targetShelf || sId === targetShelf) {
+              sec.classList.remove("hidden");
+            } else {
+              sec.classList.add("hidden");
+            }
           });
-          const targetPanel = document.getElementById(`diagram-panel-${tabId}`);
-          if (targetPanel) {
-            targetPanel.classList.remove("hidden");
-            targetPanel.classList.add("block");
+          return;
+        }
+        const toggleEditorBtn = e.target.closest("#btn-toggle-doc-editor");
+        if (toggleEditorBtn) {
+          const readerContainer = document.getElementById("doc-reader-view-container");
+          const editorContainer = document.getElementById("doc-editor-view-container");
+          const btnText = document.getElementById("btn-toggle-doc-text");
+          const btnIcon = document.getElementById("btn-toggle-doc-icon");
+          const textarea = document.getElementById("doc-editor-textarea");
+          const preview = document.getElementById("doc-editor-live-preview");
+          const pathEl = document.getElementById("doc-active-path");
+          if (readerContainer && editorContainer) {
+            const isEditorHidden = editorContainer.classList.contains("hidden");
+            if (isEditorHidden) {
+              const docKey = pathEl ? pathEl.textContent.trim() : "";
+              const docs = store.getState().knowledgeIndex?.docs || {};
+              const content = docs[docKey] || "";
+              if (textarea) textarea.value = content;
+              if (preview) preview.innerHTML = renderMarkdown(content);
+              editorContainer.classList.remove("hidden");
+              readerContainer.classList.add("hidden");
+              if (btnText) btnText.textContent = "Modo Lectura";
+              if (btnIcon) btnIcon.textContent = "\u{1F441}\uFE0F";
+              this.setupSynchronizedScroll();
+            } else {
+              editorContainer.classList.add("hidden");
+              readerContainer.classList.remove("hidden");
+              if (btnText) btnText.textContent = "Modo Editor";
+              if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+            }
+          }
+          return;
+        }
+        const btnModeMd = e.target.closest("#btn-editor-mode-md");
+        if (btnModeMd) {
+          this.editorMode = "markdown";
+          btnModeMd.classList.add("bg-indigo-600", "text-white");
+          btnModeMd.classList.remove("text-slate-600", "dark:text-slate-400");
+          const btnModeBlocks2 = document.getElementById("btn-editor-mode-blocks");
+          btnModeBlocks2?.classList.remove("bg-indigo-600", "text-white");
+          btnModeBlocks2?.classList.add("text-slate-600", "dark:text-slate-400");
+          document.getElementById("editor-pane-markdown")?.classList.remove("hidden");
+          document.getElementById("editor-pane-blocks")?.classList.add("hidden");
+          this.setupSynchronizedScroll();
+          return;
+        }
+        const btnModeBlocks = e.target.closest("#btn-editor-mode-blocks");
+        if (btnModeBlocks) {
+          this.editorMode = "blocks";
+          btnModeBlocks.classList.add("bg-indigo-600", "text-white");
+          btnModeBlocks.classList.remove("text-slate-600", "dark:text-slate-400");
+          const btnModeMd2 = document.getElementById("btn-editor-mode-md");
+          btnModeMd2?.classList.remove("bg-indigo-600", "text-white");
+          btnModeMd2?.classList.add("text-slate-600", "dark:text-slate-400");
+          document.getElementById("editor-pane-markdown")?.classList.add("hidden");
+          document.getElementById("editor-pane-blocks")?.classList.remove("hidden");
+          const textarea = document.getElementById("doc-editor-textarea");
+          const currentMd = textarea ? textarea.value : "";
+          this.currentBlocks = parseMarkdownToBlocks(currentMd);
+          this.renderVisualBlocks(this.currentBlocks);
+          return;
+        }
+        const addBlockBtn = e.target.closest("[data-add-block]");
+        if (addBlockBtn) {
+          const type = addBlockBtn.getAttribute("data-add-block");
+          const newBlock = {
+            id: "blk_" + Math.random().toString(36).substring(2, 9),
+            type
+          };
+          if (type === "header") {
+            newBlock.level = 2;
+            newBlock.text = "Nuevo Encabezado";
+          } else if (type === "paragraph") {
+            newBlock.lines = ["Escribe aqu\xED tu contenido descriptivo..."];
+          } else if (type === "callout") {
+            newBlock.kind = "NOTE";
+            newBlock.text = "Nota importante para desarrolladores o IA.";
+          } else if (type === "business_rule") {
+            newBlock.ruleId = "BR-NEW-001";
+            newBlock.title = "Nueva Regla";
+            newBlock.text = "Invariante de cumplimiento estricto.";
+          } else if (type === "code") {
+            newBlock.lang = "mermaid";
+            newBlock.content = ["flowchart TD\n  A[Inicio] --> B[Fin]"];
+          }
+          this.currentBlocks.push(newBlock);
+          this.renderVisualBlocks(this.currentBlocks);
+          const serialized = blocksToMarkdown(this.currentBlocks);
+          const textarea = document.getElementById("doc-editor-textarea");
+          if (textarea) textarea.value = serialized;
+          return;
+        }
+        const blockActionBtn = e.target.closest("[data-block-action]");
+        if (blockActionBtn) {
+          const card = blockActionBtn.closest(".visual-block-card");
+          const bId = card?.getAttribute("data-block-id");
+          const action = blockActionBtn.getAttribute("data-block-action");
+          const idx = this.currentBlocks.findIndex((b) => b.id === bId);
+          if (idx !== -1) {
+            if (action === "move-up" && idx > 0) {
+              const temp = this.currentBlocks[idx - 1];
+              this.currentBlocks[idx - 1] = this.currentBlocks[idx];
+              this.currentBlocks[idx] = temp;
+            } else if (action === "move-down" && idx < this.currentBlocks.length - 1) {
+              const temp = this.currentBlocks[idx + 1];
+              this.currentBlocks[idx + 1] = this.currentBlocks[idx];
+              this.currentBlocks[idx] = temp;
+            } else if (action === "delete") {
+              this.currentBlocks.splice(idx, 1);
+            }
+            this.renderVisualBlocks(this.currentBlocks);
+            const serialized = blocksToMarkdown(this.currentBlocks);
+            const textarea = document.getElementById("doc-editor-textarea");
+            if (textarea) textarea.value = serialized;
+          }
+          return;
+        }
+        const saveEditBtn = e.target.closest("#btn-save-doc-edit");
+        if (saveEditBtn) {
+          const pathEl = document.getElementById("doc-active-path");
+          const docKey = pathEl ? pathEl.textContent.trim() : "";
+          const textarea = document.getElementById("doc-editor-textarea");
+          const newContent = textarea ? textarea.value : "";
+          if (docKey) {
+            store.saveDoc(docKey, newContent);
+            const bodyEl = document.getElementById("doc-active-body");
+            if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
+            const tocEl = document.getElementById("doc-active-toc");
+            if (tocEl) tocEl.innerHTML = renderTocHtml(extractTableOfContents(newContent));
+            document.getElementById("doc-editor-view-container")?.classList.add("hidden");
+            document.getElementById("doc-reader-view-container")?.classList.remove("hidden");
+            const btnText = document.getElementById("btn-toggle-doc-text");
+            const btnIcon = document.getElementById("btn-toggle-doc-icon");
+            if (btnText) btnText.textContent = "Modo Editor";
+            if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
             this.initMermaidDiagrams();
           }
           return;
         }
-        const copyActiveBtn = e.target.closest("#copy-active-mermaid-btn");
-        if (copyActiveBtn) {
-          const activePanel = document.querySelector(".diagram-panel:not(.hidden)");
-          const codeEl = activePanel?.querySelector("pre code");
-          const textToCopy = codeEl ? codeEl.textContent : "Clean Architecture + Event-Driven Architecture Layers";
-          if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(textToCopy).then(() => {
-              const origHtml = copyActiveBtn.innerHTML;
-              copyActiveBtn.innerHTML = "<span>\u2705</span> \xA1Copiado!";
+        const cancelEditBtn = e.target.closest("#btn-cancel-doc-edit");
+        if (cancelEditBtn) {
+          document.getElementById("doc-editor-view-container")?.classList.add("hidden");
+          document.getElementById("doc-reader-view-container")?.classList.remove("hidden");
+          const btnText = document.getElementById("btn-toggle-doc-text");
+          const btnIcon = document.getElementById("btn-toggle-doc-icon");
+          if (btnText) btnText.textContent = "Modo Editor";
+          if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+          return;
+        }
+        const copyDocBtn = e.target.closest("#copy-active-doc-btn");
+        if (copyDocBtn) {
+          const pathEl = document.getElementById("doc-active-path");
+          const docKey = pathEl ? pathEl.textContent.trim() : "";
+          const content = store.getState().knowledgeIndex?.docs?.[docKey] || "";
+          if (content && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(content).then(() => {
+              const orig = copyDocBtn.innerHTML;
+              copyDocBtn.innerHTML = "<span>\u2705</span>";
               setTimeout(() => {
-                copyActiveBtn.innerHTML = origHtml;
+                copyDocBtn.innerHTML = orig;
               }, 2e3);
-            }).catch(() => {
             });
           }
           return;
         }
-        const copyMermaidBtn = e.target.closest("[data-copy-mermaid]");
-        if (copyMermaidBtn) {
-          const mermaidText = copyMermaidBtn.getAttribute("data-copy-mermaid");
-          if (mermaidText && navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(mermaidText).then(() => {
-              const origHtml = copyMermaidBtn.innerHTML;
-              copyMermaidBtn.innerHTML = "<span>\u2705</span> \xA1Copiado!";
-              setTimeout(() => {
-                copyMermaidBtn.innerHTML = origHtml;
-              }, 2e3);
-            }).catch(() => {
-            });
+        const downloadDocBtn = e.target.closest('[data-action="download-active-doc"]');
+        if (downloadDocBtn) {
+          const pathEl = document.getElementById("doc-active-path");
+          const docKey = pathEl ? pathEl.textContent.trim() : "";
+          const content = store.getState().knowledgeIndex?.docs?.[docKey] || "";
+          const filename = docKey.split("/").pop() || "document.md";
+          const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        }
+        const deleteDocBtn = e.target.closest('[data-action="delete-active-doc"]');
+        if (deleteDocBtn) {
+          const pathEl = document.getElementById("doc-active-path");
+          const docKey = pathEl ? pathEl.textContent.trim() : "";
+          if (docKey && confirm(`\xBFEst\xE1s seguro de que deseas eliminar "${docKey}" de la Base de Conocimiento?`)) {
+            store.deleteDoc(docKey);
+            document.getElementById("kb-view-article")?.classList.add("hidden");
+            document.getElementById("kb-view-library")?.classList.remove("hidden");
           }
           return;
         }
@@ -4597,6 +5732,79 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
             }).catch(() => {
             });
           }
+          return;
+        }
+        const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
+        if (openNewDocBtn) {
+          const modal = document.getElementById("new-doc-modal");
+          if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            const modInput = document.getElementById("new-doc-module");
+            if (modInput) modInput.focus();
+          }
+          return;
+        }
+        const closeNewDocBtn = e.target.closest('[data-action="close-new-doc-modal"]');
+        if (closeNewDocBtn || e.target.id === "new-doc-modal") {
+          const modal = document.getElementById("new-doc-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          return;
+        }
+        const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
+        if (exportKnowledgeBtn) {
+          const kData = store.getState().knowledgeIndex;
+          const jsonStr = JSON.stringify(kData, null, 2);
+          const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `knowledge-base-${store.getState().project || "project"}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        }
+        const triggerImportBtn = e.target.closest('[data-action="trigger-import-doc"]');
+        if (triggerImportBtn) {
+          const fileInput = document.getElementById("import-doc-file-input");
+          if (fileInput) fileInput.click();
+          return;
+        }
+        const viewDetailBtn = e.target.closest('[data-action="view-detail"]');
+        if (viewDetailBtn) {
+          const id = parseInt(viewDetailBtn.getAttribute("data-id"), 10);
+          const feature = store.getState().features.find((f) => f.id === id);
+          if (feature) store.setSelectedFeature(feature);
+          return;
+        }
+        const tableRow = e.target.closest("tr[data-feature-id]");
+        if (tableRow && !e.target.closest("button")) {
+          const id = parseInt(tableRow.getAttribute("data-feature-id"), 10);
+          const feature = store.getState().features.find((f) => f.id === id);
+          if (feature) store.setSelectedFeature(feature);
+          return;
+        }
+        const closeModalBtn = e.target.closest('[data-action="close-modal"]');
+        if (closeModalBtn) {
+          store.setSelectedFeature(null);
+          return;
+        }
+        const pageBtn = e.target.closest("[data-page]");
+        if (pageBtn) {
+          const page = parseInt(pageBtn.getAttribute("data-page"), 10);
+          if (!isNaN(page) && page > 0) store.setPage(page);
+          return;
+        }
+        const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
+        if (resetFiltersBtn) {
+          const searchInput = document.getElementById("feature-search-input");
+          if (searchInput) searchInput.value = "";
+          store.resetFilters();
           return;
         }
         const diagToggle = e.target.closest("[data-diagram-toggle]");
@@ -4649,230 +5857,6 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
           }
           return;
         }
-        const docItem = e.target.closest("[data-doc-key]");
-        if (docItem) {
-          const docKey = docItem.getAttribute("data-doc-key");
-          const state = store.getState();
-          const docs = state.knowledgeIndex?.docs || {};
-          const content = docs[docKey] || "# Documento no disponible";
-          document.querySelectorAll(".doc-nav-item").forEach((el) => {
-            el.classList.remove("active", "bg-indigo-600", "text-white", "font-bold");
-            el.classList.add("text-slate-600", "dark:text-slate-400");
-          });
-          docItem.classList.add("active", "bg-indigo-600", "text-white", "font-bold");
-          docItem.classList.remove("text-slate-600", "dark:text-slate-400");
-          const pathEl = document.getElementById("doc-active-path");
-          const bodyEl = document.getElementById("doc-active-body");
-          if (pathEl) pathEl.textContent = docKey;
-          if (bodyEl) {
-            bodyEl.innerHTML = renderMarkdown(content);
-            this.initMermaidDiagrams();
-          }
-          const editorTextarea = document.getElementById("doc-editor-textarea");
-          const editorPreview = document.getElementById("doc-editor-live-preview");
-          if (editorTextarea) editorTextarea.value = content;
-          if (editorPreview) editorPreview.innerHTML = renderMarkdown(content);
-          return;
-        }
-        const toggleEditorBtn = e.target.closest("#btn-toggle-doc-editor");
-        if (toggleEditorBtn) {
-          const readerContainer = document.getElementById("doc-reader-view-container");
-          const editorContainer = document.getElementById("doc-editor-view-container");
-          const btnText = document.getElementById("btn-toggle-doc-text");
-          const btnIcon = document.getElementById("btn-toggle-doc-icon");
-          const textarea = document.getElementById("doc-editor-textarea");
-          const preview = document.getElementById("doc-editor-live-preview");
-          const pathEl = document.getElementById("doc-active-path");
-          if (readerContainer && editorContainer) {
-            const isEditorHidden = editorContainer.classList.contains("hidden");
-            if (isEditorHidden) {
-              const docKey = pathEl ? pathEl.textContent.trim() : "";
-              const docs = store.getState().knowledgeIndex?.docs || {};
-              const content = docs[docKey] || "";
-              if (textarea) textarea.value = content;
-              if (preview) preview.innerHTML = renderMarkdown(content);
-              editorContainer.classList.remove("hidden");
-              readerContainer.classList.add("hidden");
-              if (btnText) btnText.textContent = "Ver Lector";
-              if (btnIcon) btnIcon.textContent = "\u{1F441}\uFE0F";
-            } else {
-              editorContainer.classList.add("hidden");
-              readerContainer.classList.remove("hidden");
-              if (btnText) btnText.textContent = "Editar";
-              if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
-            }
-          }
-          return;
-        }
-        const cancelEditBtn = e.target.closest("#btn-cancel-doc-edit");
-        if (cancelEditBtn) {
-          const readerContainer = document.getElementById("doc-reader-view-container");
-          const editorContainer = document.getElementById("doc-editor-view-container");
-          const btnText = document.getElementById("btn-toggle-doc-text");
-          const btnIcon = document.getElementById("btn-toggle-doc-icon");
-          if (readerContainer && editorContainer) {
-            editorContainer.classList.add("hidden");
-            readerContainer.classList.remove("hidden");
-            if (btnText) btnText.textContent = "Editar";
-            if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
-          }
-          return;
-        }
-        const saveEditBtn = e.target.closest("#btn-save-doc-edit");
-        if (saveEditBtn) {
-          const pathEl = document.getElementById("doc-active-path");
-          const docKey = pathEl ? pathEl.textContent.trim() : "";
-          const textarea = document.getElementById("doc-editor-textarea");
-          const newContent = textarea ? textarea.value : "";
-          if (docKey) {
-            store.saveDoc(docKey, newContent);
-            const bodyEl = document.getElementById("doc-active-body");
-            if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
-            const readerContainer = document.getElementById("doc-reader-view-container");
-            const editorContainer = document.getElementById("doc-editor-view-container");
-            const btnText = document.getElementById("btn-toggle-doc-text");
-            const btnIcon = document.getElementById("btn-toggle-doc-icon");
-            if (readerContainer && editorContainer) {
-              editorContainer.classList.add("hidden");
-              readerContainer.classList.remove("hidden");
-              if (btnText) btnText.textContent = "Editar";
-              if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
-            }
-            this.initMermaidDiagrams();
-          }
-          return;
-        }
-        const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
-        if (openNewDocBtn) {
-          const modal = document.getElementById("new-doc-modal");
-          if (modal) {
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-            const modInput = document.getElementById("new-doc-module");
-            if (modInput) modInput.focus();
-          }
-          return;
-        }
-        const closeNewDocBtn = e.target.closest('[data-action="close-new-doc-modal"]');
-        if (closeNewDocBtn || e.target.id === "new-doc-modal") {
-          const modal = document.getElementById("new-doc-modal");
-          if (modal) {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-          }
-          return;
-        }
-        const deleteDocBtn = e.target.closest('[data-action="delete-active-doc"]');
-        if (deleteDocBtn) {
-          const pathEl = document.getElementById("doc-active-path");
-          const docKey = pathEl ? pathEl.textContent.trim() : "";
-          if (docKey) {
-            if (confirm(`\xBFEst\xE1s seguro de que deseas eliminar el documento "${docKey}" de la Base de Conocimiento?`)) {
-              store.deleteDoc(docKey);
-            }
-          }
-          return;
-        }
-        const downloadDocBtn = e.target.closest('[data-action="download-active-doc"]');
-        if (downloadDocBtn) {
-          const pathEl = document.getElementById("doc-active-path");
-          const docKey = pathEl ? pathEl.textContent.trim() : "";
-          const docs = store.getState().knowledgeIndex?.docs || {};
-          const content = docs[docKey] || "";
-          const filename = docKey.split("/").pop() || "document.md";
-          const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          return;
-        }
-        const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
-        if (exportKnowledgeBtn) {
-          const kData = store.getState().knowledgeIndex;
-          const jsonStr = JSON.stringify(kData, null, 2);
-          const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `knowledge-base-${store.getState().project || "project"}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          return;
-        }
-        const triggerImportBtn = e.target.closest('[data-action="trigger-import-doc"]');
-        if (triggerImportBtn) {
-          const fileInput = document.getElementById("import-doc-file-input");
-          if (fileInput) fileInput.click();
-          return;
-        }
-        const kbModPill = e.target.closest(".kb-mod-pill");
-        if (kbModPill) {
-          const targetMod = kbModPill.getAttribute("data-kb-filter-module");
-          document.querySelectorAll(".kb-mod-pill").forEach((p) => {
-            p.classList.remove("active", "bg-indigo-600", "text-white", "font-bold");
-            p.classList.add("bg-slate-200/70", "dark:bg-slate-800/80", "text-slate-600", "dark:text-slate-400");
-          });
-          kbModPill.classList.add("active", "bg-indigo-600", "text-white", "font-bold");
-          kbModPill.classList.remove("bg-slate-200/70", "dark:bg-slate-800/80", "text-slate-600", "dark:text-slate-400");
-          const generalGroup = document.querySelector('.kb-doc-group[data-group-type="general"]');
-          const moduleItems = document.querySelectorAll(".kb-module-item");
-          if (!targetMod) {
-            if (generalGroup) generalGroup.classList.remove("hidden");
-            moduleItems.forEach((mi) => mi.classList.remove("hidden"));
-          } else if (targetMod === "general") {
-            if (generalGroup) generalGroup.classList.remove("hidden");
-            moduleItems.forEach((mi) => mi.classList.add("hidden"));
-          } else {
-            if (generalGroup) generalGroup.classList.add("hidden");
-            moduleItems.forEach((mi) => {
-              const mName = mi.getAttribute("data-module-name");
-              if (mName === targetMod) {
-                mi.classList.remove("hidden");
-              } else {
-                mi.classList.add("hidden");
-              }
-            });
-          }
-          return;
-        }
-        const copyDocBtn = e.target.closest("#copy-active-doc-btn");
-        if (copyDocBtn) {
-          const pathEl = document.getElementById("doc-active-path");
-          const docKey = pathEl ? pathEl.textContent.trim() : "";
-          const state = store.getState();
-          const content = state.knowledgeIndex?.docs?.[docKey] || "";
-          if (content && navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(content).then(() => {
-              const orig = copyDocBtn.innerHTML;
-              copyDocBtn.innerHTML = "<span>\u2705</span> \xA1Copiado!";
-              setTimeout(() => {
-                copyDocBtn.innerHTML = orig;
-              }, 2e3);
-            });
-          }
-          return;
-        }
-        const copyCodeBlockBtn = e.target.closest('[data-action="copy-code-block"]');
-        if (copyCodeBlockBtn) {
-          const pre = copyCodeBlockBtn.closest("div.my-4")?.querySelector("pre code");
-          if (pre && navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(pre.textContent).then(() => {
-              const orig = copyCodeBlockBtn.textContent;
-              copyCodeBlockBtn.textContent = "\xA1Copiado! \u2713";
-              setTimeout(() => {
-                copyCodeBlockBtn.textContent = orig;
-              }, 2e3);
-            });
-          }
-          return;
-        }
       });
       document.addEventListener("input", (e) => {
         if (e.target.id === "feature-search-input") {
@@ -4881,35 +5865,44 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
           this.searchDebounceTimer = setTimeout(() => {
             store.setFilter("search", val);
           }, 260);
-        } else if (e.target.id === "kb-doc-search-input") {
+        } else if (e.target.id === "kb-library-search-input") {
           clearTimeout(this.kbSearchDebounceTimer);
           const query = (e.target.value || "").toLowerCase().trim();
           this.kbSearchDebounceTimer = setTimeout(() => {
-            const docItems = document.querySelectorAll(".doc-nav-item");
-            docItems.forEach((item) => {
-              const name = (item.getAttribute("data-doc-name") || "").toLowerCase();
-              const key = (item.getAttribute("data-doc-key") || "").toLowerCase();
-              const mod = (item.getAttribute("data-doc-module") || "").toLowerCase();
-              if (!query || name.includes(query) || key.includes(query) || mod.includes(query)) {
-                item.classList.remove("hidden");
+            const cards = document.querySelectorAll(".kb-shelf-doc-card");
+            cards.forEach((card) => {
+              const title = (card.getAttribute("data-doc-title") || "").toLowerCase();
+              const key = (card.getAttribute("data-doc-key") || "").toLowerCase();
+              const mod = (card.getAttribute("data-doc-module") || "").toLowerCase();
+              const text = card.textContent.toLowerCase();
+              if (!query || title.includes(query) || key.includes(query) || mod.includes(query) || text.includes(query)) {
+                card.classList.remove("hidden");
               } else {
-                item.classList.add("hidden");
+                card.classList.add("hidden");
               }
             });
-            document.querySelectorAll(".kb-module-item").forEach((mi) => {
-              const visibleChildren = mi.querySelectorAll(".doc-nav-item:not(.hidden)");
-              if (query && visibleChildren.length === 0) {
-                mi.classList.add("hidden");
+            document.querySelectorAll(".kb-shelf-section").forEach((sec) => {
+              const visibleCards = sec.querySelectorAll(".kb-shelf-doc-card:not(.hidden)");
+              if (query && visibleCards.length === 0) {
+                sec.classList.add("hidden");
               } else {
-                mi.classList.remove("hidden");
+                sec.classList.remove("hidden");
               }
             });
           }, 180);
+        } else if (e.target.id === "omnibox-input") {
+          clearTimeout(this.omniboxDebounceTimer);
+          const query = e.target.value;
+          this.omniboxDebounceTimer = setTimeout(() => {
+            this.renderOmniboxResults(query);
+          }, 150);
         } else if (e.target.id === "doc-editor-textarea") {
           const preview = document.getElementById("doc-editor-live-preview");
           if (preview) {
             preview.innerHTML = renderMarkdown(e.target.value);
           }
+        } else if (e.target.closest(".visual-block-card")) {
+          this.syncBlocksFromDom();
         }
       });
       document.addEventListener("change", (e) => {
@@ -4959,6 +5952,8 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
             e.target.value = "";
           };
           fileReader.readAsText(file);
+        } else if (e.target.closest(".visual-block-card")) {
+          this.syncBlocksFromDom();
         }
       });
       document.addEventListener("submit", (e) => {
@@ -4988,7 +5983,13 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         }
       });
       document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+          e.preventDefault();
+          this.openOmnibox();
+          return;
+        }
         if (e.key === "Escape") {
+          this.closeOmnibox();
           if (store.getState().selectedFeature) {
             store.setSelectedFeature(null);
           }
@@ -5011,9 +6012,47 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
       });
     }
   };
+  function getBlockTypeLabel(type) {
+    switch (type) {
+      case "header":
+        return "\u{1F3F7}\uFE0F Encabezado";
+      case "paragraph":
+        return "\u{1F4DD} P\xE1rrafo";
+      case "callout":
+        return "\u{1F4A1} Alerta";
+      case "business_rule":
+        return "\u2696\uFE0F Regla BR";
+      case "code":
+        return "\u{1F4D0} C\xF3digo/Diagrama";
+      case "divider":
+        return "\u2796 Separador";
+      default:
+        return "\u{1F4C4} Bloque";
+    }
+  }
+  function renderTocHtml(toc = []) {
+    if (!toc || toc.length === 0) {
+      return `<div class="text-[11px] text-slate-400 italic py-2">Sin encabezados.</div>`;
+    }
+    return `
+    <nav class="space-y-1 text-xs font-mono">
+      ${toc.map((item) => `
+        <a href="#${item.id}" 
+           class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
+           title="${escapeAttr5(item.text)}">
+          ${escapeHtml7(item.text)}
+        </a>
+      `).join("")}
+    </nav>
+  `;
+  }
   function escapeHtml7(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function escapeAttr5(text) {
+    if (!text) return "";
+    return String(text).replace(/"/g, "&quot;");
   }
   document.addEventListener("DOMContentLoaded", () => {
     const app = new App();

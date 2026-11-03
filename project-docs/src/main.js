@@ -16,7 +16,7 @@ import { SpaceView3D } from './features/space-view-3d/SpaceView3D.js';
 import { renderHistoryTimeline } from './features/history-timeline/HistoryTimeline.js';
 import { renderArchitectureDocs } from './features/architecture-docs/ArchitectureDocs.js';
 import { renderKnowledgeBase } from './features/knowledge-base/KnowledgeBase.js';
-import { renderMarkdown } from './shared/MarkdownViewer.js';
+import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksToMarkdown } from './shared/MarkdownViewer.js';
 
 class App {
   constructor() {
@@ -28,8 +28,23 @@ class App {
     this.isAppMounted = false;
     this.searchDebounceTimer = null;
     this.kbSearchDebounceTimer = null;
+    this.omniboxDebounceTimer = null;
     this.autoSyncController = null;
     this.lastSyncTime = new Date();
+
+    // Estado del Editor Dual & Base de Conocimiento
+    this.currentActiveDocKey = 'c4-model.md';
+    this.editorMode = 'markdown'; // 'markdown' | 'blocks'
+    this.currentBlocks = [];
+
+    // Estado de Omnibox
+    this.omniboxResults = [];
+    this.activeOmniboxIndex = -1;
+
+    // Control de Scroll Sincronizado
+    this.isScrollingFromEditor = false;
+    this.isScrollingFromPreview = false;
+    this.scrollResetTimer = null;
   }
 
   async init() {
@@ -107,9 +122,6 @@ class App {
   }
 
   handleStateChange(state) {
-    // Si la aplicación ya está montada y estamos en la pestaña de features,
-    // actualizamos solo la tabla y paginación para no destruir el <input> de búsqueda
-    // ni perder el cursor o el foco del usuario.
     const tableContainer = document.getElementById('feature-table-container');
     const paginationContainer = document.getElementById('feature-pagination-container');
     const isSearchFocused = document.activeElement && document.activeElement.id === 'feature-search-input';
@@ -134,7 +146,6 @@ class App {
   render() {
     if (!this.root) return;
 
-    // Guardar foco de input si existe antes de renderizar
     const activeElementId = document.activeElement?.id;
     const selectionStart = document.activeElement?.selectionStart;
     const selectionEnd = document.activeElement?.selectionEnd;
@@ -205,9 +216,18 @@ class App {
               </div>
             </div>
 
-            <!-- Chips de Agente, Stack y Auto-Sync -->
+            <!-- Chips de Agente, Omnibox, Stack y Auto-Sync -->
             <div class="hidden lg:flex items-center gap-2 text-xs">
               
+              <!-- Omnibox Trigger Button (Ctrl+K) -->
+              <button type="button" 
+                      data-action="open-omnibox"
+                      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-xs"
+                      title="Búsqueda global omnibox (Ctrl+K)">
+                <span>🔍 Buscar...</span>
+                <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold">Ctrl K</kbd>
+              </button>
+
               <!-- Badge de Auto-Sync Reactivo -->
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl ${isLocalFile ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'} shadow-xs"
                    title="${isLocalFile ? 'Modo local file://. Usa abrir-tablero.bat para auto-sync HTTP.' : 'Auto-Sync activo: detecta cambios en feature_list.json y progres/ en vivo'}">
@@ -271,7 +291,7 @@ class App {
           <!-- 3. Navegación por pestañas (Router) -->
           <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3 overflow-x-auto" aria-label="Vistas del tablero">
             ${renderTabButton({ id: 'features', label: 'Tareas y Bugfixes', icon: Icons.folder, active: this.activeTab === 'features', badge: String(state.features.length) })}
-            ${renderTabButton({ id: 'knowledge', label: 'Base de Conocimiento', icon: Icons.book, active: this.activeTab === 'knowledge', badge: String(state.knowledgeIndex?.business_rules?.length || 10) })}
+            ${renderTabButton({ id: 'knowledge', label: 'Base de Conocimiento', icon: Icons.book, active: this.activeTab === 'knowledge', badge: String(Object.keys(state.knowledgeIndex?.docs || {}).length || 22) })}
             ${renderTabButton({ id: 'architecture', label: 'Arquitectura & Stack', icon: Icons.layers, active: this.activeTab === 'architecture' })}
             ${renderTabButton({ id: 'graph', label: 'Grafo Visual DAG', icon: Icons.gitBranch, active: this.activeTab === 'graph' })}
             ${renderTabButton({ id: 'tree', label: 'Árbol Jerárquico', icon: Icons.check, active: this.activeTab === 'tree' })}
@@ -285,17 +305,40 @@ class App {
           </section>
         </main>
 
-        <!-- Modal de Detalle -->
+        <!-- Modal de Detalle de Feature -->
         <div id="modal-container">
           ${renderModal(state.selectedFeature)}
         </div>
+
+        <!-- MODAL OMNIBOX GLOBAL SEARCH (Ctrl+K / Cmd+K) -->
+        <div id="omnibox-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-start justify-center pt-16 sm:pt-24 px-4">
+          <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              <span class="text-slate-400 text-sm">🔍</span>
+              <input type="text" 
+                     id="omnibox-input" 
+                     placeholder="Buscar tareas (INT-*), docs, reglas (BR-*), módulos..." 
+                     class="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 text-sm font-mono placeholder-slate-400" 
+                     autocomplete="off" />
+              <kbd class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">ESC</kbd>
+            </div>
+            <div id="omnibox-results" class="p-3 overflow-y-auto space-y-3 flex-1 text-xs font-mono max-h-[460px]">
+              <!-- Resultados generados en vivo -->
+            </div>
+            <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+              <span>Navegar: <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">↑</kbd> <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">↓</kbd></span>
+              <span>Seleccionar: <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">Enter</kbd></span>
+              <span>Cerrar: <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border">ESC</kbd></span>
+            </div>
+          </div>
+        </div>
+
       </div>
     `;
 
     this.isAppMounted = true;
     this.postRender({ state, filteredFeatures });
 
-    // Restaurar foco y cursor si el input de búsqueda estaba activo
     if (activeElementId && activeElementId === 'feature-search-input') {
       requestAnimationFrame(() => {
         const input = document.getElementById('feature-search-input');
@@ -395,6 +438,42 @@ class App {
     if (this.activeTab === 'architecture' || this.activeTab === 'knowledge') {
       this.initMermaidDiagrams();
     }
+
+    if (this.activeTab === 'knowledge') {
+      this.setupSynchronizedScroll();
+    }
+  }
+
+  setupSynchronizedScroll() {
+    const textarea = document.getElementById('doc-editor-textarea');
+    const preview = document.getElementById('doc-editor-live-preview');
+    if (!textarea || !preview) return;
+
+    textarea.onscroll = () => {
+      if (this.isScrollingFromPreview) return;
+      this.isScrollingFromEditor = true;
+      const scrollMaxTextarea = textarea.scrollHeight - textarea.clientHeight;
+      const scrollMaxPreview = preview.scrollHeight - preview.clientHeight;
+      if (scrollMaxTextarea > 0 && scrollMaxPreview > 0) {
+        const ratio = textarea.scrollTop / scrollMaxTextarea;
+        preview.scrollTop = ratio * scrollMaxPreview;
+      }
+      clearTimeout(this.scrollResetTimer);
+      this.scrollResetTimer = setTimeout(() => { this.isScrollingFromEditor = false; }, 60);
+    };
+
+    preview.onscroll = () => {
+      if (this.isScrollingFromEditor) return;
+      this.isScrollingFromPreview = true;
+      const scrollMaxTextarea = textarea.scrollHeight - textarea.clientHeight;
+      const scrollMaxPreview = preview.scrollHeight - preview.clientHeight;
+      if (scrollMaxTextarea > 0 && scrollMaxPreview > 0) {
+        const ratio = preview.scrollTop / scrollMaxPreview;
+        textarea.scrollTop = ratio * scrollMaxTextarea;
+      }
+      clearTimeout(this.scrollResetTimer);
+      this.scrollResetTimer = setTimeout(() => { this.isScrollingFromPreview = false; }, 60);
+    };
   }
 
   async initMermaidDiagrams() {
@@ -419,13 +498,12 @@ class App {
         fontFamily: 'system-ui, -apple-system, sans-serif'
       });
 
-      // 1. Renderizar tarjetas interactivas .mermaid-render-target con data-mermaid-code
+      // Renderizar tarjetas con clase .mermaid-render-target
       const targets = document.querySelectorAll('.mermaid-render-target[data-mermaid-code]');
       for (const target of targets) {
         const rawCode = target.getAttribute('data-mermaid-code');
         if (!rawCode) continue;
 
-        // Si ya tiene un SVG renderizado válido y no ha cambiado el código, omitir
         if (target.querySelector('svg') && target.getAttribute('data-rendered-code') === rawCode) {
           continue;
         }
@@ -458,7 +536,7 @@ class App {
         }
       }
 
-      // 2. Renderizar bloques Markdown <pre class="mermaid">
+      // Renderizar bloques Markdown <pre class="mermaid">
       const preMermaids = document.querySelectorAll('pre.mermaid:not([data-processed="true"])');
       for (const pre of preMermaids) {
         pre.setAttribute('data-processed', 'true');
@@ -495,15 +573,12 @@ class App {
         const nodeId = parseInt(node.getAttribute('data-graph-node'), 10);
         const nodeDeps = (node.getAttribute('data-deps') || '').split(',').filter(Boolean).map(Number);
 
-        // Atenuar todo
         nodes.forEach(n => n.classList.add('opacity-30'));
         edges.forEach(e => e.classList.add('opacity-10'));
 
-        // Resaltar nodo actual
         node.classList.remove('opacity-30');
         node.classList.add('scale-105', 'ring-2', 'ring-indigo-500');
 
-        // Resaltar dependencias (predecesores) en ámbar
         nodeDeps.forEach(depId => {
           const depEl = document.querySelector(`[data-graph-node="${depId}"]`);
           if (depEl) {
@@ -518,7 +593,6 @@ class App {
           }
         });
 
-        // Resaltar dependientes (sucesores) en cian
         document.querySelectorAll(`.graph-edge[data-edge-from="${nodeId}"]`).forEach(edge => {
           edge.classList.remove('opacity-10');
           edge.setAttribute('stroke-width', '4');
@@ -541,6 +615,355 @@ class App {
         });
       });
     });
+  }
+
+  // Abre el visor de artículo con el documento indicado
+  openArticleView(docKey, openInEditor = false) {
+    this.currentActiveDocKey = docKey;
+    const state = store.getState();
+    const docs = state.knowledgeIndex?.docs || {};
+    const meta = state.knowledgeIndex?.docMetadata?.[docKey] || {
+      title: docKey,
+      shelf: 'general',
+      readingTime: 3,
+      wordCount: 400
+    };
+    const content = docs[docKey] || '# Documento no disponible';
+
+    const libView = document.getElementById('kb-view-library');
+    const artView = document.getElementById('kb-view-article');
+    const pathEl = document.getElementById('doc-active-path');
+    const shelfBadge = document.getElementById('article-shelf-badge');
+    const readingTimeBadge = document.getElementById('article-reading-time-badge');
+    const bodyEl = document.getElementById('doc-active-body');
+    const tocEl = document.getElementById('doc-active-toc');
+    const wordsEl = document.getElementById('article-meta-words');
+    const brEl = document.getElementById('article-meta-br');
+    const rfEl = document.getElementById('article-meta-rf');
+
+    const readerContainer = document.getElementById('doc-reader-view-container');
+    const editorContainer = document.getElementById('doc-editor-view-container');
+    const btnText = document.getElementById('btn-toggle-doc-text');
+    const btnIcon = document.getElementById('btn-toggle-doc-icon');
+    const textarea = document.getElementById('doc-editor-textarea');
+    const livePreview = document.getElementById('doc-editor-live-preview');
+
+    if (pathEl) pathEl.textContent = docKey;
+    if (shelfBadge) shelfBadge.textContent = meta.shelf || 'Canónico';
+    if (readingTimeBadge) readingTimeBadge.textContent = `⏱️ ${meta.readingTime || 3} min`;
+    if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
+    if (brEl) brEl.textContent = meta.ruleCount || 0;
+    if (rfEl) rfEl.textContent = meta.reqCount || 0;
+
+    if (bodyEl) bodyEl.innerHTML = renderMarkdown(content);
+    if (tocEl) {
+      const toc = extractTableOfContents(content);
+      tocEl.innerHTML = renderTocHtml(toc);
+    }
+
+    if (textarea) textarea.value = content;
+    if (livePreview) livePreview.innerHTML = renderMarkdown(content);
+
+    if (openInEditor) {
+      readerContainer?.classList.add('hidden');
+      editorContainer?.classList.remove('hidden');
+      if (btnText) btnText.textContent = 'Modo Lectura';
+      if (btnIcon) btnIcon.textContent = '👁️';
+      this.setupSynchronizedScroll();
+    } else {
+      editorContainer?.classList.add('hidden');
+      readerContainer?.classList.remove('hidden');
+      if (btnText) btnText.textContent = 'Modo Editor';
+      if (btnIcon) btnIcon.textContent = '✏️';
+    }
+
+    libView?.classList.add('hidden');
+    artView?.classList.remove('hidden');
+
+    this.initMermaidDiagrams();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Abre el Omnibox Global Search
+  openOmnibox() {
+    const modal = document.getElementById('omnibox-modal');
+    const input = document.getElementById('omnibox-input');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (input) {
+        input.value = '';
+        input.focus();
+        this.renderOmniboxResults('');
+      }
+    }
+  }
+
+  closeOmnibox() {
+    const modal = document.getElementById('omnibox-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  renderOmniboxResults(query = '') {
+    const resultsContainer = document.getElementById('omnibox-results');
+    if (!resultsContainer) return;
+
+    const q = (query || '').toLowerCase().trim();
+    const state = store.getState();
+    const features = state.features || [];
+    const docs = state.knowledgeIndex?.docMetadata || {};
+    const rules = state.knowledgeIndex?.business_rules || [];
+    const modules = store.getAvailableModules() || [];
+
+    const matchedFeatures = features.filter(f => 
+      !q || f.title.toLowerCase().includes(q) || f.name.toLowerCase().includes(q) || f.module.toLowerCase().includes(q) || `int-${f.id}`.includes(q)
+    ).slice(0, 5);
+
+    const matchedDocs = Object.values(docs).filter(d => 
+      !q || d.key.toLowerCase().includes(q) || (d.title && d.title.toLowerCase().includes(q)) || (d.summary && d.summary.toLowerCase().includes(q))
+    ).slice(0, 5);
+
+    const matchedRules = rules.filter(r => 
+      !q || r.id.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)
+    ).slice(0, 5);
+
+    const matchedModules = modules.filter(m => 
+      !q || m.toLowerCase().includes(q)
+    ).slice(0, 4);
+
+    let html = '';
+
+    if (matchedFeatures.length > 0) {
+      html += `
+        <div class="space-y-1">
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">📋 Tareas & Specs</div>
+          ${matchedFeatures.map((f, i) => `
+            <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
+                 data-omnibox-type="feature"
+                 data-feature-id="${f.id}">
+              <div class="flex items-center gap-2 truncate">
+                <span class="font-bold text-indigo-500">[INT-${f.id}]</span>
+                <span class="truncate">${escapeHtml(f.title)}</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">${f.status}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (matchedDocs.length > 0) {
+      html += `
+        <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">📚 Base de Conocimiento</div>
+          ${matchedDocs.map(d => `
+            <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
+                 data-omnibox-type="doc"
+                 data-doc-key="${escapeAttr(d.key)}">
+              <div class="flex items-center gap-2 truncate">
+                <span>📄</span>
+                <span class="font-bold truncate">${escapeHtml(d.title)}</span>
+                <span class="text-[10px] text-slate-400 font-mono truncate">(${escapeHtml(d.key)})</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">⏱️ ${d.readingTime || 2}m</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (matchedRules.length > 0) {
+      html += `
+        <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">⚖️ Reglas de Negocio (BR-*)</div>
+          ${matchedRules.map(r => `
+            <div class="omnibox-item p-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/50 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center justify-between transition-colors"
+                 data-omnibox-type="rule"
+                 data-rule-id="${escapeAttr(r.id)}"
+                 data-rule-module="${escapeAttr(r.module || '')}">
+              <div class="flex items-center gap-2 truncate">
+                <span class="font-bold text-amber-500">${r.id}</span>
+                <span class="truncate">${escapeHtml(r.title)}</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400">[${r.module || 'general'}]</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (!matchedFeatures.length && !matchedDocs.length && !matchedRules.length) {
+      html = `<div class="p-6 text-center text-slate-400">No se encontraron resultados para "${escapeHtml(q)}"</div>`;
+    }
+
+    resultsContainer.innerHTML = html;
+  }
+
+  // Renderiza los bloques interactivos en el editor de bloques visuales
+  renderVisualBlocks(blocks = []) {
+    const container = document.getElementById('doc-editor-blocks-container');
+    if (!container) return;
+
+    if (!blocks || blocks.length === 0) {
+      container.innerHTML = `
+        <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-400 text-xs">
+          Sin bloques de contenido aún. Añade uno con la barra superior de acciones.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = blocks.map((b, idx) => {
+      const typeLabel = getBlockTypeLabel(b.type);
+      return `
+        <div class="visual-block-card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs space-y-3"
+             data-block-id="${b.id}"
+             data-block-index="${idx}">
+          <div class="flex items-center justify-between text-xs font-mono pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+                ${typeLabel}
+              </span>
+              <span class="text-slate-400 text-[10px]">Bloque #${idx + 1}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button type="button" data-block-action="move-up" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover arriba" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>🔼</button>
+              <button type="button" data-block-action="move-down" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover abajo" ${idx === blocks.length - 1 ? 'disabled style="opacity:0.3"' : ''}>🔽</button>
+              <button type="button" data-block-action="delete" class="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer text-xs" title="Eliminar bloque">🗑️</button>
+            </div>
+          </div>
+          ${this.renderBlockInputControls(b)}
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderBlockInputControls(b) {
+    switch (b.type) {
+      case 'header':
+        return `
+          <div class="flex items-center gap-2">
+            <select class="block-input-header-level px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono">
+              <option value="1" ${b.level === 1 ? 'selected' : ''}>H1 (#)</option>
+              <option value="2" ${b.level === 2 ? 'selected' : ''}>H2 (##)</option>
+              <option value="3" ${b.level === 3 ? 'selected' : ''}>H3 (###)</option>
+            </select>
+            <input type="text" class="block-input-header-text flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-900 dark:text-slate-100" value="${escapeAttr(b.text || '')}" placeholder="Título del encabezado" />
+          </div>
+        `;
+
+      case 'paragraph':
+        return `
+          <textarea class="block-input-paragraph-text w-full p-3 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y leading-relaxed" rows="3" placeholder="Párrafo o contenido descriptivo...">${escapeHtml(Array.isArray(b.lines) ? b.lines.join('\n') : (b.text || ''))}</textarea>
+        `;
+
+      case 'callout':
+        return `
+          <div class="space-y-2">
+            <select class="block-input-callout-kind px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold">
+              <option value="NOTE" ${b.kind === 'NOTE' ? 'selected' : ''}>NOTE (Nota informativa)</option>
+              <option value="TIP" ${b.kind === 'TIP' ? 'selected' : ''}>TIP (Consejo/Buenas prácticas)</option>
+              <option value="IMPORTANT" ${b.kind === 'IMPORTANT' ? 'selected' : ''}>IMPORTANT (Importante)</option>
+              <option value="WARNING" ${b.kind === 'WARNING' ? 'selected' : ''}>WARNING (Advertencia)</option>
+              <option value="CAUTION" ${b.kind === 'CAUTION' ? 'selected' : ''}>CAUTION (Precaución)</option>
+              <option value="DANGER" ${b.kind === 'DANGER' ? 'selected' : ''}>DANGER (Riesgo Crítico)</option>
+            </select>
+            <textarea class="block-input-callout-text w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Mensaje de la alerta...">${escapeHtml(b.text || '')}</textarea>
+          </div>
+        `;
+
+      case 'business_rule':
+        return `
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <input type="text" class="block-input-rule-id w-36 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold text-amber-600 dark:text-amber-400" value="${escapeAttr(b.ruleId || 'BR-GEN-001')}" placeholder="BR-XXX-001" />
+              <input type="text" class="block-input-rule-title flex-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-800 dark:text-slate-100 font-semibold" value="${escapeAttr(b.title || '')}" placeholder="Título de la regla de negocio" />
+            </div>
+            <textarea class="block-input-rule-desc w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Descripción detallada de la invariante...">${escapeHtml(b.text || b.description || '')}</textarea>
+          </div>
+        `;
+
+      case 'code':
+        return `
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400">Lenguaje:</span>
+              <select class="block-input-code-lang px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold text-purple-600 dark:text-purple-400">
+                <option value="mermaid" ${b.lang === 'mermaid' ? 'selected' : ''}>mermaid</option>
+                <option value="drawio" ${b.lang === 'drawio' ? 'selected' : ''}>drawio</option>
+                <option value="csharp" ${b.lang === 'csharp' ? 'selected' : ''}>csharp (.NET)</option>
+                <option value="javascript" ${b.lang === 'javascript' ? 'selected' : ''}>javascript</option>
+                <option value="typescript" ${b.lang === 'typescript' ? 'selected' : ''}>typescript</option>
+                <option value="json" ${b.lang === 'json' ? 'selected' : ''}>json</option>
+                <option value="sql" ${b.lang === 'sql' ? 'selected' : ''}>sql</option>
+                <option value="bash" ${b.lang === 'bash' ? 'selected' : ''}>bash</option>
+                <option value="yaml" ${b.lang === 'yaml' ? 'selected' : ''}>yaml</option>
+              </select>
+            </div>
+            <textarea class="block-input-code-content w-full p-3 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-900 text-indigo-300 resize-y" rows="6" placeholder="Código o sintaxis del diagrama...">${escapeHtml(Array.isArray(b.content) ? b.content.join('\n') : (b.content || ''))}</textarea>
+          </div>
+        `;
+
+      case 'divider':
+        return `
+          <div class="py-2 text-center text-xs font-mono text-slate-400 flex items-center gap-2">
+            <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+            <span>--- Separador de Sección ---</span>
+            <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+          </div>
+        `;
+
+      default:
+        return `
+          <textarea class="block-input-raw-text w-full p-2.5 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950" rows="3">${escapeHtml(b.raw || '')}</textarea>
+        `;
+    }
+  }
+
+  // Extrae y sincroniza bloques visuales desde el DOM
+  syncBlocksFromDom() {
+    const cards = document.querySelectorAll('.visual-block-card');
+    const newBlocks = [];
+
+    cards.forEach(card => {
+      const bId = card.getAttribute('data-block-id');
+      const origBlock = this.currentBlocks.find(b => b.id === bId) || {};
+      const type = origBlock.type || 'paragraph';
+
+      if (type === 'header') {
+        const level = parseInt(card.querySelector('.block-input-header-level')?.value || '1', 10);
+        const text = card.querySelector('.block-input-header-text')?.value || '';
+        newBlocks.push({ ...origBlock, level, text });
+      } else if (type === 'paragraph') {
+        const text = card.querySelector('.block-input-paragraph-text')?.value || '';
+        newBlocks.push({ ...origBlock, lines: text.split('\n') });
+      } else if (type === 'callout') {
+        const kind = card.querySelector('.block-input-callout-kind')?.value || 'NOTE';
+        const text = card.querySelector('.block-input-callout-text')?.value || '';
+        newBlocks.push({ ...origBlock, kind, text });
+      } else if (type === 'business_rule') {
+        const ruleId = card.querySelector('.block-input-rule-id')?.value || 'BR-GEN-001';
+        const title = card.querySelector('.block-input-rule-title')?.value || '';
+        const text = card.querySelector('.block-input-rule-desc')?.value || '';
+        newBlocks.push({ ...origBlock, ruleId, title, text });
+      } else if (type === 'code') {
+        const lang = card.querySelector('.block-input-code-lang')?.value || 'mermaid';
+        const content = card.querySelector('.block-input-code-content')?.value || '';
+        newBlocks.push({ ...origBlock, lang, content: content.split('\n') });
+      } else if (type === 'divider') {
+        newBlocks.push({ ...origBlock, type: 'divider' });
+      }
+    });
+
+    this.currentBlocks = newBlocks;
+    const serializedMd = blocksToMarkdown(this.currentBlocks);
+    const textarea = document.getElementById('doc-editor-textarea');
+    const preview = document.getElementById('doc-editor-live-preview');
+    if (textarea) textarea.value = serializedMd;
+    if (preview) preview.innerHTML = renderMarkdown(serializedMd);
   }
 
   bindGlobalEvents() {
@@ -568,109 +991,294 @@ class App {
         return;
       }
 
-      // Clic en nodo de grafo para ver detalle
-      const graphNode = e.target.closest('[data-graph-node]');
-      if (graphNode) {
-        const id = parseInt(graphNode.getAttribute('data-graph-node'), 10);
-        const feature = store.getState().features.find(f => f.id === id);
-        if (feature) store.setSelectedFeature(feature);
+      // Abrir Omnibox Global Search
+      const openOmniboxBtn = e.target.closest('[data-action="open-omnibox"]');
+      if (openOmniboxBtn) {
+        this.openOmnibox();
         return;
       }
 
-      // Ver detalle de feature
-      const viewDetailBtn = e.target.closest('[data-action="view-detail"]');
-      if (viewDetailBtn) {
-        const id = parseInt(viewDetailBtn.getAttribute('data-id'), 10);
-        const feature = store.getState().features.find(f => f.id === id);
-        if (feature) store.setSelectedFeature(feature);
-        return;
-      }
+      // Selección dentro de Omnibox
+      const omniboxItem = e.target.closest('.omnibox-item');
+      if (omniboxItem) {
+        const type = omniboxItem.getAttribute('data-omnibox-type');
+        this.closeOmnibox();
 
-      // Fila de la tabla (abrir detalle con click)
-      const tableRow = e.target.closest('tr[data-feature-id]');
-      if (tableRow && !e.target.closest('button')) {
-        const id = parseInt(tableRow.getAttribute('data-feature-id'), 10);
-        const feature = store.getState().features.find(f => f.id === id);
-        if (feature) store.setSelectedFeature(feature);
-        return;
-      }
-
-      // Cerrar modal
-      const closeModalBtn = e.target.closest('[data-action="close-modal"]');
-      if (closeModalBtn) {
-        store.setSelectedFeature(null);
-        return;
-      }
-
-      // Paginación de página
-      const pageBtn = e.target.closest('[data-page]');
-      if (pageBtn) {
-        const page = parseInt(pageBtn.getAttribute('data-page'), 10);
-        if (!isNaN(page) && page > 0) {
-          store.setPage(page);
+        if (type === 'feature') {
+          const id = parseInt(omniboxItem.getAttribute('data-feature-id'), 10);
+          const feature = store.getState().features.find(f => f.id === id);
+          if (feature) store.setSelectedFeature(feature);
+        } else if (type === 'doc') {
+          const docKey = omniboxItem.getAttribute('data-doc-key');
+          router.navigate('knowledge');
+          setTimeout(() => this.openArticleView(docKey, false), 50);
+        } else if (type === 'rule') {
+          router.navigate('knowledge');
+          setTimeout(() => {
+            const rulesEl = document.getElementById('kb-rules-list');
+            if (rulesEl) rulesEl.scrollIntoView({ behavior: 'smooth' });
+          }, 80);
         }
         return;
       }
 
-      // Reset filtros
-      const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
-      if (resetFiltersBtn) {
-        const searchInput = document.getElementById('feature-search-input');
-        if (searchInput) searchInput.value = '';
-        store.resetFilters();
+      // Clic fuera del Omnibox para cerrar
+      if (e.target.id === 'omnibox-modal') {
+        this.closeOmnibox();
         return;
       }
 
-      // Cambio de diagrama en Arquitectura & Stack
-      const archTabBtn = e.target.closest('[data-arch-tab]');
-      if (archTabBtn) {
-        const tabId = archTabBtn.getAttribute('data-arch-tab');
-        document.querySelectorAll('.arch-tab-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-indigo-600', 'text-white');
-          btn.classList.add('text-slate-600', 'dark:text-slate-400');
-        });
-        archTabBtn.classList.add('active', 'bg-indigo-600', 'text-white');
-        archTabBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+      // Volver a la Biblioteca de Conocimiento
+      const backToLibBtn = e.target.closest('[data-action="back-to-library"]');
+      if (backToLibBtn) {
+        document.getElementById('kb-view-article')?.classList.add('hidden');
+        document.getElementById('kb-view-library')?.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
 
-        document.querySelectorAll('.diagram-panel').forEach(panel => {
-          panel.classList.add('hidden');
-          panel.classList.remove('block');
+      // Abrir Documento en Modo Lectura (Editorial Article)
+      const openReadBtn = e.target.closest('[data-action="open-article-read"]');
+      if (openReadBtn) {
+        const docKey = openReadBtn.getAttribute('data-doc-key');
+        if (docKey) this.openArticleView(docKey, false);
+        return;
+      }
+
+      // Abrir Documento en Modo Edición
+      const openEditBtn = e.target.closest('[data-action="open-article-edit"]');
+      if (openEditBtn) {
+        const docKey = openEditBtn.getAttribute('data-doc-key');
+        if (docKey) this.openArticleView(docKey, true);
+        return;
+      }
+
+      // Filtrar estantes por píldora en la Biblioteca
+      const shelfPill = e.target.closest('.kb-shelf-pill');
+      if (shelfPill) {
+        const targetShelf = shelfPill.getAttribute('data-shelf-filter');
+        document.querySelectorAll('.kb-shelf-pill').forEach(p => {
+          p.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
+          p.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
         });
-        const targetPanel = document.getElementById(`diagram-panel-${tabId}`);
-        if (targetPanel) {
-          targetPanel.classList.remove('hidden');
-          targetPanel.classList.add('block');
+        shelfPill.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
+        shelfPill.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+
+        document.querySelectorAll('.kb-shelf-section').forEach(sec => {
+          const sId = sec.getAttribute('data-shelf-id');
+          if (!targetShelf || sId === targetShelf) {
+            sec.classList.remove('hidden');
+          } else {
+            sec.classList.add('hidden');
+          }
+        });
+        return;
+      }
+
+      // Conmutar entre Modo Lectura y Modo Editor en la Base de Conocimiento
+      const toggleEditorBtn = e.target.closest('#btn-toggle-doc-editor');
+      if (toggleEditorBtn) {
+        const readerContainer = document.getElementById('doc-reader-view-container');
+        const editorContainer = document.getElementById('doc-editor-view-container');
+        const btnText = document.getElementById('btn-toggle-doc-text');
+        const btnIcon = document.getElementById('btn-toggle-doc-icon');
+        const textarea = document.getElementById('doc-editor-textarea');
+        const preview = document.getElementById('doc-editor-live-preview');
+        const pathEl = document.getElementById('doc-active-path');
+
+        if (readerContainer && editorContainer) {
+          const isEditorHidden = editorContainer.classList.contains('hidden');
+          if (isEditorHidden) {
+            const docKey = pathEl ? pathEl.textContent.trim() : '';
+            const docs = store.getState().knowledgeIndex?.docs || {};
+            const content = docs[docKey] || '';
+            if (textarea) textarea.value = content;
+            if (preview) preview.innerHTML = renderMarkdown(content);
+            editorContainer.classList.remove('hidden');
+            readerContainer.classList.add('hidden');
+            if (btnText) btnText.textContent = 'Modo Lectura';
+            if (btnIcon) btnIcon.textContent = '👁️';
+            this.setupSynchronizedScroll();
+          } else {
+            editorContainer.classList.add('hidden');
+            readerContainer.classList.remove('hidden');
+            if (btnText) btnText.textContent = 'Modo Editor';
+            if (btnIcon) btnIcon.textContent = '✏️';
+          }
+        }
+        return;
+      }
+
+      // Conmutador del Editor Dual: Modo Markdown
+      const btnModeMd = e.target.closest('#btn-editor-mode-md');
+      if (btnModeMd) {
+        this.editorMode = 'markdown';
+        btnModeMd.classList.add('bg-indigo-600', 'text-white');
+        btnModeMd.classList.remove('text-slate-600', 'dark:text-slate-400');
+        const btnModeBlocks = document.getElementById('btn-editor-mode-blocks');
+        btnModeBlocks?.classList.remove('bg-indigo-600', 'text-white');
+        btnModeBlocks?.classList.add('text-slate-600', 'dark:text-slate-400');
+
+        document.getElementById('editor-pane-markdown')?.classList.remove('hidden');
+        document.getElementById('editor-pane-blocks')?.classList.add('hidden');
+        this.setupSynchronizedScroll();
+        return;
+      }
+
+      // Conmutador del Editor Dual: Modo Bloques Visuales (ContextForge)
+      const btnModeBlocks = e.target.closest('#btn-editor-mode-blocks');
+      if (btnModeBlocks) {
+        this.editorMode = 'blocks';
+        btnModeBlocks.classList.add('bg-indigo-600', 'text-white');
+        btnModeBlocks.classList.remove('text-slate-600', 'dark:text-slate-400');
+        const btnModeMd = document.getElementById('btn-editor-mode-md');
+        btnModeMd?.classList.remove('bg-indigo-600', 'text-white');
+        btnModeMd?.classList.add('text-slate-600', 'dark:text-slate-400');
+
+        document.getElementById('editor-pane-markdown')?.classList.add('hidden');
+        document.getElementById('editor-pane-blocks')?.classList.remove('hidden');
+
+        // Parsear markdown actual a bloques
+        const textarea = document.getElementById('doc-editor-textarea');
+        const currentMd = textarea ? textarea.value : '';
+        this.currentBlocks = parseMarkdownToBlocks(currentMd);
+        this.renderVisualBlocks(this.currentBlocks);
+        return;
+      }
+
+      // Agregar bloque visual de cualquier tipo
+      const addBlockBtn = e.target.closest('[data-add-block]');
+      if (addBlockBtn) {
+        const type = addBlockBtn.getAttribute('data-add-block');
+        const newBlock = {
+          id: 'blk_' + Math.random().toString(36).substring(2, 9),
+          type
+        };
+        if (type === 'header') { newBlock.level = 2; newBlock.text = 'Nuevo Encabezado'; }
+        else if (type === 'paragraph') { newBlock.lines = ['Escribe aquí tu contenido descriptivo...']; }
+        else if (type === 'callout') { newBlock.kind = 'NOTE'; newBlock.text = 'Nota importante para desarrolladores o IA.'; }
+        else if (type === 'business_rule') { newBlock.ruleId = 'BR-NEW-001'; newBlock.title = 'Nueva Regla'; newBlock.text = 'Invariante de cumplimiento estricto.'; }
+        else if (type === 'code') { newBlock.lang = 'mermaid'; newBlock.content = ['flowchart TD\n  A[Inicio] --> B[Fin]']; }
+
+        this.currentBlocks.push(newBlock);
+        this.renderVisualBlocks(this.currentBlocks);
+        const serialized = blocksToMarkdown(this.currentBlocks);
+        const textarea = document.getElementById('doc-editor-textarea');
+        if (textarea) textarea.value = serialized;
+        return;
+      }
+
+      // Acciones de bloque visual individual: mover arriba, mover abajo, eliminar
+      const blockActionBtn = e.target.closest('[data-block-action]');
+      if (blockActionBtn) {
+        const card = blockActionBtn.closest('.visual-block-card');
+        const bId = card?.getAttribute('data-block-id');
+        const action = blockActionBtn.getAttribute('data-block-action');
+        const idx = this.currentBlocks.findIndex(b => b.id === bId);
+
+        if (idx !== -1) {
+          if (action === 'move-up' && idx > 0) {
+            const temp = this.currentBlocks[idx - 1];
+            this.currentBlocks[idx - 1] = this.currentBlocks[idx];
+            this.currentBlocks[idx] = temp;
+          } else if (action === 'move-down' && idx < this.currentBlocks.length - 1) {
+            const temp = this.currentBlocks[idx + 1];
+            this.currentBlocks[idx + 1] = this.currentBlocks[idx];
+            this.currentBlocks[idx] = temp;
+          } else if (action === 'delete') {
+            this.currentBlocks.splice(idx, 1);
+          }
+          this.renderVisualBlocks(this.currentBlocks);
+          const serialized = blocksToMarkdown(this.currentBlocks);
+          const textarea = document.getElementById('doc-editor-textarea');
+          if (textarea) textarea.value = serialized;
+        }
+        return;
+      }
+
+      // Guardar cambios del documento
+      const saveEditBtn = e.target.closest('#btn-save-doc-edit');
+      if (saveEditBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        const textarea = document.getElementById('doc-editor-textarea');
+        const newContent = textarea ? textarea.value : '';
+
+        if (docKey) {
+          store.saveDoc(docKey, newContent);
+          const bodyEl = document.getElementById('doc-active-body');
+          if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
+          const tocEl = document.getElementById('doc-active-toc');
+          if (tocEl) tocEl.innerHTML = renderTocHtml(extractTableOfContents(newContent));
+
+          document.getElementById('doc-editor-view-container')?.classList.add('hidden');
+          document.getElementById('doc-reader-view-container')?.classList.remove('hidden');
+          const btnText = document.getElementById('btn-toggle-doc-text');
+          const btnIcon = document.getElementById('btn-toggle-doc-icon');
+          if (btnText) btnText.textContent = 'Modo Editor';
+          if (btnIcon) btnIcon.textContent = '✏️';
+
           this.initMermaidDiagrams();
         }
         return;
       }
 
-      // Copiar código Mermaid del diagrama activo
-      const copyActiveBtn = e.target.closest('#copy-active-mermaid-btn');
-      if (copyActiveBtn) {
-        const activePanel = document.querySelector('.diagram-panel:not(.hidden)');
-        const codeEl = activePanel?.querySelector('pre code');
-        const textToCopy = codeEl ? codeEl.textContent : 'Clean Architecture + Event-Driven Architecture Layers';
-        if (navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(textToCopy).then(() => {
-            const origHtml = copyActiveBtn.innerHTML;
-            copyActiveBtn.innerHTML = '<span>✅</span> ¡Copiado!';
-            setTimeout(() => { copyActiveBtn.innerHTML = origHtml; }, 2000);
-          }).catch(() => {});
+      // Cancelar edición de documento
+      const cancelEditBtn = e.target.closest('#btn-cancel-doc-edit');
+      if (cancelEditBtn) {
+        document.getElementById('doc-editor-view-container')?.classList.add('hidden');
+        document.getElementById('doc-reader-view-container')?.classList.remove('hidden');
+        const btnText = document.getElementById('btn-toggle-doc-text');
+        const btnIcon = document.getElementById('btn-toggle-doc-icon');
+        if (btnText) btnText.textContent = 'Modo Editor';
+        if (btnIcon) btnIcon.textContent = '✏️';
+        return;
+      }
+
+      // Copiar Markdown Activo
+      const copyDocBtn = e.target.closest('#copy-active-doc-btn');
+      if (copyDocBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        const content = store.getState().knowledgeIndex?.docs?.[docKey] || '';
+        if (content && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(content).then(() => {
+            const orig = copyDocBtn.innerHTML;
+            copyDocBtn.innerHTML = '<span>✅</span>';
+            setTimeout(() => { copyDocBtn.innerHTML = orig; }, 2000);
+          });
         }
         return;
       }
 
-      // Copiar código Mermaid individual
-      const copyMermaidBtn = e.target.closest('[data-copy-mermaid]');
-      if (copyMermaidBtn) {
-        const mermaidText = copyMermaidBtn.getAttribute('data-copy-mermaid');
-        if (mermaidText && navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(mermaidText).then(() => {
-            const origHtml = copyMermaidBtn.innerHTML;
-            copyMermaidBtn.innerHTML = '<span>✅</span> ¡Copiado!';
-            setTimeout(() => { copyMermaidBtn.innerHTML = origHtml; }, 2000);
-          }).catch(() => {});
+      // Descargar documento activo en .md
+      const downloadDocBtn = e.target.closest('[data-action="download-active-doc"]');
+      if (downloadDocBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        const content = store.getState().knowledgeIndex?.docs?.[docKey] || '';
+        const filename = docKey.split('/').pop() || 'document.md';
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Eliminar documento activo
+      const deleteDocBtn = e.target.closest('[data-action="delete-active-doc"]');
+      if (deleteDocBtn) {
+        const pathEl = document.getElementById('doc-active-path');
+        const docKey = pathEl ? pathEl.textContent.trim() : '';
+        if (docKey && confirm(`¿Estás seguro de que deseas eliminar "${docKey}" de la Base de Conocimiento?`)) {
+          store.deleteDoc(docKey);
+          document.getElementById('kb-view-article')?.classList.add('hidden');
+          document.getElementById('kb-view-library')?.classList.remove('hidden');
         }
         return;
       }
@@ -708,6 +1316,93 @@ class App {
             setTimeout(() => { copyContextBtn.innerHTML = origHtml; }, 2000);
           }).catch(() => {});
         }
+        return;
+      }
+
+      // Abrir modal de nuevo documento
+      const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
+      if (openNewDocBtn) {
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          const modInput = document.getElementById('new-doc-module');
+          if (modInput) modInput.focus();
+        }
+        return;
+      }
+
+      // Cerrar modal de nuevo documento
+      const closeNewDocBtn = e.target.closest('[data-action="close-new-doc-modal"]');
+      if (closeNewDocBtn || e.target.id === 'new-doc-modal') {
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
+
+      // Exportar toda la Base de Conocimiento en JSON
+      const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
+      if (exportKnowledgeBtn) {
+        const kData = store.getState().knowledgeIndex;
+        const jsonStr = JSON.stringify(kData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `knowledge-base-${store.getState().project || 'project'}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Trigger para importar documento o JSON desde archivo local
+      const triggerImportBtn = e.target.closest('[data-action="trigger-import-doc"]');
+      if (triggerImportBtn) {
+        const fileInput = document.getElementById('import-doc-file-input');
+        if (fileInput) fileInput.click();
+        return;
+      }
+
+      // Detalle de Feature desde tabla o nodo
+      const viewDetailBtn = e.target.closest('[data-action="view-detail"]');
+      if (viewDetailBtn) {
+        const id = parseInt(viewDetailBtn.getAttribute('data-id'), 10);
+        const feature = store.getState().features.find(f => f.id === id);
+        if (feature) store.setSelectedFeature(feature);
+        return;
+      }
+
+      const tableRow = e.target.closest('tr[data-feature-id]');
+      if (tableRow && !e.target.closest('button')) {
+        const id = parseInt(tableRow.getAttribute('data-feature-id'), 10);
+        const feature = store.getState().features.find(f => f.id === id);
+        if (feature) store.setSelectedFeature(feature);
+        return;
+      }
+
+      const closeModalBtn = e.target.closest('[data-action="close-modal"]');
+      if (closeModalBtn) {
+        store.setSelectedFeature(null);
+        return;
+      }
+
+      const pageBtn = e.target.closest('[data-page]');
+      if (pageBtn) {
+        const page = parseInt(pageBtn.getAttribute('data-page'), 10);
+        if (!isNaN(page) && page > 0) store.setPage(page);
+        return;
+      }
+
+      const resetFiltersBtn = e.target.closest('[data-action="reset-filters"]');
+      if (resetFiltersBtn) {
+        const searchInput = document.getElementById('feature-search-input');
+        if (searchInput) searchInput.value = '';
+        store.resetFilters();
         return;
       }
 
@@ -758,7 +1453,7 @@ class App {
         return;
       }
 
-      // Cerrar modal de diagrama ampliado
+      // Cerrar modal de diagrama
       const closeDiagModal = e.target.closest('[data-action="close-diagram-modal"]');
       if (closeDiagModal || e.target.id === 'diagram-modal') {
         const modal = document.getElementById('diagram-modal');
@@ -768,266 +1463,9 @@ class App {
         }
         return;
       }
-
-      // Lector Docs-as-Code: Seleccionar documento Markdown
-      const docItem = e.target.closest('[data-doc-key]');
-      if (docItem) {
-        const docKey = docItem.getAttribute('data-doc-key');
-        const state = store.getState();
-        const docs = state.knowledgeIndex?.docs || {};
-        const content = docs[docKey] || '# Documento no disponible';
-
-        document.querySelectorAll('.doc-nav-item').forEach(el => {
-          el.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold');
-          el.classList.add('text-slate-600', 'dark:text-slate-400');
-        });
-        docItem.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold');
-        docItem.classList.remove('text-slate-600', 'dark:text-slate-400');
-
-        const pathEl = document.getElementById('doc-active-path');
-        const bodyEl = document.getElementById('doc-active-body');
-        if (pathEl) pathEl.textContent = docKey;
-        if (bodyEl) {
-          bodyEl.innerHTML = renderMarkdown(content);
-          this.initMermaidDiagrams();
-        }
-
-        // Actualizar también editor y previsualización si están en pantalla
-        const editorTextarea = document.getElementById('doc-editor-textarea');
-        const editorPreview = document.getElementById('doc-editor-live-preview');
-        if (editorTextarea) editorTextarea.value = content;
-        if (editorPreview) editorPreview.innerHTML = renderMarkdown(content);
-        return;
-      }
-
-      // Conmutar entre Modo Lectura y Modo Editor en la Base de Conocimiento
-      const toggleEditorBtn = e.target.closest('#btn-toggle-doc-editor');
-      if (toggleEditorBtn) {
-        const readerContainer = document.getElementById('doc-reader-view-container');
-        const editorContainer = document.getElementById('doc-editor-view-container');
-        const btnText = document.getElementById('btn-toggle-doc-text');
-        const btnIcon = document.getElementById('btn-toggle-doc-icon');
-        const textarea = document.getElementById('doc-editor-textarea');
-        const preview = document.getElementById('doc-editor-live-preview');
-        const pathEl = document.getElementById('doc-active-path');
-
-        if (readerContainer && editorContainer) {
-          const isEditorHidden = editorContainer.classList.contains('hidden');
-          if (isEditorHidden) {
-            // Entrar al editor
-            const docKey = pathEl ? pathEl.textContent.trim() : '';
-            const docs = store.getState().knowledgeIndex?.docs || {};
-            const content = docs[docKey] || '';
-            if (textarea) textarea.value = content;
-            if (preview) preview.innerHTML = renderMarkdown(content);
-            editorContainer.classList.remove('hidden');
-            readerContainer.classList.add('hidden');
-            if (btnText) btnText.textContent = 'Ver Lector';
-            if (btnIcon) btnIcon.textContent = '👁️';
-          } else {
-            // Salir del editor
-            editorContainer.classList.add('hidden');
-            readerContainer.classList.remove('hidden');
-            if (btnText) btnText.textContent = 'Editar';
-            if (btnIcon) btnIcon.textContent = '✏️';
-          }
-        }
-        return;
-      }
-
-      // Cancelar edición de documento
-      const cancelEditBtn = e.target.closest('#btn-cancel-doc-edit');
-      if (cancelEditBtn) {
-        const readerContainer = document.getElementById('doc-reader-view-container');
-        const editorContainer = document.getElementById('doc-editor-view-container');
-        const btnText = document.getElementById('btn-toggle-doc-text');
-        const btnIcon = document.getElementById('btn-toggle-doc-icon');
-        if (readerContainer && editorContainer) {
-          editorContainer.classList.add('hidden');
-          readerContainer.classList.remove('hidden');
-          if (btnText) btnText.textContent = 'Editar';
-          if (btnIcon) btnIcon.textContent = '✏️';
-        }
-        return;
-      }
-
-      // Guardar cambios del documento editado
-      const saveEditBtn = e.target.closest('#btn-save-doc-edit');
-      if (saveEditBtn) {
-        const pathEl = document.getElementById('doc-active-path');
-        const docKey = pathEl ? pathEl.textContent.trim() : '';
-        const textarea = document.getElementById('doc-editor-textarea');
-        const newContent = textarea ? textarea.value : '';
-
-        if (docKey) {
-          store.saveDoc(docKey, newContent);
-          const bodyEl = document.getElementById('doc-active-body');
-          if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
-
-          const readerContainer = document.getElementById('doc-reader-view-container');
-          const editorContainer = document.getElementById('doc-editor-view-container');
-          const btnText = document.getElementById('btn-toggle-doc-text');
-          const btnIcon = document.getElementById('btn-toggle-doc-icon');
-          if (readerContainer && editorContainer) {
-            editorContainer.classList.add('hidden');
-            readerContainer.classList.remove('hidden');
-            if (btnText) btnText.textContent = 'Editar';
-            if (btnIcon) btnIcon.textContent = '✏️';
-          }
-          this.initMermaidDiagrams();
-        }
-        return;
-      }
-
-      // Abrir modal de nuevo documento
-      const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
-      if (openNewDocBtn) {
-        const modal = document.getElementById('new-doc-modal');
-        if (modal) {
-          modal.classList.remove('hidden');
-          modal.classList.add('flex');
-          const modInput = document.getElementById('new-doc-module');
-          if (modInput) modInput.focus();
-        }
-        return;
-      }
-
-      // Cerrar modal de nuevo documento
-      const closeNewDocBtn = e.target.closest('[data-action="close-new-doc-modal"]');
-      if (closeNewDocBtn || e.target.id === 'new-doc-modal') {
-        const modal = document.getElementById('new-doc-modal');
-        if (modal) {
-          modal.classList.add('hidden');
-          modal.classList.remove('flex');
-        }
-        return;
-      }
-
-      // Eliminar documento activo
-      const deleteDocBtn = e.target.closest('[data-action="delete-active-doc"]');
-      if (deleteDocBtn) {
-        const pathEl = document.getElementById('doc-active-path');
-        const docKey = pathEl ? pathEl.textContent.trim() : '';
-        if (docKey) {
-          if (confirm(`¿Estás seguro de que deseas eliminar el documento "${docKey}" de la Base de Conocimiento?`)) {
-            store.deleteDoc(docKey);
-          }
-        }
-        return;
-      }
-
-      // Descargar documento activo en archivo .md
-      const downloadDocBtn = e.target.closest('[data-action="download-active-doc"]');
-      if (downloadDocBtn) {
-        const pathEl = document.getElementById('doc-active-path');
-        const docKey = pathEl ? pathEl.textContent.trim() : '';
-        const docs = store.getState().knowledgeIndex?.docs || {};
-        const content = docs[docKey] || '';
-        const filename = docKey.split('/').pop() || 'document.md';
-        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return;
-      }
-
-      // Exportar toda la Base de Conocimiento en JSON
-      const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
-      if (exportKnowledgeBtn) {
-        const kData = store.getState().knowledgeIndex;
-        const jsonStr = JSON.stringify(kData, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `knowledge-base-${store.getState().project || 'project'}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return;
-      }
-
-      // Trigger para importar documento o JSON desde archivo local
-      const triggerImportBtn = e.target.closest('[data-action="trigger-import-doc"]');
-      if (triggerImportBtn) {
-        const fileInput = document.getElementById('import-doc-file-input');
-        if (fileInput) fileInput.click();
-        return;
-      }
-
-      // Filtrar documentos por píldora de módulo (Pills)
-      const kbModPill = e.target.closest('.kb-mod-pill');
-      if (kbModPill) {
-        const targetMod = kbModPill.getAttribute('data-kb-filter-module');
-        document.querySelectorAll('.kb-mod-pill').forEach(p => {
-          p.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold');
-          p.classList.add('bg-slate-200/70', 'dark:bg-slate-800/80', 'text-slate-600', 'dark:text-slate-400');
-        });
-        kbModPill.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold');
-        kbModPill.classList.remove('bg-slate-200/70', 'dark:bg-slate-800/80', 'text-slate-600', 'dark:text-slate-400');
-
-        const generalGroup = document.querySelector('.kb-doc-group[data-group-type="general"]');
-        const moduleItems = document.querySelectorAll('.kb-module-item');
-
-        if (!targetMod) {
-          if (generalGroup) generalGroup.classList.remove('hidden');
-          moduleItems.forEach(mi => mi.classList.remove('hidden'));
-        } else if (targetMod === 'general') {
-          if (generalGroup) generalGroup.classList.remove('hidden');
-          moduleItems.forEach(mi => mi.classList.add('hidden'));
-        } else {
-          if (generalGroup) generalGroup.classList.add('hidden');
-          moduleItems.forEach(mi => {
-            const mName = mi.getAttribute('data-module-name');
-            if (mName === targetMod) {
-              mi.classList.remove('hidden');
-            } else {
-              mi.classList.add('hidden');
-            }
-          });
-        }
-        return;
-      }
-
-      // Copiar Markdown Activo
-      const copyDocBtn = e.target.closest('#copy-active-doc-btn');
-      if (copyDocBtn) {
-        const pathEl = document.getElementById('doc-active-path');
-        const docKey = pathEl ? pathEl.textContent.trim() : '';
-        const state = store.getState();
-        const content = state.knowledgeIndex?.docs?.[docKey] || '';
-        if (content && navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(content).then(() => {
-            const orig = copyDocBtn.innerHTML;
-            copyDocBtn.innerHTML = '<span>✅</span> ¡Copiado!';
-            setTimeout(() => { copyDocBtn.innerHTML = orig; }, 2000);
-          });
-        }
-        return;
-      }
-
-      // Copiar bloque de código dentro del Markdown
-      const copyCodeBlockBtn = e.target.closest('[data-action="copy-code-block"]');
-      if (copyCodeBlockBtn) {
-        const pre = copyCodeBlockBtn.closest('div.my-4')?.querySelector('pre code');
-        if (pre && navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(pre.textContent).then(() => {
-            const orig = copyCodeBlockBtn.textContent;
-            copyCodeBlockBtn.textContent = '¡Copiado! ✓';
-            setTimeout(() => { copyCodeBlockBtn.textContent = orig; }, 2000);
-          });
-        }
-        return;
-      }
     });
 
-    // Búsqueda con Debouncing Inteligente (260ms) para no bloquear la escritura
+    // Inputs con debouncing
     document.addEventListener('input', (e) => {
       if (e.target.id === 'feature-search-input') {
         clearTimeout(this.searchDebounceTimer);
@@ -1035,38 +1473,45 @@ class App {
         this.searchDebounceTimer = setTimeout(() => {
           store.setFilter('search', val);
         }, 260);
-      } else if (e.target.id === 'kb-doc-search-input') {
+      } else if (e.target.id === 'kb-library-search-input') {
         clearTimeout(this.kbSearchDebounceTimer);
         const query = (e.target.value || '').toLowerCase().trim();
         this.kbSearchDebounceTimer = setTimeout(() => {
-          const docItems = document.querySelectorAll('.doc-nav-item');
-          docItems.forEach(item => {
-            const name = (item.getAttribute('data-doc-name') || '').toLowerCase();
-            const key = (item.getAttribute('data-doc-key') || '').toLowerCase();
-            const mod = (item.getAttribute('data-doc-module') || '').toLowerCase();
-            if (!query || name.includes(query) || key.includes(query) || mod.includes(query)) {
-              item.classList.remove('hidden');
+          const cards = document.querySelectorAll('.kb-shelf-doc-card');
+          cards.forEach(card => {
+            const title = (card.getAttribute('data-doc-title') || '').toLowerCase();
+            const key = (card.getAttribute('data-doc-key') || '').toLowerCase();
+            const mod = (card.getAttribute('data-doc-module') || '').toLowerCase();
+            const text = card.textContent.toLowerCase();
+            if (!query || title.includes(query) || key.includes(query) || mod.includes(query) || text.includes(query)) {
+              card.classList.remove('hidden');
             } else {
-              item.classList.add('hidden');
+              card.classList.add('hidden');
             }
           });
 
-          // Ocultar o mostrar grupos de módulos según si tienen documentos visibles
-          document.querySelectorAll('.kb-module-item').forEach(mi => {
-            const visibleChildren = mi.querySelectorAll('.doc-nav-item:not(.hidden)');
-            if (query && visibleChildren.length === 0) {
-              mi.classList.add('hidden');
+          document.querySelectorAll('.kb-shelf-section').forEach(sec => {
+            const visibleCards = sec.querySelectorAll('.kb-shelf-doc-card:not(.hidden)');
+            if (query && visibleCards.length === 0) {
+              sec.classList.add('hidden');
             } else {
-              mi.classList.remove('hidden');
+              sec.classList.remove('hidden');
             }
           });
         }, 180);
+      } else if (e.target.id === 'omnibox-input') {
+        clearTimeout(this.omniboxDebounceTimer);
+        const query = e.target.value;
+        this.omniboxDebounceTimer = setTimeout(() => {
+          this.renderOmniboxResults(query);
+        }, 150);
       } else if (e.target.id === 'doc-editor-textarea') {
-        // Previsualización en vivo en el editor Markdown
         const preview = document.getElementById('doc-editor-live-preview');
         if (preview) {
           preview.innerHTML = renderMarkdown(e.target.value);
         }
+      } else if (e.target.closest('.visual-block-card')) {
+        this.syncBlocksFromDom();
       }
     });
 
@@ -1113,12 +1558,13 @@ class App {
               alert('Error al parsear el archivo JSON: ' + err.message);
             }
           } else {
-            // Archivo .md o .markdown
             store.saveDoc(file.name, text);
           }
           e.target.value = '';
         };
         fileReader.readAsText(file);
+      } else if (e.target.closest('.visual-block-card')) {
+        this.syncBlocksFromDom();
       }
     });
 
@@ -1155,8 +1601,16 @@ class App {
       }
     });
 
+    // Atajos de Teclado Globales (Ctrl+K / Cmd+K y Escape)
     document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        this.openOmnibox();
+        return;
+      }
+
       if (e.key === 'Escape') {
+        this.closeOmnibox();
         if (store.getState().selectedFeature) {
           store.setSelectedFeature(null);
         }
@@ -1180,6 +1634,36 @@ class App {
   }
 }
 
+function getBlockTypeLabel(type) {
+  switch (type) {
+    case 'header': return '🏷️ Encabezado';
+    case 'paragraph': return '📝 Párrafo';
+    case 'callout': return '💡 Alerta';
+    case 'business_rule': return '⚖️ Regla BR';
+    case 'code': return '📐 Código/Diagrama';
+    case 'divider': return '➖ Separador';
+    default: return '📄 Bloque';
+  }
+}
+
+function renderTocHtml(toc = []) {
+  if (!toc || toc.length === 0) {
+    return `<div class="text-[11px] text-slate-400 italic py-2">Sin encabezados.</div>`;
+  }
+
+  return `
+    <nav class="space-y-1 text-xs font-mono">
+      ${toc.map(item => `
+        <a href="#${item.id}" 
+           class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? 'font-bold text-slate-900 dark:text-slate-100' : item.level === 2 ? 'pl-3' : 'pl-5 text-[11px]'}"
+           title="${escapeAttr(item.text)}">
+          ${escapeHtml(item.text)}
+        </a>
+      `).join('')}
+    </nav>
+  `;
+}
+
 function escapeHtml(text) {
   if (!text) return '';
   return String(text)
@@ -1188,6 +1672,11 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(text) {
+  if (!text) return '';
+  return String(text).replace(/"/g, '&quot;');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

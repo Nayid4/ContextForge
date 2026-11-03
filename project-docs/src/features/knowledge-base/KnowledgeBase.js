@@ -1,18 +1,19 @@
 import { Icons } from '../../shared/Icons.js';
 import { renderBadge } from '../../shared/Badge.js';
-import { renderMarkdown } from '../../shared/MarkdownViewer.js';
+import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksToMarkdown } from '../../shared/MarkdownViewer.js';
 
 /**
  * KnowledgeBaseComponent: Base de Conocimiento de Ingeniería Soberana (Docs-as-Code).
- * Inspirada en la arquitectura, gestión y diseño editorial de ContextForge.
+ * Diseñada con experiencia editorial de alta gama (Biblioteca por Estantes + Lector de Artículos)
+ * e inspirada en la arquitectura, gestión y diseño visual de ContextForge.
  *
  * Capacidades:
- * 1. Gestión de Documentos: Lectura, Creación (➕), Edición directa (✏️) y Eliminación (🗑️).
- * 2. Importación & Exportación: Carga de archivos .md/.json y exportación en 1-clic.
- * 3. Buscador reactivo con debouncing para módulos y documentos.
- * 4. Lector Editorial con soporte de GitHub Alerts, tablas limpias y bloques de código.
- * 5. Prompt Bundler para LLMs (copiar contexto canónico sin sesgo).
- * 6. Catálogo formal de Reglas de Negocio (BR-*), Servicios Externos y Guardrails.
+ * 1. Biblioteca Editorial (Shelves Hub): 6 estantes temáticos, tarjeta Hero destacada, metadatos ricos.
+ * 2. Lector de Artículos: Columna de 780px centrada, 1.75em line-height, TOC flotante con scrollspy.
+ * 3. Editor Dual ContextForge: Conmutador entre [ 📝 Modo Markdown ] y [ 🧱 Modo Bloques Visuales ].
+ * 4. Scroll Sincronizado Proporcional Anti-Bloqueo entre textarea y previsualización.
+ * 5. Catálogo formal de Reglas de Negocio (BR-*), Servicios Externos y Guardrails Anti-Sesgo dinámicos.
+ * 6. Prompt Bundler reactivo para inicializar LLMs sin alucinaciones ni mocks estáticos.
  */
 
 export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
@@ -23,327 +24,541 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
   const guardrails = standards.guardrails || [];
   const naming = standards.naming_conventions || {};
   const docs = kData.docs || getDefaultDocs();
+  const docMetadata = kData.docMetadata || buildDocMetadataFallback(docs);
+  const shelvesData = kData.shelves || buildShelvesFallback(docMetadata);
 
-  // Documento activo por defecto
   const docKeys = Object.keys(docs);
-  const activeDocKey = docKeys.includes('coding-standards.md') 
-    ? 'coding-standards.md' 
-    : (docKeys[0] || 'c4-model.md');
+  const activeDocKey = docKeys.includes('c4-model.md') 
+    ? 'c4-model.md' 
+    : (docKeys.includes('coding-standards.md') ? 'coding-standards.md' : (docKeys[0] || ''));
   const activeDocContent = docs[activeDocKey] || '# Documento no disponible';
+  const activeDocMeta = docMetadata[activeDocKey] || {
+    title: activeDocKey,
+    shelf: 'general',
+    readingTime: 3,
+    wordCount: 450,
+    ruleCount: 0,
+    reqCount: 0,
+    adrCount: 0
+  };
 
-  // Categorizar documentos
-  const generalDocs = [];
-  const moduleDocsMap = {};
+  // Módulos disponibles dinámicamente
+  const moduleNames = Array.from(new Set([
+    ...(projectSpec?.modules?.map(m => m.name) || []),
+    ...Object.values(docMetadata).filter(d => d.moduleName).map(d => d.moduleName),
+    ...rules.map(r => r.module)
+  ])).filter(Boolean);
 
-  docKeys.forEach(key => {
-    if (key.startsWith('modules/')) {
-      const parts = key.split('/');
-      const modName = parts[1] || 'general';
-      const fileName = parts.slice(2).join('/') || parts[1];
-      if (!moduleDocsMap[modName]) moduleDocsMap[modName] = [];
-      moduleDocsMap[modName].push({ key, fileName, modName });
-    } else {
-      generalDocs.push({ key, fileName: key });
-    }
-  });
+  // Seleccionar documento para Hero Card destacado
+  const heroDocKey = docKeys.includes('c4-model.md') 
+    ? 'c4-model.md' 
+    : (docKeys.includes('coding-standards.md') ? 'coding-standards.md' : (docKeys[0] || ''));
+  const heroDocMeta = docMetadata[heroDocKey] || activeDocMeta;
 
-  const availableModules = Object.keys(moduleDocsMap);
+  // Tabla de contenidos para el documento activo
+  const activeDocToc = extractTableOfContents(activeDocContent);
+
+  // Prompt dinámico para alimentar a la IA (System Prompt canónico)
+  const dynamicAiPrompt = buildAiSystemPrompt({ projectSpec, kData, rules, services, guardrails, naming });
 
   return `
-    <div class="space-y-10">
+    <div class="space-y-10" id="kb-container">
       
-      <!-- 1. HEADER HERO: ContextForge Sovereign Knowledge Base -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                Docs-as-Code
-              </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-                Sovereign Engineering Knowledge
-              </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                Anti-Bias Context
-              </span>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-              <span>📚</span> Base de Conocimiento de Ingeniería (ContextForge)
-            </h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-              Repositorio soberano de arquitectura, requerimientos, reglas de negocio y documentación viva en Markdown.
-              Permite auditar, crear y editar documentos técnicos para transferir contexto libre de sesgos a desarrolladores e inteligencias artificiales.
-            </p>
-          </div>
-
-          <!-- Barra de Acciones Principales -->
-          <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Nuevo Documento -->
-            <button type="button" 
-                    data-action="open-new-doc-modal"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
-              <span>➕</span> Nuevo Doc
-            </button>
-
-            <!-- Importar Archivo -->
-            <button type="button" 
-                    data-action="trigger-import-doc"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                    title="Importar archivo .md o .json local">
-              <span>📥</span> Importar
-            </button>
-            <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
-
-            <!-- Exportar Todo -->
-            <button type="button" 
-                    data-action="export-all-knowledge"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                    title="Descargar paquete JSON con toda la Base de Conocimiento">
-              <span>📤</span> Exportar
-            </button>
-
-            <!-- Prompt Bundler para LLM -->
-            <button type="button" 
-                    data-action="open-ai-context-modal" 
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
-              <span>🤖</span> Contexto IA
-            </button>
-          </div>
-        </div>
-
-        <!-- Métricas Rápidas -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Documentos Vivos</div>
-            <div id="kb-stats-doc-count" class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${docKeys.length} indexados</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Docs-as-Code (.md)</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Bounded Contexts</div>
-            <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${availableModules.length} módulos</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">DDD estratégicos</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
-            <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-0.5">${rules.length} catalogadas</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Identificadores BR-*</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-            <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
-            <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} integraciones</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Stripe, PG, Redis...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 2. EXPLORADOR & LECTOR EDITORIAL DOCS-AS-CODE (Estilo ContextForge) -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+      <!-- ============================================================== -->
+      <!-- VISTA 1: BIBLIOTECA EDITORIAL (HUB POR ESTANTES)               -->
+      <!-- ============================================================== -->
+      <div id="kb-view-library" class="space-y-8">
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          <!-- 2.1 SIDEBAR DE NAVEGACIÓN Y BÚSQUEDA (4 de 12 columnas) -->
-          <div class="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 space-y-4">
+        <!-- 1.1 Header Hero de la Biblioteca -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
+          <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  Docs-as-Code
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                  Biblioteca Editorial
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Anti-Bias Context
+                </span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+                <span>📚</span> Base de Conocimiento de Ingeniería Soberana
+              </h2>
+              <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                Repositorio canónico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), reglas de negocio (BR-*), 
+                decisiones técnicas (ADR) y bounded contexts. Permite auditar, crear y editar documentos con editor dual para guiar a desarrolladores y agentes de IA.
+              </p>
+            </div>
+
+            <!-- Botones de Acción Globales -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button type="button" 
+                      data-action="open-new-doc-modal"
+                      class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
+                <span>➕</span> Nuevo Doc
+              </button>
+
+              <button type="button" 
+                      data-action="trigger-import-doc"
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                      title="Importar archivo .md o .json local">
+                <span>📥</span> Importar
+              </button>
+              <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
+
+              <button type="button" 
+                      data-action="export-all-knowledge"
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                      title="Descargar paquete JSON con toda la Base de Conocimiento">
+                <span>📤</span> Exportar
+              </button>
+
+              <button type="button" 
+                      data-action="open-ai-context-modal" 
+                      class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+                <span>🤖</span> Contexto IA
+              </button>
+            </div>
+          </div>
+
+          <!-- Métricas Dinámicas Reales -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Documentos Vivos</div>
+              <div class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${docKeys.length} indexados</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Docs-as-Code (.md)</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Bounded Contexts</div>
+              <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${moduleNames.length} módulos</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Estratégicos DDD</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
+              <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-0.5">${rules.length} catalogadas</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Invariantes BR-*</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
+              <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} contratos</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Integraciones auditadas</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 1.2 Hero Featured Card (Artículo Destacado de la Biblioteca) -->
+        ${heroDocKey ? `
+          <section class="rounded-3xl border border-indigo-200/60 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden shadow-sm">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div class="space-y-3 max-w-3xl">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
+                    ⭐ Documento Destacado
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    ⏱️ ${heroDocMeta.readingTime} min de lectura
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    📝 ${heroDocMeta.wordCount} palabras
+                  </span>
+                  ${heroDocMeta.ruleCount ? `
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      ⚖️ ${heroDocMeta.ruleCount} Reglas BR
+                    </span>
+                  ` : ''}
+                </div>
+
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  ${escapeHtml(heroDocMeta.title || heroDocKey)}
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  ${escapeHtml(heroDocMeta.summary || 'Especificación formal del sistema con diagramas de contexto, contenedores y componentes.')}
+                </p>
+                <div class="font-mono text-[11px] text-slate-400">
+                  Ruta canónica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
+                </div>
+              </div>
+
+              <div class="flex sm:flex-col items-stretch gap-2.5 shrink-0 w-full sm:w-auto">
+                <button type="button" 
+                        data-action="open-article-read"
+                        data-doc-key="${escapeAttr(heroDocKey)}"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
+                  <span>📖</span> Leer Artículo Completo
+                </button>
+                <button type="button" 
+                        data-action="open-article-edit"
+                        data-doc-key="${escapeAttr(heroDocKey)}"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                  <span>✏️</span> Editar en Vivo
+                </button>
+              </div>
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- 1.3 Barra de Filtros por Estante Temático y Buscador con Debouncing -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-5 shadow-sm space-y-4">
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             
+            <!-- Píldoras de Filtro por Estante -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono" id="kb-shelf-filter-pills">
+              <button type="button" 
+                      data-shelf-filter="" 
+                      class="kb-shelf-pill active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0 shadow-xs">
+                Todos (${docKeys.length})
+              </button>
+              ${Object.values(shelvesData).map(sh => `
+                <button type="button" 
+                        data-shelf-filter="${sh.id}" 
+                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium">
+                  <span>${sh.icon}</span> ${sh.title.split(' ')[0]} (${sh.docs.length})
+                </button>
+              `).join('')}
+            </div>
+
             <!-- Buscador con Debouncing -->
-            <div class="relative">
+            <div class="relative min-w-[280px]">
               <input type="text" 
-                     id="kb-doc-search-input" 
-                     placeholder="Buscar documento o módulo..." 
-                     class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
+                     id="kb-library-search-input" 
+                     placeholder="Buscar en la biblioteca (título, módulo, BR-*)..." 
+                     class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
               <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none text-xs">
                 ${Icons.search('w-3.5 h-3.5')}
               </span>
             </div>
 
-            <!-- Filtro rápido por Módulo (Pills) -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-mono" id="kb-module-pill-filters">
+          </div>
+        </section>
+
+        <!-- 1.4 Estantes Temáticos (Shelves Grid) -->
+        <div class="space-y-10" id="kb-shelves-container">
+          ${Object.values(shelvesData).map(sh => {
+            if (!sh.docs || sh.docs.length === 0) return '';
+            return `
+              <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-xl">${sh.icon}</span>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                      ${escapeHtml(sh.title)}
+                    </h3>
+                  </div>
+                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    ${sh.docs.length} documentos
+                  </span>
+                </div>
+
+                <!-- Cuadrícula de Tarjetas de Documentos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  ${sh.docs.map(key => {
+                    const meta = docMetadata[key] || {
+                      title: key,
+                      summary: 'Documento técnico.',
+                      readingTime: 2,
+                      ruleCount: 0,
+                      reqCount: 0,
+                      adrCount: 0
+                    };
+
+                    return `
+                      <div class="kb-shelf-doc-card rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex flex-col justify-between group"
+                           data-doc-key="${escapeAttr(key)}"
+                           data-doc-shelf="${escapeAttr(sh.id)}"
+                           data-doc-title="${escapeAttr(meta.title)}"
+                           data-doc-module="${escapeAttr(meta.moduleName || '')}">
+                        
+                        <div class="space-y-3">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'} truncate">
+                              ${meta.moduleName ? `📦 ${meta.moduleName}` : `🏛️ ${sh.title.split(' ')[0]}`}
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-400 shrink-0">
+                              ⏱️ ${meta.readingTime} min
+                            </span>
+                          </div>
+
+                          <div>
+                            <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                              ${escapeHtml(meta.title)}
+                            </h4>
+                            <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
+                              ${escapeHtml(key)}
+                            </div>
+                          </div>
+
+                          <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                            ${escapeHtml(meta.summary)}
+                          </p>
+                        </div>
+
+                        <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                          <div class="flex items-center gap-1.5">
+                            ${meta.ruleCount ? `
+                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
+                                ⚖️ ${meta.ruleCount} BR
+                              </span>
+                            ` : ''}
+                            ${meta.reqCount ? `
+                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
+                                📋 ${meta.reqCount} RF
+                              </span>
+                            ` : ''}
+                            ${meta.adrCount ? `
+                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
+                                🏛️ ${meta.adrCount} ADR
+                              </span>
+                            ` : ''}
+                          </div>
+
+                          <div class="flex items-center gap-1.5">
+                            <button type="button" 
+                                    data-action="open-article-read"
+                                    data-doc-key="${escapeAttr(key)}"
+                                    class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
+                              <span>📖</span> Leer
+                            </button>
+                            <button type="button" 
+                                    data-action="open-article-edit"
+                                    data-doc-key="${escapeAttr(key)}"
+                                    class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                    title="Editar directamente este documento">
+                              <span>✏️</span>
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </section>
+            `;
+          }).join('')}
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- VISTA 2: LECTOR & EDITOR EDITORIAL (ARTICLE MODE)              -->
+      <!-- ============================================================== -->
+      <div id="kb-view-article" class="hidden space-y-6">
+        
+        <!-- 2.1 Breadcrumb de Navegación & Barra de Herramientas Flotante -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 shadow-sm sticky top-20 z-20 transition-all">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Breadcrumbs -->
+            <div class="flex items-center gap-2 text-xs font-mono">
               <button type="button" 
-                      data-kb-filter-module="" 
-                      class="kb-mod-pill active px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0">
-                Todos
+                      data-action="back-to-library"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold transition-all cursor-pointer">
+                <span>←</span> Biblioteca
               </button>
-              ${availableModules.map(m => `
-                <button type="button" 
-                        data-kb-filter-module="${m}" 
-                        class="kb-mod-pill px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0">
-                  ${m}
-                </button>
-              `).join('')}
+              <span class="text-slate-300 dark:text-slate-700">/</span>
+              <span id="article-shelf-badge" class="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                ${activeDocMeta.shelf || 'Canónico'}
+              </span>
+              <span class="text-slate-300 dark:text-slate-700">/</span>
+              <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 truncate max-w-xs sm:max-w-md">
+                ${activeDocKey}
+              </span>
             </div>
 
-            <!-- Lista Jerárquica de Documentos -->
-            <div class="space-y-4 max-h-[560px] overflow-y-auto pr-1" id="kb-docs-list-tree">
-              
-              <!-- Documentos Canónicos Generales -->
-              <div class="space-y-1 kb-doc-group" data-group-type="general">
-                <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 py-1 flex items-center justify-between">
-                  <span>🏛️ Canónicos Generales</span>
-                  <span class="text-[9px] opacity-70">${generalDocs.length}</span>
-                </div>
-                <div class="space-y-0.5">
-                  ${generalDocs.map(doc => `
-                    <button type="button" 
-                            data-doc-key="${escapeAttr(doc.key)}"
-                            data-doc-name="${escapeAttr(doc.fileName)}"
-                            class="doc-nav-item w-full text-left px-3 py-2 rounded-xl flex items-center justify-between font-mono text-xs transition-all cursor-pointer ${doc.key === activeDocKey ? 'active bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
-                      <span class="flex items-center gap-2 truncate">
-                        <span class="text-xs opacity-75">📄</span>
-                        <span class="truncate">${doc.fileName}</span>
-                      </span>
-                    </button>
-                  `).join('')}
-                </div>
+            <!-- Acciones del Documento -->
+            <div class="flex items-center gap-2">
+              <span id="article-reading-time-badge" class="hidden sm:inline-flex px-2 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
+                ⏱️ ${activeDocMeta.readingTime} min
+              </span>
+
+              <!-- Botón Conmutar Modo Edición / Lectura -->
+              <button type="button" 
+                      id="btn-toggle-doc-editor" 
+                      class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                      title="Alternar entre Lector Editorial y Editor Dual">
+                <span id="btn-toggle-doc-icon">✏️</span>
+                <span id="btn-toggle-doc-text">Modo Editor</span>
+              </button>
+
+              <!-- Botón Copiar Markdown -->
+              <button type="button" 
+                      id="copy-active-doc-btn" 
+                      class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      title="Copiar contenido Markdown completo">
+                <span class="text-xs">📋</span>
+              </button>
+
+              <!-- Botón Descargar Archivo .md -->
+              <button type="button" 
+                      data-action="download-active-doc" 
+                      class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      title="Descargar este archivo .md a tu equipo">
+                <span class="text-xs">💾</span>
+              </button>
+
+              <!-- Botón Eliminar Documento -->
+              <button type="button" 
+                      data-action="delete-active-doc" 
+                      class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                      title="Eliminar este documento de la Base de Conocimiento">
+                <span class="text-xs">🗑️</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada 780px + TOC flotante) -->
+        <div id="doc-reader-view-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Contenido Principal del Artículo (Columna de Lectura) -->
+          <div class="lg:col-span-9 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px]">
+            <article id="doc-active-body" class="prose dark:prose-invert max-w-3xl mx-auto text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
+              ${renderMarkdown(activeDocContent)}
+            </article>
+          </div>
+
+          <!-- Barra Lateral Flotante: Tabla de Contenidos (TOC) On-This-Page -->
+          <div class="hidden lg:block lg:col-span-3 sticky top-36 space-y-4">
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
+              <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
+                <span>📑</span> En esta página
+              </div>
+              <div id="doc-active-toc" class="max-h-[460px] overflow-y-auto pr-1">
+                ${renderTableOfContentsHtml(activeDocToc)}
+              </div>
+            </div>
+
+            <!-- Meta Box -->
+            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-[11px] font-mono text-slate-500 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span>Palabras:</span>
+                <strong id="article-meta-words" class="text-slate-800 dark:text-slate-200">${activeDocMeta.wordCount || 0}</strong>
+              </div>
+              <div class="flex items-center justify-between">
+                <span>Invariantes BR:</span>
+                <strong id="article-meta-br" class="text-amber-600 dark:text-amber-400">${activeDocMeta.ruleCount || 0}</strong>
+              </div>
+              <div class="flex items-center justify-between">
+                <span>Requerimientos RF:</span>
+                <strong id="article-meta-rf" class="text-emerald-600 dark:text-emerald-400">${activeDocMeta.reqCount || 0}</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2.3 MODO EDITOR DUAL (Markdown vs Bloques Visuales con Scroll Sincronizado) -->
+        <div id="doc-editor-view-container" class="hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-6 sm:p-8 shadow-sm space-y-6">
+          
+          <!-- Barra de Control del Editor Dual -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
+                <button type="button" 
+                        id="btn-editor-mode-md" 
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
+                  📝 Modo Markdown
+                </button>
+                <button type="button" 
+                        id="btn-editor-mode-blocks" 
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
+                  🧱 Modo Bloques Visuales
+                </button>
               </div>
 
-              <!-- Módulos / Bounded Contexts -->
-              <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800" id="kb-modules-container">
-                <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center justify-between">
-                  <span>📦 Bounded Contexts</span>
-                  <span class="text-[9px] opacity-70">${availableModules.length}</span>
-                </div>
+              <span id="editor-sync-indicator" class="text-xs text-slate-500 font-mono hidden sm:inline">
+                Sincronización activa (Docs-as-Code)
+              </span>
+            </div>
 
-                ${availableModules.map(modName => `
-                  <div class="space-y-1 kb-module-item" data-module-name="${modName}">
-                    <div class="flex items-center justify-between px-2 py-0.5 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                      <span class="flex items-center gap-1.5">
-                        <span>📁</span>
-                        <span>${modName}</span>
-                      </span>
-                      <span class="text-[9px] font-normal text-slate-400">${moduleDocsMap[modName].length} docs</span>
-                    </div>
-                    <div class="pl-2 space-y-0.5 text-xs font-mono">
-                      ${moduleDocsMap[modName].map(doc => `
-                        <button type="button" 
-                                data-doc-key="${escapeAttr(doc.key)}"
-                                data-doc-name="${escapeAttr(doc.fileName)}"
-                                data-doc-module="${escapeAttr(modName)}"
-                                class="doc-nav-item w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-all cursor-pointer ${doc.key === activeDocKey ? 'active bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}">
-                          <span class="flex items-center gap-1.5 truncate">
-                            <span class="text-[10px] opacity-70">📄</span>
-                            <span class="truncate text-[11px]">${doc.fileName}</span>
-                          </span>
-                        </button>
-                      `).join('')}
-                    </div>
-                  </div>
-                `).join('')}
+            <!-- Botones Guardar / Cancelar -->
+            <div class="flex items-center gap-2">
+              <button type="button" 
+                      id="btn-cancel-doc-edit" 
+                      class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                Cancelar
+              </button>
+              <button type="button" 
+                      id="btn-save-doc-edit" 
+                      class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
+                <span>💾</span> Guardar Cambios
+              </button>
+            </div>
+          </div>
+
+          <!-- PANEL 1: MODO MARKDOWN CON SCROLL SINCRONIZADO -->
+          <div id="editor-pane-markdown" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
+                <span>Código Fuente Markdown (.md)</span>
+                <span>Atajos: Alertas GitHub, Tablas, Mermaid</span>
               </div>
+              <textarea id="doc-editor-textarea" 
+                        rows="24" 
+                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml(activeDocContent)}</textarea>
+            </div>
 
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
+                <span>Previsualización Renderizada en Vivo</span>
+                <span class="text-emerald-500 font-semibold">● Scroll Sincronizado</span>
+              </div>
+              <div id="doc-editor-live-preview" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 overflow-y-auto h-[560px] prose dark:prose-invert max-w-none text-xs">
+                ${renderMarkdown(activeDocContent)}
+              </div>
             </div>
 
           </div>
 
-          <!-- 2.2 LECTOR & EDITOR EDITORIAL (8 de 12 columnas) -->
-          <div class="lg:col-span-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-8 min-h-[560px] shadow-sm flex flex-col justify-between">
+          <!-- PANEL 2: MODO BLOQUES VISUALES (ESTILO CONTEXTFORGE) -->
+          <div id="editor-pane-blocks" class="hidden space-y-4">
             
-            <div>
-              <!-- Barra Superior del Documento -->
-              <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800/80">
-                <div class="flex items-center gap-2 text-xs font-mono">
-                  <span class="text-slate-400">Documento:</span>
-                  <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
-                    ${activeDocKey}
-                  </span>
-                </div>
-
-                <!-- Herramientas del Documento Activo -->
-                <div class="flex items-center gap-2">
-                  <!-- Botón Conmutar Modo Edición / Lectura -->
-                  <button type="button" 
-                          id="btn-toggle-doc-editor" 
-                          class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
-                          title="Editar el contenido de este documento">
-                    <span id="btn-toggle-doc-icon">✏️</span>
-                    <span id="btn-toggle-doc-text">Editar</span>
-                  </button>
-
-                  <!-- Botón Copiar Markdown -->
-                  <button type="button" 
-                          id="copy-active-doc-btn" 
-                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                          title="Copiar contenido Markdown completo">
-                    <span class="text-xs">📋</span>
-                  </button>
-
-                  <!-- Botón Descargar Archivo .md -->
-                  <button type="button" 
-                          data-action="download-active-doc" 
-                          class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                          title="Descargar este archivo .md a tu equipo">
-                    <span class="text-xs">💾</span>
-                  </button>
-
-                  <!-- Botón Eliminar Documento -->
-                  <button type="button" 
-                          data-action="delete-active-doc" 
-                          class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
-                          title="Eliminar este documento de la Base de Conocimiento">
-                    <span class="text-xs">🗑️</span>
-                  </button>
-                </div>
+            <!-- Barra para Agregar Bloques Nuevos -->
+            <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono">
+              <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <span>🧱</span> Añadir Bloque Visual:
+              </span>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" data-add-block="header" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  ➕ Encabezado
+                </button>
+                <button type="button" data-add-block="paragraph" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  ➕ Párrafo
+                </button>
+                <button type="button" data-add-block="business_rule" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
+                  ➕ Regla BR
+                </button>
+                <button type="button" data-add-block="callout" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
+                  ➕ Alerta/Callout
+                </button>
+                <button type="button" data-add-block="code" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
+                  ➕ Diagrama/Código
+                </button>
+                <button type="button" data-add-block="divider" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
+                  ➕ Separador
+                </button>
               </div>
-
-              <!-- MODO 1: LECTOR EDITORIAL (ACTIVO) -->
-              <div id="doc-reader-view-container" class="space-y-4">
-                <div id="doc-active-body" class="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200">
-                  ${renderMarkdown(activeDocContent)}
-                </div>
-              </div>
-
-              <!-- MODO 2: EDITOR MARKDOWN EN VIVO (OCULTO POR DEFECTO) -->
-              <div id="doc-editor-view-container" class="hidden space-y-4">
-                <div class="flex items-center justify-between text-xs text-slate-500 font-mono">
-                  <span>Modo Editor Directo (Markdown)</span>
-                  <span>Soporta tablas, alertas GitHub y diagramas Mermaid</span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Textarea de Edición -->
-                  <textarea id="doc-editor-textarea" 
-                            rows="18" 
-                            class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed">${escapeHtml(activeDocContent)}</textarea>
-
-                  <!-- Previsualización en Vivo -->
-                  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 overflow-y-auto max-h-[460px]">
-                    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
-                      Vista Previa en Vivo
-                    </div>
-                    <div id="doc-editor-live-preview" class="prose dark:prose-invert max-w-none text-xs">
-                      ${renderMarkdown(activeDocContent)}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Botones de Guardar / Cancelar Edición -->
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <button type="button" 
-                          id="btn-cancel-doc-edit" 
-                          class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                    Cancelar
-                  </button>
-                  <button type="button" 
-                          id="btn-save-doc-edit" 
-                          class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
-                    <span>💾</span> Guardar Cambios
-                  </button>
-                </div>
-              </div>
-
             </div>
 
-            <!-- Pie del Lector -->
-            <div class="pt-6 mt-8 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>Soberanía: Docs-as-Code</span>
-              <span>Guardado local persistente</span>
+            <!-- Lista de Bloques Visuales Editables -->
+            <div id="doc-editor-blocks-container" class="space-y-4 max-h-[580px] overflow-y-auto pr-1">
+              <!-- Renderizado dinámicamente con parseMarkdownToBlocks -->
             </div>
 
           </div>
 
         </div>
 
-      </section>
+      </div>
 
-      <!-- 3. CATÁLOGO DE REGLAS DE NEGOCIO (BR-*) -->
+      <!-- ============================================================== -->
+      <!-- 3. CATÁLOGO DINÁMICO DE REGLAS DE NEGOCIO (INVARIANTES BR-*)   -->
+      <!-- ============================================================== -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -354,61 +569,71 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               Catálogo de Reglas de Negocio (Invariantes de Dominio)
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Invariantes de cumplimiento estricto para no generar discrepancias contables ni vulnerabilidades
+              Invariantes de estricto cumplimiento para evitar alucinaciones, fallos contables y vulnerabilidades
             </p>
           </div>
 
-          <!-- Selector de Filtro de Módulo -->
+          <!-- Selector de Filtro de Módulo Dinámico -->
           <div class="flex items-center gap-2 text-xs">
-            <span class="text-slate-400 font-mono text-[11px]">Filtrar:</span>
+            <span class="text-slate-400 font-mono text-[11px]">Filtrar por Módulo:</span>
             <select id="kb-rules-module-filter" 
                     class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500">
-              <option value="">Todos los Módulos</option>
-              <option value="backend">backend</option>
-              <option value="billing">billing</option>
-              <option value="infra">infra</option>
-              <option value="analytics">analytics</option>
-              <option value="notifications">notifications</option>
+              <option value="">Todos los Módulos (${rules.length})</option>
+              ${moduleNames.map(m => `
+                <option value="${escapeAttr(m)}">${m}</option>
+              `).join('')}
             </select>
           </div>
         </div>
 
-        <div class="space-y-3" id="kb-rules-list">
-          ${rules.map(rule => {
-            const isCritical = rule.severity === 'Crítica';
-            const sevBadge = isCritical 
-              ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
-              : 'bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+        ${rules.length > 0 ? `
+          <div class="space-y-3" id="kb-rules-list">
+            ${rules.map(rule => {
+              const isCritical = rule.severity === 'Crítica' || rule.severity === 'Critica' || rule.severity === 'Alta';
+              const sevBadge = isCritical 
+                ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                : 'bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
 
-            return `
-              <div data-rule-module="${rule.module}" 
-                   class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-indigo-400 transition-all space-y-1.5">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <div class="flex items-center gap-2">
-                    <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
-                      ${rule.id}
+              return `
+                <div data-rule-module="${escapeAttr(rule.module || 'general')}" 
+                     class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all space-y-2">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
+                        ${rule.id}
+                      </span>
+                      <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                        [${rule.module || 'general'}]
+                      </span>
+                      <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
+                        ${escapeHtml(rule.title)}
+                      </h4>
+                    </div>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
+                      ${rule.severity || 'Normal'}
                     </span>
-                    <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
-                      [${rule.module}]
-                    </span>
-                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
-                      ${rule.title}
-                    </h4>
                   </div>
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
-                    ${rule.severity}
-                  </span>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
+                    ${escapeHtml(rule.description)}
+                  </p>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
-                  ${rule.description}
-                </p>
-              </div>
-            `;
-          }).join('')}
-        </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+            <span class="text-2xl">⚖️</span>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300">No hay reglas de negocio registradas aún</div>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Ejecuta la skill <code class="font-mono text-indigo-500">/project-knowledge</code> para extraer automáticamente las reglas e invariantes de tu proyecto.
+            </p>
+          </div>
+        `}
       </section>
 
-      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS -->
+      <!-- ============================================================== -->
+      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS                   -->
+      <!-- ============================================================== -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -418,60 +643,76 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             Matriz de Servicios Externos & Protocolos
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Contratos, protocolos, autenticación y políticas de contingencia de las dependencias externas
+            Contratos, protocolos de red, esquemas de autenticación y políticas de contingencia
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${services.map(svc => `
-            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${svc.name}</span>
-                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
-                  ${svc.type}
-                </span>
-              </div>
-              <div class="space-y-1 text-[11px] font-mono">
-                <div class="text-slate-500 dark:text-slate-400">
-                  Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${svc.protocol}</span>
+        ${services.length > 0 ? `
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${services.map(svc => `
+              <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml(svc.name)}</span>
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
+                    ${escapeHtml(svc.type)}
+                  </span>
                 </div>
-                <div class="text-slate-500 dark:text-slate-400">
-                  Autenticación: <span class="text-slate-800 dark:text-slate-200 font-semibold">${svc.auth}</span>
+                <div class="space-y-1 text-[11px] font-mono">
+                  <div class="text-slate-500 dark:text-slate-400">
+                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml(svc.protocol)}</span>
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400">
+                    Autenticación: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml(svc.auth)}</span>
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400">
+                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml(svc.env_var)}</code>
+                  </div>
                 </div>
-                <div class="text-slate-500 dark:text-slate-400">
-                  Variable: <code class="text-indigo-600 dark:text-indigo-400">${svc.env_var}</code>
+                <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
+                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml(svc.failover)}
                 </div>
               </div>
-              <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
-                <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${svc.failover}
-              </div>
-            </div>
-          `).join('')}
-        </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+            <span class="text-2xl">🌐</span>
+            <div class="text-sm font-bold text-slate-700 dark:text-slate-300">Sin integraciones externas documentadas</div>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Si tu sistema consume APIs externas, bases de datos o brokers de mensajería, documenta sus contratos para auditar su contingencia.
+            </p>
+          </div>
+        `}
       </section>
 
-      <!-- 5. GUARDRAILS ANTI-SESGO & FORMA DE PROGRAMAR -->
+      <!-- ============================================================== -->
+      <!-- 5. GUARDRAILS ANTI-SESGO & DIRECTRICES DE CÓDIGO               -->
+      <!-- ============================================================== -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
         <div class="mb-6">
           <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
               ${Icons.code}
             </span>
-            Directrices Anti-Sesgo & Forma de Programar
+            Directrices Anti-Sesgo & Convenciones de Ingeniería
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Reglas de oro para evitar que los agentes de IA inventen dependencias o rompan la arquitectura
+            Reglas de oro para asegurar que agentes de IA y desarrolladores respeten la arquitectura del proyecto
           </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Guardrails Estrictos para IA -->
+          <!-- Guardrails Anti-Alucinación -->
           <div class="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/15 space-y-3">
             <h4 class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🛑</span> Guardrails de No-Alucinación (Obligatorios)
+              <span>🛑</span> Guardrails de No-Alucinación (Inviolables)
             </h4>
             <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
-              ${guardrails.map(g => `
+              ${(guardrails.length > 0 ? guardrails : [
+                'Prohibido instalar paquetes o bibliotecas redundantes no canónicas.',
+                'Toda regla de negocio BR-* debe implementarse con tests automatizados.',
+                'Inversión de dependencias obligatoria en controladores y servicios.'
+              ]).map(g => `
                 <li class="flex items-start gap-2">
                   <span class="text-rose-500 font-bold shrink-0 mt-0.5">✕</span>
                   <span>${escapeHtml(g)}</span>
@@ -483,7 +724,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <!-- Convenciones de Nomenclatura -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
             <h4 class="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>📐</span> Convenciones de Nomenclatura del Código
+              <span>📐</span> Convenciones de Nomenclatura & Control de Versiones
             </h4>
             <div class="space-y-2 text-xs font-mono">
               <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -507,7 +748,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         </div>
       </section>
 
-      <!-- MODAL PARA NUEVO DOCUMENTO (➕) -->
+      <!-- ============================================================== -->
+      <!-- MODAL: CREAR NUEVO DOCUMENTO (➕)                              -->
+      <!-- ============================================================== -->
       <div id="new-doc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -522,7 +765,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <form id="new-doc-form" class="space-y-3 text-xs">
             <div>
               <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">Módulo o Categoría:</label>
-              <input type="text" id="new-doc-module" placeholder="general, infra, backend, billing..." value="general" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
+              <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
             </div>
 
             <div>
@@ -547,7 +790,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         </div>
       </div>
 
-      <!-- MODAL FLOTANTE DE CONTEXTO CANÓNICO PARA IA (PROMPT BUNDLER) -->
+      <!-- ============================================================== -->
+      <!-- MODAL: PROMPT BUNDLER DINÁMICO PARA IA (SYSTEM PROMPT)          -->
+      <!-- ============================================================== -->
       <div id="ai-context-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -559,27 +804,10 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             </button>
           </div>
           <p class="text-xs text-slate-600 dark:text-slate-400">
-            Copia este bloque de instrucciones para inicializar cualquier conversación con agentes o modelos (ChatGPT, Claude, Codex, Copilot) para que operen con cero sesgo y pleno conocimiento del proyecto:
+            Copia estas instrucciones generadas en vivo desde los metadatos reales del arnés para inicializar cualquier modelo (Claude, Gemini, ChatGPT, Codex) sin sesgo:
           </p>
           <div class="relative">
-            <textarea id="ai-context-prompt-text" readonly rows="12" class="w-full p-3 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none">
-# Contexto Canónico del Proyecto — CloudSaaS Platform
-Arquitectura: Clean Architecture (Hexagonal) + Event-Driven Architecture (EDA)
-Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
-
-## Reglas de Negocio Clave:
-- BR-AUTH-001: Marcas de tiempo de expiración JWT calculadas exclusivamente en Epoch UTC.
-- BR-BILL-001: Cabecera Idempotency-Key obligatoria en checkout (Redis TTL 120s).
-- BR-BILL-002: Verificación criptográfica HMAC-SHA256 obligatoria en webhooks de Stripe.
-- BR-BILL-003: Algoritmo Banker's Rounding (IEEE 754) a dos decimales exactos.
-- BR-CART-002: Operaciones atómicas en Redis para reserva de inventario.
-- BR-ORDR-001: Desvío a orders.dlq tras 3 reintentos con backoff exponencial.
-
-## Estándares de Código:
-- Ramas Git: {type}/INT-{numero}/{nombre_rama} (máximo 80 caracteres).
-- Commits: Conventional Commits (feat, fix, docs, refactor).
-- Estilo: Controladores HTTP pasan por Casos de Uso e interfaces de repositorio. Prohibido inventar librerías no aprobadas.
-            </textarea>
+            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml(dynamicAiPrompt)}</textarea>
           </div>
           <div class="flex items-center justify-end gap-3 pt-2">
             <button type="button" 
@@ -591,7 +819,9 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
         </div>
       </div>
 
-      <!-- MODAL PARA EXPANDIR DIAGRAMAS A PANTALLA COMPLETA -->
+      <!-- ============================================================== -->
+      <!-- MODAL: EXPANDIR DIAGRAMAS A PANTALLA COMPLETA                   -->
+      <!-- ============================================================== -->
       <div id="diagram-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
         <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -610,6 +840,55 @@ Stack: Node.js (LTS), .NET 10, PostgreSQL 16, Redis 7.2, RabbitMQ 3.13
 
     </div>
   `;
+}
+
+function renderTableOfContentsHtml(toc = []) {
+  if (!toc || toc.length === 0) {
+    return `<div class="text-[11px] text-slate-400 italic py-2">Sin encabezados en este documento.</div>`;
+  }
+
+  return `
+    <nav class="space-y-1 text-xs font-mono">
+      ${toc.map(item => `
+        <a href="#${item.id}" 
+           class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? 'font-bold text-slate-900 dark:text-slate-100' : item.level === 2 ? 'pl-3' : 'pl-5 text-[11px]'}"
+           title="${escapeAttr(item.text)}">
+          ${escapeHtml(item.text)}
+        </a>
+      `).join('')}
+    </nav>
+  `;
+}
+
+function buildAiSystemPrompt({ projectSpec, kData, rules = [], services = [], guardrails = [], naming = {} }) {
+  const pName = projectSpec?.project?.name || projectSpec?.name || 'Sistema de Ingeniería Soberana';
+  const archStyle = projectSpec?.architecture?.style || 'Clean Architecture (Hexagonal)';
+  const patterns = (projectSpec?.architecture?.patterns || []).join(', ');
+  const stack = projectSpec?.tech_stack ? Object.entries(projectSpec.tech_stack).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : (v?.name || v)}`).join(' | ') : 'Agnóstico';
+
+  const rulesText = rules.slice(0, 10).map(r => `- ${r.id} (${r.module || 'general'}): ${r.title}. ${r.description}`).join('\n');
+  const servicesText = services.map(s => `- ${s.name} (${s.type}): Protocolo ${s.protocol}, Auth: ${s.auth}, Var: ${s.env_var}`).join('\n');
+  const guardrailsText = guardrails.map(g => `- 🛑 ${g}`).join('\n');
+
+  return `# Contexto Canónico del Proyecto — ${pName}
+Arquitectura: ${archStyle} ${patterns ? `(${patterns})` : ''}
+Stack Tecnológico: ${stack}
+
+## Reglas de Negocio Clave (Invariantes Obligatorias):
+${rulesText || '- Sin reglas de negocio registradas aún.'}
+
+## Integraciones y Servicios Externos:
+${servicesText || '- Sin servicios externos registrados aún.'}
+
+## Guardrails Anti-Sesgo & Estándares:
+${guardrailsText || '- No inventar librerías redundantes.\n- Respetar convención de ramas {type}/INT-{id}/{name} (≤80c).'}
+
+## Convenciones de Nomenclatura:
+- Archivos: ${naming.files || 'kebab-case'}
+- Clases / Tipos: ${naming.classes || 'PascalCase'}
+- Ramas Git: {type}/INT-{id}/{name} (≤80c)
+- Commits: Conventional Commits (feat, fix, docs, refactor)
+`;
 }
 
 function escapeHtml(text) {
@@ -640,9 +919,45 @@ function getFallbackKnowledge() {
   };
 }
 
+function buildDocMetadataFallback(docs) {
+  const meta = {};
+  for (const [k, c] of Object.entries(docs)) {
+    const words = c.trim().split(/\s+/).length;
+    meta[k] = {
+      key: k,
+      title: k.replace(/\.md$/, '').replace(/[-_]/g, ' '),
+      summary: c.slice(0, 140) + '...',
+      shelf: k.startsWith('modules/') ? 'modules' : 'architecture',
+      readingTime: Math.max(1, Math.ceil(words / 200)),
+      wordCount: words,
+      ruleCount: (c.match(/BR-[A-Z]+-[0-9]+/g) || []).length,
+      reqCount: (c.match(/RF-[A-Z]+-[0-9]+/g) || []).length,
+      adrCount: (c.match(/ADR-[0-9]+/g) || []).length,
+      moduleName: k.startsWith('modules/') ? k.split('/')[1] : null
+    };
+  }
+  return meta;
+}
+
+function buildShelvesFallback(docMetadata) {
+  const shelves = {
+    architecture: { id: 'architecture', title: 'Arquitectura & Modelado C4', icon: '📐', docs: [] },
+    business_rules: { id: 'business_rules', title: 'Reglas de Negocio & Dominio', icon: '⚖️', docs: [] },
+    requirements: { id: 'requirements', title: 'Requerimientos & Metodología Ágil', icon: '📋', docs: [] },
+    adrs: { id: 'adrs', title: 'Decisiones de Arquitectura (ADRs)', icon: '🏛️', docs: [] },
+    standards: { id: 'standards', title: 'Estándares, Capacidades & Servicios', icon: '🛡️', docs: [] },
+    modules: { id: 'modules', title: 'Módulos & Bounded Contexts', icon: '📦', docs: [] }
+  };
+  for (const [k, m] of Object.entries(docMetadata)) {
+    const s = m.shelf && shelves[m.shelf] ? m.shelf : (k.startsWith('modules/') ? 'modules' : 'architecture');
+    shelves[s].docs.push(k);
+  }
+  return shelves;
+}
+
 function getDefaultDocs() {
   return {
-    'coding-standards.md': '# Estándares de Codificación & Guardrails Anti-Sesgo\n\n> [!NOTE]\n> Este documento define las directrices obligatorias para desarrolladores y agentes de IA.\n\n## Convenciones\n- **Ramas**: `{type}/INT-{id}/{name}` (≤80c)\n- **Commits**: `feat(scope): desc` o `fix(scope): desc`\n\n## Guardrails Estrictos\n1. No instalar librerías redundantes.\n2. Inversión de dependencias estricta en controladores.',
-    'modules/billing/module-spec.md': '# Módulo: billing (Facturación & Pagos)\n\n> [!IMPORTANT]\n> Módulo crítico que gestiona cobros e impuestos.\n\n## Tareas Asignadas\n- `INT-006`: `payment_gateway_integration` (Stripe HMAC e idempotencia).\n- `INT-007`: `fix_cart_tax_rounding` (Banker\'s rounding a 2 decimales).'
+    'c4-model.md': '# Modelo C4 — Arquitectura de Sistema y Contenedores\n\n> [!NOTE]\n> Especificación de contexto y contenedores del sistema.\n\n## Componentes\n- API Gateway\n- Microservicios de Dominio\n- Bases de datos transaccionales',
+    'coding-standards.md': '# Estándares de Codificación & Guardrails Anti-Sesgo\n\n> [!NOTE]\n> Este documento define las directrices obligatorias para desarrolladores y agentes de IA.\n\n## Convenciones\n- **Ramas**: `{type}/INT-{id}/{name}` (≤80c)\n- **Commits**: `feat(scope): desc` o `fix(scope): desc`\n\n## Guardrails Estrictos\n1. No instalar librerías redundantes.\n2. Inversión de dependencias estricta en controladores.'
   };
 }

@@ -56,21 +56,98 @@ const knowledgeIndex = readJsonIfExists([
 const knowledgeDir = path.join(PROJECT_DOCS_DIR, 'knowledge');
 if (fs.existsSync(knowledgeDir)) {
   const docs = {};
+  const docMetadata = {};
+  const shelves = {
+    architecture: { id: 'architecture', title: 'Arquitectura & Modelado C4', icon: '📐', docs: [] },
+    business_rules: { id: 'business_rules', title: 'Reglas de Negocio & Dominio', icon: '⚖️', docs: [] },
+    requirements: { id: 'requirements', title: 'Requerimientos & Metodología Ágil', icon: '📋', docs: [] },
+    adrs: { id: 'adrs', title: 'Decisiones de Arquitectura (ADRs)', icon: '🏛️', docs: [] },
+    standards: { id: 'standards', title: 'Estándares, Capacidades & Servicios', icon: '🛡️', docs: [] },
+    modules: { id: 'modules', title: 'Módulos & Bounded Contexts', icon: '📦', docs: [] }
+  };
+
+  function classifyShelf(key) {
+    if (key.startsWith('modules/')) return 'modules';
+    if (key === 'c4-model.md' || key === 'uml-diagrams.md' || key === 'data-dictionary.md') return 'architecture';
+    if (key === 'business-rules.md') return 'business_rules';
+    if (key === 'functional-requirements.md' || key === 'user-stories-catalog.md' || key === 'traceability-matrix.md') return 'requirements';
+    if (key === 'adr-catalog.md') return 'adrs';
+    if (key === 'coding-standards.md' || key === 'external-services.md' || key === 'system-capabilities.md') return 'standards';
+    return 'general';
+  }
+
+  function extractTitleAndSummary(content, filename) {
+    const lines = content.split(/\r?\n/);
+    let title = '';
+    let summary = '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!title && trimmed.startsWith('# ')) {
+        title = trimmed.replace(/^#\s+/, '').trim();
+      } else if (title && !summary && trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('>') && !trimmed.startsWith('-') && !trimmed.startsWith('```')) {
+        summary = trimmed.slice(0, 160) + (trimmed.length > 160 ? '...' : '');
+      }
+      if (title && summary) break;
+    }
+    if (!title) {
+      title = filename.replace(/\.md$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    if (!summary) {
+      summary = 'Documentación técnica y especificación formal de ingeniería.';
+    }
+    return { title, summary };
+  }
+
   function scanDocs(dir, prefix = '') {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const ent of entries) {
+      const fullPath = path.join(dir, ent.name);
       if (ent.isDirectory()) {
-        scanDocs(path.join(dir, ent.name), prefix ? `${prefix}/${ent.name}` : ent.name);
+        scanDocs(fullPath, prefix ? `${prefix}/${ent.name}` : ent.name);
       } else if (ent.isFile() && ent.name.endsWith('.md')) {
         const key = prefix ? `${prefix}/${ent.name}` : ent.name;
         try {
-          docs[key] = fs.readFileSync(path.join(dir, ent.name), 'utf8');
+          const content = fs.readFileSync(fullPath, 'utf8');
+          const stat = fs.statSync(fullPath);
+          docs[key] = content;
+
+          const words = content.trim().split(/\s+/).length;
+          const readingTime = Math.max(1, Math.ceil(words / 200));
+          const { title, summary } = extractTitleAndSummary(content, ent.name);
+          const shelfKey = classifyShelf(key);
+          const brMatches = (content.match(/BR-[A-Z]+-[0-9]+/g) || []).length;
+          const rfMatches = (content.match(/RF-[A-Z]+-[0-9]+/g) || []).length;
+          const adrMatches = (content.match(/ADR-[0-9]+/g) || []).length;
+
+          const meta = {
+            key,
+            filename: ent.name,
+            title,
+            summary,
+            shelf: shelfKey,
+            readingTime,
+            wordCount: words,
+            lastModified: stat.mtime.toISOString().split('T')[0],
+            ruleCount: brMatches,
+            reqCount: rfMatches,
+            adrCount: adrMatches,
+            isModule: key.startsWith('modules/'),
+            moduleName: key.startsWith('modules/') ? key.split('/')[1] : null
+          };
+
+          docMetadata[key] = meta;
+          if (shelves[shelfKey]) {
+            shelves[shelfKey].docs.push(key);
+          }
         } catch (_) {}
       }
     }
   }
+
   scanDocs(knowledgeDir);
   knowledgeIndex.docs = docs;
+  knowledgeIndex.docMetadata = docMetadata;
+  knowledgeIndex.shelves = shelves;
 
   // Actualizar también el archivo JSON en disco
   const kIndexPath = path.join(knowledgeDir, 'knowledge-index.json');
