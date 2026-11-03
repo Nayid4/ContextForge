@@ -3,11 +3,11 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  actor Runner as "💻 Implementer / Reviewer"
-  participant NPM as "📦 npm test"
-  participant RunnerNative as "⚡ Node.js Test Runner"
-  participant UnitTests as "🧪 tests/unit/*.test.js"
-  participant SmokeTests as "🌐 tests/e2e/*.test.js"
+  actor Runner as "Implementer / Reviewer"
+  participant NPM as "npm test"
+  participant RunnerNative as "Node.js Test Runner"
+  participant UnitTests as "tests/unit/*.test.js"
+  participant SmokeTests as "tests/e2e/*.test.js"
 
   Runner->>NPM: "Ejecutar npm test"
   NPM->>RunnerNative: "node --test tests/unit/**/*.test.js"

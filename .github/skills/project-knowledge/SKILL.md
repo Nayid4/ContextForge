@@ -34,7 +34,7 @@ project-docs/knowledge/
 ├── system-capabilities.md       # Inventario de capacidades para Onboarding y Detección de Duplicados
 ├── c4-model.md                  # Modelo C4: Contexto C1, Contenedores C2 y Componentes C3
 ├── uml-diagrams.md              # Diagramas UML: Clases con tipos, Secuencias con alt/else, Casos de Uso
-├── data-dictionary.md           # Diccionario de datos, ERD Mermaid y restricciones de persistencia
+├── data-dictionary.md           # Diccionario de datos, ERD Mermaid, FKs, índices y restricciones
 ├── business-rules.md            # Catálogo formal de reglas de negocio e invariantes (BR-*)
 ├── adr-catalog.md               # Architecture Decision Records (ADRs) vigentes e históricos
 ├── external-services.md         # Matriz de integraciones externas, protocolos, SLAs y failover
@@ -78,7 +78,8 @@ Para prevenir el desbordamiento de contexto en repositorios medianos o grandes, 
    - Identificador de Capacidad (`CAP-[MOD]-[NUM]`).
    - Endpoint / Interfaz técnica asociada.
    - Estado actual (Operativo, Legacy/Deprecado, En migración).
-   - Este inventario sirve como primera línea de consulta para evitar reinventar funcionalidades existentes o releer recursivamente el código.
+3. **Protocolo de Detección de No-Existencia**:
+   - Si una capacidad o endpoint no existe en el sistema actual, registrarlo explícitamente como `[NO_EXISTE]` en la tabla, detallando los requisitos técnicos necesarios para incorporarlo. Esto impide que agentes o desarrolladores alucinen dependencias o supongan que el endpoint ya está activo.
 
 ---
 
@@ -125,34 +126,73 @@ Bajo el estándar **IEEE 830 / ISO/IEC/IEEE 29148**:
 
 ---
 
-### Paso 5: Diccionario de Datos & Persistencia (`data-dictionary.md`)
+### Paso 5: Diccionario de Datos & Persistencia Profunda (`data-dictionary.md`)
 1. **Diagrama ERD**: Diagrama `erDiagram` en Mermaid con entidades principales, relaciones y cardinalidad.
-2. **Catálogo de Tablas / Colecciones**:
+2. **Topología de Persistencia y Restricciones**:
+   - Claves Primarias (PK) y Claves Foráneas (FK) con integridad referencial explícita (`CASCADE`, `RESTRICT`, `SET NULL`).
+   - Restricciones compuestas: Índices únicos compuestos (`UNIQUE(tenant_id, email)`), constraints de validación (`CHECK`).
+   - Patrón de acceso a datos detectado: Repository, Unit of Work, Data Mapper, ORM o raw SQL.
+3. **Catálogo de Tablas / Colecciones**:
    - Nombre de tabla y propósito de negocio.
-   - Campos clave, tipos de datos nativos, nulabilidad y restricciones (Primary Keys, Foreign Keys, Unique, Check).
-   - Políticas de concurrencia (Optimistic Locking / RowVersion) y borrado (Soft Delete vs Hard Delete).
+   - Campos clave, tipos de datos nativos, nulabilidad y defaults.
+   - Políticas de concurrencia: Optimistic Locking (`version` / `rowversion`) vs Pessimistic Locking.
+   - Políticas de ciclo de vida: Soft Delete (`is_deleted`, `deleted_at`) vs Hard Delete.
    - Campos de auditoría obligatorios (`created_at`, `updated_at`, `tenant_id`).
 
 ---
 
-### Paso 6: Catálogo de Reglas de Negocio (`business-rules.md`)
+### Paso 6: Topologías Transaccionales & Flujos Críticos
+En la documentación de módulos y arquitectura:
+1. **Fronteras Transaccionales (Transaction Boundaries)**:
+   - Delimitar qué operaciones son atómicas (Single Transaction) y cuáles distribuidas.
+   - Niveles de aislamiento de base de datos requeridos (`READ COMMITTED`, `SERIALIZABLE`).
+2. **Consistencia en Sistemas Distribuidos**:
+   - Patrón Saga (Orquestada vs Coreografiada) con transacciones de compensación.
+   - Outbox Pattern transaccional para evitar fallos dual-write entre base de datos y colas de mensajería.
+   - Claves de Idempotencia (`Idempotency-Key`) en endpoints transaccionales o de pago.
+
+---
+
+### Paso 7: Superficie de Integración & APIs
+En `external-services.md` y especificaciones de módulo:
+1. **Estándar de Errores RFC 7807 (Problem Details)**:
+   - Respuestas HTTP de error estructuradas con `type`, `title`, `status`, `detail`, `instance` e `invalid-params`.
+2. **Contratos y Autenticación**:
+   - Protocolos (REST, gRPC `.proto`, GraphQL, Webhooks).
+   - Mecanismos de seguridad (Bearer JWT, mTLS, HMAC, API Keys).
+   - Cabeceras canónicas requeridas (`X-Correlation-ID`, `X-Tenant-ID`, `Accept-Version`).
+   - Timeouts, Circuit Breakers y políticas de contingencia (failover).
+
+---
+
+### Paso 8: Deuda Técnica & Hotspots Arquitectónicos
+En `coding-standards.md` y métricas de módulo:
+1. **Hotspots y Complejidad**:
+   - Módulos o clases con alta complejidad ciclomática o acoplamiento excesivo (*God Classes*).
+   - Dependencias cruzadas o circulares entre módulos que violan la arquitectura.
+2. **Zonas Sin Cobertura**:
+   - Identificar áreas críticas sin tests unitarios (*zero-coverage zones*) para alertar a los agentes antes de modificar código sensible.
+
+---
+
+### Paso 9: Catálogo de Reglas de Negocio (`business-rules.md`)
 - Formato: `BR-[MODULO]-[NUMERO]`.
 - Atributos: Título, Severidad (`Crítica`, `Alta`, `Media`), Lógica formal/matemática, Bounded Context y Comportamiento ante Violación.
 
 ---
 
-### Paso 7: Registro de Decisiones de Arquitectura (`adr-catalog.md`)
+### Paso 10: Registro de Decisiones de Arquitectura (`adr-catalog.md`)
 - Documentar decisiones técnicas consolidadas en formato ADR estándar (Michael Nygard):
   - **Título y Fecha**: Identificador `ADR-XXX: Título`.
   - **Estado**: Propuesto / Aceptado / Reemplazado.
   - **Contexto**: Qué problema, restricción o fuerza técnica se enfrentaba.
   - **Decisión**: Qué tecnología, patrón o arquitectura se seleccionó y por qué.
   - **Consecuencias**: Beneficios obtenidos, trade-offs aceptados y deuda técnica legítima asumida.
-  - **Anti-Patrones Legítimos & Workarounds**: Detallar atajos o comportamientos intencionales (ej. endpoints legacy que devuelven `200 OK` con error interno) para evitar que agentes intenten "corregirlos" rompiendo clientes existentes.
+  - **Anti-Patrones Legítimos & Workarounds**: Detallar atajos o comportamientos intencionales para evitar que agentes intenten "corregirlos" rompiendo clientes existentes.
 
 ---
 
-### Paso 8: Matriz de Trazabilidad Cruzada (`traceability-matrix.md`)
+### Paso 11: Matriz de Trazabilidad Cruzada (`traceability-matrix.md`)
 Tabla bidireccional (RTM) para garantizar consistencia total:
 
 | RF ID | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Código | Test Automatizado |
@@ -162,26 +202,30 @@ Tabla bidireccional (RTM) para garantizar consistencia total:
 
 ---
 
-### Paso 9: Servicios Externos & Guardrails Anti-Sesgo
-1. En `external-services.md`: Integraciones de terceros, contratos de comunicación, credenciales requeridas (solo nombres de variables de entorno, nunca valores reales), timeouts, políticas de reintento y Circuit Breaker.
-2. En `coding-standards.md`: Convenciones de nombrado, directrices anti-alucinación, lista blanca de dependencias autorizadas y lista negra de librerías prohibidas.
+### Paso 12: Guardrails Anti-Sesgo y Lista Blanca/Negra (`coding-standards.md`)
+1. **Lista Blanca Canónica**:
+   - Solo se permite el uso de bibliotecas y herramientas registradas en `project-spec.yaml` o los manifiestos de paquetes detectados.
+2. **Lista Negra Estricta**:
+   - Prohibido alucinar o sugerir paquetes externos que dupliquen capacidades ya resueltas en el proyecto.
+3. **Invariante de Contexto Soberano**:
+   - Antes de iniciar especificaciones (`spec-author`) o código (`implementer`), la IA debe consultar obligatoriamente `project-docs/knowledge/` y respetar todas las reglas `BR-*`.
 
 ---
 
-### Paso 10: Documentación Modular Granular (`modules/`)
+### Paso 13: Documentación Modular Granular (`modules/`)
 Para cada Bounded Context identificado:
 - Crear `project-docs/knowledge/modules/{modulo}/`.
 - Redactar `module-spec.md` (responsabilidades y contratos), `rules.md` (invariantes locales) y `sequence.md` (flujo detallado).
 
 ---
 
-### Paso 11: Consolidación y Sincronización Automática
+### Paso 14: Consolidación y Sincronización Automática
 1. Generar o actualizar `project-docs/knowledge/knowledge-index.json`.
 2. **Ejecutar obligatoriamente**:
    ```bash
    node project-docs/sync-data.js
    ```
-   Esto valida la estructura, actualiza los índices y asegura que el tablero interactivo (tanto local `file:///` como vía servidor HTTP) refleje la documentación actualizada sin desincronizaciones.
+   Esto valida la estructura, actualiza los índices y asegura que el tablero interactivo refleje de inmediato la documentación actualizada.
 
 ---
 

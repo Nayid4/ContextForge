@@ -127,7 +127,7 @@ export class DependencyTreeComponent {
               <div class="absolute left-1.5 top-0 w-3 h-3.5 border-l-2 border-b-2 border-slate-300 dark:border-slate-700/80 rounded-bl-sm"></div>
               
               <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${sub.done ? 'bg-emerald-500 text-white' : 'border border-slate-400 dark:border-slate-600 text-slate-400'}">
-                ${sub.done ? '✓' : '○'}
+                ${sub.done ? Icons.check('w-2.5 h-2.5') : '○'}
               </span>
               <span class="truncate text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
                 ${escapeHtml(sub.name)}
@@ -224,7 +224,7 @@ export class DependencyTreeComponent {
                 </button>
 
                 <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold font-mono">
-                  📁
+                  ${Icons.folder('w-3.5 h-3.5')}
                 </div>
 
                 <div>
@@ -295,8 +295,8 @@ export class DependencyTreeComponent {
             </button>
             <button type="button" 
                     data-action="tree-collapse-modules" 
-                    class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
-              📁 Solo Módulos
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
+              ${Icons.folder('w-3.5 h-3.5')} <span>Solo Módulos</span>
             </button>
           </div>
         </div>
@@ -309,7 +309,7 @@ export class DependencyTreeComponent {
             <div class="p-4 rounded-2xl bg-indigo-600 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-xl shadow-xs">
-                  🚀
+                  ${Icons.cube('w-5 h-5')}
                 </div>
                 <div>
                   <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-200 font-bold">Nodo Raíz (Nivel 0)</div>

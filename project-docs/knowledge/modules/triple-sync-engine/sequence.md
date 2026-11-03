@@ -3,11 +3,11 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  actor Dev as "💻 Desarrollador / IA"
-  participant Truth as "📁 .opencode/skills/ (Fuente)"
-  participant MirrorCopilot as "📁 .github/skills/ (Espejo Copilot)"
-  participant MirrorAGY as "📁 .agents/skills/ (Espejo Antigravity)"
-  participant SyncTool as "🔄 Skill sync-skills"
+  actor Dev as "Desarrollador / IA"
+  participant Truth as ".opencode/skills/ (Fuente)"
+  participant MirrorCopilot as ".github/skills/ (Espejo Copilot)"
+  participant MirrorAGY as ".agents/skills/ (Espejo Antigravity)"
+  participant SyncTool as "Skill sync-skills"
 
   Dev->>Truth: "Crear o actualizar {skill}/SKILL.md"
   Dev->>SyncTool: "Invocar /sync-skills"

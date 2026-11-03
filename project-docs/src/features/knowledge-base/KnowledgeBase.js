@@ -6,14 +6,7 @@ import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksTo
  * KnowledgeBaseComponent: Base de Conocimiento de Ingeniería Soberana (Docs-as-Code).
  * Diseñada con experiencia editorial de alta gama (Biblioteca por Estantes + Lector de Artículos)
  * e inspirada en la arquitectura, gestión y diseño visual de ContextForge.
- *
- * Capacidades:
- * 1. Biblioteca Editorial (Shelves Hub): 6 estantes temáticos, tarjeta Hero destacada, metadatos ricos.
- * 2. Lector de Artículos: Columna de 780px centrada, 1.75em line-height, TOC flotante con scrollspy.
- * 3. Editor Dual ContextForge: Conmutador entre [ 📝 Modo Markdown ] y [ 🧱 Modo Bloques Visuales ].
- * 4. Scroll Sincronizado Proporcional Anti-Bloqueo entre textarea y previsualización.
- * 5. Catálogo formal de Reglas de Negocio (BR-*), Servicios Externos y Guardrails Anti-Sesgo dinámicos.
- * 6. Prompt Bundler reactivo para inicializar LLMs sin alucinaciones ni mocks estáticos.
+ * 100% Vectorial, accesible, sin emojis.
  */
 
 export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
@@ -85,7 +78,8 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                 </span>
               </div>
               <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <span>📚</span> Base de Conocimiento de Ingeniería Soberana
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.book('w-7 h-7')}</span>
+                <span>Base de Conocimiento de Ingeniería Soberana</span>
               </h2>
               <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
                 Repositorio canónico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), reglas de negocio (BR-*), 
@@ -98,14 +92,14 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <button type="button" 
                       data-action="open-new-doc-modal"
                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
-                <span>➕</span> Nuevo Doc
+                ${Icons.plus} <span>Nuevo Doc</span>
               </button>
 
               <button type="button" 
                       data-action="trigger-import-doc"
                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
                       title="Importar archivo .md o .json local">
-                <span>📥</span> Importar
+                ${Icons.upload} <span>Importar</span>
               </button>
               <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
 
@@ -113,13 +107,13 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       data-action="export-all-knowledge"
                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
                       title="Descargar paquete JSON con toda la Base de Conocimiento">
-                <span>📤</span> Exportar
+                ${Icons.download} <span>Exportar</span>
               </button>
 
               <button type="button" 
                       data-action="open-ai-context-modal" 
                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
-                <span>🤖</span> Contexto IA
+                ${Icons.bot} <span>Contexto IA</span>
               </button>
             </div>
           </div>
@@ -155,18 +149,18 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div class="space-y-3 max-w-3xl">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
-                    ⭐ Documento Destacado
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
+                    ${Icons.star('w-3 h-3')} <span>Documento Destacado</span>
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    ⏱️ ${heroDocMeta.readingTime} min de lectura
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    ${Icons.clock('w-3 h-3')} <span>${heroDocMeta.readingTime} min de lectura</span>
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    📝 ${heroDocMeta.wordCount} palabras
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    ${Icons.fileText('w-3 h-3')} <span>${heroDocMeta.wordCount} palabras</span>
                   </span>
                   ${heroDocMeta.ruleCount ? `
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                      ⚖️ ${heroDocMeta.ruleCount} Reglas BR
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      ${Icons.scale('w-3 h-3')} <span>${heroDocMeta.ruleCount} Reglas BR</span>
                     </span>
                   ` : ''}
                 </div>
@@ -187,13 +181,13 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                         data-action="open-article-read"
                         data-doc-key="${escapeAttr(heroDocKey)}"
                         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
-                  <span>📖</span> Leer Artículo Completo
+                  ${Icons.bookOpen} <span>Leer Artículo Completo</span>
                 </button>
                 <button type="button" 
                         data-action="open-article-edit"
                         data-doc-key="${escapeAttr(heroDocKey)}"
                         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                  <span>✏️</span> Editar en Vivo
+                  ${Icons.edit} <span>Editar en Vivo</span>
                 </button>
               </div>
             </div>
@@ -214,8 +208,8 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               ${Object.values(shelvesData).map(sh => `
                 <button type="button" 
                         data-shelf-filter="${sh.id}" 
-                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium">
-                  <span>${sh.icon}</span> ${sh.title.split(' ')[0]} (${sh.docs.length})
+                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium inline-flex items-center gap-1.5">
+                  ${getShelfIconSvg(sh.id)} <span>${sh.title.split(' ')[0]}</span> <span>(${sh.docs.length})</span>
                 </button>
               `).join('')}
             </div>
@@ -242,7 +236,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <div class="flex items-center gap-2.5">
-                    <span class="text-xl">${sh.icon}</span>
+                    <span class="p-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                      ${getShelfIconSvg(sh.id, 'w-5 h-5')}
+                    </span>
                     <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                       ${escapeHtml(sh.title)}
                     </h3>
@@ -273,11 +269,11 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                         
                         <div class="space-y-3">
                           <div class="flex items-center justify-between gap-2">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'} truncate">
-                              ${meta.moduleName ? `📦 ${meta.moduleName}` : `🏛️ ${sh.title.split(' ')[0]}`}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'} truncate">
+                              ${meta.moduleName ? `${Icons.folder('w-3 h-3')} <span>${meta.moduleName}</span>` : `${getShelfIconSvg(sh.id, 'w-3 h-3')} <span>${sh.title.split(' ')[0]}</span>`}
                             </span>
-                            <span class="text-[10px] font-mono text-slate-400 shrink-0">
-                              ⏱️ ${meta.readingTime} min
+                            <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
+                              ${Icons.clock('w-3 h-3')} <span>${meta.readingTime} min</span>
                             </span>
                           </div>
 
@@ -298,18 +294,18 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                         <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                           <div class="flex items-center gap-1.5">
                             ${meta.ruleCount ? `
-                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
-                                ⚖️ ${meta.ruleCount} BR
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
+                                ${Icons.scale('w-3 h-3')} <span>${meta.ruleCount} BR</span>
                               </span>
                             ` : ''}
                             ${meta.reqCount ? `
-                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
-                                📋 ${meta.reqCount} RF
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
+                                ${Icons.fileText('w-3 h-3')} <span>${meta.reqCount} RF</span>
                               </span>
                             ` : ''}
                             ${meta.adrCount ? `
-                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
-                                🏛️ ${meta.adrCount} ADR
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
+                                ${Icons.cube('w-3 h-3')} <span>${meta.adrCount} ADR</span>
                               </span>
                             ` : ''}
                           </div>
@@ -319,14 +315,14 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                                     data-action="open-article-read"
                                     data-doc-key="${escapeAttr(key)}"
                                     class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
-                              <span>📖</span> Leer
+                              ${Icons.bookOpen('w-3.5 h-3.5')} <span>Leer</span>
                             </button>
                             <button type="button" 
                                     data-action="open-article-edit"
                                     data-doc-key="${escapeAttr(key)}"
                                     class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                                     title="Editar directamente este documento">
-                              <span>✏️</span>
+                              ${Icons.edit('w-3.5 h-3.5')}
                             </button>
                           </div>
                         </div>
@@ -356,7 +352,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <button type="button" 
                       data-action="back-to-library"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold transition-all cursor-pointer">
-                <span>←</span> Biblioteca
+                ${Icons.arrowLeft} <span>Biblioteca</span>
               </button>
               <span class="text-slate-300 dark:text-slate-700">/</span>
               <span id="article-shelf-badge" class="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
@@ -370,8 +366,8 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
 
             <!-- Acciones del Documento -->
             <div class="flex items-center gap-2">
-              <span id="article-reading-time-badge" class="hidden sm:inline-flex px-2 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
-                ⏱️ ${activeDocMeta.readingTime} min
+              <span id="article-reading-time-badge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
+                ${Icons.clock('w-3.5 h-3.5')} <span>${activeDocMeta.readingTime} min</span>
               </span>
 
               <!-- Botón Conmutar Modo Edición / Lectura -->
@@ -379,7 +375,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       id="btn-toggle-doc-editor" 
                       class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5"
                       title="Alternar entre Lector Editorial y Editor Dual">
-                <span id="btn-toggle-doc-icon">✏️</span>
+                <span id="btn-toggle-doc-icon">${Icons.edit}</span>
                 <span id="btn-toggle-doc-text">Modo Editor</span>
               </button>
 
@@ -388,7 +384,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       id="copy-active-doc-btn" 
                       class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Copiar contenido Markdown completo">
-                <span class="text-xs">📋</span>
+                ${Icons.copy}
               </button>
 
               <!-- Botón Descargar Archivo .md -->
@@ -396,7 +392,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       data-action="download-active-doc" 
                       class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Descargar este archivo .md a tu equipo">
-                <span class="text-xs">💾</span>
+                ${Icons.download}
               </button>
 
               <!-- Botón Eliminar Documento -->
@@ -404,7 +400,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       data-action="delete-active-doc" 
                       class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
                       title="Eliminar este documento de la Base de Conocimiento">
-                <span class="text-xs">🗑️</span>
+                ${Icons.trash}
               </button>
             </div>
 
@@ -425,7 +421,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <div class="hidden lg:block lg:col-span-3 sticky top-36 space-y-4">
             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
               <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
-                <span>📑</span> En esta página
+                ${Icons.fileText} <span>En esta página</span>
               </div>
               <div id="doc-active-toc" class="max-h-[460px] overflow-y-auto pr-1">
                 ${renderTableOfContentsHtml(activeDocToc)}
@@ -460,13 +456,13 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
                 <button type="button" 
                         id="btn-editor-mode-md" 
-                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
-                  📝 Modo Markdown
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
+                  ${Icons.code('w-3.5 h-3.5')} <span>Modo Markdown</span>
                 </button>
                 <button type="button" 
                         id="btn-editor-mode-blocks" 
-                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
-                  🧱 Modo Bloques Visuales
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
+                  ${Icons.grid('w-3.5 h-3.5')} <span>Modo Bloques Visuales</span>
                 </button>
               </div>
 
@@ -485,7 +481,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <button type="button" 
                       id="btn-save-doc-edit" 
                       class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
-                <span>💾</span> Guardar Cambios
+                ${Icons.save} <span>Guardar Cambios</span>
               </button>
             </div>
           </div>
@@ -521,26 +517,26 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <!-- Barra para Agregar Bloques Nuevos -->
             <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono">
               <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>🧱</span> Añadir Bloque Visual:
+                ${Icons.grid} <span>Añadir Bloque Visual:</span>
               </span>
               <div class="flex flex-wrap items-center gap-1.5">
-                <button type="button" data-add-block="header" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
-                  ➕ Encabezado
+                <button type="button" data-add-block="header" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus('w-3 h-3')} <span>Encabezado</span>
                 </button>
-                <button type="button" data-add-block="paragraph" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
-                  ➕ Párrafo
+                <button type="button" data-add-block="paragraph" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus('w-3 h-3')} <span>Párrafo</span>
                 </button>
-                <button type="button" data-add-block="business_rule" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
-                  ➕ Regla BR
+                <button type="button" data-add-block="business_rule" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus('w-3 h-3')} <span>Regla BR</span>
                 </button>
-                <button type="button" data-add-block="callout" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
-                  ➕ Alerta/Callout
+                <button type="button" data-add-block="callout" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus('w-3 h-3')} <span>Alerta/Callout</span>
                 </button>
-                <button type="button" data-add-block="code" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
-                  ➕ Diagrama/Código
+                <button type="button" data-add-block="code" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus('w-3 h-3')} <span>Diagrama/Código</span>
                 </button>
-                <button type="button" data-add-block="divider" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
-                  ➕ Separador
+                <button type="button" data-add-block="divider" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus('w-3 h-3')} <span>Separador</span>
                 </button>
               </div>
             </div>
@@ -564,9 +560,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <div>
             <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                ${Icons.checkCircle}
+                ${Icons.scale}
               </span>
-              Catálogo de Reglas de Negocio (Invariantes de Dominio)
+              <span>Catálogo de Reglas de Negocio (Invariantes de Dominio)</span>
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Invariantes de estricto cumplimiento para evitar alucinaciones, fallos contables y vulnerabilidades
@@ -622,7 +618,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         ` : `
           <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <span class="text-2xl">⚖️</span>
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
+              ${Icons.scale('w-5 h-5')}
+            </div>
             <div class="text-sm font-bold text-slate-700 dark:text-slate-300">No hay reglas de negocio registradas aún</div>
             <p class="text-xs text-slate-500 max-w-md mx-auto">
               Ejecuta la skill <code class="font-mono text-indigo-500">/project-knowledge</code> para extraer automáticamente las reglas e invariantes de tu proyecto.
@@ -640,7 +638,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <span class="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
               ${Icons.server}
             </span>
-            Matriz de Servicios Externos & Protocolos
+            <span>Matriz de Servicios Externos & Protocolos</span>
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Contratos, protocolos de red, esquemas de autenticación y políticas de contingencia
@@ -653,7 +651,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml(svc.name)}</span>
-                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
                     ${escapeHtml(svc.type)}
                   </span>
                 </div>
@@ -676,7 +674,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         ` : `
           <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <span class="text-2xl">🌐</span>
+            <div class="w-10 h-10 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
+              ${Icons.network('w-5 h-5')}
+            </div>
             <div class="text-sm font-bold text-slate-700 dark:text-slate-300">Sin integraciones externas documentadas</div>
             <p class="text-xs text-slate-500 max-w-md mx-auto">
               Si tu sistema consume APIs externas, bases de datos o brokers de mensajería, documenta sus contratos para auditar su contingencia.
@@ -694,7 +694,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
               ${Icons.code}
             </span>
-            Directrices Anti-Sesgo & Convenciones de Ingeniería
+            <span>Directrices Anti-Sesgo & Convenciones de Ingeniería</span>
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Reglas de oro para asegurar que agentes de IA y desarrolladores respeten la arquitectura del proyecto
@@ -705,7 +705,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <!-- Guardrails Anti-Alucinación -->
           <div class="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/15 space-y-3">
             <h4 class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🛑</span> Guardrails de No-Alucinación (Inviolables)
+              ${Icons.shield} <span>Guardrails de No-Alucinación (Inviolables)</span>
             </h4>
             <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
               ${(guardrails.length > 0 ? guardrails : [
@@ -714,7 +714,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                 'Inversión de dependencias obligatoria en controladores y servicios.'
               ]).map(g => `
                 <li class="flex items-start gap-2">
-                  <span class="text-rose-500 font-bold shrink-0 mt-0.5">✕</span>
+                  <span class="text-rose-500 font-bold shrink-0 mt-0.5">&times;</span>
                   <span>${escapeHtml(g)}</span>
                 </li>
               `).join('')}
@@ -724,7 +724,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <!-- Convenciones de Nomenclatura -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
             <h4 class="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>📐</span> Convenciones de Nomenclatura & Control de Versiones
+              ${Icons.tag} <span>Convenciones de Nomenclatura & Control de Versiones</span>
             </h4>
             <div class="space-y-2 text-xs font-mono">
               <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -749,16 +749,16 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
       </section>
 
       <!-- ============================================================== -->
-      <!-- MODAL: CREAR NUEVO DOCUMENTO (➕)                              -->
+      <!-- MODAL: CREAR NUEVO DOCUMENTO                                   -->
       <!-- ============================================================== -->
       <div id="new-doc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>📄</span> Crear Nuevo Documento Técnico
+              ${Icons.fileText} <span>Crear Nuevo Documento Técnico</span>
             </h3>
             <button type="button" data-action="close-new-doc-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              ✕
+              ${Icons.close('w-3.5 h-3.5')}
             </button>
           </div>
           
@@ -797,10 +797,10 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>🤖</span> Contexto Canónico para alimentar a la IA (System Prompt)
+              ${Icons.bot} <span>Contexto Canónico para alimentar a la IA (System Prompt)</span>
             </h3>
             <button type="button" data-action="close-ai-context-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              ✕
+              ${Icons.close('w-3.5 h-3.5')}
             </button>
           </div>
           <p class="text-xs text-slate-600 dark:text-slate-400">
@@ -826,11 +826,11 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="text-base">📐</span>
+              <span class="text-indigo-600 dark:text-indigo-400">${Icons.architecture}</span>
               <h3 id="diagram-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Diagrama Ampliado</h3>
             </div>
             <button type="button" data-action="close-diagram-modal" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              ✕
+              ${Icons.close('w-3.5 h-3.5')}
             </button>
           </div>
           <div id="diagram-modal-content" class="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-50 dark:bg-slate-950">
@@ -840,6 +840,18 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
 
     </div>
   `;
+}
+
+function getShelfIconSvg(shelfId, cls = 'w-4 h-4') {
+  switch (shelfId) {
+    case 'architecture': return Icons.architecture(cls);
+    case 'business_rules': return Icons.scale(cls);
+    case 'requirements': return Icons.fileText(cls);
+    case 'adrs': return Icons.cube(cls);
+    case 'standards': return Icons.shield(cls);
+    case 'modules': return Icons.folder(cls);
+    default: return Icons.book(cls);
+  }
 }
 
 function renderTableOfContentsHtml(toc = []) {
@@ -868,7 +880,7 @@ function buildAiSystemPrompt({ projectSpec, kData, rules = [], services = [], gu
 
   const rulesText = rules.slice(0, 10).map(r => `- ${r.id} (${r.module || 'general'}): ${r.title}. ${r.description}`).join('\n');
   const servicesText = services.map(s => `- ${s.name} (${s.type}): Protocolo ${s.protocol}, Auth: ${s.auth}, Var: ${s.env_var}`).join('\n');
-  const guardrailsText = guardrails.map(g => `- 🛑 ${g}`).join('\n');
+  const guardrailsText = guardrails.map(g => `- [GUARDRAIL] ${g}`).join('\n');
 
   return `# Contexto Canónico del Proyecto — ${pName}
 Arquitectura: ${archStyle} ${patterns ? `(${patterns})` : ''}
@@ -941,12 +953,12 @@ function buildDocMetadataFallback(docs) {
 
 function buildShelvesFallback(docMetadata) {
   const shelves = {
-    architecture: { id: 'architecture', title: 'Arquitectura & Modelado C4', icon: '📐', docs: [] },
-    business_rules: { id: 'business_rules', title: 'Reglas de Negocio & Dominio', icon: '⚖️', docs: [] },
-    requirements: { id: 'requirements', title: 'Requerimientos & Metodología Ágil', icon: '📋', docs: [] },
-    adrs: { id: 'adrs', title: 'Decisiones de Arquitectura (ADRs)', icon: '🏛️', docs: [] },
-    standards: { id: 'standards', title: 'Estándares, Capacidades & Servicios', icon: '🛡️', docs: [] },
-    modules: { id: 'modules', title: 'Módulos & Bounded Contexts', icon: '📦', docs: [] }
+    architecture: { id: 'architecture', title: 'Arquitectura & Modelado C4', iconName: 'architecture', docs: [] },
+    business_rules: { id: 'business_rules', title: 'Reglas de Negocio & Dominio', iconName: 'business_rules', docs: [] },
+    requirements: { id: 'requirements', title: 'Requerimientos & Metodología Ágil', iconName: 'requirements', docs: [] },
+    adrs: { id: 'adrs', title: 'Decisiones de Arquitectura (ADRs)', iconName: 'adrs', docs: [] },
+    standards: { id: 'standards', title: 'Estándares, Capacidades & Servicios', iconName: 'standards', docs: [] },
+    modules: { id: 'modules', title: 'Módulos & Bounded Contexts', iconName: 'modules', docs: [] }
   };
   for (const [k, m] of Object.entries(docMetadata)) {
     const s = m.shelf && shelves[m.shelf] ? m.shelf : (k.startsWith('modules/') ? 'modules' : 'architecture');

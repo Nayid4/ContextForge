@@ -3,11 +3,11 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  actor Humano as "👤 Usuario (Humano)"
-  participant Leader as "⚡ Leader Agent"
-  participant SpecAuthor as "📝 Spec-Author"
-  participant Implementer as "🔨 Implementer"
-  participant Reviewer as "🔍 Reviewer"
+  actor Humano as "Usuario (Humano)"
+  participant Leader as "Leader Agent"
+  participant SpecAuthor as "Spec-Author"
+  participant Implementer as "Implementer"
+  participant Reviewer as "Reviewer"
 
   Humano->>Leader: "Iniciar feature / INT-001"
   Leader->>Leader: "Crear rama feature/INT-001/{nombre} (<=80c)"

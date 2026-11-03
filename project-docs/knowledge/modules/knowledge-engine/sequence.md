@@ -3,12 +3,12 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  actor User as "👤 Ingeniero / Agente"
-  participant Skill as "🧠 /project-knowledge"
-  participant Phase1 as "🔍 Fase 1: Escaneo Topológico"
-  participant Phase2 as "🔬 Fase 2: Inspección DDD Focalizada"
-  participant Storage as "📚 project-docs/knowledge/"
-  participant Sync as "⚡ sync-data.js"
+  actor User as "Ingeniero / Agente"
+  participant Skill as "/project-knowledge"
+  participant Phase1 as "Fase 1: Escaneo Topologico"
+  participant Phase2 as "Fase 2: Inspeccion DDD Focalizada"
+  participant Storage as "project-docs/knowledge/"
+  participant Sync as "sync-data.js"
 
   User->>Skill: "Ejecutar /project-knowledge"
   Skill->>Phase1: "Auditar package.json, project-spec.yaml, estructura de carpetas"

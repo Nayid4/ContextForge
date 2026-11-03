@@ -2,6 +2,7 @@
  * Environment & Tech Stack Auto-Detector
  * Detecta qué agentes de IA están configurados (Antigravity, Claude Code, Open Code, GitHub Copilot, Codex)
  * y el stack tecnológico del proyecto donde se adoptó el arnés.
+ * 100% Vectorial, sin emojis.
  */
 
 export async function detectEnvironment(projectData = {}) {
@@ -13,7 +14,7 @@ export async function detectEnvironment(projectData = {}) {
       id: 'antigravity',
       name: 'Google Antigravity',
       badge: 'Antigravity 2.0',
-      icon: '⚡',
+      iconName: 'zap',
       color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30',
       paths: ['.agents/rules/antigravity-harness.md', 'ANTIGRAVITY.md', '.agents/agents/leader.md']
     },
@@ -21,7 +22,7 @@ export async function detectEnvironment(projectData = {}) {
       id: 'opencode',
       name: 'Open Code',
       badge: 'OpenCode SDD',
-      icon: '🔷',
+      iconName: 'code',
       color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30',
       paths: ['opencode.json', '.opencode/rules/commits.md']
     },
@@ -29,7 +30,7 @@ export async function detectEnvironment(projectData = {}) {
       id: 'copilot',
       name: 'GitHub Copilot',
       badge: 'Copilot Chat',
-      icon: '🐙',
+      iconName: 'bot',
       color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30',
       paths: ['.github/instructions/commits.instructions.md', '.github/copilot-instructions.md', '.github/skills/']
     },
@@ -37,7 +38,7 @@ export async function detectEnvironment(projectData = {}) {
       id: 'claude',
       name: 'Claude Code',
       badge: 'Claude SDD',
-      icon: '🧠',
+      iconName: 'cpu',
       color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
       paths: ['CLAUDE.md', '.claude/', '.claude.json']
     },
@@ -45,7 +46,7 @@ export async function detectEnvironment(projectData = {}) {
       id: 'codex',
       name: 'Codex / OpenAI',
       badge: 'Codex Engine',
-      icon: '🤖',
+      iconName: 'terminal',
       color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
       paths: ['.codex/', '.openai/']
     }
@@ -78,7 +79,7 @@ export async function detectEnvironment(projectData = {}) {
     id: 'antigravity',
     name: 'Google Antigravity',
     badge: 'Antigravity 2.0',
-    icon: '⚡',
+    iconName: 'zap',
     color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
   };
 

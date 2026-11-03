@@ -13,5 +13,5 @@
 
 ### BR-ORCH-003: Subagente Revisor No Modifica Código
 - **Severidad**: Crítica
-- **Restricción**: El subagente `reviewer` audita de forma imparcial la trazabilidad R↔Tests, la compilación y los tests, pero tiene prohibido editar archivos fuente (`src/`, `tests/`).
+- **Restricción**: El subagente `reviewer` audita de forma imparcial la trazabilidad R-Tests, la compilación y los tests, pero tiene prohibido editar archivos fuente (`src/`, `tests/`).
 - **Comportamiento ante Violación**: Veredicto nulo y reasignación al `implementer`.

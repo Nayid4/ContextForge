@@ -1,3 +1,5 @@
+import { Icons } from '../../shared/Icons.js';
+
 /**
  * SpaceView3D: Visualizador 3D interactivo en Three.js con Jerarquía Piramidal Arquitectónica.
  * 
@@ -594,7 +596,7 @@ export class SpaceView3D {
             <span class="font-semibold px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 uppercase">${f.status}</span>
           </div>
           <div class="font-bold text-slate-100 text-xs leading-snug">${f.title || f.name}</div>
-          <div class="font-mono text-[10px] text-slate-400 truncate">🌿 ${branchName}</div>
+          <div class="font-mono text-[10px] text-slate-400 truncate flex items-center gap-1">${Icons.gitBranch('w-3 h-3')} <span>${branchName}</span></div>
           
           <!-- Nivel Piramidal -->
           <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px]">

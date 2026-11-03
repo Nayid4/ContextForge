@@ -82,18 +82,20 @@
       "id": 4,
       "type": "feature",
       "name": "dashboard_editorial_dual_editor",
-      "title": "Tablero Editorial con Lector ContextForge y Editor Dual",
-      "description": "Interfaz visual con Tailwind CSS v4, estantes temáticos, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
+      "title": "Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis",
+      "description": "Interfaz visual con Tailwind CSS v4, iconografia SVG accesible (0 emojis), tabla tecnica de stack, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
       "module": "dashboard-visualizer",
       "priority": "P0",
       "weight": 95,
-      "branch": "feature/INT-004/dashboard_editorial_dual_editor",
+      "branch": "feature/INT-004/refactor_frontend_zero_emojis_atdd",
       "spec_folder": "specs/004_dashboard_editorial_dual_editor",
       "status": "done",
       "acceptance": [
         "Biblioteca organizada por estantes temáticos con tarjeta Hero destacada",
         "Lector de artículos con ancho centrado a 780px e interlineado 1.75em",
-        "Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional"
+        "Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional",
+        "Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde",
+        "Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica"
       ]
     },
     {
@@ -143,7 +145,7 @@
       "weight": 90,
       "branch": "feature/INT-007/automated_unit_testing_suite",
       "spec_folder": "specs/007_automated_unit_testing_suite",
-      "status": "in_progress",
+      "status": "done",
       "acceptance": [
         "Suite de tests unitarios nativos ejecutables con npm test",
         "Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown",

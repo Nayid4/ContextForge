@@ -20,7 +20,7 @@ export function renderModal(feature) {
         <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
           ${feature.acceptance.map(a => `
             <li class="flex items-start gap-2">
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">${Icons.check('w-3.5 h-3.5')}</span>
               <span>${a}</span>
             </li>`).join('')}
         </ul>
@@ -34,7 +34,7 @@ export function renderModal(feature) {
         <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
           ${feature.tasks.map(t => `
             <li class="flex items-start gap-2 ${t.done ? 'text-emerald-700 dark:text-emerald-400 line-through opacity-80' : ''}">
-              <span class="${t.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'} font-mono">${t.done ? '✓' : '○'}</span>
+              <span class="${t.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'} font-mono">${t.done ? Icons.check('w-3 h-3') : '○'}</span>
               <span>${t.title || t}</span>
             </li>`).join('')}
         </ul>
@@ -77,7 +77,7 @@ export function renderModal(feature) {
             </h3>
           </div>
           <button type="button" data-action="close-modal" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Cerrar modal (Esc)">
-            ✕
+            ${Icons.close('w-4 h-4')}
           </button>
         </div>
 

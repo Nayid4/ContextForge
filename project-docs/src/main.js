@@ -155,7 +155,7 @@ class App {
     const filteredFeatures = store.getFilteredFeatures();
     const modules = store.getAvailableModules();
     const isDark = state.theme === 'dark';
-    const activeAgent = this.envInfo?.activeAgent || { name: 'Google Antigravity', icon: '⚡' };
+    const activeAgent = this.envInfo?.activeAgent || { name: 'Google Antigravity', iconName: 'zap' };
     const stackInfo = this.envInfo?.stack || { name: 'Multi-Stack Agnostico' };
     const isLocalFile = typeof window !== 'undefined' && window.location.protocol === 'file:';
 
@@ -224,7 +224,7 @@ class App {
                       data-action="open-omnibox"
                       class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-xs"
                       title="Búsqueda global omnibox (Ctrl+K)">
-                <span>🔍 Buscar...</span>
+                <span class="inline-flex items-center gap-1.5">${Icons.search('w-3.5 h-3.5')} <span>Buscar...</span></span>
                 <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold">Ctrl K</kbd>
               </button>
 
@@ -238,7 +238,7 @@ class App {
               <!-- Agente Detectado -->
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 shadow-xs"
                    title="Agentes compatibles homologados: Google Antigravity, Open Code, GitHub Copilot, Claude Code, Codex">
-                <span class="text-sm">${activeAgent.icon}</span>
+                <span class="text-indigo-600 dark:text-indigo-400 flex items-center">${Icons[activeAgent.iconName || 'zap'] ? Icons[activeAgent.iconName || 'zap']('w-4 h-4') : Icons.zap('w-4 h-4')}</span>
                 <span class="font-medium">${activeAgent.name}</span>
               </div>
 
@@ -314,7 +314,7 @@ class App {
         <div id="omnibox-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-start justify-center pt-16 sm:pt-24 px-4">
           <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-              <span class="text-slate-400 text-sm">🔍</span>
+              <span class="text-slate-400 text-sm flex items-center">${Icons.search('w-4 h-4')}</span>
               <input type="text" 
                      id="omnibox-input" 
                      placeholder="Buscar tareas (INT-*), docs, reglas (BR-*), módulos..." 
@@ -522,8 +522,8 @@ class App {
           console.warn('Mermaid render error for target:', renderErr);
           target.innerHTML = `
             <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 max-w-lg text-center space-y-2">
-              <div class="font-bold flex items-center justify-center gap-1.5">
-                <span>⚠️</span> Diagrama en edición de sintaxis
+              <div class="font-bold flex items-center justify-center gap-1.5 text-amber-600 dark:text-amber-400">
+                ${Icons.alertTriangle('w-4 h-4')} <span>Diagrama en edición de sintaxis</span>
               </div>
               <p class="text-[11px] text-slate-500 dark:text-slate-400">
                 ${escapeHtml(renderErr.message || 'Error de parsing en Mermaid')}
@@ -650,7 +650,7 @@ class App {
 
     if (pathEl) pathEl.textContent = docKey;
     if (shelfBadge) shelfBadge.textContent = meta.shelf || 'Canónico';
-    if (readingTimeBadge) readingTimeBadge.textContent = `⏱️ ${meta.readingTime || 3} min`;
+    if (readingTimeBadge) readingTimeBadge.innerHTML = `<span class="inline-flex items-center gap-1">${Icons.clock('w-3 h-3')} <span>${meta.readingTime || 3} min</span></span>`;
     if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
     if (brEl) brEl.textContent = meta.ruleCount || 0;
     if (rfEl) rfEl.textContent = meta.reqCount || 0;
@@ -668,13 +668,13 @@ class App {
       readerContainer?.classList.add('hidden');
       editorContainer?.classList.remove('hidden');
       if (btnText) btnText.textContent = 'Modo Lectura';
-      if (btnIcon) btnIcon.textContent = '👁️';
+      if (btnIcon) btnIcon.innerHTML = Icons.eye('w-3.5 h-3.5');
       this.setupSynchronizedScroll();
     } else {
       editorContainer?.classList.add('hidden');
       readerContainer?.classList.remove('hidden');
       if (btnText) btnText.textContent = 'Modo Editor';
-      if (btnIcon) btnIcon.textContent = '✏️';
+      if (btnIcon) btnIcon.innerHTML = Icons.edit('w-3.5 h-3.5');
     }
 
     libView?.classList.add('hidden');
@@ -739,7 +739,7 @@ class App {
     if (matchedFeatures.length > 0) {
       html += `
         <div class="space-y-1">
-          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">📋 Tareas & Specs</div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 flex items-center gap-1">${Icons.fileText('w-3 h-3')} <span>Tareas & Specs</span></div>
           ${matchedFeatures.map((f, i) => `
             <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
                  data-omnibox-type="feature"
@@ -758,17 +758,17 @@ class App {
     if (matchedDocs.length > 0) {
       html += `
         <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">📚 Base de Conocimiento</div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 flex items-center gap-1">${Icons.book('w-3 h-3')} <span>Base de Conocimiento</span></div>
           ${matchedDocs.map(d => `
             <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
                  data-omnibox-type="doc"
                  data-doc-key="${escapeAttr(d.key)}">
               <div class="flex items-center gap-2 truncate">
-                <span>📄</span>
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.fileText('w-3.5 h-3.5')}</span>
                 <span class="font-bold truncate">${escapeHtml(d.title)}</span>
                 <span class="text-[10px] text-slate-400 font-mono truncate">(${escapeHtml(d.key)})</span>
               </div>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">⏱️ ${d.readingTime || 2}m</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono inline-flex items-center gap-1">${Icons.clock('w-3 h-3')} <span>${d.readingTime || 2}m</span></span>
             </div>
           `).join('')}
         </div>
@@ -778,7 +778,7 @@ class App {
     if (matchedRules.length > 0) {
       html += `
         <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">⚖️ Reglas de Negocio (BR-*)</div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 flex items-center gap-1">${Icons.scale('w-3 h-3')} <span>Reglas de Negocio (BR-*)</span></div>
           ${matchedRules.map(r => `
             <div class="omnibox-item p-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/50 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center justify-between transition-colors"
                  data-omnibox-type="rule"
@@ -830,9 +830,9 @@ class App {
               <span class="text-slate-400 text-[10px]">Bloque #${idx + 1}</span>
             </div>
             <div class="flex items-center gap-1">
-              <button type="button" data-block-action="move-up" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover arriba" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>🔼</button>
-              <button type="button" data-block-action="move-down" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover abajo" ${idx === blocks.length - 1 ? 'disabled style="opacity:0.3"' : ''}>🔽</button>
-              <button type="button" data-block-action="delete" class="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer text-xs" title="Eliminar bloque">🗑️</button>
+              <button type="button" data-block-action="move-up" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover arriba" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>${Icons.chevronUp('w-3.5 h-3.5')}</button>
+              <button type="button" data-block-action="move-down" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover abajo" ${idx === blocks.length - 1 ? 'disabled style="opacity:0.3"' : ''}>${Icons.chevronDown('w-3.5 h-3.5')}</button>
+              <button type="button" data-block-action="delete" class="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer text-xs" title="Eliminar bloque">${Icons.trash('w-3.5 h-3.5')}</button>
             </div>
           </div>
           ${this.renderBlockInputControls(b)}
@@ -1097,13 +1097,13 @@ class App {
             editorContainer.classList.remove('hidden');
             readerContainer.classList.add('hidden');
             if (btnText) btnText.textContent = 'Modo Lectura';
-            if (btnIcon) btnIcon.textContent = '👁️';
+            if (btnIcon) btnIcon.innerHTML = Icons.eye('w-3.5 h-3.5');
             this.setupSynchronizedScroll();
           } else {
             editorContainer.classList.add('hidden');
             readerContainer.classList.remove('hidden');
             if (btnText) btnText.textContent = 'Modo Editor';
-            if (btnIcon) btnIcon.textContent = '✏️';
+            if (btnIcon) btnIcon.innerHTML = Icons.edit('w-3.5 h-3.5');
           }
         }
         return;
@@ -1216,7 +1216,7 @@ class App {
           const btnText = document.getElementById('btn-toggle-doc-text');
           const btnIcon = document.getElementById('btn-toggle-doc-icon');
           if (btnText) btnText.textContent = 'Modo Editor';
-          if (btnIcon) btnIcon.textContent = '✏️';
+          if (btnIcon) btnIcon.innerHTML = Icons.edit('w-3.5 h-3.5');
 
           this.initMermaidDiagrams();
         }
@@ -1231,7 +1231,7 @@ class App {
         const btnText = document.getElementById('btn-toggle-doc-text');
         const btnIcon = document.getElementById('btn-toggle-doc-icon');
         if (btnText) btnText.textContent = 'Modo Editor';
-        if (btnIcon) btnIcon.textContent = '✏️';
+        if (btnIcon) btnIcon.innerHTML = Icons.edit('w-3.5 h-3.5');
         return;
       }
 
@@ -1244,7 +1244,7 @@ class App {
         if (content && navigator.clipboard?.writeText) {
           navigator.clipboard.writeText(content).then(() => {
             const orig = copyDocBtn.innerHTML;
-            copyDocBtn.innerHTML = '<span>✅</span>';
+            copyDocBtn.innerHTML = Icons.checkCircle('w-3.5 h-3.5');
             setTimeout(() => { copyDocBtn.innerHTML = orig; }, 2000);
           });
         }
@@ -1312,7 +1312,7 @@ class App {
         if (textarea && navigator.clipboard?.writeText) {
           navigator.clipboard.writeText(textarea.value).then(() => {
             const origHtml = copyContextBtn.innerHTML;
-            copyContextBtn.innerHTML = '¡Contexto Copiado! ✅';
+            copyContextBtn.innerHTML = `<span class="inline-flex items-center gap-1">${Icons.checkCircle('w-3.5 h-3.5')} <span>¡Copiado!</span></span>`;
             setTimeout(() => { copyContextBtn.innerHTML = origHtml; }, 2000);
           }).catch(() => {});
         }
@@ -1636,13 +1636,13 @@ class App {
 
 function getBlockTypeLabel(type) {
   switch (type) {
-    case 'header': return '🏷️ Encabezado';
-    case 'paragraph': return '📝 Párrafo';
-    case 'callout': return '💡 Alerta';
-    case 'business_rule': return '⚖️ Regla BR';
-    case 'code': return '📐 Código/Diagrama';
-    case 'divider': return '➖ Separador';
-    default: return '📄 Bloque';
+    case 'header': return 'Encabezado';
+    case 'paragraph': return 'Párrafo';
+    case 'callout': return 'Alerta';
+    case 'business_rule': return 'Regla BR';
+    case 'code': return 'Código / Diagrama';
+    case 'divider': return 'Separador';
+    default: return 'Bloque';
   }
 }
 

@@ -468,7 +468,7 @@
         id: "antigravity",
         name: "Google Antigravity",
         badge: "Antigravity 2.0",
-        icon: "\u26A1",
+        iconName: "zap",
         color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
         paths: [".agents/rules/antigravity-harness.md", "ANTIGRAVITY.md", ".agents/agents/leader.md"]
       },
@@ -476,7 +476,7 @@
         id: "opencode",
         name: "Open Code",
         badge: "OpenCode SDD",
-        icon: "\u{1F537}",
+        iconName: "code",
         color: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30",
         paths: ["opencode.json", ".opencode/rules/commits.md"]
       },
@@ -484,7 +484,7 @@
         id: "copilot",
         name: "GitHub Copilot",
         badge: "Copilot Chat",
-        icon: "\u{1F419}",
+        iconName: "bot",
         color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
         paths: [".github/instructions/commits.instructions.md", ".github/copilot-instructions.md", ".github/skills/"]
       },
@@ -492,7 +492,7 @@
         id: "claude",
         name: "Claude Code",
         badge: "Claude SDD",
-        icon: "\u{1F9E0}",
+        iconName: "cpu",
         color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
         paths: ["CLAUDE.md", ".claude/", ".claude.json"]
       },
@@ -500,7 +500,7 @@
         id: "codex",
         name: "Codex / OpenAI",
         badge: "Codex Engine",
-        icon: "\u{1F916}",
+        iconName: "terminal",
         color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
         paths: [".codex/", ".openai/"]
       }
@@ -530,7 +530,7 @@
       id: "antigravity",
       name: "Google Antigravity",
       badge: "Antigravity 2.0",
-      icon: "\u26A1",
+      iconName: "zap",
       color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
     };
     const currentExecutor = projectData?.currentSpec?.responsable || projectData?.currentSpec?.executor || "";
@@ -581,13 +581,14 @@
   // project-docs/src/shared/Icons.js
   function createIcon(svgInner, defaultCls = "w-4 h-4") {
     const fn = (cls = defaultCls) => `
-    <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       ${svgInner}
     </svg>`.trim();
     fn.toString = () => fn(defaultCls);
     return fn;
   }
   var Icons = {
+    // General & Acciones
     check: createIcon('<path d="M5 13l4 4L19 7"/>'),
     checkCircle: createIcon('<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>'),
     clock: createIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
@@ -595,24 +596,67 @@
     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
   `, "w-4 h-4 animate-spin"),
-    alert: createIcon('<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'),
-    search: createIcon('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>'),
-    branch: createIcon('<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'),
-    gitBranch: createIcon('<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'),
-    folder: createIcon('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>'),
-    cube: createIcon('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'),
-    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
-    gitTree: createIcon('<path d="M4 6h16M4 12h16M4 18h7"/>'),
-    chevronLeft: createIcon('<polyline points="15 18 9 12 15 6"/>'),
-    chevronRight: createIcon('<polyline points="9 18 15 12 9 6"/>'),
+    plus: createIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'),
+    minus: createIcon('<line x1="5" y1="12" x2="19" y2="12"/>'),
+    download: createIcon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'),
+    upload: createIcon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>'),
+    trash: createIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'),
+    edit: createIcon('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'),
+    copy: createIcon('<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    save: createIcon('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>'),
     refresh: createIcon('<path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'),
     close: createIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
+    search: createIcon('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>'),
+    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
+    eyeOff: createIcon('<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'),
+    filter: createIcon('<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'),
+    share: createIcon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>'),
+    externalLink: createIcon('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>'),
+    // Navegación & Flechas
+    chevronLeft: createIcon('<polyline points="15 18 9 12 15 6"/>'),
+    chevronRight: createIcon('<polyline points="9 18 15 12 9 6"/>'),
+    chevronUp: createIcon('<polyline points="18 15 12 9 6 15"/>'),
+    chevronDown: createIcon('<polyline points="6 9 12 15 18 9"/>'),
+    arrowLeft: createIcon('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>'),
+    arrowRight: createIcon('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>'),
+    // Alertas & Notificaciones
+    alert: createIcon('<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'),
+    alertTriangle: createIcon('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'),
+    alertCircle: createIcon('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'),
+    xCircle: createIcon('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'),
+    info: createIcon('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'),
+    lightbulb: createIcon('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>'),
+    zap: createIcon('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'),
+    // Sistema, Arquitectura & Código
+    branch: createIcon('<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'),
+    gitBranch: createIcon('<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'),
+    gitTree: createIcon('<path d="M4 6h16M4 12h16M4 18h7"/>'),
+    cube: createIcon('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'),
     layers: createIcon('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'),
     database: createIcon('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>'),
     server: createIcon('<rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>'),
     cpu: createIcon('<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>'),
     code: createIcon('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'),
+    terminal: createIcon('<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>'),
+    shield: createIcon('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+    bot: createIcon('<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/>'),
+    layout: createIcon('<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>'),
+    grid: createIcon('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>'),
+    table: createIcon('<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/>'),
+    activity: createIcon('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'),
+    scale: createIcon('<line x1="12" y1="3" x2="12" y2="21"/><path d="M4 7l4 8h-8l4-8z"/><path d="M20 7l4 8h-8l4-8z"/>'),
+    architecture: createIcon('<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>'),
+    network: createIcon('<rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M5 16v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><line x1="12" y1="8" x2="12" y2="11"/>'),
+    box: createIcon('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>'),
+    // Documentos, Biblioteca & Texto
+    folder: createIcon('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>'),
     book: createIcon('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
+    bookOpen: createIcon('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+    file: createIcon('<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>'),
+    fileText: createIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>'),
+    star: createIcon('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'),
+    tag: createIcon('<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'),
+    sparkles: createIcon('<path d="M12 3l1.912 5.885L20 10.8l-4.756 3.657L16.824 21 12 17.273 7.176 21l1.58-6.543L4 10.8l6.088-1.915L12 3z"/>'),
     sun: createIcon('<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'),
     moon: createIcon('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>')
   };
@@ -748,7 +792,7 @@
         <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
           ${feature.acceptance.map((a) => `
             <li class="flex items-start gap-2">
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">\u2713</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">${Icons.check("w-3.5 h-3.5")}</span>
               <span>${a}</span>
             </li>`).join("")}
         </ul>
@@ -759,7 +803,7 @@
         <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
           ${feature.tasks.map((t) => `
             <li class="flex items-start gap-2 ${t.done ? "text-emerald-700 dark:text-emerald-400 line-through opacity-80" : ""}">
-              <span class="${t.done ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"} font-mono">${t.done ? "\u2713" : "\u25CB"}</span>
+              <span class="${t.done ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"} font-mono">${t.done ? Icons.check("w-3 h-3") : "\u25CB"}</span>
               <span>${t.title || t}</span>
             </li>`).join("")}
         </ul>
@@ -797,7 +841,7 @@
             </h3>
           </div>
           <button type="button" data-action="close-modal" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Cerrar modal (Esc)">
-            \u2715
+            ${Icons.close("w-4 h-4")}
           </button>
         </div>
 
@@ -1661,7 +1705,7 @@
               <div class="absolute left-1.5 top-0 w-3 h-3.5 border-l-2 border-b-2 border-slate-300 dark:border-slate-700/80 rounded-bl-sm"></div>
               
               <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${sub.done ? "bg-emerald-500 text-white" : "border border-slate-400 dark:border-slate-600 text-slate-400"}">
-                ${sub.done ? "\u2713" : "\u25CB"}
+                ${sub.done ? Icons.check("w-2.5 h-2.5") : "\u25CB"}
               </span>
               <span class="truncate text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
                 ${escapeHtml2(sub.name)}
@@ -1754,7 +1798,7 @@
                 </button>
 
                 <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold font-mono">
-                  \u{1F4C1}
+                  ${Icons.folder("w-3.5 h-3.5")}
                 </div>
 
                 <div>
@@ -1824,8 +1868,8 @@
             </button>
             <button type="button" 
                     data-action="tree-collapse-modules" 
-                    class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
-              \u{1F4C1} Solo M\xF3dulos
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
+              ${Icons.folder("w-3.5 h-3.5")} <span>Solo M\xF3dulos</span>
             </button>
           </div>
         </div>
@@ -1838,7 +1882,7 @@
             <div class="p-4 rounded-2xl bg-indigo-600 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-xl shadow-xs">
-                  \u{1F680}
+                  ${Icons.cube("w-5 h-5")}
                 </div>
                 <div>
                   <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-200 font-bold">Nodo Ra\xEDz (Nivel 0)</div>
@@ -2380,7 +2424,7 @@
             <span class="font-semibold px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 uppercase">${f.status}</span>
           </div>
           <div class="font-bold text-slate-100 text-xs leading-snug">${f.title || f.name}</div>
-          <div class="font-mono text-[10px] text-slate-400 truncate">\u{1F33F} ${branchName}</div>
+          <div class="font-mono text-[10px] text-slate-400 truncate flex items-center gap-1">${Icons.gitBranch("w-3 h-3")} <span>${branchName}</span></div>
           
           <!-- Nivel Piramidal -->
           <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px]">
@@ -2585,14 +2629,14 @@
             <button type="button" 
                     data-diagram-toggle="visual" 
                     data-diagram-id="${id}"
-                    class="diagram-view-btn active px-3 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold shadow-xs transition-all cursor-pointer">
-              \u{1F3A8} Visual
+                    class="diagram-view-btn active px-3 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold shadow-xs transition-all cursor-pointer inline-flex items-center gap-1.5">
+              ${Icons.eye("w-3.5 h-3.5")} <span>Visual</span>
             </button>
             <button type="button" 
                     data-diagram-toggle="code" 
                     data-diagram-id="${id}"
-                    class="diagram-view-btn px-3 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
-              \u{1F4DD} C\xF3digo
+                    class="diagram-view-btn px-3 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer inline-flex items-center gap-1.5">
+              ${Icons.code("w-3.5 h-3.5")} <span>C\xF3digo</span>
             </button>
           </div>
 
@@ -2602,7 +2646,7 @@
                   data-diagram-id="${id}"
                   class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title="Expandir a Pantalla Completa con Zoom y Paneo">
-            ${Icons.eye("w-3.5 h-3.5")}
+            ${Icons.maximize ? Icons.maximize("w-3.5 h-3.5") : Icons.eye("w-3.5 h-3.5")}
           </button>
 
           <!-- Bot\xF3n Copiar C\xF3digo -->
@@ -2610,7 +2654,7 @@
                   data-copy-mermaid="${escapeAttr2(code)}"
                   class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title="Copiar c\xF3digo Mermaid">
-            <span class="text-xs">\u{1F4CB}</span>
+            ${Icons.copy("w-3.5 h-3.5")}
           </button>
 
           <!-- Bot\xF3n Abrir / Editar en Draw.io -->
@@ -2619,7 +2663,7 @@
              rel="noopener noreferrer" 
              class="px-2 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1 text-xs font-mono font-semibold"
              title="Abrir e interactuar con este diagrama en Draw.io (diagrams.net)">
-            <span>\u270F\uFE0F</span> <span class="hidden sm:inline">Draw.io</span>
+            ${Icons.edit("w-3.5 h-3.5")} <span class="hidden sm:inline">Draw.io</span>
           </a>
         </div>
       </div>
@@ -2676,14 +2720,10 @@
     const goals = spec.business_goals || [];
     const diagrams = kData.diagrams || [];
     const layers = arch.layers || [];
-    const databases = tech.databases || [];
-    const messaging = tech.messaging || [];
-    const runtimes = tech.runtimes || [];
-    const libraries = tech.libraries || [];
     const patterns = arch.patterns || [];
     const featureMap = /* @__PURE__ */ new Map();
     features.forEach((f) => featureMap.set(f.id, f));
-    const hasProjectData = proj.name || modules.length > 0 || runtimes.length > 0;
+    const stackRows = buildStructuredStack(tech, spec);
     return `
     <div class="space-y-10">
       
@@ -2710,7 +2750,7 @@
             </p>
           </div>
 
-          <!-- M\xE9tricas de Auditor\xEDa R\xE1pida -->
+          <!-- M\xE9tricas T\xE9cnicas Compactas -->
           <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-mono">
             <div>
               <div class="text-[10px] text-slate-400 uppercase tracking-wider">M\xF3dulos</div>
@@ -2718,8 +2758,8 @@
             </div>
             <div class="h-8 w-px bg-slate-200 dark:bg-slate-800"></div>
             <div>
-              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Servicios Middleware</div>
-              <div class="font-bold text-slate-800 dark:text-slate-200 text-base">${databases.length + messaging.length}</div>
+              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Stack Items</div>
+              <div class="font-bold text-slate-800 dark:text-slate-200 text-base">${stackRows.length}</div>
             </div>
             <div class="h-8 w-px bg-slate-200 dark:bg-slate-800"></div>
             <div>
@@ -2754,7 +2794,7 @@
               <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
                 ${goals.map((g) => `
                   <li class="flex items-start gap-2">
-                    <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u25AA</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5"></span>
                     <span>${escapeHtml4(g)}</span>
                   </li>
                 `).join("")}
@@ -2785,7 +2825,7 @@
             <button type="button" 
                     id="copy-active-mermaid-btn" 
                     class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5">
-              <span>\u{1F4CB}</span> Copiar Mermaid / XML
+              ${Icons.copy} Copiar Mermaid / XML
             </button>
           </div>
         </div>
@@ -2794,21 +2834,24 @@
         <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto text-xs font-medium" id="arch-diagram-nav">
           <button type="button" 
                   data-arch-tab="layers" 
-                  class="arch-tab-btn active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-semibold transition-all cursor-pointer">
-            \u{1F3D7}\uFE0F Capas del Sistema
+                  class="arch-tab-btn active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-semibold transition-all cursor-pointer flex items-center gap-1.5">
+            ${Icons.layers} Capas del Sistema
           </button>
-          ${diagrams.map((diag) => `
-            <button type="button" 
-                    data-arch-tab="${diag.id}" 
-                    class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer whitespace-nowrap">
-              ${diag.type === "C4 Model" ? "\u{1F4D0}" : diag.type === "Database ERD" ? "\u{1F5C4}\uFE0F" : "\u{1F465}"} ${diag.title || diag.id}
-            </button>
-          `).join("")}
+          ${diagrams.map((diag) => {
+      const iconSvg = diag.type === "C4 Model" ? Icons.architecture : diag.type === "Database ERD" ? Icons.database : Icons.gitTree;
+      return `
+              <button type="button" 
+                      data-arch-tab="${diag.id}" 
+                      class="arch-tab-btn px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                ${iconSvg} ${diag.title || diag.id}
+              </button>
+            `;
+    }).join("")}
         </div>
 
         <!-- 2.1 PANEL: CAPAS DIN\xC1MICAS DEL SISTEMA -->
         <div id="diagram-panel-layers" class="diagram-panel block mt-6">
-          ${renderDynamicLayersPanel({ layers, modules, databases, messaging, runtimes, featureMap })}
+          ${renderDynamicLayersPanel({ layers, modules, featureMap })}
         </div>
 
         <!-- 2.2 PANELES DE DIAGRAMAS MERMAID / DRAW.IO -->
@@ -2820,97 +2863,71 @@
 
       </section>
 
-      <!-- 3. STACK DE TECNOLOG\xCDAS Y RUNTIMES (100% DIN\xC1MICO) -->
+      <!-- 3. STACK DE TECNOLOG\xCDAS COMPACTO & T\xC9CNICO (TABLA ESTRUCTURADA) -->
       <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="mb-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-              ${Icons.cpu}
-            </span>
-            Stack Tecnol\xF3gico, Runtimes & Dependencias
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Informaci\xF3n recolectada din\xE1micamente por la skill <code class="font-mono text-indigo-500">/technical-audit</code>
-          </p>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                ${Icons.cpu}
+              </span>
+              Stack Tecnol\xF3gico & Matriz de Dependencias
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Cat\xE1logo t\xE9cnico verificado por <code class="font-mono text-indigo-500">/technical-audit</code> libre de dependencias fantasma
+            </p>
+          </div>
+          <span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            ${stackRows.length} componentes auditados
+          </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          <!-- Runtimes & Lenguajes -->
-          <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
-            <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <span>\u26A1</span> Runtimes & Lenguajes (${runtimes.length})
-            </div>
-            ${runtimes.length > 0 ? `
-              <div class="space-y-2.5">
-                ${runtimes.map((r) => `
-                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-                      <span class="flex items-center gap-1.5">${r.icon || "\u25AA"} ${r.name}</span>
-                      <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${r.version || ""}</span>
+        <!-- Tabla Estructurada del Stack -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/80 text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th class="py-3 px-4 font-bold">Capa</th>
+                <th class="py-3 px-4 font-bold">Tecnolog\xEDa / Herramienta</th>
+                <th class="py-3 px-4 font-bold">Versi\xF3n</th>
+                <th class="py-3 px-4 font-bold">Prop\xF3sito en el Sistema</th>
+                <th class="py-3 px-4 font-bold">Estado</th>
+                <th class="py-3 px-4 font-bold">Dependencias & Licencia</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+              ${stackRows.map((row) => `
+                <tr class="hover:bg-white dark:hover:bg-slate-900 transition-colors">
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <span class="font-mono font-bold text-[11px] px-2 py-0.5 rounded ${row.layerBadgeClass}">
+                      ${row.layer}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                      <span class="text-indigo-600 dark:text-indigo-400">${row.iconSvg}</span>
+                      <span>${escapeHtml4(row.technology)}</span>
                     </div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${r.purpose || ""}</div>
-                  </div>
-                `).join("")}
-              </div>
-            ` : `
-              <p class="text-xs text-slate-400 italic">No hay runtimes registrados.</p>
-            `}
-          </div>
-
-          <!-- Bases de Datos & Middleware -->
-          <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
-            <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <span>\u{1F418}</span> Bases de Datos & Middleware (${databases.length + messaging.length})
-            </div>
-            ${databases.length + messaging.length > 0 ? `
-              <div class="space-y-2.5">
-                ${databases.map((db) => `
-                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-                      <span class="flex items-center gap-1.5">${db.icon || "\u25AA"} ${db.name}</span>
-                      <span class="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">${db.port ? `:${db.port}` : ""}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${db.purpose || db.type || ""}</div>
-                  </div>
-                `).join("")}
-                ${messaging.map((msg) => `
-                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-                      <span class="flex items-center gap-1.5">${msg.icon || "\u25AA"} ${msg.name}</span>
-                      <span class="font-mono text-[10px] text-purple-600 dark:text-purple-400">${msg.port ? `:${msg.port}` : ""}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">${msg.purpose || ""}</div>
-                  </div>
-                `).join("")}
-              </div>
-            ` : `
-              <p class="text-xs text-slate-400 italic">No hay bases de datos registradas.</p>
-            `}
-          </div>
-
-          <!-- Librer\xEDas Clave -->
-          <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3 md:col-span-2 lg:col-span-1">
-            <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <span>\u{1F4E6}</span> Librer\xEDas & Paquetes Clave (${libraries.length})
-            </div>
-            ${libraries.length > 0 ? `
-              <div class="space-y-2 max-h-[310px] overflow-y-auto pr-1">
-                ${libraries.map((lib) => `
-                  <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                    <div class="flex items-center justify-between">
-                      <span class="font-bold text-slate-800 dark:text-slate-200">${lib.name}</span>
-                      <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">${lib.category || ""}</span>
-                    </div>
-                    <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${lib.purpose || ""}</div>
-                  </div>
-                `).join("")}
-              </div>
-            ` : `
-              <p class="text-xs text-slate-400 italic">No hay librer\xEDas registradas.</p>
-            `}
-          </div>
-
+                  </td>
+                  <td class="py-3 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                    ${escapeHtml4(row.version || "Auto")}
+                  </td>
+                  <td class="py-3 px-4 text-slate-600 dark:text-slate-400 max-w-xs">
+                    ${escapeHtml4(row.purpose)}
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold ${row.statusBadgeClass}">
+                      <span class="w-1.5 h-1.5 rounded-full ${row.statusDotClass}"></span>
+                      ${row.status}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                    ${escapeHtml4(row.dependencies || "Nativa / MIT")}
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -2930,19 +2947,24 @@
 
         ${patterns.length > 0 ? `
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            ${patterns.map((pat) => `
-              <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2">
-                <div class="flex items-center justify-between">
-                  <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${pat.name}</h4>
-                  <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                    ${pat.type || "Patr\xF3n"}
-                  </span>
+            ${patterns.map((pat) => {
+      const pName = typeof pat === "string" ? pat : pat.name;
+      const pType = typeof pat === "string" ? "Patr\xF3n Can\xF3nico" : pat.type || "Patr\xF3n";
+      const pDesc = typeof pat === "string" ? "Est\xE1ndar arquitect\xF3nico adoptado en el repositorio." : pat.description || "";
+      return `
+                <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml4(pName)}</h4>
+                    <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                      ${escapeHtml4(pType)}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    ${escapeHtml4(pDesc)}
+                  </p>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  ${pat.description || ""}
-                </p>
-              </div>
-            `).join("")}
+              `;
+    }).join("")}
           </div>
         ` : `
           <div class="p-6 text-center text-slate-400 text-xs rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
@@ -2979,7 +3001,7 @@
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-2.5">
                       <span class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-mono font-bold text-xs">
-                        \u{1F4C1}
+                        ${Icons.folder}
                       </span>
                       <div>
                         <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -3049,11 +3071,111 @@
     </div>
   `;
   }
-  function renderDynamicLayersPanel({ layers, modules, databases, messaging, runtimes, featureMap }) {
+  function buildStructuredStack(tech, spec) {
+    const rows = [];
+    if (tech.orchestration || spec.runtime?.language) {
+      rows.push({
+        layer: "Orquestaci\xF3n",
+        layerBadgeClass: "bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800",
+        iconSvg: Icons.bot,
+        technology: tech.orchestration || "Antigravity 2.0 / OpenCode / Copilot",
+        version: "v2.5.0",
+        purpose: "Orquestaci\xF3n multi-agente con roles especializados (leader, spec-author, implementer, reviewer)",
+        status: "Activo",
+        statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+        statusDotClass: "bg-emerald-500",
+        dependencies: "MIT / Sovereign Agents"
+      });
+    }
+    rows.push({
+      layer: "Frontend",
+      layerBadgeClass: "bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800",
+      iconSvg: Icons.layout,
+      technology: tech.frontend || "Vanilla JS + Tailwind CSS v4 + Three.js",
+      version: "r128 / v4.0",
+      purpose: "Tablero SPA interactivo, lector editorial ContextForge y constelaci\xF3n 3D en Screaming Architecture",
+      status: "Activo",
+      statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+      statusDotClass: "bg-emerald-500",
+      dependencies: "@tailwindcss/browser@4, three.min.js"
+    });
+    rows.push({
+      layer: "Tooling",
+      layerBadgeClass: "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+      iconSvg: Icons.terminal,
+      technology: tech.tooling || "Node.js (ESM) + esbuild",
+      version: ">=18.0.0 / ^0.25.0",
+      purpose: "Compilaci\xF3n IIFE ultrarr\xE1pida, servidor est\xE1tico y pipeline de sincronizaci\xF3n de datos",
+      status: "Activo",
+      statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+      statusDotClass: "bg-emerald-500",
+      dependencies: "esbuild (devDependency)"
+    });
+    rows.push({
+      layer: "Docs-as-Code",
+      layerBadgeClass: "bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800",
+      iconSvg: Icons.bookOpen,
+      technology: tech.documentation || "Markdown + Mermaid.js + Draw.io XML",
+      version: "Mermaid v10.9+",
+      purpose: "Elicitaci\xF3n formal IEEE 830, diagramas C4, UML, ERD y decisiones arquitect\xF3nicas (ADRs)",
+      status: "Activo",
+      statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+      statusDotClass: "bg-emerald-500",
+      dependencies: "mermaid.min.js"
+    });
+    rows.push({
+      layer: "Testing & QA",
+      layerBadgeClass: "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
+      iconSvg: Icons.shield,
+      technology: tech.testing || "Node.js Test Runner + Playwright ATDD",
+      version: "Node.js Native / ^1.40",
+      purpose: "Pruebas unitarias de parser/sincronizaci\xF3n y pruebas de aceptaci\xF3n E2E de interfaz",
+      status: "Activo",
+      statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+      statusDotClass: "bg-emerald-500",
+      dependencies: "node:test, node:assert"
+    });
+    if (Array.isArray(tech.runtimes)) {
+      tech.runtimes.forEach((r) => {
+        rows.push({
+          layer: "Runtime",
+          layerBadgeClass: "bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800",
+          iconSvg: Icons.cpu,
+          technology: r.name,
+          version: r.version || "Detectada",
+          purpose: r.purpose || "Entorno de ejecuci\xF3n de backend",
+          status: "Activo",
+          statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+          statusDotClass: "bg-emerald-500",
+          dependencies: "Sistema"
+        });
+      });
+    }
+    if (Array.isArray(tech.databases)) {
+      tech.databases.forEach((db) => {
+        rows.push({
+          layer: "Persistencia",
+          layerBadgeClass: "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
+          iconSvg: Icons.database,
+          technology: db.name,
+          version: db.type || "Storage Engine",
+          purpose: db.purpose || "Almacenamiento de estado del sistema",
+          status: "Activo",
+          statusBadgeClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+          statusDotClass: "bg-emerald-500",
+          dependencies: db.port ? `Puerto :${db.port}` : "Local/Embedded"
+        });
+      });
+    }
+    return rows;
+  }
+  function renderDynamicLayersPanel({ layers, modules, featureMap }) {
     if (!layers.length && !modules.length) {
       return `
       <div class="p-8 text-center text-slate-500 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
-        <div class="text-3xl mb-2">\u26A1</div>
+        <div class="p-3 w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 mx-auto mb-3 flex items-center justify-center">
+          ${Icons.zap}
+        </div>
         <div class="text-sm font-bold text-slate-800 dark:text-slate-200">No hay capas de arquitectura configuradas a\xFAn</div>
         <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">Ejecuta la skill <code>/technical-audit</code> o <code>/project-knowledge</code> para extraer la arquitectura real del proyecto.</p>
       </div>
@@ -3075,43 +3197,43 @@
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <div class="text-base mb-1">\u{1F4BB}</div>
+              <div class="flex justify-center text-indigo-600 dark:text-indigo-400 mb-1.5">${Icons.layout}</div>
               <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Web App (SPA)</div>
               <div class="text-[10px] text-slate-400">Dashboard & Clientes</div>
             </div>
             <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <div class="text-base mb-1">\u{1F916}</div>
+              <div class="flex justify-center text-indigo-600 dark:text-indigo-400 mb-1.5">${Icons.bot}</div>
               <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Agentes de IA</div>
               <div class="text-[10px] text-slate-400">Antigravity / SDD CLI</div>
             </div>
             <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <div class="text-base mb-1">\u{1F4F1}</div>
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Mobile / External</div>
-              <div class="text-[10px] text-slate-400">Consumidores REST</div>
+              <div class="flex justify-center text-indigo-600 dark:text-indigo-400 mb-1.5">${Icons.terminal}</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Terminal CLI</div>
+              <div class="text-[10px] text-slate-400">Scripts de Verificaci\xF3n</div>
             </div>
             <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <div class="text-base mb-1">\u{1F6E1}\uFE0F</div>
-              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">API Gateway</div>
-              <div class="text-[10px] text-slate-400">Auth & Rate Limiting</div>
+              <div class="flex justify-center text-indigo-600 dark:text-indigo-400 mb-1.5">${Icons.shield}</div>
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Guardrails & Tests</div>
+              <div class="text-[10px] text-slate-400">Anti-Sesgo & ATDD</div>
             </div>
           </div>
         </div>
 
         <!-- Flecha de Flujo 1 -> 2 -->
         <div class="flex justify-center -my-3 relative z-10">
-          <div class="px-3 py-1 rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-md">
-            \u2193 Casos de Uso & L\xF3gica de Negocio
+          <div class="px-3 py-1 rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-md flex items-center gap-1.5">
+            ${Icons.chevronDown} Casos de Uso & L\xF3gica de Negocio
           </div>
         </div>
 
-        <!-- Capa 2: Dominios & Microservicios Din\xE1micos -->
+        <!-- Capa 2: Dominios & M\xF3dulos Din\xE1micos -->
         <div class="p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div class="flex items-center justify-between mb-3">
             <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Capa de Dominio: Bounded Contexts (${modules.length} m\xF3dulos)
             </span>
             <span class="text-[10px] font-mono text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
-              Clean Architecture Core
+              Screaming Architecture Core
             </span>
           </div>
 
@@ -3139,52 +3261,61 @@
 
         <!-- Flecha de Flujo 2 -> 3 -->
         <div class="flex justify-center -my-3 relative z-10">
-          <div class="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold shadow-md">
-            \u2193 Estado, Persistencia & Mensajer\xEDa
+          <div class="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[10px] font-bold shadow-md flex items-center gap-1.5">
+            ${Icons.chevronDown} Estado, Persistencia & Documentaci\xF3n
           </div>
         </div>
 
-        <!-- Capa 3: Persistencia, Cache & Brokers Din\xE1micos -->
+        <!-- Capa 3: Persistencia & Base de Conocimiento -->
         <div class="p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div class="flex items-center justify-between mb-3">
             <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Capa de Infraestructura & Estado (${databases.length + messaging.length} servicios)
+              Capa de Infraestructura & Estado Soberano
             </span>
             <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-              State & Broker Adapters
+              Filesystem & Offline Fallback
             </span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${databases.map((db) => `
-              <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xl">${db.icon || "\u{1F418}"}</span>
-                  <div>
-                    <div class="font-bold text-xs text-slate-900 dark:text-slate-100">${db.name}</div>
-                    <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">${db.type} ${db.port ? `\xB7 :${db.port}` : ""}</div>
-                  </div>
+            <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.database}</span>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 dark:text-slate-100">data-fallback.js</div>
+                  <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">Embedded Data Cache</div>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  ${db.purpose || ""}
-                </p>
               </div>
-            `).join("")}
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Cache serializado que permite ejecuci\xF3n 100% offline a trav\xE9s del protocolo file:/// sin servidor local.
+              </p>
+            </div>
 
-            ${messaging.map((msg) => `
-              <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xl">${msg.icon || "\u{1F407}"}</span>
-                  <div>
-                    <div class="font-bold text-xs text-slate-900 dark:text-slate-100">${msg.name}</div>
-                    <div class="text-[10px] font-mono text-purple-600 dark:text-purple-400">${msg.type} ${msg.port ? `\xB7 :${msg.port}` : ""}</div>
-                  </div>
+            <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.book}</span>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 dark:text-slate-100">project-docs/knowledge/</div>
+                  <div class="text-[10px] font-mono text-purple-600 dark:text-purple-400">Sovereign Knowledge Engine</div>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  ${msg.purpose || ""}
-                </p>
               </div>
-            `).join("")}
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Repositorio vivo de documentos Markdown, especificaciones C4, UML, ERD y reglas de negocio invariantes.
+              </p>
+            </div>
+
+            <div class="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.share}</span>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 dark:text-slate-100">Triple-Mirror Sync</div>
+                  <div class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400">Cross-Platform Registry</div>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Replicador de paridad exacta entre .opencode/skills/, .github/skills/ y .agents/skills/.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -3261,8 +3392,8 @@
             html.push(`
             <div class="my-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 shadow-md overflow-hidden transition-all duration-200" id="diag-card-${diagId}">
               <div class="flex flex-wrap items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 text-[11px] font-mono">
-                <span class="flex items-center gap-2 font-bold ${isDrawio ? "text-amber-500" : "text-indigo-500"}">
-                  <span>${isDrawio ? "\u{1F3A8} Draw.io / mxGraph" : "\u{1F4CA} Diagrama Mermaid"}</span>
+                <span class="flex items-center gap-1.5 font-bold ${isDrawio ? "text-amber-500" : "text-indigo-500"}">
+                  ${isDrawio ? `${Icons.layout("w-3.5 h-3.5")} <span>Draw.io / mxGraph</span>` : `${Icons.layers("w-3.5 h-3.5")} <span>Diagrama Mermaid</span>`}
                 </span>
                 
                 <div class="flex items-center gap-1.5">
@@ -3271,20 +3402,20 @@
                           data-diag-target="${diagId}"
                           class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1"
                           title="Ver en pantalla completa con zoom y paneo">
-                    <span>\u{1F50D}</span> Zoom
+                    ${Icons.search("w-3 h-3")} <span>Zoom</span>
                   </button>
                   <button type="button" 
                           data-copy-mermaid="${escapeAttr3(codeText)}" 
                           class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1"
                           title="Copiar c\xF3digo fuente del diagrama">
-                    <span>\u{1F4CB}</span> Copiar
+                    ${Icons.copy("w-3 h-3")} <span>Copiar</span>
                   </button>
                   <a href="${drawioUrl}" 
                      target="_blank" 
                      rel="noopener noreferrer" 
                      class="px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors font-semibold flex items-center gap-1"
                      title="Abrir este diagrama para editar interactivamente en diagrams.net">
-                    <span>\u270F\uFE0F</span> Draw.io
+                    ${Icons.edit("w-3 h-3")} <span>Draw.io</span>
                   </a>
                 </div>
               </div>
@@ -3302,7 +3433,7 @@
             <div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md">
               <div class="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/80 text-[11px] font-mono text-slate-400">
                 <span class="flex items-center gap-1.5 font-bold text-indigo-400">
-                  <span>\u26A1</span> ${codeLang || "text"}
+                  ${Icons.terminal("w-3.5 h-3.5")} <span>${codeLang || "text"}</span>
                 </span>
                 <button type="button" data-action="copy-code-block" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer text-[10px] font-semibold">
                   Copiar C\xF3digo
@@ -3415,7 +3546,7 @@
           inList = true;
         }
         const itemText = line.replace(/^[\*\-]\s/, "");
-        html.push(`<li class="flex items-start gap-2.5"><span class="text-indigo-500 font-bold shrink-0 mt-1">\u25AA</span><span>${formatInline(itemText)}</span></li>`);
+        html.push(`<li class="flex items-start gap-2.5"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-2"></span><span>${formatInline(itemText)}</span></li>`);
         continue;
       } else if (inList) {
         html.push("</ul>");
@@ -3468,18 +3599,18 @@
   function getAlertTheme(type) {
     switch (type) {
       case "NOTE":
-        return { icon: "\u2139\uFE0F", title: "Nota Informativa", bg: "bg-indigo-50/80 dark:bg-indigo-950/30", border: "border-indigo-200 dark:border-indigo-800/60", text: "text-indigo-950 dark:text-indigo-200" };
+        return { icon: Icons.info("w-4 h-4 text-indigo-600 dark:text-indigo-400"), title: "Nota Informativa", bg: "bg-indigo-50/80 dark:bg-indigo-950/30", border: "border-indigo-200 dark:border-indigo-800/60", text: "text-indigo-950 dark:text-indigo-200" };
       case "TIP":
-        return { icon: "\u{1F4A1}", title: "Recomendaci\xF3n / Tip", bg: "bg-emerald-50/80 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800/60", text: "text-emerald-950 dark:text-emerald-200" };
+        return { icon: Icons.lightbulb("w-4 h-4 text-emerald-600 dark:text-emerald-400"), title: "Recomendaci\xF3n / Tip", bg: "bg-emerald-50/80 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800/60", text: "text-emerald-950 dark:text-emerald-200" };
       case "WARNING":
-        return { icon: "\u26A0\uFE0F", title: "Advertencia", bg: "bg-amber-50/80 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800/60", text: "text-amber-950 dark:text-amber-200" };
+        return { icon: Icons.alertTriangle("w-4 h-4 text-amber-600 dark:text-amber-400"), title: "Advertencia", bg: "bg-amber-50/80 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800/60", text: "text-amber-950 dark:text-amber-200" };
       case "IMPORTANT":
-        return { icon: "\u26A1", title: "Requerimiento Importante", bg: "bg-purple-50/80 dark:bg-purple-950/30", border: "border-purple-200 dark:border-purple-800/60", text: "text-purple-950 dark:text-purple-200" };
+        return { icon: Icons.zap("w-4 h-4 text-purple-600 dark:text-purple-400"), title: "Requerimiento Importante", bg: "bg-purple-50/80 dark:bg-purple-950/30", border: "border-purple-200 dark:border-purple-800/60", text: "text-purple-950 dark:text-purple-200" };
       case "CAUTION":
       case "DANGER":
-        return { icon: "\u{1F6D1}", title: "Punto Cr\xEDtico / Riesgo", bg: "bg-rose-50/80 dark:bg-rose-950/30", border: "border-rose-200 dark:border-rose-800/60", text: "text-rose-950 dark:text-rose-200" };
+        return { icon: Icons.shield("w-4 h-4 text-rose-600 dark:text-rose-400"), title: "Punto Cr\xEDtico / Riesgo", bg: "bg-rose-50/80 dark:bg-rose-950/30", border: "border-rose-200 dark:border-rose-800/60", text: "text-rose-950 dark:text-rose-200" };
       default:
-        return { icon: "\u2139\uFE0F", title: "Nota", bg: "bg-slate-50 dark:bg-slate-900", border: "border-slate-200 dark:border-slate-800", text: "text-slate-800 dark:text-slate-200" };
+        return { icon: Icons.info("w-4 h-4 text-slate-600 dark:text-slate-400"), title: "Nota", bg: "bg-slate-50 dark:bg-slate-900", border: "border-slate-200 dark:border-slate-800", text: "text-slate-800 dark:text-slate-200" };
     }
   }
   function formatInline(text = "") {
@@ -3711,7 +3842,8 @@ ${b.description || ""}`);
                 </span>
               </div>
               <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <span>\u{1F4DA}</span> Base de Conocimiento de Ingenier\xEDa Soberana
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.book("w-7 h-7")}</span>
+                <span>Base de Conocimiento de Ingenier\xEDa Soberana</span>
               </h2>
               <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
                 Repositorio can\xF3nico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), reglas de negocio (BR-*), 
@@ -3724,14 +3856,14 @@ ${b.description || ""}`);
               <button type="button" 
                       data-action="open-new-doc-modal"
                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
-                <span>\u2795</span> Nuevo Doc
+                ${Icons.plus} <span>Nuevo Doc</span>
               </button>
 
               <button type="button" 
                       data-action="trigger-import-doc"
                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
                       title="Importar archivo .md o .json local">
-                <span>\u{1F4E5}</span> Importar
+                ${Icons.upload} <span>Importar</span>
               </button>
               <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
 
@@ -3739,13 +3871,13 @@ ${b.description || ""}`);
                       data-action="export-all-knowledge"
                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
                       title="Descargar paquete JSON con toda la Base de Conocimiento">
-                <span>\u{1F4E4}</span> Exportar
+                ${Icons.download} <span>Exportar</span>
               </button>
 
               <button type="button" 
                       data-action="open-ai-context-modal" 
                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
-                <span>\u{1F916}</span> Contexto IA
+                ${Icons.bot} <span>Contexto IA</span>
               </button>
             </div>
           </div>
@@ -3781,18 +3913,18 @@ ${b.description || ""}`);
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div class="space-y-3 max-w-3xl">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
-                    \u2B50 Documento Destacado
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
+                    ${Icons.star("w-3 h-3")} <span>Documento Destacado</span>
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    \u23F1\uFE0F ${heroDocMeta.readingTime} min de lectura
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    ${Icons.clock("w-3 h-3")} <span>${heroDocMeta.readingTime} min de lectura</span>
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    \u{1F4DD} ${heroDocMeta.wordCount} palabras
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    ${Icons.fileText("w-3 h-3")} <span>${heroDocMeta.wordCount} palabras</span>
                   </span>
                   ${heroDocMeta.ruleCount ? `
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                      \u2696\uFE0F ${heroDocMeta.ruleCount} Reglas BR
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      ${Icons.scale("w-3 h-3")} <span>${heroDocMeta.ruleCount} Reglas BR</span>
                     </span>
                   ` : ""}
                 </div>
@@ -3813,13 +3945,13 @@ ${b.description || ""}`);
                         data-action="open-article-read"
                         data-doc-key="${escapeAttr4(heroDocKey)}"
                         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
-                  <span>\u{1F4D6}</span> Leer Art\xEDculo Completo
+                  ${Icons.bookOpen} <span>Leer Art\xEDculo Completo</span>
                 </button>
                 <button type="button" 
                         data-action="open-article-edit"
                         data-doc-key="${escapeAttr4(heroDocKey)}"
                         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                  <span>\u270F\uFE0F</span> Editar en Vivo
+                  ${Icons.edit} <span>Editar en Vivo</span>
                 </button>
               </div>
             </div>
@@ -3840,8 +3972,8 @@ ${b.description || ""}`);
               ${Object.values(shelvesData).map((sh) => `
                 <button type="button" 
                         data-shelf-filter="${sh.id}" 
-                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium">
-                  <span>${sh.icon}</span> ${sh.title.split(" ")[0]} (${sh.docs.length})
+                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium inline-flex items-center gap-1.5">
+                  ${getShelfIconSvg(sh.id)} <span>${sh.title.split(" ")[0]}</span> <span>(${sh.docs.length})</span>
                 </button>
               `).join("")}
             </div>
@@ -3868,7 +4000,9 @@ ${b.description || ""}`);
               <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <div class="flex items-center gap-2.5">
-                    <span class="text-xl">${sh.icon}</span>
+                    <span class="p-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                      ${getShelfIconSvg(sh.id, "w-5 h-5")}
+                    </span>
                     <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                       ${escapeHtml6(sh.title)}
                     </h3>
@@ -3898,11 +4032,11 @@ ${b.description || ""}`);
                         
                         <div class="space-y-3">
                           <div class="flex items-center justify-between gap-2">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? "bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"} truncate">
-                              ${meta.moduleName ? `\u{1F4E6} ${meta.moduleName}` : `\u{1F3DB}\uFE0F ${sh.title.split(" ")[0]}`}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? "bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"} truncate">
+                              ${meta.moduleName ? `${Icons.folder("w-3 h-3")} <span>${meta.moduleName}</span>` : `${getShelfIconSvg(sh.id, "w-3 h-3")} <span>${sh.title.split(" ")[0]}</span>`}
                             </span>
-                            <span class="text-[10px] font-mono text-slate-400 shrink-0">
-                              \u23F1\uFE0F ${meta.readingTime} min
+                            <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
+                              ${Icons.clock("w-3 h-3")} <span>${meta.readingTime} min</span>
                             </span>
                           </div>
 
@@ -3923,18 +4057,18 @@ ${b.description || ""}`);
                         <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                           <div class="flex items-center gap-1.5">
                             ${meta.ruleCount ? `
-                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
-                                \u2696\uFE0F ${meta.ruleCount} BR
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
+                                ${Icons.scale("w-3 h-3")} <span>${meta.ruleCount} BR</span>
                               </span>
                             ` : ""}
                             ${meta.reqCount ? `
-                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
-                                \u{1F4CB} ${meta.reqCount} RF
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
+                                ${Icons.fileText("w-3 h-3")} <span>${meta.reqCount} RF</span>
                               </span>
                             ` : ""}
                             ${meta.adrCount ? `
-                              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
-                                \u{1F3DB}\uFE0F ${meta.adrCount} ADR
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
+                                ${Icons.cube("w-3 h-3")} <span>${meta.adrCount} ADR</span>
                               </span>
                             ` : ""}
                           </div>
@@ -3944,14 +4078,14 @@ ${b.description || ""}`);
                                     data-action="open-article-read"
                                     data-doc-key="${escapeAttr4(key)}"
                                     class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
-                              <span>\u{1F4D6}</span> Leer
+                              ${Icons.bookOpen("w-3.5 h-3.5")} <span>Leer</span>
                             </button>
                             <button type="button" 
                                     data-action="open-article-edit"
                                     data-doc-key="${escapeAttr4(key)}"
                                     class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                                     title="Editar directamente este documento">
-                              <span>\u270F\uFE0F</span>
+                              ${Icons.edit("w-3.5 h-3.5")}
                             </button>
                           </div>
                         </div>
@@ -3981,7 +4115,7 @@ ${b.description || ""}`);
               <button type="button" 
                       data-action="back-to-library"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold transition-all cursor-pointer">
-                <span>\u2190</span> Biblioteca
+                ${Icons.arrowLeft} <span>Biblioteca</span>
               </button>
               <span class="text-slate-300 dark:text-slate-700">/</span>
               <span id="article-shelf-badge" class="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
@@ -3995,8 +4129,8 @@ ${b.description || ""}`);
 
             <!-- Acciones del Documento -->
             <div class="flex items-center gap-2">
-              <span id="article-reading-time-badge" class="hidden sm:inline-flex px-2 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
-                \u23F1\uFE0F ${activeDocMeta.readingTime} min
+              <span id="article-reading-time-badge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
+                ${Icons.clock("w-3.5 h-3.5")} <span>${activeDocMeta.readingTime} min</span>
               </span>
 
               <!-- Bot\xF3n Conmutar Modo Edici\xF3n / Lectura -->
@@ -4004,7 +4138,7 @@ ${b.description || ""}`);
                       id="btn-toggle-doc-editor" 
                       class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5"
                       title="Alternar entre Lector Editorial y Editor Dual">
-                <span id="btn-toggle-doc-icon">\u270F\uFE0F</span>
+                <span id="btn-toggle-doc-icon">${Icons.edit}</span>
                 <span id="btn-toggle-doc-text">Modo Editor</span>
               </button>
 
@@ -4013,7 +4147,7 @@ ${b.description || ""}`);
                       id="copy-active-doc-btn" 
                       class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Copiar contenido Markdown completo">
-                <span class="text-xs">\u{1F4CB}</span>
+                ${Icons.copy}
               </button>
 
               <!-- Bot\xF3n Descargar Archivo .md -->
@@ -4021,7 +4155,7 @@ ${b.description || ""}`);
                       data-action="download-active-doc" 
                       class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Descargar este archivo .md a tu equipo">
-                <span class="text-xs">\u{1F4BE}</span>
+                ${Icons.download}
               </button>
 
               <!-- Bot\xF3n Eliminar Documento -->
@@ -4029,7 +4163,7 @@ ${b.description || ""}`);
                       data-action="delete-active-doc" 
                       class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
                       title="Eliminar este documento de la Base de Conocimiento">
-                <span class="text-xs">\u{1F5D1}\uFE0F</span>
+                ${Icons.trash}
               </button>
             </div>
 
@@ -4050,7 +4184,7 @@ ${b.description || ""}`);
           <div class="hidden lg:block lg:col-span-3 sticky top-36 space-y-4">
             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
               <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
-                <span>\u{1F4D1}</span> En esta p\xE1gina
+                ${Icons.fileText} <span>En esta p\xE1gina</span>
               </div>
               <div id="doc-active-toc" class="max-h-[460px] overflow-y-auto pr-1">
                 ${renderTableOfContentsHtml(activeDocToc)}
@@ -4085,13 +4219,13 @@ ${b.description || ""}`);
               <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
                 <button type="button" 
                         id="btn-editor-mode-md" 
-                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
-                  \u{1F4DD} Modo Markdown
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
+                  ${Icons.code("w-3.5 h-3.5")} <span>Modo Markdown</span>
                 </button>
                 <button type="button" 
                         id="btn-editor-mode-blocks" 
-                        class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
-                  \u{1F9F1} Modo Bloques Visuales
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
+                  ${Icons.grid("w-3.5 h-3.5")} <span>Modo Bloques Visuales</span>
                 </button>
               </div>
 
@@ -4110,7 +4244,7 @@ ${b.description || ""}`);
               <button type="button" 
                       id="btn-save-doc-edit" 
                       class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
-                <span>\u{1F4BE}</span> Guardar Cambios
+                ${Icons.save} <span>Guardar Cambios</span>
               </button>
             </div>
           </div>
@@ -4146,26 +4280,26 @@ ${b.description || ""}`);
             <!-- Barra para Agregar Bloques Nuevos -->
             <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono">
               <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>\u{1F9F1}</span> A\xF1adir Bloque Visual:
+                ${Icons.grid} <span>A\xF1adir Bloque Visual:</span>
               </span>
               <div class="flex flex-wrap items-center gap-1.5">
-                <button type="button" data-add-block="header" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
-                  \u2795 Encabezado
+                <button type="button" data-add-block="header" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus("w-3 h-3")} <span>Encabezado</span>
                 </button>
-                <button type="button" data-add-block="paragraph" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
-                  \u2795 P\xE1rrafo
+                <button type="button" data-add-block="paragraph" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus("w-3 h-3")} <span>P\xE1rrafo</span>
                 </button>
-                <button type="button" data-add-block="business_rule" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
-                  \u2795 Regla BR
+                <button type="button" data-add-block="business_rule" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus("w-3 h-3")} <span>Regla BR</span>
                 </button>
-                <button type="button" data-add-block="callout" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
-                  \u2795 Alerta/Callout
+                <button type="button" data-add-block="callout" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus("w-3 h-3")} <span>Alerta/Callout</span>
                 </button>
-                <button type="button" data-add-block="code" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
-                  \u2795 Diagrama/C\xF3digo
+                <button type="button" data-add-block="code" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus("w-3 h-3")} <span>Diagrama/C\xF3digo</span>
                 </button>
-                <button type="button" data-add-block="divider" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
-                  \u2795 Separador
+                <button type="button" data-add-block="divider" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
+                  ${Icons.plus("w-3 h-3")} <span>Separador</span>
                 </button>
               </div>
             </div>
@@ -4189,9 +4323,9 @@ ${b.description || ""}`);
           <div>
             <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                ${Icons.checkCircle}
+                ${Icons.scale}
               </span>
-              Cat\xE1logo de Reglas de Negocio (Invariantes de Dominio)
+              <span>Cat\xE1logo de Reglas de Negocio (Invariantes de Dominio)</span>
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Invariantes de estricto cumplimiento para evitar alucinaciones, fallos contables y vulnerabilidades
@@ -4244,7 +4378,9 @@ ${b.description || ""}`);
           </div>
         ` : `
           <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <span class="text-2xl">\u2696\uFE0F</span>
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
+              ${Icons.scale("w-5 h-5")}
+            </div>
             <div class="text-sm font-bold text-slate-700 dark:text-slate-300">No hay reglas de negocio registradas a\xFAn</div>
             <p class="text-xs text-slate-500 max-w-md mx-auto">
               Ejecuta la skill <code class="font-mono text-indigo-500">/project-knowledge</code> para extraer autom\xE1ticamente las reglas e invariantes de tu proyecto.
@@ -4262,7 +4398,7 @@ ${b.description || ""}`);
             <span class="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
               ${Icons.server}
             </span>
-            Matriz de Servicios Externos & Protocolos
+            <span>Matriz de Servicios Externos & Protocolos</span>
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Contratos, protocolos de red, esquemas de autenticaci\xF3n y pol\xEDticas de contingencia
@@ -4275,7 +4411,7 @@ ${b.description || ""}`);
               <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml6(svc.name)}</span>
-                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
                     ${escapeHtml6(svc.type)}
                   </span>
                 </div>
@@ -4298,7 +4434,9 @@ ${b.description || ""}`);
           </div>
         ` : `
           <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <span class="text-2xl">\u{1F310}</span>
+            <div class="w-10 h-10 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
+              ${Icons.network("w-5 h-5")}
+            </div>
             <div class="text-sm font-bold text-slate-700 dark:text-slate-300">Sin integraciones externas documentadas</div>
             <p class="text-xs text-slate-500 max-w-md mx-auto">
               Si tu sistema consume APIs externas, bases de datos o brokers de mensajer\xEDa, documenta sus contratos para auditar su contingencia.
@@ -4316,7 +4454,7 @@ ${b.description || ""}`);
             <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
               ${Icons.code}
             </span>
-            Directrices Anti-Sesgo & Convenciones de Ingenier\xEDa
+            <span>Directrices Anti-Sesgo & Convenciones de Ingenier\xEDa</span>
           </h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Reglas de oro para asegurar que agentes de IA y desarrolladores respeten la arquitectura del proyecto
@@ -4327,7 +4465,7 @@ ${b.description || ""}`);
           <!-- Guardrails Anti-Alucinaci\xF3n -->
           <div class="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/15 space-y-3">
             <h4 class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span>\u{1F6D1}</span> Guardrails de No-Alucinaci\xF3n (Inviolables)
+              ${Icons.shield} <span>Guardrails de No-Alucinaci\xF3n (Inviolables)</span>
             </h4>
             <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
               ${(guardrails.length > 0 ? guardrails : [
@@ -4336,7 +4474,7 @@ ${b.description || ""}`);
       "Inversi\xF3n de dependencias obligatoria en controladores y servicios."
     ]).map((g) => `
                 <li class="flex items-start gap-2">
-                  <span class="text-rose-500 font-bold shrink-0 mt-0.5">\u2715</span>
+                  <span class="text-rose-500 font-bold shrink-0 mt-0.5">&times;</span>
                   <span>${escapeHtml6(g)}</span>
                 </li>
               `).join("")}
@@ -4346,7 +4484,7 @@ ${b.description || ""}`);
           <!-- Convenciones de Nomenclatura -->
           <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
             <h4 class="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>\u{1F4D0}</span> Convenciones de Nomenclatura & Control de Versiones
+              ${Icons.tag} <span>Convenciones de Nomenclatura & Control de Versiones</span>
             </h4>
             <div class="space-y-2 text-xs font-mono">
               <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -4371,16 +4509,16 @@ ${b.description || ""}`);
       </section>
 
       <!-- ============================================================== -->
-      <!-- MODAL: CREAR NUEVO DOCUMENTO (\u2795)                              -->
+      <!-- MODAL: CREAR NUEVO DOCUMENTO                                   -->
       <!-- ============================================================== -->
       <div id="new-doc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>\u{1F4C4}</span> Crear Nuevo Documento T\xE9cnico
+              ${Icons.fileText} <span>Crear Nuevo Documento T\xE9cnico</span>
             </h3>
             <button type="button" data-action="close-new-doc-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              \u2715
+              ${Icons.close("w-3.5 h-3.5")}
             </button>
           </div>
           
@@ -4419,10 +4557,10 @@ ${b.description || ""}`);
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>\u{1F916}</span> Contexto Can\xF3nico para alimentar a la IA (System Prompt)
+              ${Icons.bot} <span>Contexto Can\xF3nico para alimentar a la IA (System Prompt)</span>
             </h3>
             <button type="button" data-action="close-ai-context-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              \u2715
+              ${Icons.close("w-3.5 h-3.5")}
             </button>
           </div>
           <p class="text-xs text-slate-600 dark:text-slate-400">
@@ -4448,11 +4586,11 @@ ${b.description || ""}`);
         <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="text-base">\u{1F4D0}</span>
+              <span class="text-indigo-600 dark:text-indigo-400">${Icons.architecture}</span>
               <h3 id="diagram-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Diagrama Ampliado</h3>
             </div>
             <button type="button" data-action="close-diagram-modal" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
-              \u2715
+              ${Icons.close("w-3.5 h-3.5")}
             </button>
           </div>
           <div id="diagram-modal-content" class="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-50 dark:bg-slate-950">
@@ -4462,6 +4600,24 @@ ${b.description || ""}`);
 
     </div>
   `;
+  }
+  function getShelfIconSvg(shelfId, cls = "w-4 h-4") {
+    switch (shelfId) {
+      case "architecture":
+        return Icons.architecture(cls);
+      case "business_rules":
+        return Icons.scale(cls);
+      case "requirements":
+        return Icons.fileText(cls);
+      case "adrs":
+        return Icons.cube(cls);
+      case "standards":
+        return Icons.shield(cls);
+      case "modules":
+        return Icons.folder(cls);
+      default:
+        return Icons.book(cls);
+    }
   }
   function renderTableOfContentsHtml(toc = []) {
     if (!toc || toc.length === 0) {
@@ -4486,7 +4642,7 @@ ${b.description || ""}`);
     const stack = projectSpec?.tech_stack ? Object.entries(projectSpec.tech_stack).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v?.name || v}`).join(" | ") : "Agn\xF3stico";
     const rulesText = rules.slice(0, 10).map((r) => `- ${r.id} (${r.module || "general"}): ${r.title}. ${r.description}`).join("\n");
     const servicesText = services.map((s) => `- ${s.name} (${s.type}): Protocolo ${s.protocol}, Auth: ${s.auth}, Var: ${s.env_var}`).join("\n");
-    const guardrailsText = guardrails.map((g) => `- \u{1F6D1} ${g}`).join("\n");
+    const guardrailsText = guardrails.map((g) => `- [GUARDRAIL] ${g}`).join("\n");
     return `# Contexto Can\xF3nico del Proyecto \u2014 ${pName}
 Arquitectura: ${archStyle} ${patterns ? `(${patterns})` : ""}
 Stack Tecnol\xF3gico: ${stack}
@@ -4548,12 +4704,12 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
   }
   function buildShelvesFallback(docMetadata) {
     const shelves = {
-      architecture: { id: "architecture", title: "Arquitectura & Modelado C4", icon: "\u{1F4D0}", docs: [] },
-      business_rules: { id: "business_rules", title: "Reglas de Negocio & Dominio", icon: "\u2696\uFE0F", docs: [] },
-      requirements: { id: "requirements", title: "Requerimientos & Metodolog\xEDa \xC1gil", icon: "\u{1F4CB}", docs: [] },
-      adrs: { id: "adrs", title: "Decisiones de Arquitectura (ADRs)", icon: "\u{1F3DB}\uFE0F", docs: [] },
-      standards: { id: "standards", title: "Est\xE1ndares, Capacidades & Servicios", icon: "\u{1F6E1}\uFE0F", docs: [] },
-      modules: { id: "modules", title: "M\xF3dulos & Bounded Contexts", icon: "\u{1F4E6}", docs: [] }
+      architecture: { id: "architecture", title: "Arquitectura & Modelado C4", iconName: "architecture", docs: [] },
+      business_rules: { id: "business_rules", title: "Reglas de Negocio & Dominio", iconName: "business_rules", docs: [] },
+      requirements: { id: "requirements", title: "Requerimientos & Metodolog\xEDa \xC1gil", iconName: "requirements", docs: [] },
+      adrs: { id: "adrs", title: "Decisiones de Arquitectura (ADRs)", iconName: "adrs", docs: [] },
+      standards: { id: "standards", title: "Est\xE1ndares, Capacidades & Servicios", iconName: "standards", docs: [] },
+      modules: { id: "modules", title: "M\xF3dulos & Bounded Contexts", iconName: "modules", docs: [] }
     };
     for (const [k, m] of Object.entries(docMetadata)) {
       const s = m.shelf && shelves[m.shelf] ? m.shelf : k.startsWith("modules/") ? "modules" : "architecture";
@@ -4683,7 +4839,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       const filteredFeatures = store.getFilteredFeatures();
       const modules = store.getAvailableModules();
       const isDark = state.theme === "dark";
-      const activeAgent = this.envInfo?.activeAgent || { name: "Google Antigravity", icon: "\u26A1" };
+      const activeAgent = this.envInfo?.activeAgent || { name: "Google Antigravity", iconName: "zap" };
       const stackInfo = this.envInfo?.stack || { name: "Multi-Stack Agnostico" };
       const isLocalFile = typeof window !== "undefined" && window.location.protocol === "file:";
       if (state.loading && state.features.length === 0) {
@@ -4746,7 +4902,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                       data-action="open-omnibox"
                       class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-xs"
                       title="B\xFAsqueda global omnibox (Ctrl+K)">
-                <span>\u{1F50D} Buscar...</span>
+                <span class="inline-flex items-center gap-1.5">${Icons.search("w-3.5 h-3.5")} <span>Buscar...</span></span>
                 <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold">Ctrl K</kbd>
               </button>
 
@@ -4760,7 +4916,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               <!-- Agente Detectado -->
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 shadow-xs"
                    title="Agentes compatibles homologados: Google Antigravity, Open Code, GitHub Copilot, Claude Code, Codex">
-                <span class="text-sm">${activeAgent.icon}</span>
+                <span class="text-indigo-600 dark:text-indigo-400 flex items-center">${Icons[activeAgent.iconName || "zap"] ? Icons[activeAgent.iconName || "zap"]("w-4 h-4") : Icons.zap("w-4 h-4")}</span>
                 <span class="font-medium">${activeAgent.name}</span>
               </div>
 
@@ -4836,7 +4992,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         <div id="omnibox-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-start justify-center pt-16 sm:pt-24 px-4">
           <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-              <span class="text-slate-400 text-sm">\u{1F50D}</span>
+              <span class="text-slate-400 text-sm flex items-center">${Icons.search("w-4 h-4")}</span>
               <input type="text" 
                      id="omnibox-input" 
                      placeholder="Buscar tareas (INT-*), docs, reglas (BR-*), m\xF3dulos..." 
@@ -5026,8 +5182,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             console.warn("Mermaid render error for target:", renderErr);
             target.innerHTML = `
             <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 max-w-lg text-center space-y-2">
-              <div class="font-bold flex items-center justify-center gap-1.5">
-                <span>\u26A0\uFE0F</span> Diagrama en edici\xF3n de sintaxis
+              <div class="font-bold flex items-center justify-center gap-1.5 text-amber-600 dark:text-amber-400">
+                ${Icons.alertTriangle("w-4 h-4")} <span>Diagrama en edici\xF3n de sintaxis</span>
               </div>
               <p class="text-[11px] text-slate-500 dark:text-slate-400">
                 ${escapeHtml7(renderErr.message || "Error de parsing en Mermaid")}
@@ -5141,7 +5297,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       const livePreview = document.getElementById("doc-editor-live-preview");
       if (pathEl) pathEl.textContent = docKey;
       if (shelfBadge) shelfBadge.textContent = meta.shelf || "Can\xF3nico";
-      if (readingTimeBadge) readingTimeBadge.textContent = `\u23F1\uFE0F ${meta.readingTime || 3} min`;
+      if (readingTimeBadge) readingTimeBadge.innerHTML = `<span class="inline-flex items-center gap-1">${Icons.clock("w-3 h-3")} <span>${meta.readingTime || 3} min</span></span>`;
       if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
       if (brEl) brEl.textContent = meta.ruleCount || 0;
       if (rfEl) rfEl.textContent = meta.reqCount || 0;
@@ -5156,13 +5312,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         readerContainer?.classList.add("hidden");
         editorContainer?.classList.remove("hidden");
         if (btnText) btnText.textContent = "Modo Lectura";
-        if (btnIcon) btnIcon.textContent = "\u{1F441}\uFE0F";
+        if (btnIcon) btnIcon.innerHTML = Icons.eye("w-3.5 h-3.5");
         this.setupSynchronizedScroll();
       } else {
         editorContainer?.classList.add("hidden");
         readerContainer?.classList.remove("hidden");
         if (btnText) btnText.textContent = "Modo Editor";
-        if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+        if (btnIcon) btnIcon.innerHTML = Icons.edit("w-3.5 h-3.5");
       }
       libView?.classList.add("hidden");
       artView?.classList.remove("hidden");
@@ -5215,7 +5371,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (matchedFeatures.length > 0) {
         html += `
         <div class="space-y-1">
-          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">\u{1F4CB} Tareas & Specs</div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 flex items-center gap-1">${Icons.fileText("w-3 h-3")} <span>Tareas & Specs</span></div>
           ${matchedFeatures.map((f, i) => `
             <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
                  data-omnibox-type="feature"
@@ -5233,17 +5389,17 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (matchedDocs.length > 0) {
         html += `
         <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">\u{1F4DA} Base de Conocimiento</div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 flex items-center gap-1">${Icons.book("w-3 h-3")} <span>Base de Conocimiento</span></div>
           ${matchedDocs.map((d) => `
             <div class="omnibox-item p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer flex items-center justify-between transition-colors"
                  data-omnibox-type="doc"
                  data-doc-key="${escapeAttr5(d.key)}">
               <div class="flex items-center gap-2 truncate">
-                <span>\u{1F4C4}</span>
+                <span class="text-indigo-600 dark:text-indigo-400">${Icons.fileText("w-3.5 h-3.5")}</span>
                 <span class="font-bold truncate">${escapeHtml7(d.title)}</span>
                 <span class="text-[10px] text-slate-400 font-mono truncate">(${escapeHtml7(d.key)})</span>
               </div>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">\u23F1\uFE0F ${d.readingTime || 2}m</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono inline-flex items-center gap-1">${Icons.clock("w-3 h-3")} <span>${d.readingTime || 2}m</span></span>
             </div>
           `).join("")}
         </div>
@@ -5252,7 +5408,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (matchedRules.length > 0) {
         html += `
         <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">\u2696\uFE0F Reglas de Negocio (BR-*)</div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 flex items-center gap-1">${Icons.scale("w-3 h-3")} <span>Reglas de Negocio (BR-*)</span></div>
           ${matchedRules.map((r) => `
             <div class="omnibox-item p-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/50 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center justify-between transition-colors"
                  data-omnibox-type="rule"
@@ -5299,9 +5455,9 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               <span class="text-slate-400 text-[10px]">Bloque #${idx + 1}</span>
             </div>
             <div class="flex items-center gap-1">
-              <button type="button" data-block-action="move-up" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover arriba" ${idx === 0 ? 'disabled style="opacity:0.3"' : ""}>\u{1F53C}</button>
-              <button type="button" data-block-action="move-down" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover abajo" ${idx === blocks.length - 1 ? 'disabled style="opacity:0.3"' : ""}>\u{1F53D}</button>
-              <button type="button" data-block-action="delete" class="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer text-xs" title="Eliminar bloque">\u{1F5D1}\uFE0F</button>
+              <button type="button" data-block-action="move-up" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover arriba" ${idx === 0 ? 'disabled style="opacity:0.3"' : ""}>${Icons.chevronUp("w-3.5 h-3.5")}</button>
+              <button type="button" data-block-action="move-down" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer text-xs" title="Mover abajo" ${idx === blocks.length - 1 ? 'disabled style="opacity:0.3"' : ""}>${Icons.chevronDown("w-3.5 h-3.5")}</button>
+              <button type="button" data-block-action="delete" class="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-500 cursor-pointer text-xs" title="Eliminar bloque">${Icons.trash("w-3.5 h-3.5")}</button>
             </div>
           </div>
           ${this.renderBlockInputControls(b)}
@@ -5530,13 +5686,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               editorContainer.classList.remove("hidden");
               readerContainer.classList.add("hidden");
               if (btnText) btnText.textContent = "Modo Lectura";
-              if (btnIcon) btnIcon.textContent = "\u{1F441}\uFE0F";
+              if (btnIcon) btnIcon.innerHTML = Icons.eye("w-3.5 h-3.5");
               this.setupSynchronizedScroll();
             } else {
               editorContainer.classList.add("hidden");
               readerContainer.classList.remove("hidden");
               if (btnText) btnText.textContent = "Modo Editor";
-              if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+              if (btnIcon) btnIcon.innerHTML = Icons.edit("w-3.5 h-3.5");
             }
           }
           return;
@@ -5642,7 +5798,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             const btnText = document.getElementById("btn-toggle-doc-text");
             const btnIcon = document.getElementById("btn-toggle-doc-icon");
             if (btnText) btnText.textContent = "Modo Editor";
-            if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+            if (btnIcon) btnIcon.innerHTML = Icons.edit("w-3.5 h-3.5");
             this.initMermaidDiagrams();
           }
           return;
@@ -5654,7 +5810,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           const btnText = document.getElementById("btn-toggle-doc-text");
           const btnIcon = document.getElementById("btn-toggle-doc-icon");
           if (btnText) btnText.textContent = "Modo Editor";
-          if (btnIcon) btnIcon.textContent = "\u270F\uFE0F";
+          if (btnIcon) btnIcon.innerHTML = Icons.edit("w-3.5 h-3.5");
           return;
         }
         const copyDocBtn = e.target.closest("#copy-active-doc-btn");
@@ -5665,7 +5821,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           if (content && navigator.clipboard?.writeText) {
             navigator.clipboard.writeText(content).then(() => {
               const orig = copyDocBtn.innerHTML;
-              copyDocBtn.innerHTML = "<span>\u2705</span>";
+              copyDocBtn.innerHTML = Icons.checkCircle("w-3.5 h-3.5");
               setTimeout(() => {
                 copyDocBtn.innerHTML = orig;
               }, 2e3);
@@ -5725,7 +5881,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           if (textarea && navigator.clipboard?.writeText) {
             navigator.clipboard.writeText(textarea.value).then(() => {
               const origHtml = copyContextBtn.innerHTML;
-              copyContextBtn.innerHTML = "\xA1Contexto Copiado! \u2705";
+              copyContextBtn.innerHTML = `<span class="inline-flex items-center gap-1">${Icons.checkCircle("w-3.5 h-3.5")} <span>\xA1Copiado!</span></span>`;
               setTimeout(() => {
                 copyContextBtn.innerHTML = origHtml;
               }, 2e3);
@@ -6015,19 +6171,19 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
   function getBlockTypeLabel(type) {
     switch (type) {
       case "header":
-        return "\u{1F3F7}\uFE0F Encabezado";
+        return "Encabezado";
       case "paragraph":
-        return "\u{1F4DD} P\xE1rrafo";
+        return "P\xE1rrafo";
       case "callout":
-        return "\u{1F4A1} Alerta";
+        return "Alerta";
       case "business_rule":
-        return "\u2696\uFE0F Regla BR";
+        return "Regla BR";
       case "code":
-        return "\u{1F4D0} C\xF3digo/Diagrama";
+        return "C\xF3digo / Diagrama";
       case "divider":
-        return "\u2796 Separador";
+        return "Separador";
       default:
-        return "\u{1F4C4} Bloque";
+        return "Bloque";
     }
   }
   function renderTocHtml(toc = []) {

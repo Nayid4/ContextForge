@@ -35,14 +35,14 @@ export function renderMermaidViewer(diagram) {
             <button type="button" 
                     data-diagram-toggle="visual" 
                     data-diagram-id="${id}"
-                    class="diagram-view-btn active px-3 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold shadow-xs transition-all cursor-pointer">
-              🎨 Visual
+                    class="diagram-view-btn active px-3 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold shadow-xs transition-all cursor-pointer inline-flex items-center gap-1.5">
+              ${Icons.eye('w-3.5 h-3.5')} <span>Visual</span>
             </button>
             <button type="button" 
                     data-diagram-toggle="code" 
                     data-diagram-id="${id}"
-                    class="diagram-view-btn px-3 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
-              📝 Código
+                    class="diagram-view-btn px-3 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer inline-flex items-center gap-1.5">
+              ${Icons.code('w-3.5 h-3.5')} <span>Código</span>
             </button>
           </div>
 
@@ -52,7 +52,7 @@ export function renderMermaidViewer(diagram) {
                   data-diagram-id="${id}"
                   class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title="Expandir a Pantalla Completa con Zoom y Paneo">
-            ${Icons.eye('w-3.5 h-3.5')}
+            ${Icons.maximize ? Icons.maximize('w-3.5 h-3.5') : Icons.eye('w-3.5 h-3.5')}
           </button>
 
           <!-- Botón Copiar Código -->
@@ -60,7 +60,7 @@ export function renderMermaidViewer(diagram) {
                   data-copy-mermaid="${escapeAttr(code)}"
                   class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title="Copiar código Mermaid">
-            <span class="text-xs">📋</span>
+            ${Icons.copy('w-3.5 h-3.5')}
           </button>
 
           <!-- Botón Abrir / Editar en Draw.io -->
@@ -69,7 +69,7 @@ export function renderMermaidViewer(diagram) {
              rel="noopener noreferrer" 
              class="px-2 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1 text-xs font-mono font-semibold"
              title="Abrir e interactuar con este diagrama en Draw.io (diagrams.net)">
-            <span>✏️</span> <span class="hidden sm:inline">Draw.io</span>
+            ${Icons.edit('w-3.5 h-3.5')} <span class="hidden sm:inline">Draw.io</span>
           </a>
         </div>
       </div>

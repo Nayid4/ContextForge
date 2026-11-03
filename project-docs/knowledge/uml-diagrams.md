@@ -71,12 +71,12 @@ classDiagram
 ```mermaid
 sequenceDiagram
   autonumber
-  actor User as "👤 Usuario (Humano)"
-  participant Leader as "⚡ Leader Agent"
-  participant Git as "🐙 Git System"
-  participant SpecAuthor as "📝 Spec-Author"
-  participant Implementer as "🔨 Implementer"
-  participant Reviewer as "🔍 Reviewer"
+  actor User as "Usuario (Humano)"
+  participant Leader as "Leader Agent"
+  participant Git as "Git System"
+  participant SpecAuthor as "Spec-Author"
+  participant Implementer as "Implementer"
+  participant Reviewer as "Reviewer"
 
   User->>Leader: "Iniciar tarea INT-001"
   Leader->>Git: "git checkout -b feature/INT-001/{name}"
@@ -109,14 +109,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   autonumber
-  actor User as "👤 Desarrollador"
-  participant UI as "💻 Tablero Web (main.js)"
-  participant Textarea as "📝 Panel Editor Markdown"
-  participant Preview as "👁️ Panel Live Preview"
-  participant Blocks as "🧱 Panel Bloques Visuales"
-  participant Storage as "💾 sync-data.js / data-fallback.js"
+  actor User as "Desarrollador"
+  participant UI as "Tablero Web (main.js)"
+  participant Textarea as "Panel Editor Markdown"
+  participant Preview as "Panel Live Preview"
+  participant Blocks as "Panel Bloques Visuales"
+  participant Storage as "sync-data.js / data-fallback.js"
 
-  User->>UI: "Pulsar [ ✏️ Modo Editor ]"
+  User->>UI: "Pulsar [ Modo Editor ]"
   UI->>Textarea: "Cargar markdown actual"
   UI->>Preview: "renderMarkdown(content)"
   
@@ -124,16 +124,16 @@ sequenceDiagram
     User->>Textarea: "Escribir texto y hacer scroll"
     Textarea->>Preview: "Sincronizar scroll proporcionalmente (isScrollingFromEditor)"
     Textarea->>Preview: "Actualizar HTML en vivo"
-  else Usuario conmuta a [ 🧱 Modo Bloques ]
-    User->>UI: "Pulsar [ 🧱 Modo Bloques Visuales ]"
+  else Usuario conmuta a [ Modo Bloques ]
+    User->>UI: "Pulsar [ Modo Bloques Visuales ]"
     UI->>Blocks: "parseMarkdownToBlocks(markdown)"
     Blocks-->>User: "Renderizar tarjetas interactivas (H1, BR, Callouts)"
-    User->>Blocks: "Reordenar bloques (🔼/🔽) o añadir bloque"
+    User->>Blocks: "Reordenar bloques o añadir bloque"
     Blocks->>Textarea: "blocksToMarkdown(blocks)"
     Blocks->>Preview: "Actualizar previsualización en vivo"
   end
 
-  User->>UI: "Pulsar [ 💾 Guardar Cambios ]"
+  User->>UI: "Pulsar [ Guardar Cambios ]"
   UI->>Storage: "store.saveDoc(key, content) + sync-data.js"
   Storage-->>User: "Documento persistido local y offline"
 ```
@@ -144,8 +144,8 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-  actorDev["👤 Desarrollador"]
-  actorAgent["⚡ Agente de IA"]
+  actorDev["Desarrollador"]
+  actorAgent["Agente de IA"]
 
   subgraph UseCases["Casos de Uso del Arnés de Ingeniería"]
     ucAudit["Auditar Stack Técnico (/technical-audit)"]

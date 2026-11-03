@@ -18,4 +18,4 @@
 - `.agents/agents/leader.md`: Orquestador principal del ciclo SDD.
 - `.agents/agents/spec-author.md`: Redactor de requerimientos EARS, ADRs y tareas.
 - `.agents/agents/implementer.md`: Implementador agnóstico de código de producción y tests.
-- `.agents/agents/reviewer.md`: Revisor independiente de calidad, build y trazabilidad R↔Tests.
+- `.agents/agents/reviewer.md`: Revisor independiente de calidad, build y trazabilidad R-Tests.

@@ -22,7 +22,7 @@ function readJsonIfExists(paths) {
   return null;
 }
 
-console.log('🔄 Sincronizando datos reales hacia project-docs/data-fallback.js...');
+console.log('[SYNC] Sincronizando datos reales hacia project-docs/data-fallback.js...');
 
 // 1. Feature list
 const featureList = readJsonIfExists([
@@ -47,12 +47,12 @@ if (fs.existsSync(knowledgeDir)) {
   const docs = {};
   const docMetadata = {};
   const shelves = {
-    architecture: { id: 'architecture', title: 'Arquitectura & Modelado C4', icon: '📐', docs: [] },
-    business_rules: { id: 'business_rules', title: 'Reglas de Negocio & Dominio', icon: '⚖️', docs: [] },
-    requirements: { id: 'requirements', title: 'Requerimientos & Metodología Ágil', icon: '📋', docs: [] },
-    adrs: { id: 'adrs', title: 'Decisiones de Arquitectura (ADRs)', icon: '🏛️', docs: [] },
-    standards: { id: 'standards', title: 'Estándares, Capacidades & Servicios', icon: '🛡️', docs: [] },
-    modules: { id: 'modules', title: 'Módulos & Bounded Contexts', icon: '📦', docs: [] }
+    architecture: { id: 'architecture', title: 'Arquitectura & Modelado C4', iconName: 'architecture', docs: [] },
+    business_rules: { id: 'business_rules', title: 'Reglas de Negocio & Dominio', iconName: 'business_rules', docs: [] },
+    requirements: { id: 'requirements', title: 'Requerimientos & Metodología Ágil', iconName: 'requirements', docs: [] },
+    adrs: { id: 'adrs', title: 'Decisiones de Arquitectura (ADRs)', iconName: 'adrs', docs: [] },
+    standards: { id: 'standards', title: 'Estándares, Capacidades & Servicios', iconName: 'standards', docs: [] },
+    modules: { id: 'modules', title: 'Módulos & Bounded Contexts', iconName: 'modules', docs: [] }
   };
 
   function classifyShelf(key) {
@@ -179,7 +179,7 @@ window.__FALLBACK_DATA__ = {
 `;
 
 fs.writeFileSync(fallbackPath, fallbackContent, 'utf8');
-console.log('✅ project-docs/data-fallback.js actualizado con los datos reales y documentos Markdown.');
+console.log('[OK] project-docs/data-fallback.js actualizado con los datos reales y documentos Markdown.');
 
 // Recompilar bundle para incluir cambios si existe esbuild
 try {
@@ -187,9 +187,9 @@ try {
     cwd: ROOT_DIR,
     stdio: 'ignore'
   });
-  console.log('✅ project-docs/dist/app.bundle.js recompilado con éxito.');
+  console.log('[OK] project-docs/dist/app.bundle.js recompilado con éxito.');
 } catch (_) {
   // esbuild opcional si no está disponible en el entorno
 }
 
-console.log('🎉 Sincronización completada. El tablero ahora muestra los datos reales en modo offline.');
+console.log('[SUCCESS] Sincronización completada. El tablero ahora muestra los datos reales en modo offline.');
