@@ -502,38 +502,67 @@ window.__FALLBACK_DATA__ = {
   "diagrams": [
     {
       "id": "c1",
-      "type": "c4",
-      "title": "Modelo C4 - Contexto de Sistema (C1)"
+      "type": "C4 Model",
+      "level": "Nivel 1",
+      "title": "Modelo C4 - Contexto de Sistema (C1)",
+      "description": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
+      "mermaid": "flowchart TD\r\n  userDeveloper[\"Desarrollador / Ingeniero de Software\"]\r\n  agentLeader[\"Agente Principal (Leader)\"]\r\n  harnessSystem[\"AI Agentic SDD Engineering Harness\"]\r\n  gitSystem[\"Sistema de Control de Versiones (Git / GitHub)\"]\r\n  browserUser[\"Navegador Web (Dashboard / Tablero Visual)\"]\r\n\r\n  userDeveloper -->|\"Define requerimientos y aprueba specs\"| harnessSystem\r\n  agentLeader -->|\"Orquesta tareas e invoca subagentes\"| harnessSystem\r\n  harnessSystem -->|\"Crea ramas INT-* y commits semánticos\"| gitSystem\r\n  harnessSystem -->|\"Genera y sincroniza datos en tiempo real\"| browserUser\r\n  browserUser -->|\"Permite lectura editorial y edición dual\"| userDeveloper"
     },
     {
       "id": "c2",
-      "type": "c4",
-      "title": "Modelo C4 - Contenedores del Arnés (C2)"
+      "type": "C4 Model",
+      "level": "Nivel 2",
+      "title": "Modelo C4 - Contenedores del Arnés (C2)",
+      "description": "Descompone el arnés en sus subsistemas y aplicaciones principales:",
+      "mermaid": "flowchart TD\r\n  subgraph HarnessContainers[\"Contenedores del Arnés SDD\"]\r\n    containerOrchestrator[\"Orquestador Multi-Agente<br/>(Leader, Spec-Author, Implementer, Reviewer)\"]\r\n    containerTripleSync[\"Motor de Sincronización Triple<br/>(.opencode / .github / .agents)\"]\r\n    containerKnowledge[\"Motor de Base de Conocimiento<br/>(Docs-as-Code, C4, UML, BR-*, ADRs)\"]\r\n    containerDashboard[\"Tablero de Seguimiento Interactivo<br/>(Tailwind v4, Three.js, Editor Dual)\"]\r\n    containerTestRunner[\"Suite de Pruebas Automatizadas<br/>(Node.js Test Runner, Smoke Tests)\"]\r\n  end\r\n\r\n  gitRepo[\"Repositorio Git Local\"]\r\n  userView[\"Navegador (file:/// o HTTP)\"]\r\n\r\n  containerOrchestrator -->|\"Escribe specs y código\"| gitRepo\r\n  containerTripleSync -->|\"Mantiene paridad de 18 skills\"| containerOrchestrator\r\n  containerKnowledge -->|\"Alimenta contexto anti-sesgo\"| containerOrchestrator\r\n  containerDashboard -->|\"Lee metadatos de specs y progreso\"| gitRepo\r\n  containerDashboard -->|\"Renderiza vistas interactivas\"| userView\r\n  containerTestRunner -->|\"Verifica build, tests y convenciones\"| containerOrchestrator"
     },
     {
       "id": "c3",
-      "type": "c4",
-      "title": "Modelo C4 - Componentes del Tablero Web (C3)"
+      "type": "C4 Model",
+      "level": "Nivel 3",
+      "title": "Modelo C4 - Componentes del Tablero Web (C3)",
+      "description": "Desglose interno de la aplicación web en `project-docs/`:",
+      "mermaid": "flowchart LR\r\n  subgraph DashboardComponents[\"project-docs/src/\"]\r\n    compRouter[\"Enrutador por Pestañas<br/>(router.js)\"]\r\n    compStore[\"Store Reactivo Central<br/>(store.js)\"]\r\n    compDetector[\"Detector de Entorno & Agente<br/>(detector.js)\"]\r\n    compMarkdown[\"Lector Editorial & Parser Bloques<br/>(MarkdownViewer.js)\"]\r\n    compThree[\"Constelación 3D Piramidal<br/>(SpaceView3D.js)\"]\r\n    compMermaid[\"Visor & Editor Draw.io<br/>(MermaidViewer.js)\"]\r\n    compOmnibox[\"Buscador Global Ctrl+K<br/>(Omnibox Modal)\"]\r\n  end\r\n\r\n  compRouter --> compStore\r\n  compDetector --> compStore\r\n  compStore --> compMarkdown\r\n  compStore --> compThree\r\n  compStore --> compMermaid\r\n  compStore --> compOmnibox"
     },
     {
       "id": "class",
-      "type": "uml",
-      "title": "Diagrama de Clases del Dominio SDD"
+      "type": "UML Clases",
+      "level": "Modelo de Dominio",
+      "title": "Diagrama de Clases del Dominio SDD",
+      "description": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
+      "mermaid": "classDiagram\r\n  class Feature {\r\n    +int id\r\n    +string type\r\n    +string name\r\n    +string title\r\n    +string description\r\n    +string module\r\n    +string priority\r\n    +string branch\r\n    +string status\r\n    +List~string~ acceptance\r\n    +markCompleted()\r\n  }\r\n\r\n  class Subagent {\r\n    +string name\r\n    +string role\r\n    +List~string~ tools\r\n    +executeTask(Task task)\r\n  }\r\n\r\n  class KnowledgeDocument {\r\n    +string key\r\n    +string filename\r\n    +string title\r\n    +string shelf\r\n    +int readingTime\r\n    +int wordCount\r\n    +int ruleCount\r\n    +extractTOC() List~Heading~\r\n  }\r\n\r\n  class BusinessRule {\r\n    +string id\r\n    +string title\r\n    +string module\r\n    +string severity\r\n    +string description\r\n    +validate() bool\r\n  }\r\n\r\n  class ArchitecturalDecisionRecord {\r\n    +string id\r\n    +string title\r\n    +string status\r\n    +string context\r\n    +string decision\r\n    +string consequences\r\n  }\r\n\r\n  Feature \"1\" --> \"*\" BusinessRule : \"satisface\"\r\n  Feature \"1\" --> \"1\" Subagent : \"asignada a\"\r\n  KnowledgeDocument \"*\" --> \"*\" BusinessRule : \"documenta\"\r\n  KnowledgeDocument \"*\" --> \"*\" ArchitecturalDecisionRecord : \"registra\""
     },
     {
       "id": "seq-sdd",
-      "type": "sequence",
-      "title": "Secuencia: Ciclo de Vida Completo SDD"
+      "type": "UML Secuencia",
+      "level": "Proceso SDD",
+      "title": "Secuencia: Ciclo de Vida Completo SDD",
+      "description": "sequenceDiagram",
+      "mermaid": "sequenceDiagram\r\n  autonumber\r\n  actor User as \"Usuario (Humano)\"\r\n  participant Leader as \"Leader Agent\"\r\n  participant Git as \"Git System\"\r\n  participant SpecAuthor as \"Spec-Author\"\r\n  participant Implementer as \"Implementer\"\r\n  participant Reviewer as \"Reviewer\"\r\n\r\n  User->>Leader: \"Iniciar tarea INT-001\"\r\n  Leader->>Git: \"git checkout -b feature/INT-001/{name}\"\r\n  Leader->>SpecAuthor: \"Redactar requerimientos y tasks\"\r\n  SpecAuthor-->>Leader: \"specs/001/ completado (spec_ready)\"\r\n  Leader->>User: \"ask_question: Aprobar spec al 100%?\"\r\n  alt Spec Aprobado\r\n    User-->>Leader: \"Aprobado (in_progress)\"\r\n    Leader->>Implementer: \"Implementar código y tests\"\r\n    Implementer->>Implementer: \"Ejecutar checks.test y checks.build\"\r\n    Implementer-->>Leader: \"Trazabilidad R<->Tests completa\"\r\n    Leader->>Reviewer: \"Auditar calidad y consistencia\"\r\n    alt Reviewer Aprueba\r\n      Reviewer-->>Leader: \"APROBADO (0 errores)\"\r\n      Leader->>User: \"ask_question: Integrar a rama base?\"\r\n    else Reviewer Rechaza\r\n      Reviewer-->>Leader: \"RECHAZADO (hallazgos)\"\r\n      Leader->>Implementer: \"Corregir observaciones\"\r\n    end\r\n  else Spec Rechazado\r\n    User-->>Leader: \"Rechazar o solicitar cambios\"\r\n    Leader->>SpecAuthor: \"Ajustar especificación\"\r\n  end"
     },
     {
       "id": "seq-editor",
-      "type": "sequence",
-      "title": "Secuencia: Editor Dual ContextForge"
+      "type": "UML Secuencia",
+      "level": "Editor Dual",
+      "title": "Secuencia: Editor Dual ContextForge",
+      "description": "sequenceDiagram",
+      "mermaid": "sequenceDiagram\r\n  autonumber\r\n  actor User as \"Desarrollador\"\r\n  participant UI as \"Tablero Web (main.js)\"\r\n  participant Textarea as \"Panel Editor Markdown\"\r\n  participant Preview as \"Panel Live Preview\"\r\n  participant Blocks as \"Panel Bloques Visuales\"\r\n  participant Storage as \"sync-data.js / data-fallback.js\"\r\n\r\n  User->>UI: \"Pulsar [ Modo Editor ]\"\r\n  UI->>Textarea: \"Cargar markdown actual\"\r\n  UI->>Preview: \"renderMarkdown(content)\"\r\n  \r\n  alt Usuario edita en Textarea (Markdown)\r\n    User->>Textarea: \"Escribir texto y hacer scroll\"\r\n    Textarea->>Preview: \"Sincronizar scroll proporcionalmente (isScrollingFromEditor)\"\r\n    Textarea->>Preview: \"Actualizar HTML en vivo\"\r\n  else Usuario conmuta a [ Modo Bloques ]\r\n    User->>UI: \"Pulsar [ Modo Bloques Visuales ]\"\r\n    UI->>Blocks: \"parseMarkdownToBlocks(markdown)\"\r\n    Blocks-->>User: \"Renderizar tarjetas interactivas (H1, BR, Callouts)\"\r\n    User->>Blocks: \"Reordenar bloques o añadir bloque\"\r\n    Blocks->>Textarea: \"blocksToMarkdown(blocks)\"\r\n    Blocks->>Preview: \"Actualizar previsualización en vivo\"\r\n  end\r\n\r\n  User->>UI: \"Pulsar [ Guardar Cambios ]\"\r\n  UI->>Storage: \"store.saveDoc(key, content) + sync-data.js\"\r\n  Storage-->>User: \"Documento persistido local y offline\""
+    },
+    {
+      "id": "use-cases",
+      "type": "UML Casos de Uso",
+      "level": "Casos de Uso",
+      "title": "Diagrama de Casos de Uso del Arnés SDD",
+      "description": "flowchart TD",
+      "mermaid": "flowchart TD\r\n  actorDev[\"Desarrollador\"]\r\n  actorAgent[\"Agente de IA\"]\r\n\r\n  subgraph UseCases[\"Casos de Uso del Arnés de Ingeniería\"]\r\n    ucAudit[\"Auditar Stack Técnico (/technical-audit)\"]\r\n    ucKnowledge[\"Extraer Base de Conocimiento (/project-knowledge)\"]\r\n    ucSpec[\"Redactar Requerimientos EARS (/generate-spec)\"]\r\n    ucHumanGate[\"Aprobar Puerta Humana (ask_question)\"]\r\n    ucImplement[\"Implementar Código & Tests (/implement)\"]\r\n    ucReview[\"Auditar Calidad & Trazabilidad (/review)\"]\r\n    ucViewDash[\"Navegar Tablero & Constelación 3D\"]\r\n    ucOmnibox[\"Búsqueda Global Omnibox (Ctrl+K)\"]\r\n    ucEditDual[\"Edición Dual Markdown / Bloques\"]\r\n  end\r\n\r\n  actorDev --> ucAudit\r\n  actorDev --> ucKnowledge\r\n  actorDev --> ucHumanGate\r\n  actorDev --> ucViewDash\r\n  actorDev --> ucOmnibox\r\n  actorDev --> ucEditDual\r\n\r\n  actorAgent --> ucSpec\r\n  actorAgent --> ucImplement\r\n  actorAgent --> ucReview\r\n  actorAgent --> ucKnowledge"
     },
     {
       "id": "erd",
-      "type": "erd",
-      "title": "Diagrama Entidad-Relación (ERD)"
+      "type": "Database ERD",
+      "level": "Persistencia",
+      "title": "Diagrama Entidad-Relación (ERD)",
+      "description": "erDiagram",
+      "mermaid": "erDiagram\r\n  PROJECT ||--o{ FEATURE : \"contiene\"\r\n  PROJECT ||--|| PROJECT_SPEC : \"especificado por\"\r\n  FEATURE ||--|{ ACCEPTANCE_CRITERIA : \"valida con\"\r\n  FEATURE ||--o{ TASK : \"descompone en\"\r\n  FEATURE ||--o{ BUSINESS_RULE : \"satisface\"\r\n  KNOWLEDGE_INDEX ||--o{ DOCUMENT : \"cataloga\"\r\n  DOCUMENT ||--o{ SHELF : \"pertenece a\"\r\n  DOCUMENT ||--o{ BUSINESS_RULE : \"documenta\"\r\n\r\n  PROJECT {\r\n    string name PK\r\n    string description\r\n    string version\r\n    string tech_stack\r\n    string runtime\r\n  }\r\n\r\n  FEATURE {\r\n    int id PK\r\n    string type\r\n    string name\r\n    string title\r\n    string module\r\n    string priority\r\n    string branch\r\n    string status\r\n  }\r\n\r\n  TASK {\r\n    string id PK\r\n    string title\r\n    bool done\r\n  }\r\n\r\n  BUSINESS_RULE {\r\n    string id PK\r\n    string module\r\n    string severity\r\n    string title\r\n    string description\r\n  }\r\n\r\n  DOCUMENT {\r\n    string key PK\r\n    string filename\r\n    string title\r\n    string shelf\r\n    int readingTime\r\n    int wordCount\r\n    int ruleCount\r\n  }"
     }
   ],
   "business_rules": [

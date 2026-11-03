@@ -52,4 +52,43 @@ test.describe('Aceptación E2E: Navegación y Vistas Principales del Dashboard',
     const docCards = tabContent.locator('.kb-shelf-doc-card');
     await expect(docCards.first()).toBeVisible();
   });
+
+  test('Escenario 4: Conmutación de sub-pestañas de diagramas C4 y visualización interactiva', async ({ page }) => {
+    await page.goto('/project-docs/index.html');
+
+    // Navegar a la pestaña de Arquitectura
+    const archTab = page.locator('button[data-tab="architecture"]');
+    await archTab.click();
+
+    // Validar que el panel por defecto "layers" está activo
+    const layersPanel = page.locator('#diagram-panel-layers');
+    await expect(layersPanel).toBeVisible();
+
+    // Conmutar a la sub-pestaña C1
+    const c1TabBtn = page.locator('button[data-arch-tab="c1"]');
+    await expect(c1TabBtn).toBeVisible();
+    await c1TabBtn.click();
+
+    // El panel layers debe ocultarse y el panel C1 debe mostrarse
+    await expect(layersPanel).toBeHidden();
+    const c1Panel = page.locator('#diagram-panel-c1');
+    await expect(c1Panel).toBeVisible();
+
+    // La tarjeta del visor Mermaid debe contener el título del diagrama y el código Mermaid
+    const mermaidTarget = c1Panel.locator('.mermaid-render-target');
+    await expect(mermaidTarget).toBeVisible();
+    const codeAttr = await mermaidTarget.getAttribute('data-mermaid-code');
+    expect(codeAttr).toContain('flowchart TD');
+    expect(codeAttr).toContain('harnessSystem');
+
+    // Conmutar a la sub-pestaña C2
+    const c2TabBtn = page.locator('button[data-arch-tab="c2"]');
+    await c2TabBtn.click();
+    await expect(c1Panel).toBeHidden();
+    const c2Panel = page.locator('#diagram-panel-c2');
+    await expect(c2Panel).toBeVisible();
+    const c2Target = c2Panel.locator('.mermaid-render-target');
+    const c2Code = await c2Target.getAttribute('data-mermaid-code');
+    expect(c2Code).toContain('HarnessContainers');
+  });
 });

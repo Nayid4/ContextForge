@@ -65,6 +65,10 @@ class App {
   }
 
   initAutoSync() {
+    if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+      return;
+    }
+
     if (this.autoSyncController) {
       this.autoSyncController.stop();
     }
@@ -476,8 +480,14 @@ class App {
     };
   }
 
-  async initMermaidDiagrams() {
-    if (typeof window === 'undefined' || !window.mermaid) return;
+  async initMermaidDiagrams(retryCount = 0) {
+    if (typeof window === 'undefined') return;
+    if (!window.mermaid) {
+      if (retryCount < 10) {
+        setTimeout(() => this.initMermaidDiagrams(retryCount + 1), 200);
+      }
+      return;
+    }
 
     try {
       const isDark = document.documentElement.classList.contains('dark');
@@ -1403,6 +1413,67 @@ class App {
         const searchInput = document.getElementById('feature-search-input');
         if (searchInput) searchInput.value = '';
         store.resetFilters();
+        return;
+      }
+
+      // Pestañas del Visualizador de Arquitectura y Diagramas (C4, UML, ERD)
+      const archTabBtn = e.target.closest('[data-arch-tab]');
+      if (archTabBtn) {
+        const targetTab = archTabBtn.getAttribute('data-arch-tab');
+        const navContainer = archTabBtn.closest('#arch-diagram-nav') || document.getElementById('arch-diagram-nav');
+        if (navContainer) {
+          navContainer.querySelectorAll('.arch-tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-semibold');
+            btn.classList.add('text-slate-600', 'dark:text-slate-400');
+          });
+          archTabBtn.classList.add('active', 'bg-indigo-600', 'text-white', 'font-semibold');
+          archTabBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+        }
+
+        const panels = document.querySelectorAll('.diagram-panel');
+        panels.forEach(p => {
+          p.classList.add('hidden');
+          p.classList.remove('block');
+        });
+
+        const activePanel = document.getElementById(`diagram-panel-${targetTab}`);
+        if (activePanel) {
+          activePanel.classList.remove('hidden');
+          activePanel.classList.add('block');
+          this.initMermaidDiagrams();
+        }
+        return;
+      }
+
+      // Copiar código Mermaid individual
+      const copyMermaidBtn = e.target.closest('[data-copy-mermaid]');
+      if (copyMermaidBtn) {
+        const code = copyMermaidBtn.getAttribute('data-copy-mermaid');
+        if (code && navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => {
+            store.showNotification('Código Mermaid copiado al portapapeles', 'success');
+          }).catch(() => {
+            store.showNotification('No se pudo acceder al portapapeles', 'warning');
+          });
+        }
+        return;
+      }
+
+      // Copiar código del diagrama activo en la sección de arquitectura
+      const copyActiveBtn = e.target.closest('#copy-active-mermaid-btn');
+      if (copyActiveBtn) {
+        const activePanel = document.querySelector('.diagram-panel:not(.hidden)');
+        const target = activePanel?.querySelector('.mermaid-render-target[data-mermaid-code]');
+        const code = target?.getAttribute('data-mermaid-code');
+        if (code && navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => {
+            store.showNotification('Código del diagrama copiado al portapapeles', 'success');
+          }).catch(() => {
+            store.showNotification('No se pudo acceder al portapapeles', 'warning');
+          });
+        } else {
+          store.showNotification('No hay código de diagrama activo para copiar', 'info');
+        }
         return;
       }
 

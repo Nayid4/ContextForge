@@ -281,6 +281,19 @@
   // project-docs/src/core/api.js
   async function fetchProjectData(options = {}) {
     const { bypassCache = false } = options;
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      const fallback = window.__FALLBACK_DATA__ || {};
+      const fData = fallback.featureList || { project: "Proyecto (Modo Local)", features: [] };
+      return {
+        project: fData.project || "Proyecto",
+        features: Array.isArray(fData.features) ? fData.features : [],
+        currentSpec: fallback.currentSpec || {},
+        historyData: fallback.historyData || { records: [] },
+        projectSpec: fallback.projectSpec || null,
+        knowledgeIndex: fallback.knowledgeIndex || null,
+        protocol: "file:"
+      };
+    }
     let featureData = null;
     let currentSpec = {};
     let historyData = { records: [] };
@@ -395,6 +408,12 @@
     };
   }
   function startAutoSync({ onUpdate, intervalMs = 2500 } = {}) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      return {
+        stop: () => {
+        }
+      };
+    }
     let isRunning = true;
     let lastFingerprint = "";
     const checkUpdates = async () => {
@@ -505,16 +524,19 @@
         paths: [".codex/", ".openai/"]
       }
     ];
+    const isFileProtocol = typeof window !== "undefined" && window.location?.protocol === "file:";
     for (const check of agentChecks) {
       let detected = false;
-      for (const p of check.paths) {
-        try {
-          const res = await fetch(p, { method: "HEAD" });
-          if (res.ok) {
-            detected = true;
-            break;
+      if (!isFileProtocol) {
+        for (const p of check.paths) {
+          try {
+            const res = await fetch(p, { method: "HEAD" });
+            if (res.ok) {
+              detected = true;
+              break;
+            }
+          } catch (_) {
           }
-        } catch (_) {
         }
       }
       if (!detected && typeof window !== "undefined") {
@@ -555,21 +577,23 @@
         isAgnostic: false
       };
     }
-    try {
-      const yamlRes = await fetch("project-spec.yaml");
-      if (yamlRes.ok) {
-        const text = await yamlRes.text();
-        const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);
-        const frameworkMatch = text.match(/framework:\s*([^\r\n]+)/);
-        if (runtimeMatch || frameworkMatch) {
-          stack = {
-            name: [frameworkMatch?.[1], runtimeMatch?.[1]].filter(Boolean).join(" \xB7 "),
-            runtime: runtimeMatch?.[1] || "Detectado por technical-audit",
-            isAgnostic: false
-          };
+    if (!isFileProtocol) {
+      try {
+        const yamlRes = await fetch("project-spec.yaml");
+        if (yamlRes.ok) {
+          const text = await yamlRes.text();
+          const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);
+          const frameworkMatch = text.match(/framework:\s*([^\r\n]+)/);
+          if (runtimeMatch || frameworkMatch) {
+            stack = {
+              name: [frameworkMatch?.[1], runtimeMatch?.[1]].filter(Boolean).join(" \xB7 "),
+              runtime: runtimeMatch?.[1] || "Detectado por technical-audit",
+              isAgnostic: false
+            };
+          }
         }
+      } catch (_) {
       }
-    } catch (_) {
     }
     return {
       agents,
@@ -4763,6 +4787,9 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       this.initAutoSync();
     }
     initAutoSync() {
+      if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+        return;
+      }
       if (this.autoSyncController) {
         this.autoSyncController.stop();
       }
@@ -5145,8 +5172,14 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }, 60);
       };
     }
-    async initMermaidDiagrams() {
-      if (typeof window === "undefined" || !window.mermaid) return;
+    async initMermaidDiagrams(retryCount = 0) {
+      if (typeof window === "undefined") return;
+      if (!window.mermaid) {
+        if (retryCount < 10) {
+          setTimeout(() => this.initMermaidDiagrams(retryCount + 1), 200);
+        }
+        return;
+      }
       try {
         const isDark = document.documentElement.classList.contains("dark");
         window.mermaid.initialize({
@@ -5965,6 +5998,59 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           const searchInput = document.getElementById("feature-search-input");
           if (searchInput) searchInput.value = "";
           store.resetFilters();
+          return;
+        }
+        const archTabBtn = e.target.closest("[data-arch-tab]");
+        if (archTabBtn) {
+          const targetTab = archTabBtn.getAttribute("data-arch-tab");
+          const navContainer = archTabBtn.closest("#arch-diagram-nav") || document.getElementById("arch-diagram-nav");
+          if (navContainer) {
+            navContainer.querySelectorAll(".arch-tab-btn").forEach((btn) => {
+              btn.classList.remove("active", "bg-indigo-600", "text-white", "font-semibold");
+              btn.classList.add("text-slate-600", "dark:text-slate-400");
+            });
+            archTabBtn.classList.add("active", "bg-indigo-600", "text-white", "font-semibold");
+            archTabBtn.classList.remove("text-slate-600", "dark:text-slate-400");
+          }
+          const panels = document.querySelectorAll(".diagram-panel");
+          panels.forEach((p) => {
+            p.classList.add("hidden");
+            p.classList.remove("block");
+          });
+          const activePanel = document.getElementById(`diagram-panel-${targetTab}`);
+          if (activePanel) {
+            activePanel.classList.remove("hidden");
+            activePanel.classList.add("block");
+            this.initMermaidDiagrams();
+          }
+          return;
+        }
+        const copyMermaidBtn = e.target.closest("[data-copy-mermaid]");
+        if (copyMermaidBtn) {
+          const code = copyMermaidBtn.getAttribute("data-copy-mermaid");
+          if (code && navigator.clipboard) {
+            navigator.clipboard.writeText(code).then(() => {
+              store.showNotification("C\xF3digo Mermaid copiado al portapapeles", "success");
+            }).catch(() => {
+              store.showNotification("No se pudo acceder al portapapeles", "warning");
+            });
+          }
+          return;
+        }
+        const copyActiveBtn = e.target.closest("#copy-active-mermaid-btn");
+        if (copyActiveBtn) {
+          const activePanel = document.querySelector(".diagram-panel:not(.hidden)");
+          const target = activePanel?.querySelector(".mermaid-render-target[data-mermaid-code]");
+          const code = target?.getAttribute("data-mermaid-code");
+          if (code && navigator.clipboard) {
+            navigator.clipboard.writeText(code).then(() => {
+              store.showNotification("C\xF3digo del diagrama copiado al portapapeles", "success");
+            }).catch(() => {
+              store.showNotification("No se pudo acceder al portapapeles", "warning");
+            });
+          } else {
+            store.showNotification("No hay c\xF3digo de diagrama activo para copiar", "info");
+          }
           return;
         }
         const diagToggle = e.target.closest("[data-diagram-toggle]");

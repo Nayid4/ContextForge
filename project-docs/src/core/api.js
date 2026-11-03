@@ -5,6 +5,23 @@
 
 export async function fetchProjectData(options = {}) {
   const { bypassCache = false } = options;
+
+  // Protocolo file:///: los navegadores bloquean fetch() hacia URLs locales (CORS origin 'null').
+  // En modo local offline, resolver inmediatamente con window.__FALLBACK_DATA__ sin intentar fetch().
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    const fallback = window.__FALLBACK_DATA__ || {};
+    const fData = fallback.featureList || { project: 'Proyecto (Modo Local)', features: [] };
+    return {
+      project: fData.project || 'Proyecto',
+      features: Array.isArray(fData.features) ? fData.features : [],
+      currentSpec: fallback.currentSpec || {},
+      historyData: fallback.historyData || { records: [] },
+      projectSpec: fallback.projectSpec || null,
+      knowledgeIndex: fallback.knowledgeIndex || null,
+      protocol: 'file:'
+    };
+  }
+
   let featureData = null;
   let currentSpec = {};
   let historyData = { records: [] };
@@ -132,6 +149,13 @@ export async function fetchProjectData(options = {}) {
  * Detecta automáticamente cuando un agente o humano actualiza feature_list.json o current.json.
  */
 export function startAutoSync({ onUpdate, intervalMs = 2500 } = {}) {
+  // En protocolo file:// no hay soporte de polling fetch por política de seguridad del navegador
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    return {
+      stop: () => {}
+    };
+  }
+
   let isRunning = true;
   let lastFingerprint = '';
 

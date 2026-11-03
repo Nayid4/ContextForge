@@ -52,16 +52,20 @@ export async function detectEnvironment(projectData = {}) {
     }
   ];
 
+  const isFileProtocol = typeof window !== 'undefined' && window.location?.protocol === 'file:';
+
   for (const check of agentChecks) {
     let detected = false;
-    for (const p of check.paths) {
-      try {
-        const res = await fetch(p, { method: 'HEAD' });
-        if (res.ok) {
-          detected = true;
-          break;
-        }
-      } catch (_) {}
+    if (!isFileProtocol) {
+      for (const p of check.paths) {
+        try {
+          const res = await fetch(p, { method: 'HEAD' });
+          if (res.ok) {
+            detected = true;
+            break;
+          }
+        } catch (_) {}
+      }
     }
     // Fallback: si fetch está restringido por file:// o no hay HEAD, inferir de los metadatos
     if (!detected && typeof window !== 'undefined') {
@@ -109,22 +113,24 @@ export async function detectEnvironment(projectData = {}) {
     };
   }
 
-  // Intentar leer project-spec.yaml si fue generado por la skill technical-audit
-  try {
-    const yamlRes = await fetch('project-spec.yaml');
-    if (yamlRes.ok) {
-      const text = await yamlRes.text();
-      const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);
-      const frameworkMatch = text.match(/framework:\s*([^\r\n]+)/);
-      if (runtimeMatch || frameworkMatch) {
-        stack = {
-          name: [frameworkMatch?.[1], runtimeMatch?.[1]].filter(Boolean).join(' · '),
-          runtime: runtimeMatch?.[1] || 'Detectado por technical-audit',
-          isAgnostic: false
-        };
+  // Intentar leer project-spec.yaml si fue generado por la skill technical-audit (solo en modo HTTP)
+  if (!isFileProtocol) {
+    try {
+      const yamlRes = await fetch('project-spec.yaml');
+      if (yamlRes.ok) {
+        const text = await yamlRes.text();
+        const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);
+        const frameworkMatch = text.match(/framework:\s*([^\r\n]+)/);
+        if (runtimeMatch || frameworkMatch) {
+          stack = {
+            name: [frameworkMatch?.[1], runtimeMatch?.[1]].filter(Boolean).join(' · '),
+            runtime: runtimeMatch?.[1] || 'Detectado por technical-audit',
+            isAgnostic: false
+          };
+        }
       }
-    }
-  } catch (_) {}
+    } catch (_) {}
+  }
 
   return {
     agents,

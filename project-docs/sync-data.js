@@ -133,10 +133,122 @@ if (fs.existsSync(knowledgeDir)) {
     }
   }
 
+  function extractDiagrams(docs, existingDiagrams = []) {
+    const configs = [
+      {
+        docKey: 'c4-model.md',
+        headingRegex: /##\s+Nivel\s+1/i,
+        id: 'c1',
+        type: 'C4 Model',
+        level: 'Nivel 1',
+        title: 'Modelo C4 - Contexto de Sistema (C1)',
+        defaultDescription: 'Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa.'
+      },
+      {
+        docKey: 'c4-model.md',
+        headingRegex: /##\s+Nivel\s+2/i,
+        id: 'c2',
+        type: 'C4 Model',
+        level: 'Nivel 2',
+        title: 'Modelo C4 - Contenedores del Arnés (C2)',
+        defaultDescription: 'Descompone el arnés en sus subsistemas y aplicaciones principales.'
+      },
+      {
+        docKey: 'c4-model.md',
+        headingRegex: /##\s+Nivel\s+3/i,
+        id: 'c3',
+        type: 'C4 Model',
+        level: 'Nivel 3',
+        title: 'Modelo C4 - Componentes del Tablero Web (C3)',
+        defaultDescription: 'Desglose interno de la aplicación web en project-docs/.'
+      },
+      {
+        docKey: 'uml-diagrams.md',
+        headingRegex: /##\s+1\.\s+Diagrama\s+de\s+Clases/i,
+        id: 'class',
+        type: 'UML Clases',
+        level: 'Modelo de Dominio',
+        title: 'Diagrama de Clases del Dominio SDD',
+        defaultDescription: 'Muestra las entidades, value objects y relaciones del modelo conceptual del arnés.'
+      },
+      {
+        docKey: 'uml-diagrams.md',
+        headingRegex: /##\s+2\.\s+Diagrama\s+de\s+Secuencia:\s*Ciclo/i,
+        id: 'seq-sdd',
+        type: 'UML Secuencia',
+        level: 'Proceso SDD',
+        title: 'Secuencia: Ciclo de Vida Completo SDD',
+        defaultDescription: 'Secuencia completa de interacciones entre desarrollador y agentes en el ciclo SDD.'
+      },
+      {
+        docKey: 'uml-diagrams.md',
+        headingRegex: /##\s+3\.\s+Diagrama\s+de\s+Secuencia:\s*Editor/i,
+        id: 'seq-editor',
+        type: 'UML Secuencia',
+        level: 'Editor Dual',
+        title: 'Secuencia: Editor Dual ContextForge',
+        defaultDescription: 'Secuencia de interacción en el editor dual con scroll sincronizado.'
+      },
+      {
+        docKey: 'uml-diagrams.md',
+        headingRegex: /##\s+4\.\s+Diagrama\s+de\s+Casos/i,
+        id: 'use-cases',
+        type: 'UML Casos de Uso',
+        level: 'Casos de Uso',
+        title: 'Diagrama de Casos de Uso del Arnés SDD',
+        defaultDescription: 'Casos de uso del arnés de ingeniería ejecutados por humanos y agentes de IA.'
+      },
+      {
+        docKey: 'data-dictionary.md',
+        headingRegex: /##\s+1\.\s+Diagrama\s+Entidad/i,
+        id: 'erd',
+        type: 'Database ERD',
+        level: 'Persistencia',
+        title: 'Diagrama Entidad-Relación (ERD)',
+        defaultDescription: 'Diagrama Entidad-Relación formal de las entidades y esquemas JSON/YAML.'
+      }
+    ];
+
+    const extractedList = [];
+
+    for (const cfg of configs) {
+      const docContent = docs[cfg.docKey];
+      if (!docContent) continue;
+      const parts = docContent.split(/(?=^##\s+)/m);
+      for (const part of parts) {
+        if (cfg.headingRegex.test(part)) {
+          const match = part.match(/```mermaid\r?\n([\s\S]*?)```/);
+          if (match) {
+            const lines = part.split(/\r?\n/);
+            let desc = '';
+            for (const line of lines) {
+              const tr = line.trim();
+              if (!tr || tr.startsWith('#') || tr.startsWith('```') || tr.startsWith('>')) continue;
+              desc = tr;
+              break;
+            }
+            extractedList.push({
+              id: cfg.id,
+              type: cfg.type,
+              level: cfg.level,
+              title: cfg.title,
+              description: desc || cfg.defaultDescription,
+              mermaid: match[1].trim()
+            });
+          }
+          break;
+        }
+      }
+    }
+
+    return extractedList;
+  }
+
   scanDocs(knowledgeDir);
   knowledgeIndex.docs = docs;
   knowledgeIndex.docMetadata = docMetadata;
   knowledgeIndex.shelves = shelves;
+  knowledgeIndex.diagrams = extractDiagrams(docs, knowledgeIndex.diagrams || []);
 
   // Actualizar también el archivo JSON en disco
   const kIndexPath = path.join(knowledgeDir, 'knowledge-index.json');
