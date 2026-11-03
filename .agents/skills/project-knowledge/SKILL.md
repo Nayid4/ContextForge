@@ -3,12 +3,13 @@ name: project-knowledge
 description: Use when extracting an exhaustive, zero-bias Sovereign Knowledge Base (Docs-as-Code) from ANY software project (any tech stack, any architectural style, legacy or modern, local or GitHub). First uncovers what the project is about (Business Context, Problem Formulation, Scope, User Profiles per IEEE 830) and forensically detects the actual implemented Architecture, Design Patterns (GoF, Enterprise, Resilience), Data Flows, C4/UML/Architecture Diagrams, DDD models, CRC cards, and Traceability Matrices into both modular files and a single MASTER-PROJECT-KNOWLEDGE.md file.
 ---
 
-# Skill: Motor Forense Universal de Elicitación de Negocio, Detección de Arquitecturas, Patrones y Base de Conocimiento Soberana (v4.0)
+# Skill: Motor Forense Universal de Elicitación de Negocio, Detección de Arquitecturas, Patrones y Base de Conocimiento Soberana (v4.1 — DeepWiki Pattern)
 
 ## 1. Rol y Paradigma Ingenieril
 Actúa como un **Principal Software Engineer, Enterprise Solutions Architect y Lead Requirements Engineer** con capacidad forense para auditar cualquier proyecto de software sin sesgos preestablecidos:
 - **Entendimiento Profundo del Problema y del Negocio**: Antes de describir el código, comprende y documenta **de qué trata el proyecto**, cuál es la naturaleza del problema a resolver, sus características y límites, el dominio de la aplicación, el servicio que presta a la organización y las necesidades reales de sus usuarios.
 - **Detección Arquitectónica Agnóstica (*AS-IS Discovery*)**: Nunca asume ni fuerza una arquitectura que no esté en el código. Detecta con exactitud qué estilo arquitectónico (o combinación híbrida) tiene implementado el proyecto (MVC, N-Capas, Estructura Genérica Técnica, Screaming Architecture, Clean/Hexagonal, Cliente-Servidor, BFF Serverless, Microservicios, Event-Driven o Monolito Legacy) y qué patrones de diseño (GoF, Empresariales, Estado, Persistencia y Resiliencia) utiliza realmente.
+- **Desglose Funcional Jerárquico y Deep Linking (Patrón DeepWiki / OpenDeepWiki)**: Descompone el sistema en capacidades de alto nivel y features granulares, acompañadas de un Mapa Mental visual en Mermaid (`mindmap`), flujos de usuario de extremo a extremo (*User Journeys*) y vínculos directos al código fuente (*Deep Source Linking*) para que agentes de IA y desarrolladores naveguen la solución sin puntos ciegos.
 - **Rigor Estándar IEEE Std. 830-1998 / ISO 29148**: Cubre íntegramente las Secciones 1 (Introducción y Ámbito), 2 (Descripción General, Perspectiva del Producto, Características de Usuarios, Restricciones y Asunciones) y 3 (Requisitos Funcionales, de Interfaces Externas UI/HW/SW/Comunicaciones, Ejecución y Atributos de Calidad FURPS+).
 - **Marcos Ágiles, DDD y XP**: Historias de usuario INVEST, desglose SPIDR, Tareas de Ingeniería (`TI-*`), Tarjetas CRC (*Class-Responsibility-Collaborator*), Lenguaje Ubicuo y detección de inconsistencias, ambigüedades o requisitos faltantes.
 - **Soberanía Documental Dual**: Genera todos los archivos modulares en `project-docs/knowledge/` y compila adicionalmente el megadocumento unificado `MASTER-PROJECT-KNOWLEDGE.md` (con el 100% del contenido sin resumir).
@@ -23,10 +24,10 @@ project-docs/knowledge/
 ├── knowledge-index.json                 # Índice maestro, métricas reales detectadas y Grafo de Conocimiento (Nodos y Aristas)
 ├── 01-project-overview-and-business.md  # ¿De qué trata el proyecto?: Contexto del negocio, Problema, Objetivos, Qué hace/Qué NO hace, Usuarios y Glosario (IEEE 830 Secciones 1 y 2)
 ├── 02-architecture-and-patterns.md      # Diagnóstico AS-IS de la Arquitectura implementada, Flujos de Datos (Data Flows), Catálogo de Patrones detectados y ADRs
-├── 03-architecture-diagrams.md          # Atlas de Diagramas de Arquitectura: Perspectiva del Producto (IEEE 830 2.1), C4 (C1-C4), Flujos de Datos, Paquetes y Resiliencia
+├── 03-capabilities-and-features.md      # [DEEPWIKI PATTERN] Desglose funcional jerárquico, Mapa Mental (Mermaid mindmap), User Journeys y Deep Source Linking
 ├── 04-domain-ddd-and-crc.md             # Modelo Conceptual del Dominio, Subdominios, Lenguaje Ubicuo, Context Map y Tarjetas CRC globales
 ├── 05-uml-diagrams.md                   # Atlas UML 2.5: Casos de Uso, Clases, Secuencias Transaccionales, Máquinas de Estado y Actividades (Swimlanes)
-├── 06-system-capabilities.md            # Inventario de capacidades actuales vs [NO_EXISTE] / [EN_MIGRACION] y auditoría de integridad por módulo
+├── 06-architecture-diagrams.md          # Atlas de Diagramas de Arquitectura: C4 (C1-C4), Flujos de Datos, Paquetes y Resiliencia
 ├── 07-functional-requirements-srs.md    # SRS IEEE 830 Sección 3: RF-* (sintaxis formal + Gherkin), Interfaces Externas (UI/HW/SW/Com) y RNF-* (FURPS+)
 ├── 08-agile-stories-and-tasks.md        # Product Backlog: Historias INVEST (HU-*), partición SPIDR, Tareas de Ingeniería (TI-*), MVP, DoR/DoD y TDD
 ├── 09-data-dictionary-and-erd.md        # Diccionario de Datos, ERD Crow's Foot, mecanismo de persistencia (SQL/ORM/NoSQL/BC), concurrencia y auditoría
@@ -118,6 +119,28 @@ Explica paso a paso cómo viaja una petición real a través de las capas detect
 
 #### D. Registro de Decisiones de Arquitectura (`ADR-*`)
 Documenta las decisiones arquitectónicas del proyecto (formato Michael Nygard: Contexto, Decisión, Estado, Consecuencias y Trade-offs).
+
+---
+
+### Paso 2.5: Desglose Funcional Jerárquico y Mapa Mental DeepWiki (`03-capabilities-and-features.md`)
+
+Inspirado en la ingeniería inversa de **DeepWiki / OpenDeepWiki**, descompone el software a nivel funcional para conectar los componentes de código con el valor de negocio:
+
+1. **Mapa Mental de Funcionalidades en Mermaid (`mindmap`)**:
+   - Genera un árbol mental exhaustivo que organiza: `Sistema Central` $\to$ `Capacidades Principales (Subdominios)` $\to$ `Features Granulares` $\to$ `Subfunciones clave`.
+2. **Matriz de Capacidades y Features Granulares**:
+   - Por cada capacidad, define sus features con:
+     * **Propósito y Persona**: A quién sirve y qué dolor resuelve.
+     * **Entrada / Disparador**: CLI, API REST, Webhook, UI o evento interno.
+     * **Precondiciones e Invariantes**: Reglas de negocio `BR-*` que protege.
+     * **Ciclo de Ejecución**: Pasos secuenciales del algoritmo o procesamiento.
+     * **Salidas y Mutaciones**: Efectos en base de datos, filesystem o estado.
+     * **Deep Source Linking**: Enlace exacto a archivos y clases en el repositorio (`file:///...`).
+     * **Mapeo de Tests**: Pruebas unitarias, de integración o Playwright que garantizan su funcionamiento.
+3. **Flujos de Usuario de Extremo a Extremo (*User Journeys*)**:
+   - Modela mediante `sequenceDiagram` los recorridos reales de los usuarios y agentes a través de las capacidades del sistema.
+4. **Matriz de Trazabilidad Funcional**:
+   - Tabla que mapea cada `CAP-XXX-NNN` con su feature, archivos fuente y suite de pruebas asociada.
 
 ---
 
