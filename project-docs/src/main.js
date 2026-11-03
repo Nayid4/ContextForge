@@ -1429,20 +1429,34 @@ class App {
         return;
       }
 
-      // Exportar toda la Base de Conocimiento en JSON
+      // Exportar toda la Base de Conocimiento en Markdown (.md)
       const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
       if (exportKnowledgeBtn) {
         const kData = store.getState().knowledgeIndex;
-        const jsonStr = JSON.stringify(kData, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const docs = kData?.docs || {};
+        let mdExport = docs['MASTER-PROJECT-KNOWLEDGE.md'];
+        
+        // Si no está disponible el megadocumento consolidado, empaquetar todos los archivos Markdown
+        if (!mdExport) {
+          const pName = store.getState().project || 'Sistema de Ingeniería Soberana';
+          mdExport = `# Base de Conocimiento Soberana — ${pName}\n\n`;
+          mdExport += `> Compendio exportado automáticamente en formato Markdown (.md) bajo el estándar Docs-as-Code.\n\n`;
+          for (const [key, content] of Object.entries(docs)) {
+            mdExport += `\n\n---\n\n<!-- SECCIÓN: ${key} -->\n\n${content}\n`;
+          }
+        }
+
+        const blob = new Blob([mdExport], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `knowledge-base-${store.getState().project || 'project'}.json`;
+        const safeName = (store.getState().project || 'knowledge-base').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+        a.download = `MASTER-${safeName}.md`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        store.showNotification('Base de conocimiento exportada con éxito en Markdown (.md)', 'success');
         return;
       }
 

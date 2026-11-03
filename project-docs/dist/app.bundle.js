@@ -3847,7 +3847,6 @@ ${b.description || ""}`);
     const heroDocKey = docKeys.includes("c4-model.md") ? "c4-model.md" : docKeys.includes("coding-standards.md") ? "coding-standards.md" : docKeys[0] || "";
     const heroDocMeta = docMetadata[heroDocKey] || activeDocMeta;
     const masterDocKey = "MASTER-PROJECT-KNOWLEDGE.md";
-    const hasMasterDoc = Boolean(docs[masterDocKey]);
     const masterDocMeta = docMetadata[masterDocKey] || {
       title: "Megadocumento Maestro Consolidado (Single-File Context Bundle)",
       wordCount: 8200,
@@ -3872,10 +3871,13 @@ ${b.description || ""}`);
                   Docs-as-Code
                 </span>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-                  Biblioteca Editorial v4.0
+                  v4.1 DeepWiki Pattern
                 </span>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   Anti-Bias Context
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  100% Offline Compatible
                 </span>
               </div>
               <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
@@ -3883,8 +3885,8 @@ ${b.description || ""}`);
                 <span>Base de Conocimiento de Ingenier\xEDa Soberana</span>
               </h2>
               <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-                Repositorio can\xF3nico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), reglas de negocio (BR-*), 
-                decisiones t\xE9cnicas (ADR) y bounded contexts. Permite auditar, crear y editar documentos con editor dual para guiar a desarrolladores y agentes de IA.
+                Repositorio can\xF3nico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), mapa mental de funcionalidades (DeepWiki), 
+                reglas de negocio (BR-*), decisiones t\xE9cnicas (ADR) y bounded contexts. Permite auditar, crear, editar y exportar documentaci\xF3n viva en Markdown (.md).
               </p>
             </div>
 
@@ -3899,16 +3901,16 @@ ${b.description || ""}`);
               <button type="button" 
                       data-action="trigger-import-doc"
                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                      title="Importar archivo .md o .json local">
+                      title="Importar archivo Markdown (.md)">
                 ${Icons.upload} <span>Importar</span>
               </button>
-              <input type="file" id="import-doc-file-input" accept=".md,.markdown,.json" class="hidden" />
+              <input type="file" id="import-doc-file-input" accept=".md,.markdown" class="hidden" />
 
               <button type="button" 
                       data-action="export-all-knowledge"
-                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                      title="Descargar paquete JSON con toda la Base de Conocimiento">
-                ${Icons.download} <span>Exportar</span>
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                      title="Exportar toda la base de conocimiento consolidada en formato Markdown (.md)">
+                ${Icons.download} <span>Exportar (.md)</span>
               </button>
 
               <button type="button" 
@@ -4042,23 +4044,52 @@ ${b.description || ""}`);
             </section>
           ` : ""}
 
-          <!-- Banner de Bienvenida y Acceso Directo a 01-project-overview (IEEE 830) -->
-          <section class="rounded-3xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-transparent dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-transparent p-5 sm:p-6 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div class="space-y-1 max-w-2xl">
-              <div class="flex items-center gap-2 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                ${Icons.info("w-4 h-4")} <span>\xBFNuevo en el proyecto o requieres entender el alcance funcional de ra\xEDz?</span>
+          <!-- Grid de Accesos R\xE1pidos: IEEE 830 & Desglose Funcional DeepWiki -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Tarjeta 1: Visi\xF3n del Producto IEEE 830 -->
+            <section class="rounded-3xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-transparent dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-transparent p-5 backdrop-blur-xl flex flex-col justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                  ${Icons.info("w-4 h-4")} <span>\xBFDe qu\xE9 trata este software?</span>
+                </div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Problema de Negocio & Alcance (IEEE 830)</h4>
+                <p class="text-xs text-slate-600 dark:text-slate-300">
+                  Definici\xF3n formal del prop\xF3sito, usuarios directos/indirectos, matriz RACI y l\xEDmites funcionales.
+                </p>
               </div>
-              <p class="text-xs text-slate-600 dark:text-slate-300">
-                Consulta el resumen ejecutivo y definici\xF3n del problema formal seg\xFAn el est\xE1ndar IEEE 830 / ISO 29148.
-              </p>
-            </div>
-            <button type="button" 
-                    data-action="open-article-read"
-                    data-doc-key="01-project-overview-and-business.md"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer shrink-0">
-              ${Icons.bookOpen("w-3.5 h-3.5")} <span>Ver Resumen IEEE 830</span>
-            </button>
-          </section>
+              <div class="pt-2">
+                <button type="button" 
+                        data-action="open-article-read"
+                        data-doc-key="01-project-overview-and-business.md"
+                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                  ${Icons.bookOpen("w-3.5 h-3.5")} <span>Ver Resumen IEEE 830</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- Tarjeta 2: Desglose Funcional & Mindmap DeepWiki -->
+            <section class="rounded-3xl border border-purple-200/70 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/60 via-indigo-50/40 to-transparent dark:from-purple-950/30 dark:via-indigo-950/20 dark:to-transparent p-5 backdrop-blur-xl flex flex-col justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 text-xs font-mono font-bold text-purple-600 dark:text-purple-400">
+                  ${Icons.grid("w-4 h-4")} <span>Patr\xF3n DeepWiki / OpenDeepWiki</span>
+                </div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Cat\xE1logo de Capacidades & Mapa Mental</h4>
+                <p class="text-xs text-slate-600 dark:text-slate-300">
+                  Desglose jer\xE1rquico de capacidades $\\to$ features, User Journeys y deep linking directo a c\xF3digo fuente.
+                </p>
+              </div>
+              <div class="pt-2">
+                <button type="button" 
+                        data-action="open-article-read"
+                        data-doc-key="03-capabilities-and-features.md"
+                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                  ${Icons.bookOpen("w-3.5 h-3.5")} <span>Ver Cat\xE1logo DeepWiki</span>
+                </button>
+              </div>
+            </section>
+
+          </div>
 
           <!-- 1.4 Barra de Filtros por Estante Tem\xE1tico y Buscador con Debouncing -->
           <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-5 shadow-sm space-y-4">
@@ -4513,7 +4544,7 @@ ${b.description || ""}`);
             <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <h4 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
-                  ${Icons.list || Icons.fileText}
+                  ${Icons.fileText}
                 </span>
                 <span>Estructura & Cap\xEDtulos del Dossier Maestro</span>
               </h4>
@@ -6477,16 +6508,38 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         const exportKnowledgeBtn = e.target.closest('[data-action="export-all-knowledge"]');
         if (exportKnowledgeBtn) {
           const kData = store.getState().knowledgeIndex;
-          const jsonStr = JSON.stringify(kData, null, 2);
-          const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+          const docs = kData?.docs || {};
+          let mdExport = docs["MASTER-PROJECT-KNOWLEDGE.md"];
+          if (!mdExport) {
+            const pName = store.getState().project || "Sistema de Ingenier\xEDa Soberana";
+            mdExport = `# Base de Conocimiento Soberana \u2014 ${pName}
+
+`;
+            mdExport += `> Compendio exportado autom\xE1ticamente en formato Markdown (.md) bajo el est\xE1ndar Docs-as-Code.
+
+`;
+            for (const [key, content] of Object.entries(docs)) {
+              mdExport += `
+
+---
+
+<!-- SECCI\xD3N: ${key} -->
+
+${content}
+`;
+            }
+          }
+          const blob = new Blob([mdExport], { type: "text/markdown;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `knowledge-base-${store.getState().project || "project"}.json`;
+          const safeName = (store.getState().project || "knowledge-base").toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+          a.download = `MASTER-${safeName}.md`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
+          store.showNotification("Base de conocimiento exportada con \xE9xito en Markdown (.md)", "success");
           return;
         }
         const triggerImportBtn = e.target.closest('[data-action="trigger-import-doc"]');

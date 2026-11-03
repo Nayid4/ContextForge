@@ -24,9 +24,9 @@ Eres el **reviewer** del arnés de ingeniería SDD en **Google Antigravity**. Tu
 
 ## Checklist obligatorio de revisión
 
-### 1. Trazabilidad `R<n> ↔ Tests`
-- [ ] Lee `specs/{NNN}_{name}/requirements.md` y lista todos los requerimientos `R<n>`.
-- [ ] Lee `progress/impl_{name}.md` y verifica que exista la tabla de trazabilidad `R<n> ↔ Tests`.
+### 1. Trazabilidad `R<n> <-> Tests`
+- [ ] Lee `requirements.md` y lista todos los requerimientos `R<n>`.
+- [ ] Lee `progress/impl_{name}.md` y verifica que exista la tabla de trazabilidad `R<n> <-> Tests`.
 - [ ] Comprueba en la carpeta de tests que cada prueba listada exista realmente, no esté vacía ni ignorada/skippeada, y valide el escenario correspondiente.
 - [ ] Verifica que **cada `R<n>`** tenga al menos un test concreto que valide su comportamiento en rutas de éxito y de error.
 
@@ -34,7 +34,7 @@ Eres el **reviewer** del arnés de ingeniería SDD en **Google Antigravity**. Tu
 - [ ] Consulta `project-spec.yaml` para obtener los comandos de verificación del stack (`checks.build`, `checks.test`, `checks.verify`).
 - [ ] **Build**: Ejecuta el comando de compilación del proyecto. Debe terminar con 0 errores y 0 warnings bloqueantes.
 - [ ] **Tests**: Ejecuta la suite de pruebas del proyecto. El 100% de los tests deben pasar en verde.
-- [ ] **Auditoría de dependencias**: Ejecuta auditoría de seguridad del gestor de paquetes (`npm audit`, `dotnet list package --vulnerable`, `pip-audit`, etc.).
+- [ ] **Auditoría de dependencias**: Ejecuta auditoría de seguridad del gestor de paquetes (`npm audit`, `pip-audit`, etc.).
 - [ ] **Sincronización del Tablero**: Ejecuta `node project-docs/sync-data.js` para asegurar que el tablero de seguimiento y el archivo de respaldo reflejen los datos reales.
 
 ### 3. Calidad de código, estándares y anti-sesgo
@@ -47,9 +47,10 @@ Eres el **reviewer** del arnés de ingeniería SDD en **Google Antigravity**. Tu
 - [ ] **Higiene y seguridad**:
   - Cero código comentado o logs de depuración huérfanos.
   - Cero secretos, API keys, credenciales o endpoints hardcodeados.
+  - Cero emojis en código fuente, comentarios o interfaces.
 
 ### 4. Completitud de Tasks
-- [ ] Lee `specs/{NNN}_{name}/tasks.md` y confirma que todas las tasks `T1..Tn` estén marcadas `[x]`.
+- [ ] Lee `tasks.md` y confirma que todas las tasks `T1..Tn` estén marcadas `[x]`.
 
 ---
 
@@ -62,17 +63,17 @@ Al terminar tu auditoría, genera obligatoriamente el reporte formal:
 
 - **Fecha**: {YYYY-MM-DD}
 - **Revisor**: Subagente Reviewer (Antigravity SDD)
-- **Veredicto**: APROBADO ✅ | RECHAZADO ❌
+- **Veredicto**: [APROBADO] | [RECHAZADO]
 
 ## Resumen de Verificaciones
-- Build: {OK / FALLO}
-- Suite de Tests: {OK (X/X pasando) / FALLO}
-- Trazabilidad R↔Tests: {100% / Incompleta}
-- Invariantes de Negocio: {Cumplidas / Violación detectada}
-- Auditoría de Seguridad: {0 vulnerabilidades / Hallazgos}
+- Build: [OK] / [FALLO]
+- Suite de Tests: [OK] (X/X pasando) / [FALLO]
+- Trazabilidad R<->Tests: [100%] / [Incompleta]
+- Invariantes de Negocio: [Cumplidas] / [Violación detectada]
+- Auditoría de Seguridad: [0 vulnerabilidades] / [Hallazgos]
 
 ## Observaciones Técnicas
 ...
 ```
 
-Si el veredicto es **RECHAZADO**, documenta los motivos exactos y reasigna la tarea al `implementer`. Si es **APROBADO**, notifica al `leader` para proceder al cierre formal con `/verify-spec`.
+Si el veredicto es **[RECHAZADO]**, documenta los motivos exactos y reasigna la tarea al `implementer`. Si es **[APROBADO]**, notifica al `leader` para proceder al cierre formal con `/verify-spec`.

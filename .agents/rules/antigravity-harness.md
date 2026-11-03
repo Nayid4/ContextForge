@@ -91,6 +91,7 @@ El proyecto expone 18 skills en `.agents/skills/` invocables con `/` o por detec
 - `/implement-ftd` — Implementación ágil para cambios menores (FTD).
 - `/write-unit-tests` — Cobertura de tests unitarios agnósticos al lenguaje.
 - `/acceptance-testing` — Pruebas de aceptación con Playwright, caja blanca/negra, sistema y carga (k6).
+- `/targeted-qa` — Pruebas focalizadas de QA bajo demanda (E2E, BVA, API, carga, a11y).
 - `/verify-spec` — Reconciliación de metadata y verificación de cierre.
 - `/api-test-plan` y `/execute-api-test-plan` — Pruebas de API REST.
 - `/sync-skills` — Sincronización masiva triple (`.opencode/skills/` → `.github/skills/` y `.agents/skills/`).

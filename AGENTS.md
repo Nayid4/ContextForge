@@ -82,6 +82,7 @@ Todas mantienen el mismo contenido y frontmatter (`name` + `description`).
 | `implement-sdd` | Implementar un spec con SDD (spec → código) | Multi-módulo, migraciones, integraciones |
 | `implement-ftd` | Implementar un cambio pequeño sin lógica nueva | Constantes, labels, estilos, config, tweaks UI |
 | `write-unit-tests` | Escribir tests unitarios (agnóstico al lenguaje) | Cubrir código de un spec antes de verificarlo |
+| `targeted-qa` | Pruebas focalizadas de QA bajo demanda | Diseñar y ejecutar suites de prueba puntuales (E2E, BVA, API, carga, a11y) a solicitud de QA |
 | `verify-spec` | Verificar cierre completo de un spec (agnóstico al lenguaje) | Acceptance criteria, tasks, tests unitarios y verify.sh |
 | `sync-skills` | Sincronizar skills hacia los espejos (Copilot y Antigravity) | Propaga de `.opencode/skills/` a `.github/skills/` y `.agents/skills/` |
 

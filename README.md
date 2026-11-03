@@ -167,6 +167,7 @@ project-docs/
 │   ├── MASTER-PROJECT-KNOWLEDGE.md  # Megadocumento Maestro Consolidado (~8,200 palabras)
 │   ├── 01-project-overview-and-business.md  # Problema IEEE 830, visión y RACI
 │   ├── 02-architecture-and-patterns.md      # Screaming Architecture AS-IS y patrones
+│   ├── 03-capabilities-and-features.md      # Desglose Funcional DeepWiki (Mindmap, Journeys)
 │   ├── 04-domain-ddd-and-crc.md            # Dominio conceptual y tarjetas CRC
 │   ├── c4-model.md                         # Diagramas C1, C2, C3 en Mermaid
 │   ├── uml-diagrams.md                     # Secuencias, clases y estados
@@ -196,7 +197,7 @@ Permite alternar entre **Modo Lector Editorial** (columna de lectura centrada de
 
 ---
 
-## Catálogo de Skills Disponibles (18 Skills Homologadas)
+## Catálogo de Skills Disponibles (19 Skills Homologadas)
 
 Las skills están homologadas en **tres plataformas**:
 - **opencode**: `.opencode/skills/` (**Fuente de verdad**)
@@ -231,7 +232,7 @@ Las skills están homologadas en **tres plataformas**:
 El harness **no debe clonarse como repositorio independiente** dentro de tu proyecto. Los archivos deben copiarse **sin el historial git** del harness para no interferir con el control de versiones de tu proyecto.
 
 <details>
-<summary>📦 Opción A — Descargar ZIP (recomendada, sin git)</summary>
+<summary>[Opción A] — Descargar ZIP (recomendada, sin git)</summary>
 
 ```bash
 # Desde la raíz de tu proyecto (el que ya tiene su propio .git):
@@ -248,7 +249,7 @@ rm -rf /tmp/harness-temp
 </details>
 
 <details>
-<summary>🔀 Opción B — Clone shallow + copia (si tienes git)</summary>
+<summary>[Opción B] — Clone shallow + copia (si tienes git)</summary>
 
 ```bash
 git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git /tmp/harness-temp
@@ -261,7 +262,7 @@ rm -rf /tmp/harness-temp
 </details>
 
 <details>
-<summary>🔄 Opción C — Nuevo proyecto desde cero</summary>
+<summary>[Opción C] — Nuevo proyecto desde cero</summary>
 
 ```bash
 git clone --depth 1 https://github.com/AndresOsorio0710/harness_anginnering.git mi-proyecto
