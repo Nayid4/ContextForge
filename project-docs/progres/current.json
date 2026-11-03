@@ -1,0 +1,26 @@
+{
+  "feature": {
+    "id": 1,
+    "type": "feature",
+    "name": "refactor_harness_architecture",
+    "title": "Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+    "description": "Auditoría real del repositorio, saneamiento de mocks e-commerce residuales, desacoplamiento universal de subagentes y configuración de tests automatizados.",
+    "module": "agent-orchestrator",
+    "priority": "P0",
+    "branch": "feature/INT-001/refactor_harness_architecture",
+    "spec_folder": "specs/001_refactor_harness_architecture"
+  },
+  "responsable": "leader (orquestador)",
+  "started_at": "2026-11-02 22:00 UTC",
+  "completed_at": "2026-11-02 22:15 UTC",
+  "status": "completed",
+  "tasks": [
+    { "title": "Auditoría técnica real y actualización de project-spec.yaml / project-spec.json", "done": true },
+    { "title": "Desacoplar subagentes implementer y reviewer para que sean stack-agnósticos", "done": true },
+    { "title": "Saneamiento de feature_list.json eliminando mocks de e-commerce y CloudSaaS", "done": true },
+    { "title": "Crear package.json con scripts de build, test y sync", "done": true },
+    { "title": "Implementar suite de pruebas unitarias para motores del arnés (tests/unit/)", "done": true },
+    { "title": "Configurar y ejecutar pruebas de aceptación (tests/e2e/)", "done": true },
+    { "title": "Auditoría de calidad por subagente reviewer y cierre de spec", "done": true }
+  ]
+}

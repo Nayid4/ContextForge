@@ -1,38 +1,29 @@
-# ─── .NET Harness — Exclusiones ───────────────────────────────────
-#
-# kickstart.json contiene parámetros locales del proyecto.
-# NO debe trackearse en git por seguridad.
-kickstart.json
+# ─── Node / npm ────────────────────────────────────────────────────
+node_modules/
+bun.lock
 
-# ─── .NET estándar ────────────────────────────────────────────────
-bin/
-obj/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-.vs/
-*.csproj.user
+# ─── Secrets y config local ────────────────────────────────────────
+.env
+.env.*
+!.env.example
 
-# ─── Paquetes NuGet ───────────────────────────────────────────────
-*.nupkg
-**/[Pp]ackages/*
-!**/[Pp]ackages/build/
-*.nuget.props
-*.nuget.targets
+# ─── Build / salida ────────────────────────────────────────────────
+dist/
+!project-docs/dist/
+build/
+coverage/
+*.log
 
-# ─── Coverage y reports ──────────────────────────────────────────
-TestResults/
-*.cobertura.xml
-*.opencover.xml
-CoverageReport/
-
-# ─── IDE ──────────────────────────────────────────────────────────
+# ─── IDE ───────────────────────────────────────────────────────────
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
 
-# ─── OS ───────────────────────────────────────────────────────────
+# ─── OS ────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ─── Harness local config ──────────────────────────────────────────
+kickstart.json

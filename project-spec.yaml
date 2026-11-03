@@ -1,0 +1,124 @@
+# project-spec.yaml — Auditoría Técnica y Especificación de Arquitectura
+# Generado por skill: technical-audit (Harness SDD)
+# Fecha: 2026-11-02
+
+project:
+  name: "AI Agentic SDD Engineering Harness"
+  description: "Arnés universal y agnóstico de ingeniería de software dirigida por especificaciones (Spec Driven Development). Provee orquestación multi-agente, sincronización de skills triple, base de conocimiento anti-sesgo y tablero de seguimiento interactivo en Screaming Architecture."
+  version: "2.5.0"
+  type: fullstack
+
+runtime:
+  language: "node"
+  version: "v18.0.0+"
+  packageManager: "npm"
+
+environment:
+  required: []
+  optional:
+    - name: PORT
+      description: "Puerto para el servidor HTTP local de visualización"
+      defaultValue: "8080"
+    - name: CI
+      description: "Indicador de ejecución en entorno de integración continua"
+      defaultValue: "false"
+
+services: []
+
+dependencies:
+  system:
+    - name: node
+      version: ">=18.0.0"
+      required: true
+    - name: npm
+      version: ">=9.0.0"
+      required: true
+    - name: git
+      version: ">=2.30.0"
+      required: true
+  packages:
+    - name: esbuild
+      version: "^0.25.0"
+      required: true
+      dev: true
+
+structure:
+  entryPoint: "project-docs/src/main.js"
+  srcDir: "project-docs/src"
+  testDir: "tests"
+  buildDir: "project-docs/dist"
+  configFiles:
+    - filename: "package.json"
+      required: true
+      description: "Manifiesto de dependencias, tipos ESM y scripts de ciclo de vida"
+    - filename: "opencode.json"
+      required: true
+      description: "Configuración principal para OpenCode"
+    - filename: "kickstart.json"
+      required: false
+      description: "Parámetros y metadatos de inicialización de proyectos cliente"
+    - filename: "AGENTS.md"
+      required: true
+      description: "Reglas de branching, commits semánticos y arquitectura de agentes"
+    - filename: "ANTIGRAVITY.md"
+      required: true
+      description: "Guía de orquestación para Google Antigravity 2.0"
+
+modules:
+  - id: agent-orchestrator
+    name: "Orquestador Multi-Agente & Reglas de Plataforma"
+    tech: "Google Antigravity Roles, OpenCode Rules, Copilot Instructions"
+    description: "Coordina roles especializados (leader, spec-author, implementer, reviewer) con guardrails de ramas y commits."
+    features: ["INT-001"]
+
+  - id: triple-sync-engine
+    name: "Motor de Sincronización Triple de Skills"
+    tech: "Node.js, FileSystem Mirroring"
+    description: "Mantiene paridad estricta entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/."
+    features: ["INT-002"]
+
+  - id: knowledge-engine
+    name: "Motor de Base de Conocimiento Anti-Sesgo"
+    tech: "Docs-as-Code, Mermaid C4/UML, Markdown"
+    description: "Genera y audita modelos C4, diagramas UML, ERD, diccionario de datos, reglas de negocio BR-* y decisiones ADR."
+    features: ["INT-003"]
+
+  - id: dashboard-visualizer
+    name: "Tablero de Seguimiento Visual & Editor Dual"
+    tech: "Vanilla JS (ES Modules), Tailwind CSS v4, Three.js, ContextForge Dual Block Editor"
+    description: "Interfaz interactiva con métricas KPI, biblioteca por estantes, constelación 3D piramidal y buscador Omnibox (Ctrl+K)."
+    features: ["INT-004", "INT-005", "INT-006"]
+
+  - id: testing-qa-suite
+    name: "Suite de Pruebas & Calidad"
+    tech: "Node.js Test Runner, Playwright E2E, Static Analysis"
+    description: "Batería de tests unitarios, caja blanca/negra, aceptación end-to-end y auditoría de código."
+    features: ["INT-007", "INT-008"]
+
+checks:
+  build:
+    command: "npm run build"
+    timeout: 60
+  test:
+    command: "npm test"
+    timeout: 120
+    hasTests: true
+  lint:
+    command: "npm run test:unit"
+    hasLint: true
+  verify:
+    command: "node project-docs/sync-data.js"
+    timeout: 60
+
+docker:
+  hasDockerfile: false
+  hasCompose: false
+  services: []
+
+scripts:
+  dev: "node project-docs/serve.js"
+  build: "npm run build"
+  start: "npm start"
+  test: "npm test"
+  lint: "npm run test:unit"
+  verify: "npm run sync"

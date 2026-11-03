@@ -1,0 +1,174 @@
+{
+  "project": "AI Agentic SDD Engineering Harness",
+  "description": "Arnés universal y agnóstico de ingeniería de software dirigida por especificaciones (Spec Driven Development) para agentes de IA (Google Antigravity, Open Code, GitHub Copilot).",
+  "version": "2.5.0",
+  "tech_stack": "Node.js (Universal Tooling) & Multi-Stack Agnostic",
+  "runtime": "Cross-Platform Agentic SDD",
+  "rules": {
+    "one_feature_at_a_time": true,
+    "require_tests_to_close": true,
+    "require_approved_spec_to_implement": true,
+    "branch_pattern": "{type}/INT-{id}/{name}",
+    "branch_types": [
+      "feature",
+      "bugfix"
+    ],
+    "max_branch_length": 80,
+    "valid_status": [
+      "pending",
+      "spec_ready",
+      "in_progress",
+      "done",
+      "blocked"
+    ]
+  },
+  "features": [
+    {
+      "id": 1,
+      "type": "feature",
+      "name": "refactor_harness_architecture",
+      "title": "Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+      "description": "Auditoría real del repositorio, saneamiento de mocks e-commerce residuales, desacoplamiento universal de subagentes y configuración de tests automatizados.",
+      "module": "agent-orchestrator",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-001/refactor_harness_architecture",
+      "spec_folder": "specs/001_refactor_harness_architecture",
+      "status": "done",
+      "acceptance": [
+        "project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce",
+        "Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests",
+        "package.json y suite de tests unitarios están configurados y pasando en verde",
+        "El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "feature",
+      "name": "triple_mirror_skills_sync",
+      "title": "Motor de Sincronización Triple de Skills",
+      "description": "Mecanismo de replicación y paridad entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/.",
+      "module": "triple-sync-engine",
+      "priority": "P0",
+      "weight": 90,
+      "branch": "feature/INT-002/triple_mirror_skills_sync",
+      "spec_folder": "specs/002_triple_mirror_skills_sync",
+      "status": "done",
+      "acceptance": [
+        "18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/",
+        "Frontmatter name y description idénticos en los 3 espejos",
+        "Skill sync-skills disponible para auditoría de discrepancias"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "feature",
+      "name": "knowledge_base_dynamic_engine",
+      "title": "Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento",
+      "description": "Protocolo de elicitación profunda en 2 fases con C4, UML, ERD, diccionario de datos, reglas BR-* y ADRs.",
+      "module": "knowledge-engine",
+      "priority": "P0",
+      "weight": 90,
+      "branch": "feature/INT-003/knowledge_base_dynamic_engine",
+      "spec_folder": "specs/003_knowledge_base_dynamic_engine",
+      "status": "done",
+      "acceptance": [
+        "Escaneo de topología en Fase 1 sin saturación de tokens",
+        "Documentación profunda por módulo en Fase 2",
+        "Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "feature",
+      "name": "dashboard_editorial_dual_editor",
+      "title": "Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis",
+      "description": "Interfaz visual con Tailwind CSS v4, iconografia SVG accesible (0 emojis), tabla tecnica de stack, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 95,
+      "branch": "feature/INT-004/refactor_frontend_zero_emojis_atdd",
+      "spec_folder": "specs/004_dashboard_editorial_dual_editor",
+      "status": "done",
+      "acceptance": [
+        "Biblioteca organizada por estantes temáticos con tarjeta Hero destacada",
+        "Lector de artículos con ancho centrado a 780px e interlineado 1.75em",
+        "Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional",
+        "Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde",
+        "Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "feature",
+      "name": "pyramidal_3d_constellation",
+      "title": "Constelación 3D en Jerarquía Piramidal Three.js",
+      "description": "Visualización 3D espacial estructurada en 4 niveles arquitectónicos con anillos translúcidos y flujo de energía Bezier.",
+      "module": "dashboard-visualizer",
+      "priority": "P1",
+      "weight": 80,
+      "branch": "feature/INT-005/pyramidal_3d_constellation",
+      "spec_folder": "specs/005_pyramidal_3d_constellation",
+      "status": "done",
+      "acceptance": [
+        "4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)",
+        "Distribución radial armónica para evitar colisión de etiquetas",
+        "Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "feature",
+      "name": "omnibox_global_search",
+      "title": "Búsqueda Global Omnibox con Atajo de Teclado",
+      "description": "Buscador omnibox modal (Ctrl+K / Cmd+K) con filtrado reactivo de tareas, documentos, reglas y módulos.",
+      "module": "dashboard-visualizer",
+      "priority": "P1",
+      "weight": 85,
+      "branch": "feature/INT-006/omnibox_global_search",
+      "spec_folder": "specs/006_omnibox_global_search",
+      "status": "done",
+      "acceptance": [
+        "Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección",
+        "Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts",
+        "Navegación fluida por teclado (Up, Down, Enter, Escape)"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "feature",
+      "name": "automated_unit_testing_suite",
+      "title": "Suite de Pruebas Unitarias para Motores del Arnés",
+      "description": "Pruebas automatizadas con Node.js Test Runner para sync-data.js, serializadores de markdown, TOC y reglas de branching.",
+      "module": "testing-qa-suite",
+      "priority": "P0",
+      "weight": 90,
+      "branch": "feature/INT-007/automated_unit_testing_suite",
+      "spec_folder": "specs/007_automated_unit_testing_suite",
+      "status": "done",
+      "acceptance": [
+        "Suite de tests unitarios nativos ejecutables con npm test",
+        "Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown",
+        "Validación de cálculo de tiempos de lectura y clasificación en estantes"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "feature",
+      "name": "playwright_acceptance_testing",
+      "title": "Pruebas de Aceptación End-to-End con Playwright",
+      "description": "Automatización integral de pruebas E2E, caja blanca y caja negra para validar el tablero, constelación 3D y editor dual.",
+      "module": "testing-qa-suite",
+      "priority": "P1",
+      "weight": 85,
+      "branch": "feature/INT-008/playwright_acceptance_testing",
+      "spec_folder": "specs/008_playwright_acceptance_testing",
+      "status": "pending",
+      "acceptance": [
+        "Script de prueba automatizada verificando carga de index.html",
+        "Verificación de renderizado de la constelación 3D y conmutación de pestañas",
+        "Prueba de edición y persistencia en el editor dual"
+      ]
+    }
+  ]
+}

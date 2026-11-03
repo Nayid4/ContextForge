@@ -1,0 +1,70 @@
+{
+  "records": [
+    {
+      "id": 2,
+      "type": "feature",
+      "name": "triple_mirror_skills_sync",
+      "title": "Motor de Sincronización Triple de Skills",
+      "branch": "feature/INT-002/triple_mirror_skills_sync",
+      "completed_at": "2026-11-02 18:00 UTC",
+      "commit": "c9e37ab",
+      "executor": "implementer + reviewer",
+      "summary": "Mecanismo de paridad estricta entre .opencode/skills/, .github/skills/ y .agents/skills/ implementado."
+    },
+    {
+      "id": 3,
+      "type": "feature",
+      "name": "knowledge_base_dynamic_engine",
+      "title": "Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento",
+      "branch": "feature/INT-003/knowledge_base_dynamic_engine",
+      "completed_at": "2026-11-02 19:30 UTC",
+      "commit": "c9e37ab",
+      "executor": "implementer + reviewer",
+      "summary": "Descubrimiento en 2 fases, diagrama ERD, catálogo de ADRs y matriz de trazabilidad RTM añadidos."
+    },
+    {
+      "id": 4,
+      "type": "feature",
+      "name": "dashboard_editorial_dual_editor",
+      "title": "Tablero Editorial con Lector ContextForge y Editor Dual",
+      "branch": "feature/INT-004/dashboard_editorial_dual_editor",
+      "completed_at": "2026-11-02 21:00 UTC",
+      "commit": "08fe75c",
+      "executor": "implementer + reviewer",
+      "summary": "Hub editorial por estantes temáticos, columna 780px, TOC flotante con scrollspy y editor dual Markdown/Bloques con scroll sincronizado."
+    },
+    {
+      "id": 5,
+      "type": "feature",
+      "name": "pyramidal_3d_constellation",
+      "title": "Constelación 3D en Jerarquía Piramidal Three.js",
+      "branch": "feature/INT-005/pyramidal_3d_constellation",
+      "completed_at": "2026-11-02 21:30 UTC",
+      "commit": "08fe75c",
+      "executor": "implementer + reviewer",
+      "summary": "Estructura piramidal en 4 niveles con anillos guía translúcidos, distribución armónica y curvas Bezier."
+    },
+    {
+      "id": 6,
+      "type": "feature",
+      "name": "omnibox_global_search",
+      "title": "Búsqueda Global Omnibox con Atajo de Teclado",
+      "branch": "feature/INT-006/omnibox_global_search",
+      "completed_at": "2026-11-02 21:45 UTC",
+      "commit": "08fe75c",
+      "executor": "implementer + reviewer",
+      "summary": "Buscador modal omnibox (Ctrl+K) con búsqueda reactiva de tareas, documentos, reglas BR-* y módulos."
+    },
+    {
+      "id": 1,
+      "type": "feature",
+      "name": "refactor_harness_architecture",
+      "title": "Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+      "branch": "feature/INT-001/refactor_harness_architecture",
+      "completed_at": "2026-11-02 22:15 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Auditoría real del arnés, desacoplamiento universal de subagentes, erradicación de mocks e-commerce y suite de pruebas unitarias y e2e."
+    }
+  ]
+}

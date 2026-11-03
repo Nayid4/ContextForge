@@ -1,289 +1,131 @@
-# AGENTS.md — Mapa de navegación para agentes de IA — .NET Harness
+# AGENTS.md
 
-> Este archivo es el **punto de entrada** para cualquier agente. NO es una
-> biblia de reglas: es un **mapa**. Lee solo lo que necesites cuando lo
-> necesites (divulgación progresiva).
->
-> `main` / `master` / `dev` son las **ramas base** del proyecto.
-> Nunca se modifican directamente durante una feature.
-> Cada feature tiene su **propia rama** `feature/{NNN}_{name}`.
-> Todo el trabajo (spec, código, tests, ENGINES.md) vive en la rama de la feature.
+## Proyecto
+Arnés de ingeniería dirigida por specs (Spec Driven Development) para desarrollo con agentes de IA, diseñado para ser **agnóstico al proyecto** donde se use. El nombre del proyecto, el stack de backend/frontend y los servicios de infraestructura varían según la instancia; las configuraciones en `.agents/` (Google Antigravity), `.opencode/` (opencode) y `.github/` (GitHub Copilot) se mantienen homologadas en cualquier proyecto que adopte este sistema.
 
----
-
-## 1. Antes de empezar (obligatorio)
-
-1. Ejecuta `./init.sh` y verifica que termina sin errores. Si falla, **para**
-   y resuelve el entorno antes de tocar código.
-
-2. Identifica la rama actual con `git branch --show-current`.
-
-   | Situación | Acción |
-   |-----------|--------|
-   | `main`, `master` o `dev` | **No hagas ningún cambio.** Crea la rama de feature desde aquí. |
-   | `feature/*` | Estás en modo trabajo para esa feature (specs + implementación). |
-   | Otra rama (`develop`, `release/*`, etc.) | **Detente.** No es una rama base válida. Pregunta al humano desde qué rama crear la feature. |
-
-3. **Verifica el estado de los archivos de progreso** para evitar cruce de
-   información entre features:
-   - Lee `progress/current.md` — debe estar vacío (solo plantilla). Si tiene
-     contenido, la sesión anterior no se cerró correctamente.
-   - Lee `progress/history.md` — verifica que la última entrada esté completa.
-   - Lee `ENGINES.md` — verifica que esté en estado limpio.
-   
-   Si alguno no está en orden, **detente** y notifica al humano antes de continuar.
-
-4. Lee `kickstart.json` para conocer los parámetros del proyecto.
-   > ⚠️ `kickstart.json` NO está trackeado en git. Debe existir localmente.
-
-5. Lee `feature_list.json`. Toda feature con `"sdd": true` pasa por
-   **Spec Driven Development** — ver `docs/specs.md` y §4 de este archivo.
-
----
-
-## 2. Mapa del repositorio
-
-### Ramas base (`main` / `master` / `dev`) — solo lectura durante features
-
-Punto de partida del proyecto. **Nunca se modifican directamente mientras una
-feature está activa.** Todo el trabajo ocurre en `feature/*`.
-
-| Archivo / carpeta         | ¿Trackeado? | Qué contiene                                                     | Cuándo leerlo                                                      |
-| ------------------------- | ----------- | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `kickstart.json`          | ❌ No (git) | Parámetros del proyecto: namespace, tipo, versión, metadatos     | Siempre, al empezar (debe existir localmente)                      |
-| `feature_list.json`       | ✅ Sí       | Lista de features con estado, rama y ejecutor                    | Siempre, al empezar (solo lectura)                                 |
-| `ENGINES.md`              | ✅ Sí       | Índice de features completadas: rama, commit SHA y fecha         | Al cerrar una feature — se actualiza **en la rama feature**        |
-| `docs/architecture.md`    | ✅ Sí       | Principios SOLID, Clean Architecture, patrones, DDD, CQRS        | Antes de implementar (solo lectura)                                |
-| `docs/conventions.md`     | ✅ Sí       | Reglas de estilo C#, nombres, estructura, nullables, LINQ, async | Antes de escribir código (solo lectura)                            |
-| `docs/specs.md`           | ✅ Sí       | Proceso SDD: EARS notation, ADRs, 3 archivos, puerta humana      | Antes de redactar o leer un spec (solo lectura)                    |
-| `docs/verification.md`    | ✅ Sí       | Los 10 niveles de verificación                                   | Antes de declarar una tarea como `done` (solo lectura)             |
-| `CHECKPOINTS.md`          | ✅ Sí       | Criterios objetivos de "estado final correcto" (C1-C7)           | Para auto-evaluarse (solo lectura)                                 |
-
-### Ramas `feature/{NNN}_{name}` (trabajo completo — specs + código)
-
-Cada feature tiene su propia rama, creada **antes** de que `spec_author`
-escriba una sola línea. Contiene **todo**: spec, progreso, código, tests y registro.
-
-| Archivo / carpeta en `feature/*` | Qué contiene                                              |
-| -------------------------------- | --------------------------------------------------------- |
-| `specs/{NNN}_{name}/`            | `requirements.md` + `design.md` + `tasks.md`              |
-| `progress/current.md`            | Estado de la sesión activa (incluye ejecutor obligatorio) |
-| `progress/history.md`            | Bitácora append-only de sesiones                          |
-| `ENGINES.md`                     | Registro de features completadas en esta rama             |
-| `feature_list.json`              | Estado actual de las features                             |
-| `src/`                           | Código fuente                                             |
-| `tests/`                         | Tests del proyecto                                        |
-
----
-
-## 3. Reglas duras (no negociables)
-
-- **Una sola feature a la vez.** No mezcles cambios de varias features en la
-  misma sesión.
-- **No declares una tarea `done` sin pruebas verdes.** `dotnet build /warnaserror`
-  y `dotnet test` deben pasar al 100%.
-- **No saltes la fase de spec.** Toda feature con `"sdd": true` debe pasar por
-  `spec_author` y obtener aprobación humana antes de tocar código.
-- **No saltes la puerta de aprobación humana.** El leader detiene el flujo
-  en `spec_ready` y espera. El spec debe estar 100% aprobado.
-- **Documenta lo que haces** en `progress/current.md` mientras trabajas,
-  no al final.
-- **Deja el repositorio limpio** antes de cerrar la sesión (ver §5).
-- **Si no sabes algo, busca en `docs/`** antes de inventarlo.
-- **No introduzcas vulnerabilidades.** No hardcodees secrets ni credenciales.
-- **`kickstart.json` no se trackea en git.** Está en `.gitignore`.
-
-### Reglas de branching
-
-- **Creación de rama:** La rama de feature se crea desde `main`, `master` o `dev`.
-  Si la rama actual no es una de estas, **pregunta al humano** qué rama base usar.
-- **Formato obligatorio:** `feature/{NNN}_{name}` con NNN de 3 dígitos
-  (ej: `feature/001_user_registration`).
-- **Todo el trabajo en `feature/*`:** Specs, código, tests, ENGINES.md y
-  feature_list.json se actualizan **siempre dentro de la rama de la feature**.
-  Nunca en `main`/`master`/`dev`.
-- **Sin fusión directa a base:** Las ramas `feature/*` NUNCA se fusionan
-  directamente. Si el humano solicita integración, se sugiere PR para proyectos
-  en la nube o merge local para proyectos locales.
-- **Rama existente:** Si la rama ya existe, reutilízala y lee `progress/current.md`
-  para retomar el estado.
-
-### Convención de nomenclatura
-
-- Features en `feature_list.json` usan `id` entero (1, 2, 3...).
-- Ramas y carpetas de specs usan id con 3 dígitos: `001`, `002`, `010`.
-- Formato: `{NNN}_{snake_case_name}`.
-  - `feature/001_user_registration`, `specs/002_jwt_auth/`
-
-### Rastreo del ejecutor
-
-Toda entrada en `progress/current.md` y `progress/history.md` DEBE incluir:
+## Estructura
 
 ```
-Ejecutado por: {nombre} ({email})
+<raíz-del-proyecto>/
+├── <backend>/           # API/servidor - nombre, lenguaje y framework dependen del proyecto
+├── <frontend>/          # UI/cliente (opcional) - nombre, lenguaje y framework dependen del proyecto
+├── infra/               # Infraestructura (Docker, IaC, etc.) - opcional según el proyecto
+├── project-docs/        # Documentación y Tablero de seguimiento (Screaming Arch + Tailwind v4 + Vanilla JS)
+├── .agents/             # Configuración homologada para Google Antigravity
+│   ├── rules/           # Reglas de flujo, branching y arnés
+│   ├── agents/          # Roles especializados (leader, spec-author, implementer, reviewer)
+│   └── skills/          # Skills homologadas para Antigravity
+├── .github/             # Configuración homologada de GitHub Copilot
+│   ├── instructions/    # Reglas homologadas (commits, branches, skills-sync, project-status)
+│   └── skills/          # Skills homologadas para Copilot
+├── .opencode/           # Configuración de opencode
+│   ├── rules/           # Reglas de commits, branches y sincronización
+│   └── skills/          # Skills de opencode (fuente de verdad)
+├── ANTIGRAVITY.md       # Guía de referencia para Google Antigravity
+├── opencode.json        # Configuración principal de opencode
+└── README.md            # Documentación general del arnés
 ```
 
-El agente que inicia el trabajo registra este dato **como primera acción**,
-antes de cualquier otra.
+> Las carpetas de backend/frontend/infra son ejemplos: su nombre, cantidad y tecnología cambian según el proyecto.
 
----
+## Reglas de Branching (Obligatorias)
 
-## 4. Flujo de trabajo (SDD + Branching)
+Toda tarea (feature o corrección de error) debe realizarse en su propia rama de trabajo, creada desde la rama base (`main`, `master` o `dev`).
 
+### Estructura
 ```
-[RAMA BASE]  leader lee feature_list.json → detecta feature pending
-  main/           │
-  master/         │  leader verifica estado de current.md, history.md, ENGINES.md
-  dev             │  leader pregunta al humano si la rama base no es main/master/dev
-                  │
-                  │  leader crea feature/{NNN}_{name} desde rama base  ← PRIMER PASO
-                  │
-[feature/*]  [spec_author] → crea 3 archivos en specs/{NNN}_{name}/
-                  │
-              status: spec_ready → ⏸ HUMANO
-                  │
-              ¿humano aprueba 100%?
-              ├── Sí → status: in_progress
-              └── No → correcciones y reescritura del spec
-                  │
-              [implementer] → ejecuta tasks.md una a una
-                  │         → documenta trazabilidad R↔Tests
-                  │
-              [reviewer] → verifica trazabilidad + build + tests
-                  │
-              ¿reviewer aprueba?
-              ├── Sí → status: done
-              └── No → vuelve a in_progress
-                  │
-              leader actualiza ENGINES.md en la rama feature
-              leader actualiza feature_list.json → status: done
-                  │
-              leader pregunta al humano:
-              "¿Requiere integración a la rama original?"
-                  │
-              ├── Sí (local)  → leader hace merge a rama base
-              ├── Sí (nube)   → leader sugiere crear un PR
-              └── No          → feature queda en su rama
+{feature o bugfix}/INT-{numero}/{nombre_rama_de_lo_realizado}
 ```
 
-### Paso a paso detallado
+- **Tipos permitidos:** Exclusivamente 2 tipos: `feature` y `bugfix`.
+- **Límite de longitud estricto:** El nombre completo de la rama debe tener **máximo 80 caracteres**.
+- **Identificador de ticket:** `INT-` seguido del número de tarea (ej. `INT-001`, `INT-042`).
+- **Nombres en minúsculas:** Usar `snake_case` o `kebab-case` descriptivo.
 
-#### Fase 1 — Preparación y validación inicial
+### Ejemplos válidos
+- `feature/INT-001/document_crud_api` (33 caracteres)
+- `bugfix/INT-002/fix_jwt_token_expiration` (40 caracteres)
+- `feature/INT-015/add_oauth2_sso_authentication` (46 caracteres)
 
-1. **En la rama base** (`main`/`master`/`dev`): El leader lee `feature_list.json`
-   y detecta la primera feature `pending`.
+## Commits
 
-2. **Validación de rama base:**
-   - Si la rama actual NO es `main`, `master` ni `dev`, el leader **pregunta al
-     humano** desde qué rama debe crear la feature y espera instrucciones.
+**SIEMPRE** seguir el formato de commits semánticos definido en `.opencode/rules/commits.md` (homologado en `.github/instructions/commits.instructions.md`).
 
-3. **Verificación de estado:**
-   - `progress/current.md` debe estar vacío (solo plantilla).
-   - `progress/history.md` debe tener entradas completas.
-   - `ENGINES.md` debe estar en estado limpio.
-   - Si algo no está en orden, **notifica al humano**.
+Pasos antes de commitear:
+1. `git status` - Ver archivos
+2. `git diff` - Revisar cambios
+3. `git commit` - Formato: `feat(scope): descripción` o `fix(scope): descripción`
 
-4. **El leader crea la rama de feature:**
-   ```bash
-   git checkout -b feature/{NNN}_{name}
-   ```
-   Si la rama ya existe: `git checkout feature/{NNN}_{name}` y leer
-   `progress/current.md` para retomar.
+**NO hacer push** sin confirmación explícita del usuario.
 
-#### Fase 2 — Spec (Spec Driven Development)
+## Skills Disponibles
 
-5. **En `feature/{NNN}_{name}`:** El leader registra el ejecutor en
-   `progress/current.md` y lanza `spec_author`.
+Las skills están homologadas en **tres plataformas**:
+- **opencode**: `.opencode/skills/` (**fuente de verdad**)
+- **GitHub Copilot**: `.github/skills/` (espejo)
+- **Google Antigravity**: `.agents/skills/` (espejo)
 
-6. **spec_author** crea los 3 archivos en `specs/{NNN}_{name}/`:
-   - `requirements.md` — EARS notation estricta
-   - `design.md` — decisiones técnicas con ADRs
-   - `tasks.md` — checklist ejecutable
+Todas mantienen el mismo contenido y frontmatter (`name` + `description`).
 
-7. Marca la feature como `spec_ready` en `feature_list.json`.
+| Skill | Descripción | Uso |
+|-------|-------------|-----|
+| `technical-audit` | Auditoría técnica de proyecto | Generar project-spec.yaml |
+| `project-knowledge` | Extracción de base de conocimiento y arquitectura | Generar modelo C4, UML, reglas de negocio y estándares anti-sesgo |
+| `generate-verify` | Generar verify.sh | Crear script de verificación |
+| `verification` | Documentación de verificación | Consultar estructura |
+| `api-test-plan` | Plan de pruebas API REST | Generar plan markdown + archivos .http |
+| `execute-api-test-plan` | Ejecutar plan de pruebas API | Correr pruebas con curl y documentar hallazgos |
+| `acceptance-testing` | Pruebas de aceptación (Playwright), caja blanca/negra, sistema y carga | Automatización integral de QA y verificación end-to-end |
+| `requirements-analysis` | Análisis de requerimientos | Generar feature_list.json |
+| `generate-spec` | Generar spec técnico de una feature | Crear spec.md/tasks.md/decisions.md en project-docs + recomendar tdd/sdd/ftd |
+| `implement-tdd` | Implementar un spec con TDD (tests primero) | Lógica con ramas y rutas de error |
+| `implement-sdd` | Implementar un spec con SDD (spec → código) | Multi-módulo, migraciones, integraciones |
+| `implement-ftd` | Implementar un cambio pequeño sin lógica nueva | Constantes, labels, estilos, config, tweaks UI |
+| `write-unit-tests` | Escribir tests unitarios (agnóstico al lenguaje) | Cubrir código de un spec antes de verificarlo |
+| `verify-spec` | Verificar cierre completo de un spec (agnóstico al lenguaje) | Acceptance criteria, tasks, tests unitarios y verify.sh |
+| `sync-skills` | Sincronizar skills hacia los espejos (Copilot y Antigravity) | Propaga de `.opencode/skills/` a `.github/skills/` y `.agents/skills/` |
 
-#### Fase 3 — ⏸ Puerta de aprobación humana
+En Antigravity y Copilot Chat, invócalas escribiendo `/` seguido del nombre de la skill, o dejando que el agente las cargue automáticamente según la tarea.
 
-8. **Pausa.** El humano lee el spec en `specs/{NNN}_{name}/`.
+### Técnicas de implementación (tdd / sdd / ftd)
 
-9. **Decisión humana:**
-   - **Aprueba 100%** → status cambia a `in_progress`, comienza implementación.
-   - **Rechaza / pide cambios** → el spec vuelve a edición. El spec_author hace
-     correcciones y reescrituras hasta que el humano apruebe al 100%.
+`generate-spec` recomienda una técnica al cerrar el Paso 9 y la escribe en el Metadata de `spec.md` (fila `Tecnica de Implementacion`). Cada técnica tiene su skill:
 
-#### Fase 4 — Implementación
+| Técnica | Skill | Ciclo |
+|---------|-------|-------|
+| **TDD** | `implement-tdd` | tests primero → rojo verificado → código mínimo → verde → refactor **acotado al spec** |
+| **SDD** | `implement-sdd` | implementa el spec por fases, siguiendo `decisions.md`; tests al final |
+| **FTD** | `implement-ftd` | cambios sin lógica nueva; verificación por diff + suite de regresión |
 
-10. **En `feature/{NNN}_{name}`:** El leader cambia el status a `in_progress`
-    y lanza `implementer`.
+**Las tres `implement-*` terminan en tests, NO cierran el spec.** El cierre de metadata (`current.json`, `feature_list.json`, `history.json`, `Status` de `spec.md`) es de `verify-spec`, que es la única que reconcilia las tres fuentes de verdad.
 
-11. **implementer** ejecuta `tasks.md` una a una, marcándolas `[x]`:
-    - Cada task produce código en `src/` y tests en `tests/`.
-    - Documenta el mapa de trazabilidad R ↔ Tests en `progress/impl_<name>.md`.
-    - Si descubre ambigüedad, vuelve a `spec_ready` para clarificar.
+### Regla de sincronización triple
 
-12. **Verificación durante implementación:**
-    - `dotnet build /warnaserror` — Nivel 0
-    - `dotnet test` — Niveles 1-3
-    - Cobertura mínima por capa — Nivel 5
-    - Sin dependencias vulnerables — Nivel 6
+**Toda skill nueva o modificada en `.opencode/skills/` (fuente de verdad) debe propagarse a `.github/skills/` (espejo Copilot) y a `.agents/skills/` (espejo Antigravity)**. Detalle completo en [.opencode/rules/skills-sync.md](.opencode/rules/skills-sync.md).
 
-#### Fase 5 — Revisión
+## Reglas
 
-13. **reviewer** verifica:
-    - Trazabilidad `R<n>` ↔ test completa.
-    - `dotnet build /warnaserror` y `dotnet test` verdes.
-    - Código alineado con `docs/architecture.md` y `docs/conventions.md`.
-    - Sin código muerto, sin supresiones de warnings, sin secretos.
+Las reglas se cargan automáticamente al iniciar una sesión:
+- **opencode**: `.opencode/rules/`
+- **Copilot**: `.github/instructions/` (formato `<name>.instructions.md`)
+- **Google Antigravity**: `.agents/rules/`
 
-14. **Decisión del reviewer:**
-    - **Aprueba** → status: `done`, se procede al cierre.
-    - **Rechaza** → vuelve a `in_progress` con razones documentadas.
+| Regla | Descripción |
+|-------|-------------|
+| `branches` | Estructura `{feature\|bugfix}/INT-{numero}/{nombre}` (máximo 80 caracteres) |
+| `commits` | Formato de commits semánticos (`feat`, `fix`, etc.) |
+| `skills-sync` | Sincronización de skills entre plataformas |
+| `project-status` | Contexto completo del proyecto al pedir "estado del proyecto" |
 
-#### Fase 6 — Cierre
+## Tablero de Seguimiento Visual (`project-docs/`)
 
-15. **En `feature/{NNN}_{name}`** (todos los cambios en la rama):
-    - Genera el commit semántico: `feat({scope}): {descripción}`
-    - Marca `status: "done"` en `feature_list.json`
-    - Actualiza `ENGINES.md` con la nueva fila de feature completada
-    - Mueve el resumen de `progress/current.md` al final de `progress/history.md`
-    - Vacía `progress/current.md` dejando solo la plantilla
+El seguimiento visual vive en `project-docs/`:
+- **Tecnologías:** Vanilla JS (ES Modules), **Tailwind CSS v4** (`@tailwindcss/browser@4`) y Three.js.
+- **Arquitectura Screaming:** Componentes modularizados por dominio en `src/features/` (`stats`, `current-spec`, `feature-list`, `dependency-graph`, `dependency-tree`, `space-view-3d`, `history-timeline`).
+- **Ejecución:** Abrir `project-docs/index.html` en el navegador directamente o vía servidor local.
 
-16. **Pregunta al humano sobre integración:**
-    ```
-    ¿Requiere integración a la rama original ({rama_base})?
-    ```
-    - **Sí, proyecto local** → el leader ejecuta el merge a la rama base.
-    - **Sí, proyecto en nube** → el leader sugiere: "Este proyecto está vinculado
-      a un repositorio remoto. La integración debería hacerse mediante un Pull
-      Request (PR) para mantener trazabilidad y permitir revisión."
-    - **No** → la feature queda en su rama. El registro en `ENGINES.md` y
-      `feature_list.json` es suficiente para saber que está completada.
+## Convenciones
 
-17. No dejes archivos temporales, warnings sin atender, ni TODOs sin contexto.
-
----
-
-## 5. Cierre de sesión (lifecycle)
-
-Antes de terminar:
-
-1. Ejecuta `./init.sh` — todo verde.
-
-2. Si la feature está acabada:
-   - Commit semántico generado en `feature/{NNN}_{name}`.
-   - `status: "done"` en `feature_list.json`.
-   - `ENGINES.md` actualizado.
-   - `progress/current → history.md` completado.
-   - `progress/current.md` vacío con solo plantilla.
-
-3. Verifica que no hay archivos temporales ni cambios sin commitear.
-
-4. Pregunta al humano sobre integración a la rama original (ver paso 16 de §4).
-
----
-
-## 6. Si te bloqueas
-
-- Relee la sección relevante de `docs/`.
-- Si la herramienta no hace lo que esperas, **no inventes un workaround**:
-  documenta el bloqueo en `progress/current.md` y para la sesión.
+- **Idioma**: Inglés para código y commits, español para documentación.
+- **Ramas**: `{feature|bugfix}/INT-{id}/{nombre_rama}` (≤80 caracteres).
+- Las demás convenciones (puertos, docker, etc.) dependen del proyecto concreto donde se adopte el arnés.
