@@ -349,6 +349,25 @@ in_progress → (implementar + verify-spec + reconciliar Paso 8) → done (compl
 
 <si el usuario proveyo contexto adicional, incluirlo aqui. Si no, omitir esta sub-seccion.>
 
+## Historia de Usuario (Scrum User Story)
+
+> **COMO** <rol del usuario / desarrollador / QA>,
+> **QUIERO** <capacidad tecnica o funcional>,
+> **PARA** <beneficio de negocio o valor tecnico>.
+
+## Definicion de Listo (Definition of Ready - DoR)
+
+- [x] <criterio DoR 1: alcance claro, dependencias identificadas>
+- [x] <criterio DoR 2: rama git INT-* creada>
+
+## Definicion de Hecho (Definition of Done - DoD)
+
+- [ ] Subtarea de desarrollo (DEV) completada con codigo y tests unitarios
+- [ ] Subtarea de QA verificada con criterios de aceptacion y evidencias
+- [ ] Capturas de pantalla generadas y guardadas en specs/.../evidence/
+- [ ] Documento evidence.md consolidado
+- [ ] 100% de tests en verde en verify.sh
+
 ## Objetivo
 
 <objetivo claro y conciso de lo que se debe lograr con esta feature>
@@ -430,7 +449,23 @@ in_progress → (implementar + verify-spec + reconciliar Paso 8) → done (compl
 - Total tareas: <N>
 - Completadas: 0
 
-## Tareas
+## Subtareas Jira (Pistas DEV & QA)
+
+### Subtarea DEV: INT-<id>-DEV — Implementacion Tecnica
+- **Asignado a**: implementer
+- **Estado**: in_progress
+- [ ] T1 — <tarea tecnica 1>
+- [ ] T2 — <tarea tecnica 2>
+- [ ] T3 — <tests unitarios / integracion>
+
+### Subtarea QA: INT-<id>-QA — Validacion de Criterios y Captura de Evidencias
+- **Asignado a**: reviewer
+- **Estado**: todo
+- [ ] TC-01 — <caso de prueba feliz>
+- [ ] TC-02 — <caso de prueba limites / BVA>
+- [ ] TC-03 — <captura de screenshots en evidence/ y redaccion de evidence.md>
+
+## Tareas por Fases
 
 ### Fase 1: Preparacion
 

@@ -52,6 +52,29 @@ export function renderFeatureTable({ features, pagination, onSelect }) {
             ${escapeHtml(f.title || f.name)}
           </div>
           ${f.description ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">${escapeHtml(f.description)}</p>` : ''}
+          ${(f.subtasks && f.subtasks.length) ? `
+            <div class="flex items-center gap-1.5 mt-1.5">
+              ${f.subtasks.map(st => {
+                const isDev = st.type === 'development';
+                const isDone = st.status === 'done';
+                const isInProgress = st.status === 'in_progress';
+                const color = isDone
+                  ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                  : (isInProgress
+                    ? 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800'
+                    : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700');
+                const iconHtml = isDone
+                  ? Icons.check('w-2.5 h-2.5')
+                  : (isInProgress ? '<span class="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span>' : '<span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>');
+                return `
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border font-semibold ${color}" title="${escapeHtml(st.title)}">
+                    <span>${isDev ? 'DEV' : 'QA'}</span>
+                    <span class="shrink-0 flex items-center">${iconHtml}</span>
+                  </span>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
         </td>
 
         <!-- Module -->

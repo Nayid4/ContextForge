@@ -58,12 +58,18 @@ export function renderCurrentSpecCard(currentSpec) {
           <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
             ${specFeature.description || 'En desarrollo por el agente implementer.'}
           </p>
-          <div class="flex items-center gap-2 pt-1">
+          <div class="flex items-center gap-2 pt-1 flex-wrap">
             <span class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
               ${branchName}
             </span>
             ${specFeature.module ? Badge({ type: 'module', value: specFeature.module }) : ''}
             ${specFeature.priority ? Badge({ type: 'priority', value: specFeature.priority }) : ''}
+            ${(specFeature.subtasks && specFeature.subtasks.length) ? `
+              <span class="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                <span>Subtarea:</span>
+                <span>${specFeature.subtasks.find(st => st.status === 'in_progress')?.id || specFeature.subtasks[0].id}</span>
+              </span>
+            ` : ''}
           </div>
         </div>
 

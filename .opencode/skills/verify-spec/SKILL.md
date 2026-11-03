@@ -84,6 +84,16 @@ Ejecutar el comando y verificar:
   - `1` → reportar como hallazgo CRÍTICO cada línea con `✗` (fallo)
 - Las advertencias (`⚠`) se reportan pero no bloquean el cierre
 
+### 6. Evidencias de Pruebas y Capturas de Pantalla (Screenshots)
+
+- Verificar que exista el directorio `<spec-dir>/evidence/` con capturas de pantalla reales (`.png`) tomadas durante las pruebas de QA.
+- Verificar que exista `<spec-dir>/evidence.md` con:
+  - Resumen detallado de qué se implementó a nivel técnico.
+  - Lista de pruebas ejecutadas y sus resultados `[PASS]`.
+  - Galería visual con las capturas de pantalla incrustadas.
+- Verificar que el campo `evidence` en `feature_list.json` contenga `completed_at`, `dev_summary`, `tests_executed` y `screenshots`.
+- **CRÍTICO:** Si el spec incluye componentes de interfaz de usuario o flujos visuales, NO se puede cerrar sin capturas de pantalla reales.
+
 ## Flujo de Ejecución
 
 ### Paso 1: Cargar contexto
@@ -93,9 +103,9 @@ Ejecutar el comando y verificar:
 3. Leer `project-spec.yaml` del módulo (si existe)
 4. Ubicar `verify.sh` del módulo
 
-### Paso 2: Ejecutar las 5 verificaciones
+### Paso 2: Ejecutar las 6 verificaciones
 
-Ejecutar en orden: Tasks → Unit Tests → Integración/API → verify.sh → Acceptance Criteria (cruzando con evidencia de los pasos anteriores)
+Ejecutar en orden: Tasks → Unit Tests → Integración/API → verify.sh → Acceptance Criteria → Evidencias y Screenshots
 
 ### Paso 3: Generar Reporte
 

@@ -803,6 +803,10 @@
   }
 
   // project-docs/src/shared/Modal.js
+  function escapeHtml(text) {
+    if (!text) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
   function renderModal(feature) {
     if (!feature) {
       return `<div id="modal-container"></div>`;
@@ -810,6 +814,84 @@
     const branchName = feature.branch || `${feature.type || "feature"}/INT-${String(feature.id).padStart(3, "0")}/${feature.name}`;
     const branchLength = branchName.length;
     const isBranchLengthOk = branchLength <= 80;
+    const userStoryHtml = feature.user_story ? `
+      <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 shadow-xs">
+        <div class="flex items-center gap-2 mb-2 text-indigo-700 dark:text-indigo-400 font-semibold text-xs uppercase tracking-wider">
+          <span class="w-4 h-4 shrink-0">${Icons.sparkles}</span>
+          <span>Historia de Usuario (Scrum)</span>
+        </div>
+        <div class="space-y-1 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
+          <p><strong class="text-indigo-600 dark:text-indigo-400 font-bold uppercase text-[11px] mr-1">Como</strong> ${escapeHtml(feature.user_story.as_a)},</p>
+          <p><strong class="text-indigo-600 dark:text-indigo-400 font-bold uppercase text-[11px] mr-1">Quiero</strong> ${escapeHtml(feature.user_story.i_want)},</p>
+          <p><strong class="text-indigo-600 dark:text-indigo-400 font-bold uppercase text-[11px] mr-1">Para</strong> ${escapeHtml(feature.user_story.so_that)}.</p>
+        </div>
+      </div>` : "";
+    const subtasksHtml = feature.subtasks && feature.subtasks.length ? `
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <span class="text-indigo-600 dark:text-indigo-400 shrink-0">${Icons.layers}</span> Subtareas Jira (${feature.subtasks.length})
+          </h4>
+          <span class="text-[11px] text-slate-500 font-mono">Pistas DEV & QA</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          ${feature.subtasks.map((st) => {
+      const isDev = st.type === "development";
+      const isDone = st.status === "done";
+      const isInProgress = st.status === "in_progress";
+      const badgeClass = isDone ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800" : isInProgress ? "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+      const statusText = isDone ? "Done" : isInProgress ? "In Progress" : "To Do";
+      const itemsList = isDev ? st.tasks || [] : st.test_cases || [];
+      return `
+              <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <span class="inline-flex items-center gap-1 font-mono text-[11px] font-bold ${isDev ? "text-indigo-600 dark:text-indigo-400" : "text-amber-600 dark:text-amber-400"}">
+                      <span>${isDev ? "[DEV]" : "[QA]"}</span>
+                      <span>${st.id}</span>
+                    </span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${badgeClass}">
+                      ${statusText}
+                    </span>
+                  </div>
+                  <h5 class="text-xs font-semibold text-slate-900 dark:text-slate-200 mb-1.5 leading-snug">
+                    ${escapeHtml(st.title)}
+                  </h5>
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                    <span>Responsable: <strong class="text-slate-700 dark:text-slate-300 font-mono">${st.assignee || (isDev ? "implementer" : "reviewer")}</strong></span>
+                  </div>
+                  ${itemsList.length ? `
+                    <ul class="space-y-1 text-xs text-slate-600 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                      ${itemsList.map((item) => {
+        const done = item.done || item.status === "passed";
+        return `
+                          <li class="flex items-start gap-1.5 ${done ? "line-through opacity-75 text-emerald-600 dark:text-emerald-400" : ""}">
+                            <span class="shrink-0 font-mono text-[11px] font-bold ${done ? "text-emerald-600" : "text-slate-400"}">${done ? Icons.check("w-3 h-3") : "\u25CB"}</span>
+                            <span class="text-[11px] leading-tight">${escapeHtml(item.title)}</span>
+                          </li>
+                        `;
+      }).join("")}
+                    </ul>
+                  ` : ""}
+                </div>
+              </div>
+            `;
+    }).join("")}
+        </div>
+      </div>` : "";
+    const dodHtml = feature.definition_of_done && feature.definition_of_done.length ? `
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+          <span class="text-emerald-600 dark:text-emerald-400 shrink-0">${Icons.shield}</span> Definition of Done (DoD - ${feature.definition_of_done.length})
+        </h4>
+        <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+          ${feature.definition_of_done.map((d) => `
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">${Icons.check("w-3.5 h-3.5")}</span>
+              <span>${escapeHtml(d)}</span>
+            </li>`).join("")}
+        </ul>
+      </div>` : "";
     const acceptanceHtml = feature.acceptance && feature.acceptance.length ? `
       <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
         <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Criterios de Aceptaci\xF3n (${feature.acceptance.length})</h4>
@@ -817,20 +899,57 @@
           ${feature.acceptance.map((a) => `
             <li class="flex items-start gap-2">
               <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">${Icons.check("w-3.5 h-3.5")}</span>
-              <span>${a}</span>
+              <span>${escapeHtml(a)}</span>
             </li>`).join("")}
         </ul>
       </div>` : "";
-    const tasksHtml = feature.tasks && feature.tasks.length ? `
+    const evidenceHtml = feature.evidence ? `
       <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Tareas (${feature.tasks.filter((t) => t.done).length}/${feature.tasks.length})</h4>
-        <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-          ${feature.tasks.map((t) => `
-            <li class="flex items-start gap-2 ${t.done ? "text-emerald-700 dark:text-emerald-400 line-through opacity-80" : ""}">
-              <span class="${t.done ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"} font-mono">${t.done ? Icons.check("w-3 h-3") : "\u25CB"}</span>
-              <span>${t.title || t}</span>
-            </li>`).join("")}
-        </ul>
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <span class="text-indigo-600 dark:text-indigo-400 shrink-0">${Icons.terminal}</span> Evidencias de Pruebas y Cierre
+          </h4>
+          ${feature.evidence.completed_at ? `<span class="text-[11px] text-slate-500 font-mono">${escapeHtml(feature.evidence.completed_at)}</span>` : ""}
+        </div>
+        
+        ${feature.evidence.dev_summary ? `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 mb-2.5">
+            <strong class="text-slate-900 dark:text-slate-200">Resumen de Implementaci\xF3n:</strong>
+            <p class="mt-0.5 leading-relaxed">${escapeHtml(feature.evidence.dev_summary)}</p>
+          </div>
+        ` : ""}
+
+        ${feature.evidence.tests_executed && feature.evidence.tests_executed.length ? `
+          <div class="mb-3">
+            <span class="text-[11px] font-semibold uppercase text-slate-500 block mb-1">Pruebas Ejecutadas:</span>
+            <div class="flex flex-wrap gap-1.5">
+              ${feature.evidence.tests_executed.map((t) => `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                  <span>${Icons.check("w-3 h-3")}</span>
+                  <span>${escapeHtml(t)}</span>
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
+
+        ${feature.evidence.screenshots && feature.evidence.screenshots.length ? `
+          <div>
+            <span class="text-[11px] font-semibold uppercase text-slate-500 block mb-1.5">Capturas de Pantalla (${feature.evidence.screenshots.length}):</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              ${feature.evidence.screenshots.map((sc) => `
+                <div class="group relative rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-950 shadow-xs">
+                  <a href="${sc.path}" target="_blank" rel="noopener noreferrer" class="block aspect-video overflow-hidden">
+                    <img src="${sc.path}" alt="${escapeHtml(sc.caption || sc.name)}" class="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-200" loading="lazy" />
+                  </a>
+                  <div class="p-1.5 text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 truncate" title="${escapeHtml(sc.caption || sc.name)}">
+                    ${escapeHtml(sc.caption || sc.name)}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
       </div>` : "";
     const rawDeps = feature.depends_on || feature.dependencies || [];
     const depsHtml = rawDeps.length ? `
@@ -861,7 +980,7 @@
               ${feature.module ? Badge({ type: "module", value: feature.module }) : ""}
             </div>
             <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-snug">
-              ${feature.title || feature.name}
+              ${escapeHtml(feature.title || feature.name)}
             </h3>
           </div>
           <button type="button" data-action="close-modal" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Cerrar modal (Esc)">
@@ -871,9 +990,12 @@
 
         <!-- Modal Body -->
         <div class="px-6 py-5 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300">
+          <!-- Scrum User Story -->
+          ${userStoryHtml}
+
           <div>
             <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Descripci\xF3n</h4>
-            <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200">${feature.description || "Sin descripci\xF3n detallada."}</p>
+            <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200">${escapeHtml(feature.description || "Sin descripci\xF3n detallada.")}</p>
           </div>
 
           <!-- Branch Info (\u226480c check) -->
@@ -895,19 +1017,30 @@
             <div>
               <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Carpeta de Especificaci\xF3n</h4>
               <p class="text-xs font-mono bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 px-2.5 py-1.5 rounded-md inline-block text-slate-800 dark:text-slate-300">
-                ${feature.spec_folder}
+                ${escapeHtml(feature.spec_folder)}
               </p>
             </div>` : ""}
 
+          <!-- Subtareas Jira DEV / QA -->
+          ${subtasksHtml}
+
+          <!-- Definition of Done (DoD) -->
+          ${dodHtml}
+
+          <!-- Acceptance Criteria -->
           ${acceptanceHtml}
-          ${tasksHtml}
+
+          <!-- Evidencias de Pruebas y Screenshots -->
+          ${evidenceHtml}
+
+          <!-- Dependencias -->
           ${depsHtml}
 
           ${feature.documentation && feature.documentation.length ? `
             <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
               <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Documentaci\xF3n</h4>
               <div class="flex flex-wrap gap-1 text-xs font-mono">
-                ${feature.documentation.map((d) => `<span class="bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-800">${d}</span>`).join("")}
+                ${feature.documentation.map((d) => `<span class="bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-800">${escapeHtml(d)}</span>`).join("")}
               </div>
             </div>` : ""}
         </div>
@@ -1040,12 +1173,18 @@
           <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
             ${specFeature.description || "En desarrollo por el agente implementer."}
           </p>
-          <div class="flex items-center gap-2 pt-1">
+          <div class="flex items-center gap-2 pt-1 flex-wrap">
             <span class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
               ${branchName}
             </span>
             ${specFeature.module ? Badge({ type: "module", value: specFeature.module }) : ""}
             ${specFeature.priority ? Badge({ type: "priority", value: specFeature.priority }) : ""}
+            ${specFeature.subtasks && specFeature.subtasks.length ? `
+              <span class="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                <span>Subtarea:</span>
+                <span>${specFeature.subtasks.find((st) => st.status === "in_progress")?.id || specFeature.subtasks[0].id}</span>
+              </span>
+            ` : ""}
           </div>
         </div>
 
@@ -1180,9 +1319,26 @@
         <!-- Title & Description -->
         <td class="py-3.5 px-4">
           <div class="font-medium text-slate-900 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-            ${escapeHtml(f.title || f.name)}
+            ${escapeHtml2(f.title || f.name)}
           </div>
-          ${f.description ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">${escapeHtml(f.description)}</p>` : ""}
+          ${f.description ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">${escapeHtml2(f.description)}</p>` : ""}
+          ${f.subtasks && f.subtasks.length ? `
+            <div class="flex items-center gap-1.5 mt-1.5">
+              ${f.subtasks.map((st) => {
+        const isDev = st.type === "development";
+        const isDone = st.status === "done";
+        const isInProgress = st.status === "in_progress";
+        const color = isDone ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800" : isInProgress ? "text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800" : "text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
+        const iconHtml = isDone ? Icons.check("w-2.5 h-2.5") : isInProgress ? '<span class="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span>' : '<span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>';
+        return `
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border font-semibold ${color}" title="${escapeHtml2(st.title)}">
+                    <span>${isDev ? "DEV" : "QA"}</span>
+                    <span class="shrink-0 flex items-center">${iconHtml}</span>
+                  </span>
+                `;
+      }).join("")}
+            </div>
+          ` : ""}
         </td>
 
         <!-- Module -->
@@ -1251,7 +1407,7 @@
     </div>
   `;
   }
-  function escapeHtml(text) {
+  function escapeHtml2(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -1732,7 +1888,7 @@
                 ${sub.done ? Icons.check("w-2.5 h-2.5") : "\u25CB"}
               </span>
               <span class="truncate text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
-                ${escapeHtml2(sub.name)}
+                ${escapeHtml3(sub.name)}
               </span>
             </div>
           `;
@@ -1771,7 +1927,7 @@
                   </span>
 
                   <span class="font-semibold text-xs text-slate-900 dark:text-slate-100">
-                    ${escapeHtml2(f.title || f.name)}
+                    ${escapeHtml3(f.title || f.name)}
                   </span>
                 </div>
 
@@ -1910,7 +2066,7 @@
                 </div>
                 <div>
                   <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-200 font-bold">Nodo Ra\xEDz (Nivel 0)</div>
-                  <h2 class="text-lg font-bold tracking-tight">${escapeHtml2(projectName)}</h2>
+                  <h2 class="text-lg font-bold tracking-tight">${escapeHtml3(projectName)}</h2>
                 </div>
               </div>
 
@@ -1950,7 +2106,7 @@
       });
     }
   };
-  function escapeHtml2(text) {
+  function escapeHtml3(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -2694,8 +2850,8 @@
 
       <!-- 2. Informaci\xF3n del Diagrama -->
       <div class="px-5 pt-4 pb-2">
-        <h4 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">${escapeHtml3(title)}</h4>
-        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">${escapeHtml3(description)}</p>
+        <h4 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">${escapeHtml4(title)}</h4>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">${escapeHtml4(description)}</p>
       </div>
 
       <!-- 3. Contenedores de Vista -->
@@ -2718,13 +2874,13 @@
           <span>Sintaxis Mermaid</span>
           <button type="button" data-copy-mermaid="${escapeAttr2(code)}" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] cursor-pointer">Copiar</button>
         </div>
-        <pre class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 select-all"><code>${escapeHtml3(code)}</code></pre>
+        <pre class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 select-all"><code>${escapeHtml4(code)}</code></pre>
       </div>
 
     </div>
   `;
   }
-  function escapeHtml3(text) {
+  function escapeHtml4(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -2767,10 +2923,10 @@
               </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              ${escapeHtml4(proj.name || "Proyecto de Software")}
+              ${escapeHtml5(proj.name || "Proyecto de Software")}
             </h2>
             <p class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mt-1">
-              ${escapeHtml4(proj.tagline || "Arquitectura Can\xF3nica y Especificaci\xF3n T\xE9cnica")}
+              ${escapeHtml5(proj.tagline || "Arquitectura Can\xF3nica y Especificaci\xF3n T\xE9cnica")}
             </p>
           </div>
 
@@ -2801,7 +2957,7 @@
             </h3>
             ${proj.description ? `
               <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                ${escapeHtml4(proj.description)}
+                ${escapeHtml5(proj.description)}
               </p>
             ` : `
               <div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-slate-400 text-xs">
@@ -2819,7 +2975,7 @@
                 ${goals.map((g) => `
                   <li class="flex items-start gap-2">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5"></span>
-                    <span>${escapeHtml4(g)}</span>
+                    <span>${escapeHtml5(g)}</span>
                   </li>
                 `).join("")}
               </ul>
@@ -2930,14 +3086,14 @@
                   <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
                     <div class="flex items-center gap-2">
                       <span class="text-indigo-600 dark:text-indigo-400">${row.iconSvg}</span>
-                      <span>${escapeHtml4(row.technology)}</span>
+                      <span>${escapeHtml5(row.technology)}</span>
                     </div>
                   </td>
                   <td class="py-3 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                    ${escapeHtml4(row.version || "Auto")}
+                    ${escapeHtml5(row.version || "Auto")}
                   </td>
                   <td class="py-3 px-4 text-slate-600 dark:text-slate-400 max-w-xs">
-                    ${escapeHtml4(row.purpose)}
+                    ${escapeHtml5(row.purpose)}
                   </td>
                   <td class="py-3 px-4 whitespace-nowrap">
                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold ${row.statusBadgeClass}">
@@ -2946,7 +3102,7 @@
                     </span>
                   </td>
                   <td class="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                    ${escapeHtml4(row.dependencies || "Nativa / MIT")}
+                    ${escapeHtml5(row.dependencies || "Nativa / MIT")}
                   </td>
                 </tr>
               `).join("")}
@@ -2978,13 +3134,13 @@
       return `
                 <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2">
                   <div class="flex items-center justify-between">
-                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml4(pName)}</h4>
+                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml5(pName)}</h4>
                     <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                      ${escapeHtml4(pType)}
+                      ${escapeHtml5(pType)}
                     </span>
                   </div>
                   <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    ${escapeHtml4(pDesc)}
+                    ${escapeHtml5(pDesc)}
                   </p>
                 </div>
               `;
@@ -3056,7 +3212,7 @@
                         ${(mod.responsibilities || []).map((r) => `
                           <li class="flex items-start gap-1.5">
                             <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u203A</span>
-                            <span>${escapeHtml4(r)}</span>
+                            <span>${escapeHtml5(r)}</span>
                           </li>
                         `).join("")}
                       </ul>
@@ -3065,7 +3221,7 @@
                     <div>
                       <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Stack Tecnol\xF3gico & Tareas Asignadas:</span>
                       <div class="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 mb-2">
-                        ${escapeHtml4(mod.tech || "")}
+                        ${escapeHtml5(mod.tech || "")}
                       </div>
                       <div class="flex flex-wrap gap-1.5">
                         ${modFeatures.map((f) => `
@@ -3347,7 +3503,7 @@
     </div>
   `;
   }
-  function escapeHtml4(text) {
+  function escapeHtml5(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -3446,7 +3602,7 @@
 
               <div class="p-6 overflow-x-auto flex justify-center items-center bg-slate-50/40 dark:bg-slate-950/40 min-h-[160px]" id="${diagId}">
                 <div class="mermaid-render-target w-full flex justify-center items-center" data-mermaid-code="${escapeAttr3(codeText)}">
-                  <pre class="mermaid text-xs font-mono text-slate-400">${escapeHtml5(codeText)}</pre>
+                  <pre class="mermaid text-xs font-mono text-slate-400">${escapeHtml6(codeText)}</pre>
                 </div>
               </div>
             </div>
@@ -3464,7 +3620,7 @@
                 </button>
               </div>
               <div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed">
-                <pre><code>${codeLines.map((l, idx) => `<span class="inline-block w-6 select-none opacity-30 text-right mr-3">${idx + 1}</span>${escapeHtml5(l)}`).join("\n")}</code></pre>
+                <pre><code>${codeLines.map((l, idx) => `<span class="inline-block w-6 select-none opacity-30 text-right mr-3">${idx + 1}</span>${escapeHtml6(l)}`).join("\n")}</code></pre>
               </div>
             </div>
           `);
@@ -3583,7 +3739,7 @@
     }
     if (inCodeBlock) {
       const codeText = codeBuffer.join("\n");
-      html.push(`<div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md"><div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><pre><code>${escapeHtml5(codeText)}</code></pre></div></div>`);
+      html.push(`<div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md"><div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><pre><code>${escapeHtml6(codeText)}</code></pre></div></div>`);
     }
     if (inTable) {
       html.push(renderInteractiveTableHtml(tableHeaders, tableRows));
@@ -3644,7 +3800,7 @@
   function formatInline(text = "") {
     return text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-indigo-600 dark:text-indigo-400 text-[11px] border border-slate-200 dark:border-slate-700 font-semibold">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>').replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 underline underline-offset-2 hover:text-indigo-500 font-semibold">$1</a>');
   }
-  function escapeHtml5(text) {
+  function escapeHtml6(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -4016,10 +4172,10 @@ ${b.description || ""}`);
                   </div>
 
                   <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    ${escapeHtml6(heroDocMeta.title || heroDocKey)}
+                    ${escapeHtml7(heroDocMeta.title || heroDocKey)}
                   </h3>
                   <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    ${escapeHtml6(heroDocMeta.summary || "Especificaci\xF3n formal del sistema con diagramas de contexto, contenedores y componentes.")}
+                    ${escapeHtml7(heroDocMeta.summary || "Especificaci\xF3n formal del sistema con diagramas de contexto, contenedores y componentes.")}
                   </p>
                   <div class="font-mono text-[11px] text-slate-400">
                     Ruta can\xF3nica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
@@ -4137,7 +4293,7 @@ ${b.description || ""}`);
                         ${getShelfIconSvg(sh.id, "w-5 h-5")}
                       </span>
                       <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                        ${escapeHtml6(sh.title)}
+                        ${escapeHtml7(sh.title)}
                       </h3>
                     </div>
                     <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -4175,15 +4331,15 @@ ${b.description || ""}`);
 
                             <div>
                               <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                ${escapeHtml6(meta.title)}
+                                ${escapeHtml7(meta.title)}
                               </h4>
                               <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
-                                ${escapeHtml6(key)}
+                                ${escapeHtml7(key)}
                               </div>
                             </div>
 
                             <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              ${escapeHtml6(meta.summary)}
+                              ${escapeHtml7(meta.summary)}
                             </p>
                           </div>
 
@@ -4282,7 +4438,7 @@ ${b.description || ""}`);
                           data-module-tab="${escapeAttr4(modId)}"
                           class="kb-module-tab-btn ${isActive ? "active bg-purple-600 text-white font-bold shadow-xs" : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium"} px-4 py-2 rounded-2xl text-xs font-mono transition-all cursor-pointer shrink-0 inline-flex items-center gap-2">
                     ${Icons.folder("w-3.5 h-3.5")}
-                    <span>${escapeHtml6(mod.title || modId)}</span>
+                    <span>${escapeHtml7(mod.title || modId)}</span>
                     <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/25 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}">${mod.docs?.length || 5}</span>
                   </button>
                 `;
@@ -4353,7 +4509,7 @@ ${b.description || ""}`);
                       </div>
                       <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         <span class="text-purple-600 dark:text-purple-400">${Icons.folder("w-6 h-6")}</span>
-                        <span>${escapeHtml6(mod.title || modId)}</span>
+                        <span>${escapeHtml7(mod.title || modId)}</span>
                       </h3>
                       <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
                         Bounded Context auditado con 5 artefactos formales de ingenier\xEDa para garantizar contexto 100% libre de alucinaciones en agentes de IA y desarrolladores.
@@ -4408,15 +4564,15 @@ ${b.description || ""}`);
 
                             <div>
                               <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                                ${escapeHtml6(spec.title)}
+                                ${escapeHtml7(spec.title)}
                               </h4>
                               <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
-                                ${escapeHtml6(docKey)}
+                                ${escapeHtml7(docKey)}
                               </div>
                             </div>
 
                             <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              ${escapeHtml6(spec.desc)}
+                              ${escapeHtml7(spec.desc)}
                             </p>
                           </div>
 
@@ -4572,10 +4728,10 @@ ${b.description || ""}`);
                       <span class="text-[10px] font-mono text-slate-400">Can\xF3nico</span>
                     </div>
                     <h5 class="font-bold text-xs text-slate-900 dark:text-white leading-snug">
-                      ${escapeHtml6(ch.title)}
+                      ${escapeHtml7(ch.title)}
                     </h5>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      ${escapeHtml6(ch.desc)}
+                      ${escapeHtml7(ch.desc)}
                     </p>
                   </div>
 
@@ -4754,7 +4910,7 @@ ${b.description || ""}`);
               </div>
               <textarea id="doc-editor-textarea" 
                         rows="24" 
-                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml6(activeDocContent)}</textarea>
+                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml7(activeDocContent)}</textarea>
             </div>
 
             <div class="space-y-2">
@@ -4857,7 +5013,7 @@ ${b.description || ""}`);
                         [${rule.module || "general"}]
                       </span>
                       <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
-                        ${escapeHtml6(rule.title)}
+                        ${escapeHtml7(rule.title)}
                       </h4>
                     </div>
                     <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
@@ -4865,7 +5021,7 @@ ${b.description || ""}`);
                     </span>
                   </div>
                   <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
-                    ${escapeHtml6(rule.description)}
+                    ${escapeHtml7(rule.description)}
                   </p>
                 </div>
               `;
@@ -4905,24 +5061,24 @@ ${b.description || ""}`);
             ${services.map((svc) => `
               <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml6(svc.name)}</span>
+                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml7(svc.name)}</span>
                   <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
-                    ${escapeHtml6(svc.type)}
+                    ${escapeHtml7(svc.type)}
                   </span>
                 </div>
                 <div class="space-y-1 text-[11px] font-mono">
                   <div class="text-slate-500 dark:text-slate-400">
-                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml6(svc.protocol)}</span>
+                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml7(svc.protocol)}</span>
                   </div>
                   <div class="text-slate-500 dark:text-slate-400">
-                    Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml6(svc.auth)}</span>
+                    Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml7(svc.auth)}</span>
                   </div>
                   <div class="text-slate-500 dark:text-slate-400">
-                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml6(svc.env_var)}</code>
+                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml7(svc.env_var)}</code>
                   </div>
                 </div>
                 <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
-                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml6(svc.failover)}
+                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml7(svc.failover)}
                 </div>
               </div>
             `).join("")}
@@ -4970,7 +5126,7 @@ ${b.description || ""}`);
     ]).map((g) => `
                 <li class="flex items-start gap-2">
                   <span class="text-rose-500 font-bold shrink-0 mt-0.5">&times;</span>
-                  <span>${escapeHtml6(g)}</span>
+                  <span>${escapeHtml7(g)}</span>
                 </li>
               `).join("")}
             </ul>
@@ -5062,7 +5218,7 @@ ${b.description || ""}`);
             Copia estas instrucciones generadas en vivo desde los metadatos reales del arn\xE9s para inicializar cualquier modelo (Claude, Gemini, ChatGPT, Codex) sin sesgo:
           </p>
           <div class="relative">
-            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml6(dynamicAiPrompt)}</textarea>
+            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml7(dynamicAiPrompt)}</textarea>
           </div>
           <div class="flex items-center justify-end gap-3 pt-2">
             <button type="button" 
@@ -5124,7 +5280,7 @@ ${b.description || ""}`);
         <a href="#${item.id}" 
            class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
            title="${escapeAttr4(item.text)}">
-          ${escapeHtml6(item.text)}
+          ${escapeHtml7(item.text)}
         </a>
       `).join("")}
     </nav>
@@ -5158,7 +5314,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
 - Commits: Conventional Commits (feat, fix, docs, refactor)
 `;
   }
-  function escapeHtml6(text) {
+  function escapeHtml7(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5402,7 +5558,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml7(state.project)}</h1>
+                  <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">${escapeHtml8(state.project)}</h1>
                   <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
                     SDD 2.0
                   </span>
@@ -5445,7 +5601,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs"
                    title="Stack tecnol\xF3gico detectado por technical-audit">
                 <span class="text-slate-400">Stack:</span>
-                <span class="font-semibold">${escapeHtml7(stackInfo.name)}</span>
+                <span class="font-semibold">${escapeHtml8(stackInfo.name)}</span>
               </div>
             </div>
 
@@ -5713,9 +5869,9 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                 ${Icons.alertTriangle("w-4 h-4")} <span>Diagrama en edici\xF3n de sintaxis</span>
               </div>
               <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                ${escapeHtml7(renderErr.message || "Error de parsing en Mermaid")}
+                ${escapeHtml8(renderErr.message || "Error de parsing en Mermaid")}
               </p>
-              <pre class="text-[10px] font-mono text-left bg-slate-900 text-indigo-300 p-2.5 rounded-xl overflow-x-auto max-h-36">${escapeHtml7(rawCode)}</pre>
+              <pre class="text-[10px] font-mono text-left bg-slate-900 text-indigo-300 p-2.5 rounded-xl overflow-x-auto max-h-36">${escapeHtml8(rawCode)}</pre>
             </div>
           `;
             const strayError = document.getElementById("d" + uniqueId);
@@ -5905,7 +6061,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                  data-feature-id="${f.id}">
               <div class="flex items-center gap-2 truncate">
                 <span class="font-bold text-indigo-500">[INT-${f.id}]</span>
-                <span class="truncate">${escapeHtml7(f.title)}</span>
+                <span class="truncate">${escapeHtml8(f.title)}</span>
               </div>
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">${f.status}</span>
             </div>
@@ -5923,8 +6079,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                  data-doc-key="${escapeAttr5(d.key)}">
               <div class="flex items-center gap-2 truncate">
                 <span class="text-indigo-600 dark:text-indigo-400">${Icons.fileText("w-3.5 h-3.5")}</span>
-                <span class="font-bold truncate">${escapeHtml7(d.title)}</span>
-                <span class="text-[10px] text-slate-400 font-mono truncate">(${escapeHtml7(d.key)})</span>
+                <span class="font-bold truncate">${escapeHtml8(d.title)}</span>
+                <span class="text-[10px] text-slate-400 font-mono truncate">(${escapeHtml8(d.key)})</span>
               </div>
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono inline-flex items-center gap-1">${Icons.clock("w-3 h-3")} <span>${d.readingTime || 2}m</span></span>
             </div>
@@ -5943,7 +6099,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                  data-rule-module="${escapeAttr5(r.module || "")}">
               <div class="flex items-center gap-2 truncate">
                 <span class="font-bold text-amber-500">${r.id}</span>
-                <span class="truncate">${escapeHtml7(r.title)}</span>
+                <span class="truncate">${escapeHtml8(r.title)}</span>
               </div>
               <span class="text-[10px] font-mono text-slate-400">[${r.module || "general"}]</span>
             </div>
@@ -5952,7 +6108,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       `;
       }
       if (!matchedFeatures.length && !matchedDocs.length && !matchedRules.length) {
-        html = `<div class="p-6 text-center text-slate-400">No se encontraron resultados para "${escapeHtml7(q)}"</div>`;
+        html = `<div class="p-6 text-center text-slate-400">No se encontraron resultados para "${escapeHtml8(q)}"</div>`;
       }
       resultsContainer.innerHTML = html;
     }
@@ -6007,7 +6163,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         `;
         case "paragraph":
           return `
-          <textarea class="block-input-paragraph-text w-full p-3 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y leading-relaxed" rows="3" placeholder="P\xE1rrafo o contenido descriptivo...">${escapeHtml7(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || "")}</textarea>
+          <textarea class="block-input-paragraph-text w-full p-3 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y leading-relaxed" rows="3" placeholder="P\xE1rrafo o contenido descriptivo...">${escapeHtml8(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || "")}</textarea>
         `;
         case "callout":
           return `
@@ -6020,7 +6176,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               <option value="CAUTION" ${b.kind === "CAUTION" ? "selected" : ""}>CAUTION (Precauci\xF3n)</option>
               <option value="DANGER" ${b.kind === "DANGER" ? "selected" : ""}>DANGER (Riesgo Cr\xEDtico)</option>
             </select>
-            <textarea class="block-input-callout-text w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Mensaje de la alerta...">${escapeHtml7(b.text || "")}</textarea>
+            <textarea class="block-input-callout-text w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Mensaje de la alerta...">${escapeHtml8(b.text || "")}</textarea>
           </div>
         `;
         case "business_rule":
@@ -6030,7 +6186,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               <input type="text" class="block-input-rule-id w-36 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold text-amber-600 dark:text-amber-400" value="${escapeAttr5(b.ruleId || "BR-GEN-001")}" placeholder="BR-XXX-001" />
               <input type="text" class="block-input-rule-title flex-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-800 dark:text-slate-100 font-semibold" value="${escapeAttr5(b.title || "")}" placeholder="T\xEDtulo de la regla de negocio" />
             </div>
-            <textarea class="block-input-rule-desc w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Descripci\xF3n detallada de la invariante...">${escapeHtml7(b.text || b.description || "")}</textarea>
+            <textarea class="block-input-rule-desc w-full p-2.5 font-sans text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 resize-y" rows="2" placeholder="Descripci\xF3n detallada de la invariante...">${escapeHtml8(b.text || b.description || "")}</textarea>
           </div>
         `;
         case "code":
@@ -6050,7 +6206,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                 <option value="yaml" ${b.lang === "yaml" ? "selected" : ""}>yaml</option>
               </select>
             </div>
-            <textarea class="block-input-code-content w-full p-3 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-900 text-indigo-300 resize-y" rows="6" placeholder="C\xF3digo o sintaxis del diagrama...">${escapeHtml7(Array.isArray(b.content) ? b.content.join("\n") : b.content || "")}</textarea>
+            <textarea class="block-input-code-content w-full p-3 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-900 text-indigo-300 resize-y" rows="6" placeholder="C\xF3digo o sintaxis del diagrama...">${escapeHtml8(Array.isArray(b.content) ? b.content.join("\n") : b.content || "")}</textarea>
           </div>
         `;
         case "divider":
@@ -6063,7 +6219,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         `;
         default:
           return `
-          <textarea class="block-input-raw-text w-full p-2.5 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950" rows="3">${escapeHtml7(b.raw || "")}</textarea>
+          <textarea class="block-input-raw-text w-full p-2.5 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950" rows="3">${escapeHtml8(b.raw || "")}</textarea>
         `;
       }
     }
@@ -6866,13 +7022,13 @@ ${content}
         <a href="#${item.id}" 
            class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
            title="${escapeAttr5(item.text)}">
-          ${escapeHtml7(item.text)}
+          ${escapeHtml8(item.text)}
         </a>
       `).join("")}
     </nav>
   `;
   }
-  function escapeHtml7(text) {
+  function escapeHtml8(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
