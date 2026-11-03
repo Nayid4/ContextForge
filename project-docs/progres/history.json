@@ -1,37 +1,70 @@
 {
   "records": [
     {
-      "id": 1,
-      "type": "feature",
-      "name": "infra_database_setup",
-      "title": "Infraestructura Base de Datos y Migraciones",
-      "branch": "feature/INT-001/infra_database_setup",
-      "completed_at": "2026-11-01 16:30 UTC",
-      "commit": "a4f891b2c3d4e5f67890",
-      "executor": "implementer + reviewer",
-      "summary": "Base de datos PostgreSQL configurada con migraciones automáticas y pool de conexiones verificado al 100%."
-    },
-    {
       "id": 2,
       "type": "feature",
-      "name": "user_auth_service",
-      "title": "Servicio de Autenticación JWT y Roles",
-      "branch": "feature/INT-002/user_auth_service",
-      "completed_at": "2026-11-02 08:45 UTC",
-      "commit": "e8c21a4f5b6c7d8e9f01",
+      "name": "triple_mirror_skills_sync",
+      "title": "Motor de Sincronización Triple de Skills",
+      "branch": "feature/INT-002/triple_mirror_skills_sync",
+      "completed_at": "2026-11-02 18:00 UTC",
+      "commit": "c9e37ab",
       "executor": "implementer + reviewer",
-      "summary": "Endpoints de login, registro y middleware de validación RBAC con cobertura de pruebas unitarias al 92%."
+      "summary": "Mecanismo de paridad estricta entre .opencode/skills/, .github/skills/ y .agents/skills/ implementado."
     },
     {
       "id": 3,
-      "type": "bugfix",
-      "name": "fix_jwt_token_expiration",
-      "title": "Corrección de Expiración JWT en Desfases UTC",
-      "branch": "bugfix/INT-003/fix_jwt_token_expiration",
-      "completed_at": "2026-11-02 09:30 UTC",
-      "commit": "c3d4e5f6a1b2c3d4e5f6",
+      "type": "feature",
+      "name": "knowledge_base_dynamic_engine",
+      "title": "Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento",
+      "branch": "feature/INT-003/knowledge_base_dynamic_engine",
+      "completed_at": "2026-11-02 19:30 UTC",
+      "commit": "c9e37ab",
       "executor": "implementer + reviewer",
-      "summary": "Corregido cálculo de expiración de token para operar estrictamente en Epoch UTC independientemente del huso horario del servidor."
+      "summary": "Descubrimiento en 2 fases, diagrama ERD, catálogo de ADRs y matriz de trazabilidad RTM añadidos."
+    },
+    {
+      "id": 4,
+      "type": "feature",
+      "name": "dashboard_editorial_dual_editor",
+      "title": "Tablero Editorial con Lector ContextForge y Editor Dual",
+      "branch": "feature/INT-004/dashboard_editorial_dual_editor",
+      "completed_at": "2026-11-02 21:00 UTC",
+      "commit": "08fe75c",
+      "executor": "implementer + reviewer",
+      "summary": "Hub editorial por estantes temáticos, columna 780px, TOC flotante con scrollspy y editor dual Markdown/Bloques con scroll sincronizado."
+    },
+    {
+      "id": 5,
+      "type": "feature",
+      "name": "pyramidal_3d_constellation",
+      "title": "Constelación 3D en Jerarquía Piramidal Three.js",
+      "branch": "feature/INT-005/pyramidal_3d_constellation",
+      "completed_at": "2026-11-02 21:30 UTC",
+      "commit": "08fe75c",
+      "executor": "implementer + reviewer",
+      "summary": "Estructura piramidal en 4 niveles con anillos guía translúcidos, distribución armónica y curvas Bezier."
+    },
+    {
+      "id": 6,
+      "type": "feature",
+      "name": "omnibox_global_search",
+      "title": "Búsqueda Global Omnibox con Atajo de Teclado",
+      "branch": "feature/INT-006/omnibox_global_search",
+      "completed_at": "2026-11-02 21:45 UTC",
+      "commit": "08fe75c",
+      "executor": "implementer + reviewer",
+      "summary": "Buscador modal omnibox (Ctrl+K) con búsqueda reactiva de tareas, documentos, reglas BR-* y módulos."
+    },
+    {
+      "id": 1,
+      "type": "feature",
+      "name": "refactor_harness_architecture",
+      "title": "Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+      "branch": "feature/INT-001/refactor_harness_architecture",
+      "completed_at": "2026-11-02 22:15 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Auditoría real del arnés, desacoplamiento universal de subagentes, erradicación de mocks e-commerce y suite de pruebas unitarias y e2e."
     }
   ]
 }

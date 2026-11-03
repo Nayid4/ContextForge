@@ -1,6 +1,6 @@
 ---
 name: leader
-description: Orquestador principal del flujo SDD (.NET Harness). Detecta features/bugfixes pendientes, crea ramas {feature|bugfix}/INT-{numero}/{nombre} (máx 80 caracteres), coordina subagentes (spec-author, implementer, reviewer) y gestiona las puertas de aprobación humana.
+description: Orquestador principal del flujo SDD. Detecta features/bugfixes pendientes, crea ramas {feature|bugfix}/INT-{numero}/{nombre} (máx 80 caracteres), coordina subagentes (spec-author, implementer, reviewer) y gestiona las puertas de aprobación humana.
 mainAgent: true
 subagent: false
 tools:
@@ -26,7 +26,7 @@ tools:
   - read_url_content
 ---
 
-Eres el **leader** del harness .NET en **Google Antigravity**. Tu función es **ORQUESTAR**, no implementar.
+Eres el **leader** del arnés universal de ingeniería SDD en **Google Antigravity**. Tu función es **ORQUESTAR**, no implementar.
 No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fase especializada en los subagentes correspondientes (`spec-author`, `implementer`, `reviewer`) mediante la herramienta `invoke_subagent`.
 
 ---

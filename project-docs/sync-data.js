@@ -1,21 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
-/**
- * Script de sincronización de datos para el modo offline (file:///) y servidor HTTP.
- * Lee los archivos reales generados por las skills:
- * - project-docs/feature_list.json (o raíz)
- * - project-docs/project-spec.json (o raíz)
- * - project-docs/knowledge/knowledge-index.json
- * - project-docs/knowledge/*.md y modules/**\/*.md (Docs-as-Code)
- * - project-docs/progres/current.json (o progress/current.json)
- * - project-docs/progres/history.json (o progress/history.json)
- *
- * Y actualiza automáticamente project-docs/data-fallback.js y knowledge-index.json
- * para que el tablero muestre la documentación y diagramas reales tanto en local como por servidor.
- */
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const PROJECT_DOCS_DIR = __dirname;
 const ROOT_DIR = path.resolve(__dirname, '..');
 

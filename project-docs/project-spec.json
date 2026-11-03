@@ -1,220 +1,115 @@
 {
   "project": {
-    "name": "CloudSaaS Platform",
-    "tagline": "E-Commerce & Microservicios Cloud con Arquitectura Limpia y Eventos Asíncronos",
-    "description": "Plataforma SaaS integral de comercio electrónico y microservicios orientada a eventos. Diseñada para alta concurrencia, resiliencia financiera y trazabilidad SDD. Gestiona catálogo de productos en tiempo real, carritos de compra de baja latencia con sincronización Redis, pasarela de pagos con prevención de duplicados e idempotencia, facturación con redondeo contable estricto, despacho asíncrono con Dead Letter Queues (DLQ) y observabilidad mediante streams de analítica y métricas Prometheus.",
-    "version": "2.0.0",
-    "type": "Fullstack / Cloud Distributed Microservices",
-    "maturity": "SDD 2.0 (Spec Driven Development)",
-    "verification_mode": "verify.sh + Test Suites"
+    "name": "AI Agentic SDD Engineering Harness",
+    "description": "Arnés universal y agnóstico de ingeniería de software dirigida por especificaciones (Spec Driven Development). Provee orquestación multi-agente, sincronización de skills triple, base de conocimiento anti-sesgo y tablero de seguimiento interactivo en Screaming Architecture.",
+    "version": "2.5.0",
+    "type": "universal-agentic-harness",
+    "architecture": "Multi-Agent System (MAS) + Screaming Architecture + Triple-Mirror Sync + Docs-as-Code"
   },
-  "business_goals": [
-    "Garantizar transacciones de pago atómicas, seguras y sin duplicidad mediante llaves de idempotencia.",
-    "Mantener latencia de consulta de catálogo < 50ms mediante cursor pagination e invalidación reactiva de cache.",
-    "Aislamiento estricto de dominios con Clean Architecture para permitir escalado y despliegues independientes.",
-    "Trazabilidad completa de especificaciones EARS, pruebas unitarias y verificación continua."
-  ],
-  "tech_stack": {
-    "runtimes": [
+  "runtime": {
+    "language": "Node.js (Universal Tooling) & Multi-Stack Agnostic",
+    "version": "Node.js v18+ / Agnóstico para proyectos cliente (.NET, Python, Go, Node, Rust)",
+    "packageManager": "npm"
+  },
+  "environment": {
+    "required": [],
+    "optional": [
       {
-        "name": "Node.js & TypeScript",
-        "version": "v20.x (LTS) / TS 5.4",
-        "purpose": "APIs REST, Gateway y orquestación de servicios asíncronos",
-        "icon": "⚡"
+        "name": "PORT",
+        "description": "Puerto para el servidor HTTP local de visualización",
+        "defaultValue": "3000"
       },
       {
-        "name": ".NET 10 / C#",
-        "version": "10.0 (Preview / LTS)",
-        "purpose": "Workers de alta concurrencia, reglas de facturación contable y procesamiento intensivo",
-        "icon": "🔷"
-      },
-      {
-        "name": "Vanilla JS & Tailwind v4",
-        "version": "ES2024 / Tailwind @tailwindcss/browser@4",
-        "purpose": "Tablero de seguimiento de ingeniería con Screaming Architecture y Three.js",
-        "icon": "🎨"
-      }
-    ],
-    "databases": [
-      {
-        "name": "PostgreSQL 16",
-        "type": "Relacional ACID",
-        "port": 5432,
-        "purpose": "Persistencia principal transaccional de órdenes, usuarios, roles y catálogo con migraciones automáticas",
-        "icon": "🐘"
-      },
-      {
-        "name": "Redis 7.2",
-        "type": "In-Memory Key-Value / Cache",
-        "port": 6379,
-        "purpose": "Cache distribuido de lectura, sesiones de carrito volátiles y locks distribuidos (Redlock)",
-        "icon": "🔴"
-      }
-    ],
-    "messaging": [
-      {
-        "name": "RabbitMQ 3.13 / Apache Kafka",
-        "type": "Message Broker & Colas de Eventos",
-        "port": 5672,
-        "purpose": "Procesamiento asíncrono de órdenes, eventos de integración y Dead Letter Queues (DLQ)",
-        "icon": "🐇"
-      }
-    ],
-    "libraries": [
-      {
-        "name": "Zod / FluentValidation",
-        "category": "Validación & Contratos",
-        "purpose": "Validación estricta de DTOs en tiempo de compilación y ejecución para contratos de API OpenAPI v3"
-      },
-      {
-        "name": "jsonwebtoken & node-crypto",
-        "category": "Seguridad & Criptografía",
-        "purpose": "Tokens JWT (Access + Refresh), verificación RBAC y validación de firmas HMAC-SHA256 en webhooks"
-      },
-      {
-        "name": "Prisma / Entity Framework Core",
-        "category": "ORM & Persistencia",
-        "purpose": "Mapeo objeto-relacional con pool de conexiones gestionado y migraciones deterministas"
-      },
-      {
-        "name": "Prometheus Client & Winston",
-        "category": "Observabilidad & Telemetría",
-        "purpose": "Exportador de métricas en /metrics y registro de logs estructurados JSON con correlation_id"
-      },
-      {
-        "name": "Three.js r128",
-        "category": "Visualización 3D",
-        "purpose": "Constelación 3D espacial con pesos de importancia, sprites y órbitas"
-      },
-      {
-        "name": "Vitest / Supertest / xUnit",
-        "category": "Aseguramiento de Calidad",
-        "purpose": "Suites completas de pruebas unitarias, de integración y regresión TDD/SDD"
+        "name": "CI",
+        "description": "Indicador de entorno de integración continua",
+        "defaultValue": "false"
       }
     ]
   },
   "architecture": {
-    "style": "Clean Architecture (Onion / Hexagonal) + Event-Driven Architecture (EDA)",
-    "description": "Arquitectura modular por capas con inversión de dependencias estricta. Las capas internas de Dominio no conocen frameworks, bases de datos ni servicios externos. La comunicación entre dominios desacoplados se realiza mediante eventos asíncronos publicados en colas de mensajería.",
+    "style": "Multi-Agent System (MAS) + Screaming Architecture (Modular)",
+    "patterns": [
+      "Spec Driven Development (SDD)",
+      "Triple-Mirror Skills Synchronization",
+      "Docs-as-Code (Markdown + Mermaid C4/UML)",
+      "Proportional Synchronized Dual Editor",
+      "Pyramidal 3D Constellation"
+    ],
     "layers": [
       {
-        "name": "Capa 1: Clientes & Perímetro",
-        "badge": "External Entry",
-        "description": "Aplicaciones cliente (Web, Móvil, Agentes de IA) y proveedores de webhooks que acceden al sistema a través de HTTPS/WSS."
+        "name": "Platform Rules & Instructions",
+        "description": "Reglas canónicas de branching ({type}/INT-{id}/{name} ≤80c) y commits semánticos en .agents/, .opencode/ y .github/."
       },
       {
-        "name": "Capa 2: API Gateway & Seguridad",
-        "badge": "Gateway / Edge",
-        "description": "Control de tráfico, terminación TLS, rate limiting perimetral, middleware de autenticación JWT y enrutamiento hacia los dominios internos."
+        "name": "Multi-Agent Orchestrator",
+        "description": "Roles especializados: leader, spec-author, implementer y reviewer con puertas de decisión humana (ask_question)."
       },
       {
-        "name": "Capa 3: Dominios & Microservicios (Clean Core)",
-        "badge": "Core Domain & Use Cases",
-        "description": "Casos de uso y reglas de negocio aisladas: Auth, Catálogo, Carrito, Pagos, Despacho, Analítica y Notificaciones."
+        "name": "Tri-Platform Skills Registry",
+        "description": "Catálogo de 18 skills homologadas con fuente de verdad en .opencode/skills/ y espejos automáticos en .github/ y .agents/."
       },
       {
-        "name": "Capa 4: Datos, Cache & Event Broker",
-        "badge": "Infrastructure & State",
-        "description": "PostgreSQL (ACID), Redis (Cache & Locks) y RabbitMQ (Broker de eventos asíncronos y colas DLQ)."
-      }
-    ],
-    "patterns": [
-      {
-        "name": "Clean / Hexagonal Architecture",
-        "type": "Estructural",
-        "description": "Aislamiento total del núcleo de negocio mediante puertos e interfaces (Domain → Application → Infrastructure)."
+        "name": "Anti-Bias Sovereign Knowledge Base",
+        "description": "Directorio project-docs/knowledge/ con modelo C4, diagramas UML, ERD, diccionario de datos, reglas BR-* y ADRs."
       },
       {
-        "name": "Repository & Unit of Work",
-        "type": "Persistencia",
-        "description": "Abstrae el motor SQL garantizando transacciones atómicas coordinadas entre múltiples agregados."
-      },
-      {
-        "name": "CQRS Ligero (Command Query Separation)",
-        "type": "Rendimiento",
-        "description": "Separa lecturas rápidas optimizadas con Redis de comandos transaccionales hacia PostgreSQL."
-      },
-      {
-        "name": "Idempotency Key Pattern",
-        "type": "Resiliencia Financiera",
-        "description": "Previene cobros duplicados en la pasarela de pagos registrando llaves de idempotencia en Redis."
-      },
-      {
-        "name": "Dead Letter Queue (DLQ) & Exponential Backoff",
-        "type": "Mensajería",
-        "description": "Aísla eventos fallidos tras reintentos exponenciales para análisis forense sin bloquear el pipeline."
-      },
-      {
-        "name": "Banker's Rounding (IEEE 754)",
-        "type": "Lógica Contable",
-        "description": "Algoritmo de redondeo bancario a dos decimales para evitar discrepancias de centavos en facturas e impuestos."
+        "name": "Interactive Tracking Dashboard",
+        "description": "Tablero web interactivo en project-docs/ con Tailwind CSS v4, Three.js 3D, Editorial Library Hub y Editor Dual ContextForge."
       }
     ]
   },
+  "tech_stack": {
+    "orchestration": "Google Antigravity 2.0 / OpenCode / GitHub Copilot",
+    "tooling": "Node.js (ES Modules), esbuild",
+    "frontend": "Vanilla JS, Tailwind CSS v4 (@tailwindcss/browser@4), Three.js r128",
+    "documentation": "Docs-as-Code, Mermaid.js 10.9+, GitHub Flavored Markdown",
+    "testing": "Node.js Test Runner, Playwright E2E"
+  },
   "modules": [
     {
-      "id": "infra",
-      "name": "Infraestructura & Plataforma Base",
-      "purpose": "Scaffolding de base de datos relacional, pool de conexiones, migraciones versionadas y workers de procesamiento en cola.",
-      "responsibilities": [
-        "Inicialización de PostgreSQL con healthchecks activos",
-        "Ejecución determinista de migraciones en arranque",
-        "Worker asíncrono consumidor de colas con Dead Letter Queue (DLQ)"
-      ],
-      "features": ["INT-001", "INT-008"],
-      "tech": "PostgreSQL 16, Docker Compose, RabbitMQ, verify.sh",
-      "status": "in_progress"
+      "id": "agent-orchestrator",
+      "name": "Orquestador Multi-Agente & Reglas de Plataforma",
+      "tech": "Antigravity Roles, OpenCode Rules, Copilot Instructions",
+      "description": "Coordina roles especializados (leader, spec-author, implementer, reviewer) con guardrails de ramas y commits."
     },
     {
-      "id": "backend",
-      "name": "Servicios Core & Catálogo",
-      "purpose": "Autenticación segura JWT, roles de usuario RBAC, catálogo de productos con paginación cursor y carrito en memoria.",
-      "responsibilities": [
-        "Emisión y rotación de tokens JWT (Access + Refresh)",
-        "Middleware de autenticación y aislamiento de roles",
-        "Endpoints de catálogo con latencia < 50ms y filtros full-text",
-        "Gestión atómica de stock en carrito temporal y persistente con Redis"
-      ],
-      "features": ["INT-002", "INT-003", "INT-004", "INT-005"],
-      "tech": "Node.js, TypeScript, Redis 7, JWT, Zod",
-      "status": "in_progress"
+      "id": "triple-sync-engine",
+      "name": "Motor de Sincronización Triple de Skills",
+      "tech": "Node.js, FileSystem Mirroring",
+      "description": "Mantiene paridad estricta entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/."
     },
     {
-      "id": "billing",
-      "name": "Facturación & Pasarelas de Pago",
-      "purpose": "Flujo de cobro seguro con pasarelas (Stripe/PSE), webhooks firmados con HMAC y redondeo financiero contable.",
-      "responsibilities": [
-        "Integración con API de pagos con idempotencia obligatoria",
-        "Validación criptográfica de webhooks con HMAC-SHA256",
-        "Cálculo de impuestos con algoritmo de redondeo contable exacto"
-      ],
-      "features": ["INT-006", "INT-007"],
-      "tech": "Stripe SDK, Crypto HMAC, Banker's Rounding",
-      "status": "pending"
+      "id": "knowledge-engine",
+      "name": "Motor de Base de Conocimiento Anti-Sesgo",
+      "tech": "Docs-as-Code, Mermaid C4/UML, Markdown",
+      "description": "Genera y audita modelos C4, diagramas UML, ERD, diccionario de datos, reglas de negocio BR-* y decisiones ADR."
     },
     {
-      "id": "analytics",
-      "name": "Analítica & Streams de Eventos",
-      "purpose": "Ingesta no bloqueante de eventos de comportamiento y métricas operativas de la plataforma.",
-      "responsibilities": [
-        "Buffer de eventos en memoria con descarga por lotes comprimidos",
-        "Exportador de métricas Prometheus para monitoreo en /metrics"
-      ],
-      "features": ["INT-009"],
-      "tech": "Prometheus, Stream Ingestion, gzip",
-      "status": "pending"
+      "id": "dashboard-visualizer",
+      "name": "Tablero de Seguimiento Visual & Editor Dual",
+      "tech": "Vanilla JS (ES Modules), Tailwind CSS v4, Three.js, ContextForge Dual Block Editor",
+      "description": "Interfaz interactiva con métricas KPI, biblioteca por estantes, constelación 3D piramidal y buscador Omnibox (Ctrl+K)."
     },
     {
-      "id": "notifications",
-      "name": "Comunicaciones & Notificaciones",
-      "purpose": "Servicio de emails transaccionales con plantillas seguras contra inyecciones y colas de reintento.",
-      "responsibilities": [
-        "Renderizado seguro de plantillas HTML responsivas",
-        "Gestión de rebotes, reintentos SMTP/SES y preferencias de usuario"
-      ],
-      "features": ["INT-010"],
-      "tech": "SMTP / AWS SES, HTML Sanitizer, Queue Retries",
-      "status": "pending"
+      "id": "testing-qa-suite",
+      "name": "Suite de Pruebas & Calidad",
+      "tech": "Node.js Test Runner, Playwright E2E, Static Analysis",
+      "description": "Batería de tests unitarios, caja blanca/negra, aceptación end-to-end y auditoría de código."
     }
-  ]
+  ],
+  "checks": {
+    "build": {
+      "command": "npm run build",
+      "timeout": 60
+    },
+    "test": {
+      "command": "npm test",
+      "timeout": 120,
+      "hasTests": true
+    },
+    "verify": {
+      "command": "node project-docs/sync-data.js",
+      "timeout": 60
+    }
+  }
 }
