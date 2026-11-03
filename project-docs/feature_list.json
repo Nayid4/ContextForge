@@ -163,7 +163,7 @@
       "weight": 85,
       "branch": "feature/INT-008/playwright_acceptance_testing",
       "spec_folder": "specs/008_playwright_acceptance_testing",
-      "status": "pending",
+      "status": "done",
       "acceptance": [
         "Script de prueba automatizada verificando carga de index.html",
         "Verificación de renderizado de la constelación 3D y conmutación de pestañas",

@@ -7,7 +7,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3333;
+const HOST = process.env.HOST || '127.0.0.1';
 // Raíz del proyecto (un nivel arriba de project-docs) para servir tanto /project-docs/ como archivos en raíz
 const ROOT_DIR = path.resolve(__dirname, '..');
 
@@ -80,7 +81,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   const url = `http://localhost:${PORT}/project-docs/`;
   console.log(`========================================================`);
   console.log(`  Tablero de Seguimiento SDD Activo en Vivo`);
@@ -93,5 +94,5 @@ server.listen(PORT, () => {
   const openCmd = process.platform === 'win32' ? `start ${url}`
                 : process.platform === 'darwin' ? `open ${url}`
                 : `xdg-open ${url}`;
-  exec(openCmd, () => {});
+  if (!process.env.NO_OPEN) { exec(openCmd, () => {}); }
 });
