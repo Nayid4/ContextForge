@@ -10,7 +10,13 @@
     "test:e2e": "node --test tests/e2e/**/*.test.js",
     "build": "npx esbuild project-docs/src/main.js --bundle --outfile=project-docs/dist/app.bundle.js --format=iife",
     "sync": "node project-docs/sync-data.js",
-    "start": "node project-docs/serve.js"
+    "start": "node project-docs/serve.js",
+    "test:acceptance": "npx playwright test",
+    "test:whitebox": "node --test tests/whitebox/**/*.test.js",
+    "test:blackbox": "node --test tests/blackbox/**/*.test.js",
+    "test:system": "node --test tests/system/**/*.test.js",
+    "test:load": "node --test tests/load/**/*.test.js",
+    "test:all": "node --test tests/unit/**/*.test.js tests/e2e/**/*.test.js tests/whitebox/**/*.test.js tests/blackbox/**/*.test.js tests/system/**/*.test.js tests/load/**/*.test.js && npx playwright test"
   },
   "keywords": [
     "antigravity",
@@ -24,6 +30,7 @@
   "author": "Google Antigravity & Harness Engineering Team",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "esbuild": "^0.25.0"
   }
 }

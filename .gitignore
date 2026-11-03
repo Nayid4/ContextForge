@@ -12,6 +12,8 @@ dist/
 !project-docs/dist/
 build/
 coverage/
+test-results/
+playwright-report/
 *.log
 
 # ─── IDE ───────────────────────────────────────────────────────────

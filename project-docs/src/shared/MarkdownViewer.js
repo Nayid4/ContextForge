@@ -15,7 +15,7 @@ import { Icons } from './Icons.js';
  */
 
 export function renderMarkdown(content = '') {
-  if (!content) return '<p class="text-slate-400 italic">Documento vacío.</p>';
+  if (!content || typeof content !== 'string') return '<p class="text-slate-400 italic">Documento vacío.</p>';
   return parseMarkdownNative(content);
 }
 
@@ -286,6 +286,10 @@ function parseMarkdownNative(md) {
     html.push(`<p class="my-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-[1.75em]">${formatInline(line)}</p>`);
   }
 
+  if (inCodeBlock) {
+    const codeText = codeBuffer.join('\n');
+    html.push(`<div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md"><div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><pre><code>${escapeHtml(codeText)}</code></pre></div></div>`);
+  }
   if (inTable) {
     html.push(renderInteractiveTableHtml(tableHeaders, tableRows));
   }
