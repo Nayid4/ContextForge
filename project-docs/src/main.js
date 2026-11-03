@@ -1085,6 +1085,82 @@ class App {
         return;
       }
 
+      // Conmutar entre Niveles de Perspectiva (Global / Módulos / Dossier Maestro)
+      const perspectiveBtn = e.target.closest('[data-kb-perspective]');
+      if (perspectiveBtn) {
+        const targetPersp = perspectiveBtn.getAttribute('data-kb-perspective');
+        document.querySelectorAll('.kb-perspective-btn').forEach(btn => {
+          btn.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
+          btn.classList.add('text-slate-600', 'dark:text-slate-400', 'font-medium');
+        });
+        perspectiveBtn.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
+        perspectiveBtn.classList.remove('text-slate-600', 'dark:text-slate-400', 'font-medium');
+
+        document.querySelectorAll('.kb-perspective-panel').forEach(panel => {
+          panel.classList.add('hidden');
+        });
+        const targetPanel = document.getElementById(`kb-perspective-panel-${targetPersp}`);
+        if (targetPanel) {
+          targetPanel.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Conmutar Pestaña de Módulo en Bounded Contexts
+      const moduleTabBtn = e.target.closest('[data-module-tab]');
+      if (moduleTabBtn) {
+        const targetMod = moduleTabBtn.getAttribute('data-module-tab');
+        document.querySelectorAll('.kb-module-tab-btn').forEach(btn => {
+          btn.classList.remove('active', 'bg-purple-600', 'text-white', 'font-bold', 'shadow-xs');
+          btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'font-medium');
+        });
+        moduleTabBtn.classList.add('active', 'bg-purple-600', 'text-white', 'font-bold', 'shadow-xs');
+        moduleTabBtn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'font-medium');
+
+        document.querySelectorAll('.kb-module-content-panel').forEach(panel => {
+          panel.classList.add('hidden');
+        });
+        const targetContent = document.getElementById(`kb-module-content-${targetMod}`);
+        if (targetContent) {
+          targetContent.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Copiar Megadocumento Maestro al portapapeles
+      const copyMasterBtn = e.target.closest('[data-action="copy-master-doc"]');
+      if (copyMasterBtn) {
+        const masterContent = store.getState().knowledgeIndex?.docs?.['MASTER-PROJECT-KNOWLEDGE.md'] || '';
+        if (masterContent && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(masterContent).then(() => {
+            const origHtml = copyMasterBtn.innerHTML;
+            copyMasterBtn.innerHTML = `<span class="inline-flex items-center gap-1">${Icons.checkCircle('w-3.5 h-3.5')} <span>¡Dossier Copiado!</span></span>`;
+            setTimeout(() => { copyMasterBtn.innerHTML = origHtml; }, 2200);
+          }).catch(() => {
+            store.showNotification('Error al copiar el dossier maestro', 'warning');
+          });
+        }
+        return;
+      }
+
+      // Descargar Megadocumento Maestro .md
+      const downloadMasterBtn = e.target.closest('[data-action="download-master-doc"]');
+      if (downloadMasterBtn) {
+        const masterContent = store.getState().knowledgeIndex?.docs?.['MASTER-PROJECT-KNOWLEDGE.md'] || '';
+        if (masterContent) {
+          const blob = new Blob([masterContent], { type: 'text/markdown;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'MASTER-PROJECT-KNOWLEDGE.md';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        return;
+      }
+
       // Conmutar entre Modo Lectura y Modo Editor en la Base de Conocimiento
       const toggleEditorBtn = e.target.closest('#btn-toggle-doc-editor');
       if (toggleEditorBtn) {

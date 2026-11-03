@@ -1,22 +1,37 @@
-# Módulo: knowledge-engine (Motor de Base de Conocimiento Anti-Sesgo)
+---
+id: MOD-KNOW-SPEC
+title: "Módulo: knowledge-engine — Especificación & Tarjetas CRC"
+module: "knowledge-engine"
+status: "Publicado"
+version: "4.0.0"
+last_updated: "2026-11-03"
+tags: ["knowledge-engine", "docs-as-code", "rag", "graphrag", "crc-cards"]
+---
+
+# Módulo: knowledge-engine — Especificación & Tarjetas CRC
 
 > [!NOTE]
-> Bounded Context responsable de extraer, modelar y persistir la arquitectura del sistema, requerimientos formales, reglas de negocio y directrices anti-sesgo bajo el paradigma Docs-as-Code.
+> Bounded Context encargado de la extracción, estandarización y mantenimiento de la Base de Conocimiento Soberana Docs-as-Code para alimentar agentes de IA y desarrolladores sin sesgo.
 
-## 1. Responsabilidades del Módulo
-- Elicitación profunda en 2 fases (Topología general $\to$ Inspección granular por módulo).
-- Especificación formal bajo IEEE 830 (RF) y FURPS+ (RNF).
-- Catálogo ágil bajo INVEST, Scrum (DoR/DoD) y XP.
-- Diagramación C4 y UML en sintaxis Mermaid ultra-estricta con etiquetas entre comillas dobles.
-- Mantenimiento incremental de reglas e invariantes sin re-escaneos recursivos.
+---
 
-## 2. Artefactos Generados
-- `functional-requirements.md` (SRS formal)
-- `user-stories-catalog.md` (Historias INVEST)
-- `system-capabilities.md` (Inventario de onboarding)
-- `c4-model.md` & `uml-diagrams.md` (Diagramas arquitectónicos)
-- `data-dictionary.md` (ERD y persistencia)
-- `business-rules.md` (Catálogo BR-*)
-- `adr-catalog.md` (Registro de decisiones)
-- `external-services.md` & `coding-standards.md`
-- `traceability-matrix.md` (RTM cruzada)
+## 1. Alcance y Estado de Cobertura
+- **Estado de Cobertura**: `COMPLETAMENTE CUBIERTO`
+- **Responsabilidad Primaria**: Elicitar la visión del producto, diagnosticar la arquitectura real AS-IS, mantener el catálogo de reglas `BR-*` y compilar el megadocumento `MASTER-PROJECT-KNOWLEDGE.md`.
+
+---
+
+## 2. Tarjetas CRC del Módulo (Class-Responsibility-Collaborator)
+
+| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |
+|---|---|---|---|
+| `DocScanner` | `<<Scanner>>` | 1. Recorrer `project-docs/knowledge/` recursivamente.<br/>2. Extraer títulos, resúmenes y metadatos AST.<br/>3. Calcular tiempo de lectura y conteo de palabras. | `FileSystem`, `MarkdownParser` |
+| `DiagramExtractor` | `<<Extractor>>` | 1. Parsear bloques ` ```mermaid ` en documentos clave.<br/>2. Enriquecer objetos de diagrama con código limpio. | `KnowledgeIndex` |
+| `MasterCompiler` | `<<Compiler>>` | 1. Unificar todos los documentos 01-12 y módulos en `MASTER-PROJECT-KNOWLEDGE.md`.<br/>2. Generar tabla de contenidos ancla interactiva. | `DocScanner`, `FileSystem` |
+
+---
+
+## 3. Contratos de Salida
+- `project-docs/knowledge/knowledge-index.json`
+- `project-docs/data-fallback.js`
+- `project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`

@@ -1,17 +1,35 @@
-# Módulo: testing-qa-suite (Suite de Pruebas & Calidad)
+---
+id: MOD-TEST-SPEC
+title: "Módulo: testing-qa-suite — Especificación & Tarjetas CRC"
+module: "testing-qa-suite"
+status: "Publicado"
+version: "4.0.0"
+last_updated: "2026-11-03"
+tags: ["testing", "qa", "verification", "crc-cards", "playwright"]
+---
+
+# Módulo: testing-qa-suite — Especificación & Tarjetas CRC
 
 > [!NOTE]
-> Bounded Context responsable de la verificación continua del arnés mediante pruebas unitarias nativas y pruebas de aceptación E2E con Playwright.
+> Bounded Context encargado de la suite de pruebas automatizadas en 8 niveles, runner de `verify.sh` y automatización end-to-end con Playwright.
 
-## 1. Responsabilidades del Módulo
-- Ejecución de pruebas unitarias ultra-rápidas mediante Node.js Test Runner nativo (`npm test`).
-- Pruebas de aceptación funcional tipo smoke (`npm run test:e2e`).
-- Validación de convenciones de branching (`{type}/INT-{id}/{name}` $\le 80$c) y commits semánticos.
-- Verificación de serialización bidireccional entre Markdown y Bloques Visuales.
-- Cobertura de cálculos de tiempo de lectura y clasificación temática de estantes.
+---
 
-## 2. Componentes de Prueba
-- `tests/unit/markdown-parser.test.js`: Pruebas de renderizado Markdown, TOC y serialización de bloques.
-- `tests/unit/sync-data.test.js`: Pruebas de indexación y generación de `data-fallback.js`.
-- `tests/unit/branching-rules.test.js`: Pruebas de reglas de ramas y formato de commits.
-- `tests/e2e/dashboard-smoke.test.js`: Pruebas de evaluación del bundle y dependencias del DOM.
+## 1. Alcance y Estado de Cobertura
+- **Estado de Cobertura**: `COMPLETAMENTE CUBIERTO`
+- **Responsabilidad Primaria**: Garantizar que el arnés y el tablero pasen el 100% de los niveles de verificación antes de cualquier entrega o cierre de spec.
+
+---
+
+## 2. Tarjetas CRC del Módulo (Class-Responsibility-Collaborator)
+
+| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |
+|---|---|---|---|
+| `VerifyRunner` | `<<TestRunner>>` | 1. Ejecutar las 8 fases de `verify.sh`.<br/>2. Detener el pipeline ante cualquier fallo (código != 0).<br/>3. Recompilar y sincronizar datos automáticamente. | `ChildProcess`, `TestSuites` |
+| `PlaywrightHarness` | `<<E2EFramework>>` | 1. Levantar servidor local en puerto dinámico.<br/>2. Ejecutar escenarios de aceptación en navegador real.<br/>3. Capturar capturas y trazas ante fallos. | `PlaywrightBrowser`, `DashboardApp` |
+
+---
+
+## 3. Contratos de Entrada y Salida
+- **Comando Canónico**: `bash verify.sh` o `npm run test:all`
+- **Output**: 56 pruebas pasando (16 Unit, 5 ATDD Smoke, 12 Whitebox, 8 Blackbox, 7 System, 1 Load, 7 Acceptance E2E).

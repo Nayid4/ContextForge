@@ -1,20 +1,45 @@
-# Módulo: dashboard-visualizer (Tablero de Seguimiento Visual & Editor Dual)
+---
+id: MOD-DASH-SPEC
+title: "Módulo: dashboard-visualizer — Especificación & Tarjetas CRC"
+module: "dashboard-visualizer"
+status: "Publicado"
+version: "4.0.0"
+last_updated: "2026-11-03"
+tags: ["dashboard", "vanilla-js", "tailwind-v4", "three-js", "dual-editor", "crc-cards"]
+---
+
+# Módulo: dashboard-visualizer — Especificación & Tarjetas CRC
 
 > [!NOTE]
-> Bounded Context responsable de la experiencia de usuario y visualización interactiva del arnés en `project-docs/`, implementado bajo Screaming Architecture con Tailwind CSS v4 y Three.js.
+> Bounded Context encargado de la visualización web interactiva del arnés, métricas KPI, editor dual ContextForge, grafos de dependencias SVG y constelación 3D en Three.js con soporte offline nativo (`file:///`).
 
-## 1. Responsabilidades del Módulo
-- Métricas KPI de avance en tiempo real (features, bugs, avance ponderado).
-- Biblioteca Editorial organizada en 6 estantes temáticos con tarjeta Hero destacada.
-- Lector de artículos con columna de 780px centrada e interlineado de 1.75em.
-- Tabla de Contenidos flotante (On-This-Page / TOC) con navegación por anclajes.
-- Editor Dual ContextForge (Modo Markdown split-pane vs Modo Bloques Visuales) con scroll sincronizado proporcional anti-bloqueo.
-- Constelación 3D espacial estructurada en 4 niveles piramidales en Three.js.
-- Búsqueda Global Omnibox modal (`Ctrl+K` / `Cmd+K`).
-- Soporte 100% offline mediante `data-fallback.js` (protocolo `file:///`) y servidor HTTP `serve.js`.
+---
 
-## 2. Tecnologías
-- Vanilla JS (ES Modules)
-- Tailwind CSS v4 (`@tailwindcss/browser@4`)
-- Three.js r128
-- Mermaid.js 10.9+
+## 1. Alcance y Estado de Cobertura
+- **Estado de Cobertura**: `COMPLETAMENTE CUBIERTO`
+- **Responsabilidad Primaria**: Renderizar el estado vivo del proyecto, permitir la edición Docs-as-Code en tiempo real, visualizar la arquitectura en diagramas interactivos y proveer navegación fluida sin emojis ni dependencias de frameworks pesados.
+
+---
+
+## 2. Lenguaje Ubicuo Local
+- **Reactive Store**: Almacén central inmutable que gestiona el estado y notifica cambios a la vista.
+- **Dual Editor**: Editor con paneles simultáneos de Markdown crudo y Bloques Visuales con sincronización proporcional de scroll.
+- **Offline Fallback**: Respaldo en memoria inyectado por `data-fallback.js` para silenciar bloqueos CORS en `file:///`.
+- **ThreeJS Constellation**: Representación astronómica 3D de las dependencias jerárquicas del proyecto.
+
+---
+
+## 3. Tarjetas CRC del Módulo (Class-Responsibility-Collaborator)
+
+| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |
+|---|---|---|---|
+| `DashboardStore` | `<<StateStore>>` | 1. Mantener estado unificado (features, specs, conocimiento).<br/>2. Notificar a observadores registrados ante mutaciones.<br/>3. Filtrar y paginar datos reactivamente. | `SubscriberCallbacks`, `LocalStorageCache` |
+| `MarkdownViewer` | `<<Renderer>>` | 1. Parsear sintaxis Markdown a HTML seguro.<br/>2. Renderizar alertas GitHub y tablas sticky.<br/>3. Convertir Markdown bidireccionalmente a bloques visuales. | `DOMPurify`, `MermaidViewer` |
+| `SpaceView3D` | `<<Visualizer>>` | 1. Inicializar escena Three.js, cámara y luces.<br/>2. Renderizar constelación piramidal de nodos.<br/>3. Destruir listeners y liberar memoria en `unmount`. | `ThreeJS`, `DashboardStore` |
+| `MermaidViewer` | `<<DiagramViewer>>` | 1. Renderizar código Mermaid como SVG interactivo.<br/>2. Ofrecer conmutador entre vista visual y código fuente.<br/>3. Habilitar zoom a pantalla completa y enlace a Draw.io. | `WindowMermaid`, `ClipboardAPI` |
+
+---
+
+## 4. Contratos de Entrada y Salida (DTOs / Interfaces)
+- **Input**: `window.__FALLBACK_DATA__` o respuestas JSON de `fetchProjectData()`.
+- **Output**: Renderizado DOM reactivo en `#app`, eventos de navegación por hash y persistencia local de documentos modificados.

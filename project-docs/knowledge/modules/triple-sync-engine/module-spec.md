@@ -1,20 +1,35 @@
-# Módulo: triple-sync-engine (Motor de Sincronización Triple de Skills)
+---
+id: MOD-SYNC-SPEC
+title: "Módulo: triple-sync-engine — Especificación & Tarjetas CRC"
+module: "triple-sync-engine"
+status: "Publicado"
+version: "4.0.0"
+last_updated: "2026-11-03"
+tags: ["triple-sync", "skills-sync", "source-of-truth", "crc-cards"]
+---
+
+# Módulo: triple-sync-engine — Especificación & Tarjetas CRC
 
 > [!NOTE]
-> Bounded Context responsable de preservar la paridad estricta entre la fuente de verdad (`.opencode/skills/`) y sus espejos automáticos en Google Antigravity (`.agents/skills/`) y GitHub Copilot (`.github/skills/`).
+> Bounded Context encargado de la sincronización triple y paridad absoluta de las 18 skills entre OpenCode (`.opencode/`), GitHub Copilot (`.github/`) y Google Antigravity (`.agents/`).
 
-## 1. Responsabilidades del Módulo
-- Garantizar que las 18 skills de ingeniería posean idéntico contenido y frontmatter (`name` + `description`).
-- Proveer la skill `/sync-skills` para auditoría y propagación unidireccional (de fuente a espejos).
-- Prevenir drift o desincronización funcional entre plataformas de IA.
+---
 
-## 2. Contratos y Ubicaciones
+## 1. Alcance y Estado de Cobertura
+- **Estado de Cobertura**: `COMPLETAMENTE CUBIERTO`
+- **Responsabilidad Primaria**: Asegurar que `.opencode/skills/` se mantenga como la única fuente de verdad inmutable y que cualquier cambio se propague de forma idéntica a los espejos sin divergencia de frontmatter ni instrucciones.
+
+---
+
+## 2. Tarjetas CRC del Módulo (Class-Responsibility-Collaborator)
+
+| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |
+|---|---|---|---|
+| `SkillsSyncEngine` | `<<SyncService>>` | 1. Leer skills en `.opencode/skills/`.<br/>2. Comparar con `.github/skills/` y `.agents/skills/`.<br/>3. Replicar contenido idéntico sin mutar el origen. | `FileSystem`, `SkillMirrorAuditor` |
+| `FrontmatterValidator` | `<<Validator>>` | 1. Parsear bloque YAML `name` y `description`.<br/>2. Comprobar paridad carácter por carácter en los 3 espejos. | `YAMLParser` |
+
+---
+
+## 3. Contratos de Entrada y Salida
 - **Fuente de Verdad**: `.opencode/skills/{skill}/SKILL.md`
-- **Espejo Copilot**: `.github/skills/{skill}/SKILL.md`
-- **Espejo Antigravity**: `.agents/skills/{skill}/SKILL.md`
-
-## 3. Catálogo de Skills Sincronizadas
-- Auditoría & Conocimiento: `technical-audit`, `project-knowledge`, `requirements-analysis`.
-- Especificación & Ciclo SDD: `generate-spec`, `spec`, `start-feature`, `sdd-workflow`.
-- Técnicas de Implementación: `implement-tdd`, `implement-sdd`, `implement-ftd`, `implement`.
-- Verificación & Calidad: `write-unit-tests`, `acceptance-testing`, `api-test-plan`, `execute-api-test-plan`, `generate-verify`, `verification`, `verify-spec`, `review`, `sync-skills`.
+- **Destinos Espejo**: `.github/skills/{skill}/SKILL.md` y `.agents/skills/{skill}/SKILL.md`

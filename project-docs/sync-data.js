@@ -57,11 +57,11 @@ if (fs.existsSync(knowledgeDir)) {
 
   function classifyShelf(key) {
     if (key.startsWith('modules/')) return 'modules';
-    if (key === 'c4-model.md' || key === 'uml-diagrams.md' || key === 'data-dictionary.md') return 'architecture';
-    if (key === 'business-rules.md') return 'business_rules';
-    if (key === 'functional-requirements.md' || key === 'user-stories-catalog.md' || key === 'traceability-matrix.md') return 'requirements';
+    if (key === 'c4-model.md' || key === 'uml-diagrams.md' || key === 'data-dictionary.md' || key.includes('architecture') || key.includes('diagrams')) return 'architecture';
+    if (key === 'business-rules.md' || key.includes('rules-catalog') || key.includes('business-rules')) return 'business_rules';
+    if (key === 'functional-requirements.md' || key === 'user-stories-catalog.md' || key === 'traceability-matrix.md' || key.includes('requirements') || key.includes('stories')) return 'requirements';
     if (key === 'adr-catalog.md') return 'adrs';
-    if (key === 'coding-standards.md' || key === 'external-services.md' || key === 'system-capabilities.md') return 'standards';
+    if (key === 'coding-standards.md' || key === 'external-services.md' || key === 'system-capabilities.md' || key.includes('overview') || key.includes('domain') || key.includes('MASTER') || key.includes('code-quality')) return 'standards';
     return 'general';
   }
 
@@ -249,6 +249,29 @@ if (fs.existsSync(knowledgeDir)) {
   knowledgeIndex.docMetadata = docMetadata;
   knowledgeIndex.shelves = shelves;
   knowledgeIndex.diagrams = extractDiagrams(docs, knowledgeIndex.diagrams || []);
+
+  // Agrupar módulos y sus artefactos para el explorador modular
+  const modulesData = {};
+  for (const key of Object.keys(docs)) {
+    if (key.startsWith('modules/')) {
+      const parts = key.split('/');
+      const modName = parts[1];
+      const filename = parts[2];
+      if (!modulesData[modName]) {
+        modulesData[modName] = {
+          id: modName,
+          name: modName,
+          title: modName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+          status: 'COMPLETAMENTE CUBIERTO',
+          docs: [],
+          docMetadata: {}
+        };
+      }
+      modulesData[modName].docs.push(key);
+      modulesData[modName].docMetadata[filename] = docMetadata[key];
+    }
+  }
+  knowledgeIndex.modulesData = modulesData;
 
   // Actualizar también el archivo JSON en disco
   const kIndexPath = path.join(knowledgeDir, 'knowledge-index.json');

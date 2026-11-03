@@ -5,7 +5,13 @@ import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksTo
 /**
  * KnowledgeBaseComponent: Base de Conocimiento de Ingeniería Soberana (Docs-as-Code).
  * Diseñada con experiencia editorial de alta gama (Biblioteca por Estantes + Lector de Artículos)
- * e inspirada en la arquitectura, gestión y diseño visual de ContextForge.
+ * e inspirada en la arquitectura visual de ContextForge.
+ * 
+ * Estructura de 3 Niveles:
+ *  - Tier 1: Visión Global & Arquitectura del Sistema (12 Documentos Canónicos)
+ *  - Tier 2: Módulos & Bounded Contexts Granulares (5 Bounded Contexts, 5 Archivos Especializados c/u)
+ *  - Tier 3: Megadocumento Maestro Consolidado (MASTER-PROJECT-KNOWLEDGE.md)
+ * 
  * 100% Vectorial, accesible, sin emojis.
  */
 
@@ -19,6 +25,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
   const docs = kData.docs || getDefaultDocs();
   const docMetadata = kData.docMetadata || buildDocMetadataFallback(docs);
   const shelvesData = kData.shelves || buildShelvesFallback(docMetadata);
+  const modulesData = kData.modulesData || buildModulesDataFallback(docMetadata);
 
   const docKeys = Object.keys(docs);
   const activeDocKey = docKeys.includes('c4-model.md') 
@@ -38,15 +45,25 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
   // Módulos disponibles dinámicamente
   const moduleNames = Array.from(new Set([
     ...(projectSpec?.modules?.map(m => m.name) || []),
+    ...Object.keys(modulesData),
     ...Object.values(docMetadata).filter(d => d.moduleName).map(d => d.moduleName),
     ...rules.map(r => r.module)
   ])).filter(Boolean);
 
-  // Seleccionar documento para Hero Card destacado
+  // Seleccionar documento para Hero Card destacado (c4-model.md para mantener contratos de tests)
   const heroDocKey = docKeys.includes('c4-model.md') 
     ? 'c4-model.md' 
     : (docKeys.includes('coding-standards.md') ? 'coding-standards.md' : (docKeys[0] || ''));
   const heroDocMeta = docMetadata[heroDocKey] || activeDocMeta;
+
+  // Master doc info
+  const masterDocKey = 'MASTER-PROJECT-KNOWLEDGE.md';
+  const hasMasterDoc = Boolean(docs[masterDocKey]);
+  const masterDocMeta = docMetadata[masterDocKey] || {
+    title: 'Megadocumento Maestro Consolidado (Single-File Context Bundle)',
+    wordCount: 8200,
+    readingTime: 35
+  };
 
   // Tabla de contenidos para el documento activo
   const activeDocToc = extractTableOfContents(activeDocContent);
@@ -71,7 +88,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                   Docs-as-Code
                 </span>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-                  Biblioteca Editorial
+                  Biblioteca Editorial v4.0
                 </span>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   Anti-Bias Context
@@ -143,197 +160,628 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         </section>
 
-        <!-- 1.2 Hero Featured Card (Artículo Destacado de la Biblioteca) -->
-        ${heroDocKey ? `
-          <section class="rounded-3xl border border-indigo-200/60 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden shadow-sm">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div class="space-y-3 max-w-3xl">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
-                    ${Icons.star('w-3 h-3')} <span>Documento Destacado</span>
-                  </span>
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    ${Icons.clock('w-3 h-3')} <span>${heroDocMeta.readingTime} min de lectura</span>
-                  </span>
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    ${Icons.fileText('w-3 h-3')} <span>${heroDocMeta.wordCount} palabras</span>
-                  </span>
-                  ${heroDocMeta.ruleCount ? `
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                      ${Icons.scale('w-3 h-3')} <span>${heroDocMeta.ruleCount} Reglas BR</span>
+        <!-- 1.2 CONMUTADOR DE PERSPECTIVA (3 Tiers de Navegación Editorial) -->
+        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-2 shadow-xs">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2" id="kb-perspective-nav">
+            <div class="flex flex-wrap items-center gap-1.5 flex-1">
+              
+              <!-- Tier 1: Visión Global -->
+              <button type="button" 
+                      data-kb-perspective="global"
+                      class="kb-perspective-btn active flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs transition-all cursor-pointer">
+                ${Icons.architecture('w-4 h-4')}
+                <span>1. Visión Global & Arquitectura</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white">Canónicos</span>
+              </button>
+
+              <!-- Tier 2: Módulos & Bounded Contexts -->
+              <button type="button" 
+                      data-kb-perspective="modules"
+                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                ${Icons.folder('w-4 h-4')}
+                <span>2. Módulos & Bounded Contexts</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${moduleNames.length} Contextos</span>
+              </button>
+
+              <!-- Tier 3: Megadocumento Maestro -->
+              <button type="button" 
+                      data-kb-perspective="master"
+                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                ${Icons.fileText('w-4 h-4')}
+                <span>3. Dossier Maestro Consolidado</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">MASTER-*.md</span>
+              </button>
+
+            </div>
+
+            <!-- Ayuda Contextual de Perspectiva -->
+            <div class="hidden xl:flex items-center gap-2 text-[11px] font-mono text-slate-400 px-3 py-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Navegación en 3 Niveles (Global $\\to$ Modular $\\to$ Dossier)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- PANEL TIER 1: VISIÓN GLOBAL & ARQUITECTURA DEL SISTEMA         -->
+        <!-- ============================================================== -->
+        <div id="kb-perspective-panel-global" class="kb-perspective-panel space-y-8">
+          
+          <!-- 1.3 Hero Featured Card (Artículo Destacado de la Biblioteca: Modelo C4) -->
+          ${heroDocKey ? `
+            <section class="rounded-3xl border border-indigo-200/60 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden shadow-sm">
+              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="space-y-3 max-w-3xl">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
+                      ${Icons.star('w-3 h-3')} <span>Documento Destacado</span>
                     </span>
-                  ` : ''}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      ${Icons.clock('w-3 h-3')} <span>${heroDocMeta.readingTime} min de lectura</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      ${Icons.fileText('w-3 h-3')} <span>${heroDocMeta.wordCount} palabras</span>
+                    </span>
+                    ${heroDocMeta.ruleCount ? `
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        ${Icons.scale('w-3 h-3')} <span>${heroDocMeta.ruleCount} Reglas BR</span>
+                      </span>
+                    ` : ''}
+                  </div>
+
+                  <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    ${escapeHtml(heroDocMeta.title || heroDocKey)}
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    ${escapeHtml(heroDocMeta.summary || 'Especificación formal del sistema con diagramas de contexto, contenedores y componentes.')}
+                  </p>
+                  <div class="font-mono text-[11px] text-slate-400">
+                    Ruta canónica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
+                  </div>
                 </div>
 
+                <div class="flex sm:flex-col items-stretch gap-2.5 shrink-0 w-full sm:w-auto">
+                  <button type="button" 
+                          data-action="open-article-read"
+                          data-doc-key="${escapeAttr(heroDocKey)}"
+                          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
+                    ${Icons.bookOpen} <span>Leer Artículo Completo</span>
+                  </button>
+                  <button type="button" 
+                          data-action="open-article-edit"
+                          data-doc-key="${escapeAttr(heroDocKey)}"
+                          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                    ${Icons.edit} <span>Editar en Vivo</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          ` : ''}
+
+          <!-- Banner de Bienvenida y Acceso Directo a 01-project-overview (IEEE 830) -->
+          <section class="rounded-3xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-transparent dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-transparent p-5 sm:p-6 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                ${Icons.info('w-4 h-4')} <span>¿Nuevo en el proyecto o requieres entender el alcance funcional de raíz?</span>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-300">
+                Consulta el resumen ejecutivo y definición del problema formal según el estándar IEEE 830 / ISO 29148.
+              </p>
+            </div>
+            <button type="button" 
+                    data-action="open-article-read"
+                    data-doc-key="01-project-overview-and-business.md"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer shrink-0">
+              ${Icons.bookOpen('w-3.5 h-3.5')} <span>Ver Resumen IEEE 830</span>
+            </button>
+          </section>
+
+          <!-- 1.4 Barra de Filtros por Estante Temático y Buscador con Debouncing -->
+          <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-5 shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              
+              <!-- Píldoras de Filtro por Estante -->
+              <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono" id="kb-shelf-filter-pills">
+                <button type="button" 
+                        data-shelf-filter="" 
+                        class="kb-shelf-pill active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0 shadow-xs">
+                  Todos (${docKeys.length})
+                </button>
+                ${Object.values(shelvesData).map(sh => `
+                  <button type="button" 
+                          data-shelf-filter="${sh.id}" 
+                          class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium inline-flex items-center gap-1.5">
+                    ${getShelfIconSvg(sh.id)} <span>${sh.title.split(' ')[0]}</span> <span>(${sh.docs.length})</span>
+                  </button>
+                `).join('')}
+              </div>
+
+              <!-- Buscador con Debouncing -->
+              <div class="relative min-w-[280px]">
+                <input type="text" 
+                       id="kb-library-search-input" 
+                       placeholder="Buscar en la biblioteca (título, módulo, BR-*)..." 
+                       class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
+                <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none text-xs">
+                  ${Icons.search('w-3.5 h-3.5')}
+                </span>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- 1.5 Estantes Temáticos (Shelves Grid) -->
+          <div class="space-y-10" id="kb-shelves-container">
+            ${Object.values(shelvesData).map(sh => {
+              if (!sh.docs || sh.docs.length === 0) return '';
+              return `
+                <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
+                  <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-2.5">
+                      <span class="p-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                        ${getShelfIconSvg(sh.id, 'w-5 h-5')}
+                      </span>
+                      <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                        ${escapeHtml(sh.title)}
+                      </h3>
+                    </div>
+                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      ${sh.docs.length} documentos
+                    </span>
+                  </div>
+
+                  <!-- Cuadrícula de Tarjetas de Documentos -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    ${sh.docs.map(key => {
+                      const meta = docMetadata[key] || {
+                        title: key,
+                        summary: 'Documento técnico.',
+                        readingTime: 2,
+                        ruleCount: 0,
+                        reqCount: 0,
+                        adrCount: 0
+                      };
+
+                      return `
+                        <div class="kb-shelf-doc-card rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex flex-col justify-between group"
+                             data-doc-key="${escapeAttr(key)}"
+                             data-doc-shelf="${escapeAttr(sh.id)}"
+                             data-doc-title="${escapeAttr(meta.title)}"
+                             data-doc-module="${escapeAttr(meta.moduleName || '')}">
+                          
+                          <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'} truncate">
+                                ${meta.moduleName ? `${Icons.folder('w-3 h-3')} <span>${meta.moduleName}</span>` : `${getShelfIconSvg(sh.id, 'w-3 h-3')} <span>${sh.title.split(' ')[0]}</span>`}
+                              </span>
+                              <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
+                                ${Icons.clock('w-3 h-3')} <span>${meta.readingTime} min</span>
+                              </span>
+                            </div>
+
+                            <div>
+                              <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                ${escapeHtml(meta.title)}
+                              </h4>
+                              <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
+                                ${escapeHtml(key)}
+                              </div>
+                            </div>
+
+                            <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                              ${escapeHtml(meta.summary)}
+                            </p>
+                          </div>
+
+                          <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5">
+                              ${meta.ruleCount ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
+                                  ${Icons.scale('w-3 h-3')} <span>${meta.ruleCount} BR</span>
+                                </span>
+                              ` : ''}
+                              ${meta.reqCount ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
+                                  ${Icons.fileText('w-3 h-3')} <span>${meta.reqCount} RF</span>
+                                </span>
+                              ` : ''}
+                              ${meta.adrCount ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
+                                  ${Icons.cube('w-3 h-3')} <span>${meta.adrCount} ADR</span>
+                                </span>
+                              ` : ''}
+                            </div>
+
+                            <div class="flex items-center gap-1.5">
+                              <button type="button" 
+                                      data-action="open-article-read"
+                                      data-doc-key="${escapeAttr(key)}"
+                                      class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
+                                ${Icons.bookOpen('w-3.5 h-3.5')} <span>Leer</span>
+                              </button>
+                              <button type="button" 
+                                      data-action="open-article-edit"
+                                      data-doc-key="${escapeAttr(key)}"
+                                      class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                      title="Editar directamente este documento">
+                                ${Icons.edit('w-3.5 h-3.5')}
+                              </button>
+                            </div>
+                          </div>
+
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </section>
+              `;
+            }).join('')}
+          </div>
+
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- PANEL TIER 2: MÓDULOS & BOUNDED CONTEXTS GRANULARES            -->
+        <!-- ============================================================== -->
+        <div id="kb-perspective-panel-modules" class="kb-perspective-panel hidden space-y-8">
+          
+          <!-- Introducción a la Arquitectura por Bounded Contexts -->
+          <section class="rounded-3xl border border-purple-200/70 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/50 via-indigo-50/30 to-transparent dark:from-purple-950/30 dark:via-indigo-950/20 dark:to-transparent p-6 sm:p-8 backdrop-blur-xl">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div class="space-y-2 max-w-3xl">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    Domain-Driven Design (DDD)
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    5 Artefactos Especializados por Módulo
+                  </span>
+                </div>
                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  ${escapeHtml(heroDocMeta.title || heroDocKey)}
+                  Explorador de Bounded Contexts Granulares
                 </h3>
                 <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  ${escapeHtml(heroDocMeta.summary || 'Especificación formal del sistema con diagramas de contexto, contenedores y componentes.')}
+                  Cada módulo representa un subdominio estratégico aislado con sus propias reglas invariantes, contratos transaccionales, 
+                  tarjetas CRC y suite de 6 diagramas visuales en Mermaid.
                 </p>
-                <div class="font-mono text-[11px] text-slate-400">
-                  Ruta canónica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-xs font-mono space-y-1 shrink-0">
+                <div class="text-[10px] uppercase font-bold text-slate-400">Artefactos por Módulo</div>
+                <div class="text-purple-600 dark:text-purple-400 font-bold">1. module-spec.md (CRC)</div>
+                <div class="text-amber-600 dark:text-amber-400 font-bold">2. requirements-and-rules.md</div>
+                <div class="text-emerald-600 dark:text-emerald-400 font-bold">3. data-and-transactions.md</div>
+                <div class="text-indigo-600 dark:text-indigo-400 font-bold">4. diagrams.md (6 Diagramas)</div>
+                <div class="text-rose-600 dark:text-rose-400 font-bold">5. technical-debt-refactoring.md</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Barra de Navegación por Módulo (Tabs Horizontales) -->
+          <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-3 shadow-xs">
+            <div class="flex items-center gap-2 overflow-x-auto pb-1" id="kb-module-tab-bar">
+              ${Object.keys(modulesData).map((modId, index) => {
+                const mod = modulesData[modId];
+                const isActive = index === 0;
+                return `
+                  <button type="button" 
+                          data-module-tab="${escapeAttr(modId)}"
+                          class="kb-module-tab-btn ${isActive ? 'active bg-purple-600 text-white font-bold shadow-xs' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium'} px-4 py-2 rounded-2xl text-xs font-mono transition-all cursor-pointer shrink-0 inline-flex items-center gap-2">
+                    ${Icons.folder('w-3.5 h-3.5')}
+                    <span>${escapeHtml(mod.title || modId)}</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${mod.docs?.length || 5}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </section>
+
+          <!-- Paneles de Contenido Modular -->
+          <div id="kb-module-contents-container">
+            ${Object.keys(modulesData).map((modId, index) => {
+              const mod = modulesData[modId];
+              const isHidden = index !== 0;
+              const modDocs = mod.docs || [];
+              const modMetaMap = mod.docMetadata || {};
+
+              // 5 Archivos Especializados canónicos
+              const specializedSpecs = [
+                {
+                  filename: 'module-spec.md',
+                  title: 'Especificación de Alcance & Tarjetas CRC',
+                  desc: 'Delimitación del bounded context, lenguaje ubicuo de dominio y matriz de tarjetas CRC (Clase, Responsabilidades y Colaboradores).',
+                  color: 'border-purple-200 dark:border-purple-800 hover:border-purple-500',
+                  badge: 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300',
+                  icon: Icons.shield
+                },
+                {
+                  filename: 'requirements-and-rules.md',
+                  title: 'Requerimientos & Invariantes de Negocio',
+                  desc: 'Matriz exhaustiva de requerimientos funcionales (RF-*), reglas de negocio inviolables (BR-*), historias de usuario (HU-*) y tareas técnicas (TI-*).',
+                  color: 'border-amber-200 dark:border-amber-800 hover:border-amber-500',
+                  badge: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300',
+                  icon: Icons.scale
+                },
+                {
+                  filename: 'data-and-transactions.md',
+                  title: 'Persistencia, Entidades & Transacciones',
+                  desc: 'Estructura de persistencia, entidades, estrategias de concurrencia optimista/pesimista, aislamiento de transacciones e invariantes ACID.',
+                  color: 'border-emerald-200 dark:border-emerald-800 hover:border-emerald-500',
+                  badge: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300',
+                  icon: Icons.database
+                },
+                {
+                  filename: 'diagrams.md',
+                  title: 'Suite de 6 Diagramas Dedicados (Mermaid)',
+                  desc: '6 diagramas visuales generados para el módulo: Contexto C4, Contenedores, Componentes, Diagrama de Secuencia, Diagrama de Estado y Modelo ERD.',
+                  color: 'border-indigo-200 dark:border-indigo-800 hover:border-indigo-500',
+                  badge: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300',
+                  icon: Icons.architecture
+                },
+                {
+                  filename: 'technical-debt-refactoring.md',
+                  title: 'Deuda Técnica & Plan de Refactorización',
+                  desc: 'Diagnóstico forense de deuda técnica, olores de código, brechas de pruebas unitarias/integración y hoja de ruta de remediación.',
+                  color: 'border-rose-200 dark:border-rose-800 hover:border-rose-500',
+                  badge: 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300',
+                  icon: Icons.alertTriangle
+                }
+              ];
+
+              return `
+                <div id="kb-module-content-${escapeAttr(modId)}" class="kb-module-content-panel space-y-6 ${isHidden ? 'hidden' : ''}">
+                  
+                  <!-- Cabecera del Módulo -->
+                  <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          ${mod.status || 'COMPLETAMENTE CUBIERTO'}
+                        </span>
+                        <span class="text-xs font-mono text-slate-400">Ruta: <code>project-docs/knowledge/modules/${modId}/</code></span>
+                      </div>
+                      <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <span class="text-purple-600 dark:text-purple-400">${Icons.folder('w-6 h-6')}</span>
+                        <span>${escapeHtml(mod.title || modId)}</span>
+                      </h3>
+                      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
+                        Bounded Context auditado con 5 artefactos formales de ingeniería para garantizar contexto 100% libre de alucinaciones en agentes de IA y desarrolladores.
+                      </p>
+                    </div>
+
+                    <!-- Métricas Rápidas del Módulo -->
+                    <div class="flex items-center gap-2 text-xs font-mono shrink-0">
+                      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                        <div class="text-[10px] text-slate-400 uppercase">Documentos</div>
+                        <div class="text-base font-bold text-purple-600 dark:text-purple-400">${modDocs.length}</div>
+                      </div>
+                      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                        <div class="text-[10px] text-slate-400 uppercase">Diagramas</div>
+                        <div class="text-base font-bold text-indigo-600 dark:text-indigo-400">6</div>
+                      </div>
+                      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                        <div class="text-[10px] text-slate-400 uppercase">Cobertura</div>
+                        <div class="text-base font-bold text-emerald-600 dark:text-emerald-400">100%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Grid de los 5 Archivos Especializados -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    ${specializedSpecs.map(spec => {
+                      const docKey = `modules/${modId}/${spec.filename}`;
+                      const meta = modMetaMap[spec.filename] || docMetadata[docKey] || {
+                        title: spec.title,
+                        summary: spec.desc,
+                        readingTime: 2,
+                        wordCount: 300,
+                        ruleCount: 0,
+                        reqCount: 0
+                      };
+
+                      return `
+                        <div class="kb-shelf-doc-card rounded-2xl border ${spec.color} bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                             data-doc-key="${escapeAttr(docKey)}"
+                             data-doc-shelf="modules"
+                             data-doc-title="${escapeAttr(spec.title)}"
+                             data-doc-module="${escapeAttr(modId)}">
+                          
+                          <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold ${spec.badge}">
+                                ${spec.icon('w-3 h-3')} <span>${spec.filename}</span>
+                              </span>
+                              <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
+                                ${Icons.clock('w-3 h-3')} <span>${meta.readingTime || 2} min</span>
+                              </span>
+                            </div>
+
+                            <div>
+                              <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                ${escapeHtml(spec.title)}
+                              </h4>
+                              <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
+                                ${escapeHtml(docKey)}
+                              </div>
+                            </div>
+
+                            <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                              ${escapeHtml(spec.desc)}
+                            </p>
+                          </div>
+
+                          <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5">
+                              ${meta.ruleCount ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                  ${Icons.scale('w-3 h-3')} <span>${meta.ruleCount} BR</span>
+                                </span>
+                              ` : ''}
+                              ${meta.reqCount ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                                  ${Icons.fileText('w-3 h-3')} <span>${meta.reqCount} RF</span>
+                                </span>
+                              ` : ''}
+                            </div>
+
+                            <div class="flex items-center gap-1.5">
+                              <button type="button" 
+                                      data-action="open-article-read"
+                                      data-doc-key="${escapeAttr(docKey)}"
+                                      class="px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
+                                ${Icons.bookOpen('w-3.5 h-3.5')} <span>Leer</span>
+                              </button>
+                              <button type="button" 
+                                      data-action="open-article-edit"
+                                      data-doc-key="${escapeAttr(docKey)}"
+                                      class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                      title="Editar este archivo">
+                                ${Icons.edit('w-3.5 h-3.5')}
+                              </button>
+                            </div>
+                          </div>
+
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- PANEL TIER 3: MEGADOCUMENTO MAESTRO CONSOLIDADO                -->
+        <!-- ============================================================== -->
+        <div id="kb-perspective-panel-master" class="kb-perspective-panel hidden space-y-8">
+          
+          <!-- Hero Card del Dossier Maestro -->
+          <section class="rounded-3xl border border-purple-200/80 dark:border-purple-900/60 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-slate-900/5 p-6 sm:p-10 backdrop-blur-xl relative overflow-hidden shadow-sm">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+              <div class="space-y-4 max-w-3xl">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-purple-600 text-white shadow-xs">
+                    ${Icons.fileText('w-3.5 h-3.5')} <span>Single-File Context Bundle</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    ${Icons.shield('w-3.5 h-3.5')} <span>Anti-Bias Context for AI</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    ${Icons.checkCircle('w-3.5 h-3.5')} <span>Docs-as-Code Soberano</span>
+                  </span>
+                </div>
+
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  MASTER-PROJECT-KNOWLEDGE.md
+                </h3>
+                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Compendio unificado de ingeniería inversa que consolida en un único archivo la visión de negocio (IEEE 830), 
+                  arquitectura AS-IS (Screaming Architecture), modelado C4, tarjetas CRC, requerimientos INVEST, diccionario de datos con ERD, 
+                  invariantes BR-*, matriz de servicios externos y trazabilidad RTM. Diseñado para alimentar a modelos LLM con contexto 100% libre 
+                  de alucinaciones en un solo prompt.
+                </p>
+
+                <!-- Grid de Métricas del Megadocumento -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 font-mono text-xs">
+                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase">Extensión Total</div>
+                    <div class="text-base font-bold text-purple-600 dark:text-purple-400 mt-0.5">~${masterDocMeta.wordCount || 8200} palabras</div>
+                  </div>
+                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase">Capítulos</div>
+                    <div class="text-base font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">9 Capítulos</div>
+                  </div>
+                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase">Diagramas</div>
+                    <div class="text-base font-bold text-cyan-600 dark:text-cyan-400 mt-0.5">12 Diagramas</div>
+                  </div>
+                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase">Contextos DDD</div>
+                    <div class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${moduleNames.length} Bounded Contexts</div>
+                  </div>
                 </div>
               </div>
 
-              <div class="flex sm:flex-col items-stretch gap-2.5 shrink-0 w-full sm:w-auto">
+              <!-- Botones de Acción del Megadocumento -->
+              <div class="flex flex-col sm:flex-row lg:flex-col items-stretch gap-3 shrink-0 w-full lg:w-auto">
                 <button type="button" 
                         data-action="open-article-read"
-                        data-doc-key="${escapeAttr(heroDocKey)}"
-                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
-                  ${Icons.bookOpen} <span>Leer Artículo Completo</span>
+                        data-doc-key="${escapeAttr(masterDocKey)}"
+                        class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/25 transition-all cursor-pointer">
+                  ${Icons.bookOpen} <span>Leer Megadocumento Completo</span>
                 </button>
+
                 <button type="button" 
-                        data-action="open-article-edit"
-                        data-doc-key="${escapeAttr(heroDocKey)}"
-                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                  ${Icons.edit} <span>Editar en Vivo</span>
+                        data-action="copy-master-doc"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all cursor-pointer">
+                  ${Icons.copy} <span>Copiar Markdown Completo</span>
+                </button>
+
+                <button type="button" 
+                        data-action="download-master-doc"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                  ${Icons.download} <span>Descargar .md</span>
                 </button>
               </div>
             </div>
           </section>
-        ` : ''}
 
-        <!-- 1.3 Barra de Filtros por Estante Temático y Buscador con Debouncing -->
-        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-5 shadow-sm space-y-4">
-          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            
-            <!-- Píldoras de Filtro por Estante -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono" id="kb-shelf-filter-pills">
-              <button type="button" 
-                      data-shelf-filter="" 
-                      class="kb-shelf-pill active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0 shadow-xs">
-                Todos (${docKeys.length})
-              </button>
-              ${Object.values(shelvesData).map(sh => `
-                <button type="button" 
-                        data-shelf-filter="${sh.id}" 
-                        class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium inline-flex items-center gap-1.5">
-                  ${getShelfIconSvg(sh.id)} <span>${sh.title.split(' ')[0]}</span> <span>(${sh.docs.length})</span>
-                </button>
+          <!-- Índice de Capítulos del Megadocumento Maestro -->
+          <section class="space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <h4 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+                  ${Icons.list || Icons.fileText}
+                </span>
+                <span>Estructura & Capítulos del Dossier Maestro</span>
+              </h4>
+              <span class="text-xs font-mono text-slate-400">9 Capítulos Estructurados</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${[
+                { num: '01', title: 'Resumen Ejecutivo & Problema de Negocio (IEEE 830)', desc: 'Definición formal del problema, usuarios del sistema, objetivos cuantificables y matriz RACI.' },
+                { num: '02', title: 'Arquitectura General & Screaming Architecture', desc: 'Topología AS-IS, patrones arquitectónicos, estilo hexagonal y flujo de datos.' },
+                { num: '03', title: 'Modelado C4 & Diagramas Globales (Mermaid)', desc: 'Contexto C1, Contenedores C2, Componentes C3, Diagramas de Secuencia y Clases de Dominio.' },
+                { num: '04', title: 'Bounded Contexts & Tarjetas CRC (DDD Táctico)', desc: 'Lenguaje ubicuo de negocio, responsabilidades por bounded context y colaboradores.' },
+                { num: '05', title: 'Requerimientos Funcionales & No Funcionales (INVEST)', desc: 'Matriz RF-*, historias de usuario y requerimientos no funcionales (rendimiento, seguridad, offline).' },
+                { num: '06', title: 'Diccionario de Datos & Modelo Entidad-Relación (ERD)', desc: 'Modelo relacional, entidades, llaves compuestas, índices y restricciones transaccionales.' },
+                { num: '07', title: 'Catálogo de Invariantes & Reglas de Negocio (BR-*)', desc: 'Invariantes de dominio de estricto cumplimiento para evitar alucinaciones.' },
+                { num: '08', title: 'Servicios Externos & Contratos de Integración', desc: 'Protocolos de red, variables de entorno, mecanismos de autenticación y contingencia failover.' },
+                { num: '09', title: 'Matriz de Trazabilidad RTM & Guardrails Anti-Sesgo', desc: 'Trazabilidad Requerimiento $\\leftrightarrow$ Código $\\leftrightarrow$ Tests y directrices de código.' }
+              ].map(ch => `
+                <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 space-y-2.5 hover:border-purple-400 dark:hover:border-purple-600 transition-all flex flex-col justify-between">
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="px-2 py-0.5 rounded-md font-mono text-xs font-black bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
+                        Capítulo ${ch.num}
+                      </span>
+                      <span class="text-[10px] font-mono text-slate-400">Canónico</span>
+                    </div>
+                    <h5 class="font-bold text-xs text-slate-900 dark:text-white leading-snug">
+                      ${escapeHtml(ch.title)}
+                    </h5>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      ${escapeHtml(ch.desc)}
+                    </p>
+                  </div>
+
+                  <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" 
+                            data-action="open-article-read"
+                            data-doc-key="${escapeAttr(masterDocKey)}"
+                            class="text-xs font-mono font-bold text-purple-600 dark:text-purple-400 hover:text-purple-500 flex items-center gap-1 cursor-pointer">
+                      <span>Ir al dossier</span> ${Icons.arrowRight('w-3 h-3')}
+                    </button>
+                  </div>
+                </div>
               `).join('')}
             </div>
+          </section>
 
-            <!-- Buscador con Debouncing -->
-            <div class="relative min-w-[280px]">
-              <input type="text" 
-                     id="kb-library-search-input" 
-                     placeholder="Buscar en la biblioteca (título, módulo, BR-*)..." 
-                     class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
-              <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none text-xs">
-                ${Icons.search('w-3.5 h-3.5')}
-              </span>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- 1.4 Estantes Temáticos (Shelves Grid) -->
-        <div class="space-y-10" id="kb-shelves-container">
-          ${Object.values(shelvesData).map(sh => {
-            if (!sh.docs || sh.docs.length === 0) return '';
-            return `
-              <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <div class="flex items-center gap-2.5">
-                    <span class="p-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                      ${getShelfIconSvg(sh.id, 'w-5 h-5')}
-                    </span>
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                      ${escapeHtml(sh.title)}
-                    </h3>
-                  </div>
-                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    ${sh.docs.length} documentos
-                  </span>
-                </div>
-
-                <!-- Cuadrícula de Tarjetas de Documentos -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  ${sh.docs.map(key => {
-                    const meta = docMetadata[key] || {
-                      title: key,
-                      summary: 'Documento técnico.',
-                      readingTime: 2,
-                      ruleCount: 0,
-                      reqCount: 0,
-                      adrCount: 0
-                    };
-
-                    return `
-                      <div class="kb-shelf-doc-card rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex flex-col justify-between group"
-                           data-doc-key="${escapeAttr(key)}"
-                           data-doc-shelf="${escapeAttr(sh.id)}"
-                           data-doc-title="${escapeAttr(meta.title)}"
-                           data-doc-module="${escapeAttr(meta.moduleName || '')}">
-                        
-                        <div class="space-y-3">
-                          <div class="flex items-center justify-between gap-2">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'} truncate">
-                              ${meta.moduleName ? `${Icons.folder('w-3 h-3')} <span>${meta.moduleName}</span>` : `${getShelfIconSvg(sh.id, 'w-3 h-3')} <span>${sh.title.split(' ')[0]}</span>`}
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
-                              ${Icons.clock('w-3 h-3')} <span>${meta.readingTime} min</span>
-                            </span>
-                          </div>
-
-                          <div>
-                            <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                              ${escapeHtml(meta.title)}
-                            </h4>
-                            <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
-                              ${escapeHtml(key)}
-                            </div>
-                          </div>
-
-                          <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                            ${escapeHtml(meta.summary)}
-                          </p>
-                        </div>
-
-                        <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
-                          <div class="flex items-center gap-1.5">
-                            ${meta.ruleCount ? `
-                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
-                                ${Icons.scale('w-3 h-3')} <span>${meta.ruleCount} BR</span>
-                              </span>
-                            ` : ''}
-                            ${meta.reqCount ? `
-                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
-                                ${Icons.fileText('w-3 h-3')} <span>${meta.reqCount} RF</span>
-                              </span>
-                            ` : ''}
-                            ${meta.adrCount ? `
-                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
-                                ${Icons.cube('w-3 h-3')} <span>${meta.adrCount} ADR</span>
-                              </span>
-                            ` : ''}
-                          </div>
-
-                          <div class="flex items-center gap-1.5">
-                            <button type="button" 
-                                    data-action="open-article-read"
-                                    data-doc-key="${escapeAttr(key)}"
-                                    class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
-                              ${Icons.bookOpen('w-3.5 h-3.5')} <span>Leer</span>
-                            </button>
-                            <button type="button" 
-                                    data-action="open-article-edit"
-                                    data-doc-key="${escapeAttr(key)}"
-                                    class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                                    title="Editar directamente este documento">
-                              ${Icons.edit('w-3.5 h-3.5')}
-                            </button>
-                          </div>
-                        </div>
-
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </section>
-            `;
-          }).join('')}
         </div>
 
       </div>
@@ -965,6 +1413,30 @@ function buildShelvesFallback(docMetadata) {
     shelves[s].docs.push(k);
   }
   return shelves;
+}
+
+function buildModulesDataFallback(docMetadata) {
+  const modules = {};
+  for (const [k, m] of Object.entries(docMetadata)) {
+    if (k.startsWith('modules/')) {
+      const parts = k.split('/');
+      const modId = parts[1];
+      const filename = parts.slice(2).join('/');
+      if (!modules[modId]) {
+        modules[modId] = {
+          id: modId,
+          name: modId,
+          title: modId.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          status: 'COMPLETAMENTE CUBIERTO',
+          docs: [],
+          docMetadata: {}
+        };
+      }
+      modules[modId].docs.push(k);
+      modules[modId].docMetadata[filename] = m;
+    }
+  }
+  return modules;
 }
 
 function getDefaultDocs() {

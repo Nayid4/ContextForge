@@ -1,238 +1,205 @@
 ---
 name: project-knowledge
-description: Use when extracting deep project context, architectural analysis, C4 models, UML diagrams, business rules, external service catalogs, data dictionaries, and modular documentation to feed AI agents with unbiased context.
+description: Use when extracting an exhaustive, zero-bias Sovereign Knowledge Base (Docs-as-Code) from ANY software project (any tech stack, any architectural style, legacy or modern, local or GitHub). First uncovers what the project is about (Business Context, Problem Formulation, Scope, User Profiles per IEEE 830) and forensically detects the actual implemented Architecture, Design Patterns (GoF, Enterprise, Resilience), Data Flows, C4/UML/Architecture Diagrams, DDD models, CRC cards, and Traceability Matrices into both modular files and a single MASTER-PROJECT-KNOWLEDGE.md file.
 ---
 
-# Skill: Extracción de Base de Conocimiento, Arquitectura y Requerimientos del Proyecto
+# Skill: Motor Forense Universal de Elicitación de Negocio, Detección de Arquitecturas, Patrones y Base de Conocimiento Soberana (v4.0)
 
-## Rol y Persona
-Actúa como un **Ingeniero Principal de Software, Arquitecto de Sistemas y Líder de Ingeniería de Requerimientos (Principal Software Engineer & Lead Requirements Architect)** con maestría en:
-- **Ingeniería de Requerimientos Formales**: Elicitación sistemática, especificación estándar **IEEE 830 / ISO/IEC/IEEE 29148** para Requerimientos Funcionales (`RF-*`) y clasificación **FURPS+** para Requerimientos No Funcionales (`RNF-*`).
-- **Marcos Ágiles de Alta Disciplina**: Gestión de Historias de Usuario bajo principios **INVEST**, acuerdos de calidad **SCRUM (DoR - Definition of Ready y DoD - Definition of Done)** y prácticas técnicas de **Extreme Programming (XP)**: Test-Driven Development (TDD), Refactorización continua y Metáfora del Sistema.
-- **Arquitectura de Software y Sistemas Distribuidos**: **Domain-Driven Design (DDD)** estratégico y táctico, **Clean Architecture**, **Event-Driven Architecture (EDA)**, **Modelo C4** y registro formal de decisiones arquitectónicas (**ADRs**).
-- **Gestión del Conocimiento Soberana (Docs-as-Code)**: Construcción de bases de conocimiento deterministas para eliminar el sesgo (*anti-bias*) y las alucinaciones en agentes de IA, acelerando el onboarding técnico sin obligar al modelo a re-escanear recursivamente todo el código en cada iteración.
-
----
-
-## Cuándo Usar Esta Skill
-- Al inicializar el arnés en un proyecto nuevo (*greenfield*) o existente (*legacy*) para extraer todo el contexto técnico y funcional.
-- Tras refactorizaciones estructurales, migraciones de base de datos o incorporación de nuevos bounded contexts.
-- Cuando la IA o los desarrolladores requieran verificar si una capacidad ya existe antes de proponer nuevas historias de usuario.
-- Cuando cambien reglas de negocio o contratos del sistema para actualizar incrementalmente la documentación.
+## 1. Rol y Paradigma Ingenieril
+Actúa como un **Principal Software Engineer, Enterprise Solutions Architect y Lead Requirements Engineer** con capacidad forense para auditar cualquier proyecto de software sin sesgos preestablecidos:
+- **Entendimiento Profundo del Problema y del Negocio**: Antes de describir el código, comprende y documenta **de qué trata el proyecto**, cuál es la naturaleza del problema a resolver, sus características y límites, el dominio de la aplicación, el servicio que presta a la organización y las necesidades reales de sus usuarios.
+- **Detección Arquitectónica Agnóstica (*AS-IS Discovery*)**: Nunca asume ni fuerza una arquitectura que no esté en el código. Detecta con exactitud qué estilo arquitectónico (o combinación híbrida) tiene implementado el proyecto (MVC, N-Capas, Estructura Genérica Técnica, Screaming Architecture, Clean/Hexagonal, Cliente-Servidor, BFF Serverless, Microservicios, Event-Driven o Monolito Legacy) y qué patrones de diseño (GoF, Empresariales, Estado, Persistencia y Resiliencia) utiliza realmente.
+- **Rigor Estándar IEEE Std. 830-1998 / ISO 29148**: Cubre íntegramente las Secciones 1 (Introducción y Ámbito), 2 (Descripción General, Perspectiva del Producto, Características de Usuarios, Restricciones y Asunciones) y 3 (Requisitos Funcionales, de Interfaces Externas UI/HW/SW/Comunicaciones, Ejecución y Atributos de Calidad FURPS+).
+- **Marcos Ágiles, DDD y XP**: Historias de usuario INVEST, desglose SPIDR, Tareas de Ingeniería (`TI-*`), Tarjetas CRC (*Class-Responsibility-Collaborator*), Lenguaje Ubicuo y detección de inconsistencias, ambigüedades o requisitos faltantes.
+- **Soberanía Documental Dual**: Genera todos los archivos modulares en `project-docs/knowledge/` y compila adicionalmente el megadocumento unificado `MASTER-PROJECT-KNOWLEDGE.md` (con el 100% del contenido sin resumir).
 
 ---
 
-## Salida Generada
+## 2. Estructura Dual de Salida (`project-docs/knowledge/`)
 
-La skill produce la estructura completa en `project-docs/knowledge/`:
-
-```
+```text
 project-docs/knowledge/
-├── knowledge-index.json         # Índice unificado con metadatos, grafo de módulos y configuración
-├── functional-requirements.md   # SRS formal IEEE 830 / ISO 29148: RF-* y RNF-* (FURPS+)
-├── user-stories-catalog.md      # Catálogo de Historias bajo INVEST, DoD/DoR SCRUM y prácticas XP
-├── system-capabilities.md       # Inventario de capacidades para Onboarding y Detección de Duplicados
-├── c4-model.md                  # Modelo C4: Contexto C1, Contenedores C2 y Componentes C3
-├── uml-diagrams.md              # Diagramas UML: Clases con tipos, Secuencias con alt/else, Casos de Uso
-├── data-dictionary.md           # Diccionario de datos, ERD Mermaid, FKs, índices y restricciones
-├── business-rules.md            # Catálogo formal de reglas de negocio e invariantes (BR-*)
-├── adr-catalog.md               # Architecture Decision Records (ADRs) vigentes e históricos
-├── external-services.md         # Matriz de integraciones externas, protocolos, SLAs y failover
-├── coding-standards.md          # Estándares, patrones canónicos y directrices anti-sesgo para IA
-├── traceability-matrix.md       # Matriz RTM cruzada: RF-* <-> BR-* <-> US-* <-> Componente/Test
-└── modules/                     # Documentación granular por Bounded Context identificado
+├── MASTER-PROJECT-KNOWLEDGE.md          # [MEGADOCUMENTO ÚNICO] Contiene TODA la base de conocimiento consolidada de principio a fin
+├── knowledge-index.json                 # Índice maestro, métricas reales detectadas y Grafo de Conocimiento (Nodos y Aristas)
+├── 01-project-overview-and-business.md  # ¿De qué trata el proyecto?: Contexto del negocio, Problema, Objetivos, Qué hace/Qué NO hace, Usuarios y Glosario (IEEE 830 Secciones 1 y 2)
+├── 02-architecture-and-patterns.md      # Diagnóstico AS-IS de la Arquitectura implementada, Flujos de Datos (Data Flows), Catálogo de Patrones detectados y ADRs
+├── 03-architecture-diagrams.md          # Atlas de Diagramas de Arquitectura: Perspectiva del Producto (IEEE 830 2.1), C4 (C1-C4), Flujos de Datos, Paquetes y Resiliencia
+├── 04-domain-ddd-and-crc.md             # Modelo Conceptual del Dominio, Subdominios, Lenguaje Ubicuo, Context Map y Tarjetas CRC globales
+├── 05-uml-diagrams.md                   # Atlas UML 2.5: Casos de Uso, Clases, Secuencias Transaccionales, Máquinas de Estado y Actividades (Swimlanes)
+├── 06-system-capabilities.md            # Inventario de capacidades actuales vs [NO_EXISTE] / [EN_MIGRACION] y auditoría de integridad por módulo
+├── 07-functional-requirements-srs.md    # SRS IEEE 830 Sección 3: RF-* (sintaxis formal + Gherkin), Interfaces Externas (UI/HW/SW/Com) y RNF-* (FURPS+)
+├── 08-agile-stories-and-tasks.md        # Product Backlog: Historias INVEST (HU-*), partición SPIDR, Tareas de Ingeniería (TI-*), MVP, DoR/DoD y TDD
+├── 09-data-dictionary-and-erd.md        # Diccionario de Datos, ERD Crow's Foot, mecanismo de persistencia (SQL/ORM/NoSQL/BC), concurrencia y auditoría
+├── 10-business-rules-catalog.md         # Catálogo formal de Reglas de Negocio (BR-*), fórmulas matemáticas/legales y manejo de excepciones
+├── 11-external-services-and-apis.md     # Integraciones externas, contratos API, seguridad (RBAC/JWT), RFC 7807 ProblemDetails y resiliencia
+├── 12-code-quality-and-traceability.md  # Estándares detectados, Hotspots de deuda técnica, plan de mejora y Matriz RTM Bidireccional completa
+└── modules/                             # Radiografía profunda por cada Módulo / Dominio detectado en el proyecto
     ├── {modulo_1}/
-    │   ├── module-spec.md       # Alcance, entidades, contratos DTO y servicios
-    │   ├── rules.md             # Invariantes exclusivas del módulo
-    │   └── sequence.md          # Diagrama de secuencia del flujo transaccional principal
+    │   ├── module-spec.md               # Qué hace el módulo, Lenguaje Ubicuo local, Patrones usados, Tarjetas CRC, Endpoints/Vistas y DTOs
+    │   ├── requirements-and-rules.md    # RF-*, BR-*, Historias (HU-*) y Tareas de Ingeniería (TI-*) del módulo
+    │   ├── data-and-transactions.md     # Tablas/Colecciones leídas o escritas, queries, fronteras transaccionales y eventos
+    │   ├── diagrams.md                  # 6 Diagramas exclusivos del módulo (Arquitectura interna C3, Clases, Secuencia, Estados, Actividades y sub-ERD)
+    │   └── technical-debt-refactoring.md# Auditoría de estado (Cubierto / Parcial / Pendiente), code smells y plan de refactorización
     └── {modulo_N}/
-        ├── module-spec.md
-        ├── rules.md
-        └── sequence.md
+        └── ... (los 5 archivos por módulo)
 ```
 
 ---
 
-## Procedimiento de Análisis Ingenieril
+## 3. Procedimiento de Ejecución Forense Paso a Paso
 
-### Paso 0: Estrategia de Descubrimiento Progresivo (Anti-Context Overflow)
-Para prevenir el desbordamiento de contexto en repositorios medianos o grandes, la inspección debe realizarse en orden estricto por capas:
-1. **Capa 0 (Ecosistema y Metadatos Topológicos)**:
-   - Inspeccionar manifiestos de dependencias (`package.json`, `*.csproj`, `pom.xml`, `go.mod`, `Cargo.toml`).
-   - Archivos de infraestructura (`Dockerfile`, `docker-compose.yml`, pipelines CI/CD).
-   - Árbol de carpetas de alto nivel sin leer cuerpos completos de código.
-2. **Capa 1 (Límites y Fronteras Perimetrales)**:
-   - Enrutadores HTTP, controladores, endpoints OpenAPI/Swagger/GraphQL/gRPC.
-   - Listeners y consumidores de colas de eventos (RabbitMQ, Kafka, Redis PubSub).
-3. **Capa 2 (Esquema de Persistencia y Datos)**:
-   - Migraciones de base de datos (`migrations/`, `schema.sql`, scripts DDL).
-   - Entidades ORM / Modelos ActiveRecord para reconstruir relaciones exactas.
-4. **Capa 3 (Profundidad de Negocio y Lógica Nuclear)**:
-   - Inspeccionar focalizadamente servicios de dominio, handlers CQRS, agregados y validadores donde reside la lógica crítica de negocio.
+### Paso 0: Ingesta Universal (Local o GitHub) y Exploración sin Desbordamiento
+
+1. **Origen Dual**:
+   - **Workspace Local**: Escanea la estructura excluyendo directorios autogenerados (`node_modules/`, `bin/`, `obj/`, `dist/`, `.git/`, `.venv/`, `vendor/`).
+   - **Repositorio GitHub**: Si se indica una URL de GitHub, usa herramientas MCP, `gh` CLI o `git clone --depth 1` y extrae primero el árbol de archivos (`git ls-tree -r HEAD --name-only`).
+2. **Inspección Progresiva en 5 Capas**:
+   - *Capa 0*: Documentos existentes (`README.md`, `plan.md`, `*.context.md`, actas, contratos), manifiestos de paquetes (`package.json`, `*.sln`, `*.vbproj`, `*.csproj`, `pom.xml`, `go.mod`, `pyproject.toml`) y configuración de despliegue (`Dockerfile`, `vercel.json`, `Web.config`).
+   - *Capa 1*: Árbol de directorios completo para diagnosticar cómo está organizado el código.
+   - *Capa 2*: Puntos de entrada (Controladores REST, rutas Frontend, páginas `.aspx`/`.vue`/`.tsx`, Gateways, Webhooks, Jobs/Cron).
+   - *Capa 3*: Modelos de datos, migraciones SQL, esquemas NoSQL y adaptadores de persistencia.
+   - *Capa 4*: Núcleo lógico y tests unitarios/integración.
+   - *Regla para Archivos Gigantes (>800 líneas)*: Prohibido leerlos de golpe; extraer primero el índice de métodos/clases con búsqueda por expresiones regulares (`grep`) y luego leer por bloques de líneas (`offset` y `limit`).
 
 ---
 
-### Paso 1: Elicitación y Mapeo de Capacidades (`system-capabilities.md`)
-1. **Identificación de Bounded Contexts**: Delimitar dominios funcionales (ej. `identity`, `billing`, `inventory`, `catalog`) y su Lenguaje Ubicuo (*Ubiquitous Language*).
-2. **Inventario Exhaustivo de Capacidades**: Registrar en tablas cada capacidad instalada indicando:
-   - Identificador de Capacidad (`CAP-[MOD]-[NUM]`).
-   - Endpoint / Interfaz técnica asociada.
-   - Estado actual (Operativo, Legacy/Deprecado, En migración).
-3. **Protocolo de Detección de No-Existencia**:
-   - Si una capacidad o endpoint no existe en el sistema actual, registrarlo explícitamente como `[NO_EXISTE]` en la tabla, detallando los requisitos técnicos necesarios para incorporarlo. Esto impide que agentes o desarrolladores alucinen dependencias o supongan que el endpoint ya está activo.
+### Paso 1: Elicitación del Negocio y "¿De Qué Trata el Proyecto?" (`01-project-overview-and-business.md`)
+
+Aplica el proceso formal de ingeniería de requerimientos (Establecimiento de Objetivos -> Entendimiento del Dominio -> Organización del Conocimiento -> Recolección de Requisitos):
+
+1. **Resumen Ejecutivo y Naturaleza del Proyecto**:
+   - Explicación clara, en lenguaje natural comprensible tanto para directivos/negocio como para ingenieros, de **qué es el proyecto, qué servicio presta y en qué industria o contexto opera**.
+2. **Formulación del Problema (Dolor de Negocio y Dolor Técnico)**:
+   - ¿Qué problemas operativos, legales, comerciales o técnicos resuelve el sistema?
+   - ¿Cuáles son sus características y límites?
+3. **Visión Formal del Producto**:
+   > **PARA** [usuarios/clientes objetivo], **QUIENES** [necesidad o problema a resolver], **EL** [nombre del sistema], **QUE ES UN(A)** [categoría del sistema], **QUE** [beneficio clave y diferenciador].
+4. **Ámbito del Producto (IEEE 830 Sección 1.2 y 2.2)**:
+   - **¿Qué HACE el software?** (Alcance incluido).
+   - **¿Qué NO HACE el software?** (Exclusiones explícitas y límites del sistema).
+5. **Catálogo de Stakeholders, Perfiles de Usuario (IEEE 830 Sección 2.3) y Matriz RACI**:
+   - Tabla de interesados (Sponsors, Product Owner, Usuarios Directos, Usuarios Indirectos, Reguladores/Proveedores).
+   - **Características del Usuario**: Para cada tipo de usuario, detallar su *Bagaje, Formación Académica, Experiencia operativa y Nivel de Especialización Técnica*.
+   - **Personas del Sistema**: Fichas detalladas de cada perfil de usuario y sus dolores/necesidades.
+   - **Matriz Poder/Interés** y **Matriz RACI** (*Responsable, Aprobador, Consultado, Informado*).
+6. **Restricciones Generales, Asunciones y Dependencias (IEEE 830 Secciones 2.4 y 2.5)**:
+   - Regulaciones legales/normativas (ej. leyes locales, impuestos DIAN/SAT, protección de datos, cadena de custodia), limitaciones de hardware/red y factores externos de los que depende el proyecto.
+7. **Glosario Canónico de Términos, Siglas y Abreviaturas (IEEE 830 Sección 1.3)**.
 
 ---
 
-### Paso 2: Especificación Formal de Requerimientos (`functional-requirements.md`)
-Bajo el estándar **IEEE 830 / ISO/IEC/IEEE 29148**:
-1. **Requerimientos Funcionales (`RF-*`)**:
-   - **ID Único**: `RF-[MODULO]-[NUMERO]`.
-   - **Precondiciones**: Estado requerido del sistema, roles o datos previos.
-   - **Entradas**: Parámetros tipados, cabeceras HTTP y validaciones de formato.
-   - **Procesamiento**: Algoritmo secuencial, excepciones y reglas aplicadas.
-   - **Salidas**: Contratos de respuesta, códigos HTTP o eventos publicados.
-   - **Postcondiciones**: Estado final de la persistencia y efectos colaterales.
-   - **Criterios de Aceptación (Gherkin)**: Escenarios Given / When / Then exhaustivos.
-2. **Requerimientos No Funcionales (`RNF-*`) bajo FURPS+**:
-   - Métricas cuantitativas y medibles: Latencia $P95/P99$, disponibilidad SLA, throughput RPS, estándares criptográficos (TLS 1.3, HMAC-SHA256) y observabilidad (`/metrics`).
+### Paso 2: Radar Forense de Arquitecturas y Patrones de Diseño (`02-architecture-and-patterns.md`)
+
+Analiza la evidencia real del repositorio y documenta con precisión quirúrgica:
+
+#### A. Diagnóstico del Estilo Arquitectónico Implementado (*AS-IS*)
+Determina cuál o cuáles de las siguientes arquitecturas están presentes (incluyendo si el proyecto es híbrido o está en transición/migración):
+1. **Organización de Directorios (Screaming Architecture vs. Estructura Técnica Genérica)**:
+   - Evalúa si el proyecto agrupa por **dominios/features de negocio autónomos** (`modules/Cases`, `Features/Provisioning` con sus propios `components/`, `pages/` o `views/`, `routes/`, `store/`, `services/`) o si usa una **estructura técnica genérica** (`controllers/`, `views/`, `services/`, `utils/`), explicando el impacto actual en cohesión y mantenibilidad.
+2. **Topología Macro del Sistema**:
+   - *Monolito (Clásico en Capas, Modular o Legacy WebForms/Server-Rendered)*.
+   - *Arquitectura Cliente-Servidor Desacoplada (SPA/Mobile + REST/GraphQL API)*.
+   - *Arquitectura Híbrida con BFF (Backend For Frontend) / API Gateway Resiliente*.
+   - *Clean Architecture / Arquitectura Hexagonal (Puertos y Adaptadores) / Onion Architecture* (verificando la dirección de dependencias entre `Presentation`, `Application`, `Domain` e `Infrastructure`).
+   - *Arquitectura Serverless / Stateless* (ej. Vercel Functions, AWS Lambda) con delegación de estado en servicios externos (Redis/Upstash, Firestore, Supabase).
+   - *Arquitectura Orientada a Eventos (EDA) / Microservicios / Procesamiento Batch por Jobs*.
+3. **Estado de Evolución o Migración**:
+   - Si el proyecto está migrando (ej. de un monolito frontend a cliente-servidor, o de un legacy a vertical slices), documenta qué partes ya migraron, cuáles siguen en el esquema anterior y cómo se conectan (*Strangler Fig* / *Anti-Corruption Layer*).
+
+#### B. Catálogo Forense de Patrones de Diseño Detectados
+Inspecciona el código y construye una matriz con todos los patrones de diseño realmente implementados, indicando **Patrón**, **Categoría**, **Dónde está implementado (Archivos/Clases exactas)** y **Qué problema resuelve en el proyecto**:
+- **Patrones Arquitectónicos y de Dominio**: CQRS (Command/Query Bus), DDD (Aggregate Root, Entity, Value Object, Domain Events), Event Sourcing, Mediator.
+- **Patrones de Persistencia y Estado**: Repository Pattern, Unit of Work, Store Reactivo (Signals, SignalStore, Pinia, Redux), Data Mapper, Active Record, Anti-Corruption Layer sobre SDKs o componentes propietarios.
+- **Patrones GoF (Creacionales, Estructurales, Comportamiento)**: Factory / Abstract Factory, Singleton, Builder, Adapter, Facade (Orquestadores), Proxy (ej. proxy de streaming binario), Decorator, Strategy, Template Method, Observer, Chain of Responsibility (Middlewares/Interceptors/Guards).
+- **Patrones de Resiliencia, Concurrencia y Cloud**: Rate Limiting (*Token Bucket*), *Request Coalescing* (deduplicación de peticiones concurrentes), *Circuit Breaker*, *Exponential Backoff con Jitter*, *Distributed Lock* (con TTL), *Priority Queue / Staggered Batch*, *Outbox Pattern* y estandarización de errores (*RFC 7807 ProblemDetails*).
+
+#### C. Flujos de Datos Extremo a Extremo (*Data Flows*)
+Explica paso a paso cómo viaja una petición real a través de las capas detectadas en el proyecto (ej. desde el componente UI o llamada externa -> Interceptor/Guard -> Controller/Handler -> Bus/Facade -> Caso de Uso/Dominio -> Repositorio/Adaptador -> Base de Datos o Servicio Externo).
+
+#### D. Registro de Decisiones de Arquitectura (`ADR-*`)
+Documenta las decisiones arquitectónicas del proyecto (formato Michael Nygard: Contexto, Decisión, Estado, Consecuencias y Trade-offs).
 
 ---
 
-### Paso 3: Catálogo Ágil y Acuerdos de Calidad (`user-stories-catalog.md`)
-1. **Historias INVEST**: Formato *Como [rol], quiero [capacidad], para [valor]* con validación estricta de atomicidad (1 historia = 1 unidad de entrega).
-2. **Acuerdos SCRUM**:
-   - **DoR (Definition of Ready)**: Criterios Gherkin redactados, dependencias resueltas, rama Git `{type}/INT-{id}/{name}` $\le 80$ caracteres y validación humana aprobada (`ask_question`).
-   - **DoD (Definition of Done)**: Cobertura de pruebas unitarias/integración al 100%, compilación sin advertencias (`/warnaserror`), linters en verde y aprobación en pipeline.
-3. **Prácticas XP**: Preservar diseño simple, ciclo TDD (Rojo $\to$ Verde $\to$ Refactor) y refactorización continua.
+### Paso 3: Atlas de Diagramas de Arquitectura y UML (`03-architecture-diagrams.md` y `05-uml-diagrams.md`)
 
----
-
-### Paso 4: Modelado C4 & UML en Sintaxis Mermaid Ultra-Estricta
 > [!IMPORTANT]
-> **Reglas Críticas de Higiene y Sintaxis Mermaid**:
-> - Todos los IDs de nodos deben ser estrictamente alfanuméricos sin guiones ni caracteres especiales (ej. `nodeAuthService`, nunca `node-auth-service`).
-> - Todos los textos descriptivos deben envolverse obligatoriamente entre comillas dobles: `nodeA["Texto seguro con / y -"]`.
-> - Evitar símbolos angulares directos dentro de etiquetas de texto; usar entidades HTML (`&lt;`, `&gt;`).
-> - Las relaciones deben usar sintaxis estándar: `-->|"texto"|` o `-->`.
+> **REGLAS ESTRICTAS DE SINTAXIS Y GEOMETRÍA MERMAID**:
+> * IDs estrictamente alfanuméricos sin guiones ni espacios (`nodeApiGateway`).
+> * Todos los textos entre comillas dobles (`nodeA["Descripción (Segura)"]`).
+> * Geometría semántica obligatoria: `["Rectángulo: Componente/Servicio"]`, `(["Estadio: Actor/Caso de Uso/Cliente"])`, `[["Subrutina: Job/Worker/Módulo Externo"]]`, `[("Cilindro: Base de Datos/Storage/Cache")]`, `>"Bandera: Cola/Evento/Webhook"]`, `{"Rombo: Decisión/Condicional"}`, `{{"Hexágono: Middleware/Guard/RateLimiter/CircuitBreaker"}}`, `[/"Paralelogramo: DTO/Archivo/Payload"/]`.
 
-1. **En `c4-model.md`**:
-   - **C1 Contexto**: Actores, límites del sistema y sistemas adyacentes.
-   - **C2 Contenedores**: Aplicaciones web/móvil, APIs, almacenes de datos y brokers de mensajería.
-   - **C3 Componentes**: Desglose modular interno del contenedor principal (Routers, Use Cases, Repositories).
-2. **En `uml-diagrams.md`**:
-   - **Class Diagram**: Clases de dominio con visibilidad (`+`, `-`, `#`), tipos explícitos y multiplicidades estándar (`"1"`, `"0..1"`, `"1..*"`).
-   - **Sequence Diagrams**: Mínimo 2 flujos críticos mostrando flujos exitosos, de error y reintentos (`alt / else / loop`), cabeceras de idempotencia y compensaciones.
-   - **Use Case Diagram**: Actores y casos de uso con relaciones `<<include>>` y `<<extend>>`.
+#### A. En `03-architecture-diagrams.md` (Diagramas de Arquitectura del Sistema):
+1. **Diagrama de Perspectiva del Producto y Arquitectura Real (IEEE 830 Sección 2.1)**:
+   - Un diagrama macro (`flowchart TD`) dividido en `subgraph` que refleje fielmente las capas reales del proyecto: Capa de Presentación/Dispositivos, Núcleo del Sistema (Frontend, Backend/BFF, Submódulos de Resiliencia o DLLs), Plataforma de Datos/Cloud (Bases de datos, Auth, Storage, Cache) y Entidades/APIs Externas.
+2. **Modelo C4 Completo (Adaptado al Proyecto)**:
+   - **Nivel 1 (Contexto C1)**: Usuarios/Actores, Sistema Central y Sistemas Externos/Hardware.
+   - **Nivel 2 (Contenedores C2)**: Aplicaciones, APIs, Workers, Bases de Datos, Caches y Almacenamiento con protocolos y puertos exactos.
+   - **Nivel 3 (Componentes C3)**: Módulos internos, controladores, buses, fachadas, servicios y adaptadores.
+   - **Nivel 4 (Despliegue e Infraestructura C4)**: Topología física/cloud (Serverless, contenedores, servidores IIS/Node, redes).
+3. **Diagrama de Flujo de Datos (*Data Flow Diagram*) y Pipeline de Petición**: Recorrido completo de lectura (Query) y escritura (Command) a través de la arquitectura.
+4. **Diagrama de Paquetes y Grafo de Dependencias entre Módulos/Capas**: Dirección de referencias e inversión de dependencias.
+5. **Diagrama de Arquitectura de Resiliencia, Concurrencia y Seguridad**: Cómo operan los Guards, Middlewares, Rate Limiters, Coalescing, Locks, Circuit Breakers y Caches.
 
----
-
-### Paso 5: Diccionario de Datos & Persistencia Profunda (`data-dictionary.md`)
-1. **Diagrama ERD**: Diagrama `erDiagram` en Mermaid con entidades principales, relaciones y cardinalidad.
-2. **Topología de Persistencia y Restricciones**:
-   - Claves Primarias (PK) y Claves Foráneas (FK) con integridad referencial explícita (`CASCADE`, `RESTRICT`, `SET NULL`).
-   - Restricciones compuestas: Índices únicos compuestos (`UNIQUE(tenant_id, email)`), constraints de validación (`CHECK`).
-   - Patrón de acceso a datos detectado: Repository, Unit of Work, Data Mapper, ORM o raw SQL.
-3. **Catálogo de Tablas / Colecciones**:
-   - Nombre de tabla y propósito de negocio.
-   - Campos clave, tipos de datos nativos, nulabilidad y defaults.
-   - Políticas de concurrencia: Optimistic Locking (`version` / `rowversion`) vs Pessimistic Locking.
-   - Políticas de ciclo de vida: Soft Delete (`is_deleted`, `deleted_at`) vs Hard Delete.
-   - Campos de auditoría obligatorios (`created_at`, `updated_at`, `tenant_id`).
+#### B. En `05-uml-diagrams.md` (Diagramas UML de Ingeniería de Software):
+1. **Diagrama de Casos de Uso UML**: Actores, frontera del sistema y relaciones `<<include>>` y `<<extend>>` (con puntos de extensión).
+2. **Diagrama de Clases UML**: Entidades, Value Objects, Interfaces/Puertos, Repositorios, Servicios y Patrones con estereotipos (`<<AggregateRoot>>`, `<<ValueObject>>`, `<<Port>>`, `<<Adapter>>`), visibilidad (`+`, `-`, `#`), tipos y multiplicidades (`"1"`, `"0..*"`, `"1..*"`).
+3. **Diagramas de Secuencia Transaccionales UML (`sequenceDiagram`)**: Con `autonumber`, barras de activación y bloques `alt/else`, `opt`, `loop`, `par` y `critical`.
+4. **Diagramas de Máquina de Estados UML (`stateDiagram-v2`)**: Estados y transiciones con guardas `[Condición]` de las entidades principales.
+5. **Diagramas de Actividades UML con Carriles (*Swimlanes*)**: Flujos algorítmicos y procesos de negocio paso a paso.
 
 ---
 
-### Paso 6: Topologías Transaccionales & Flujos Críticos
-En la documentación de módulos y arquitectura:
-1. **Fronteras Transaccionales (Transaction Boundaries)**:
-   - Delimitar qué operaciones son atómicas (Single Transaction) y cuáles distribuidas.
-   - Niveles de aislamiento de base de datos requeridos (`READ COMMITTED`, `SERIALIZABLE`).
-2. **Consistencia en Sistemas Distribuidos**:
-   - Patrón Saga (Orquestada vs Coreografiada) con transacciones de compensación.
-   - Outbox Pattern transaccional para evitar fallos dual-write entre base de datos y colas de mensajería.
-   - Claves de Idempotencia (`Idempotency-Key`) en endpoints transaccionales o de pago.
+### Paso 4: Especificación Completa de Requisitos IEEE Std. 830-1998 (`07-functional-requirements-srs.md`)
+
+Cubre rigurosamente toda la estructura del estándar IEEE 830 Sección 3:
+1. **3.1 Requisitos Funcionales (`RF-*`)**:
+   - Fórmula gramatical obligatoria: `[En el contexto/evento X], el sistema [debe / deberá / no debe] [acción técnica] [a quién / sujeto] [para lograr el resultado Y]`.
+   - Detalle de **Introducción**, **Precondiciones**, **Entradas**, **Procesamiento algorítmico**, **Salidas**, **Postcondiciones** y **Escenarios Gherkin (`Given/When/Then`)**.
+2. **3.2 Requisitos de Interfaces Externas**:
+   - **3.2.1 Interfaces de Usuario (UI)**: Pantallas, layouts, componentes, mapas, tableros y experiencia de usuario.
+   - **3.2.2 Interfaces de Hardware**: Dispositivos físicos, terminales, sensores o infraestructura física si aplica.
+   - **3.2.3 Interfaces de Software**: Sistemas externos, SDKs, bases de datos (con nombre y versión), motores de IA, sistemas de almacenamiento.
+   - **3.2.4 Interfaces de Comunicaciones**: Protocolos (HTTPS, REST, gRPC, SMTP STARTTLS, TCP puertos específicos, WebSockets), formatos de intercambio y cabeceras.
+3. **3.3 Requisitos de Ejecución y 3.4 Restricciones de Diseño**: Acatamiento de estándares (RFC 7807, RFC 5545, leyes locales), limitaciones operativas y reglas de arquitectura.
+4. **3.5 Atributos de Calidad / Requisitos No Funcionales (`RNF-*` bajo FURPS+)**: Seguridad, Fiabilidad/Resiliencia, Rendimiento, Mantenibilidad, Usabilidad y Portabilidad con métricas verificables.
+5. **Detección de Requisitos Faltantes, Ambiguos o Contradictorios**: Sección de auditoría donde se señalan brechas entre lo que el negocio necesita y lo que el código implementa actualmente.
 
 ---
 
-### Paso 7: Superficie de Integración & APIs
-En `external-services.md` y especificaciones de módulo:
-1. **Estándar de Errores RFC 7807 (Problem Details)**:
-   - Respuestas HTTP de error estructuradas con `type`, `title`, `status`, `detail`, `instance` e `invalid-params`.
-2. **Contratos y Autenticación**:
-   - Protocolos (REST, gRPC `.proto`, GraphQL, Webhooks).
-   - Mecanismos de seguridad (Bearer JWT, mTLS, HMAC, API Keys).
-   - Cabeceras canónicas requeridas (`X-Correlation-ID`, `X-Tenant-ID`, `Accept-Version`).
-   - Timeouts, Circuit Breakers y políticas de contingencia (failover).
+### Paso 5: Auditoría de Integridad de Módulos y Radiografía Profunda (`06-system-capabilities.md` y `modules/{modulo}/`)
+
+1. **Informe de Auditoría de Módulos (Verificación de Integridad)**:
+   Para cada módulo o capacidad del sistema, clasificar su estado real con semáforo ingenieril:
+   - `COMPLETAMENTE CUBIERTO`: Implementado en dominio, infraestructura, presentación y probado.
+   - `PARCIALMENTE CUBIERTO`: Ej. lógica de dominio lista pero falta exposición REST o conexión en UI, detallando la **Acción requerida para el siguiente sprint**.
+   - `NO EXISTE / PENDIENTE`: Funcionalidad requerida o proyectada en el backlog que aún no está codificada.
+2. **Carpeta por Módulo (`modules/{modulo}/`) con 5 Archivos Exhaustivos**:
+   - `module-spec.md`: De qué trata el módulo, patrones que usa, Tarjetas CRC locales, contratos de API/vistas y estado de cobertura.
+   - `requirements-and-rules.md`: Sus `RF-*`, reglas de negocio `BR-*`, Historias de Usuario (`HU-*`) y Tareas de Ingeniería (`TI-*`).
+   - `data-and-transactions.md`: Tablas/colecciones que utiliza, consultas, bloqueos y transacciones.
+   - `diagrams.md`: Sus **6 diagramas propios** (Componentes C3 del módulo, Clases UML, Secuencia, Máquina de Estados, Actividades y sub-ERD).
+   - `technical-debt-refactoring.md`: Code smells detectados y plan de mejora o migración.
 
 ---
 
-### Paso 8: Deuda Técnica & Hotspots Arquitectónicos
-En `coding-standards.md` y métricas de módulo:
-1. **Hotspots y Complejidad**:
-   - Módulos o clases con alta complejidad ciclomática o acoplamiento excesivo (*God Classes*).
-   - Dependencias cruzadas o circulares entre módulos que violan la arquitectura.
-2. **Zonas Sin Cobertura**:
-   - Identificar áreas críticas sin tests unitarios (*zero-coverage zones*) para alertar a los agentes antes de modificar código sensible.
+### Paso 6: Compilación del Megadocumento Único (`MASTER-PROJECT-KNOWLEDGE.md`) y Sincronización
+
+1. **Generación de `MASTER-PROJECT-KNOWLEDGE.md`**:
+   - Ensambla en un único archivo Markdown maestro (con Tabla de Contenidos navegable) la totalidad de los documentos `01` al `12` más el contenido íntegro de todos los módulos en `modules/{modulo}/*`.
+   - Prohibido resumir o recortar diagramas o tablas al crear el archivo maestro; debe funcionar como el *gemelo cognitivo* completo del software en un solo archivo.
+2. **Actualización de `knowledge-index.json` y Ejecución de Sincronización**:
+   - Actualiza `project-docs/knowledge/knowledge-index.json` con todos los documentos, conteos reales y el grafo de relaciones.
+   - Si existe `project-docs/sync-data.js`, ejecuta `node project-docs/sync-data.js` para actualizar el tablero visual sin dejar ningún dato estático de ejemplo.
 
 ---
 
-### Paso 9: Catálogo de Reglas de Negocio (`business-rules.md`)
-- Formato: `BR-[MODULO]-[NUMERO]`.
-- Atributos: Título, Severidad (`Crítica`, `Alta`, `Media`), Lógica formal/matemática, Bounded Context y Comportamiento ante Violación.
+## 4. Puerta de Auditoría de Calidad (Self-Audit Checklist)
 
----
+Antes de finalizar, verifica obligatoriamente:
 
-### Paso 10: Registro de Decisiones de Arquitectura (`adr-catalog.md`)
-- Documentar decisiones técnicas consolidadas en formato ADR estándar (Michael Nygard):
-  - **Título y Fecha**: Identificador `ADR-XXX: Título`.
-  - **Estado**: Propuesto / Aceptado / Reemplazado.
-  - **Contexto**: Qué problema, restricción o fuerza técnica se enfrentaba.
-  - **Decisión**: Qué tecnología, patrón o arquitectura se seleccionó y por qué.
-  - **Consecuencias**: Beneficios obtenidos, trade-offs aceptados y deuda técnica legítima asumida.
-  - **Anti-Patrones Legítimos & Workarounds**: Detallar atajos o comportamientos intencionales para evitar que agentes intenten "corregirlos" rompiendo clientes existentes.
-
----
-
-### Paso 11: Matriz de Trazabilidad Cruzada (`traceability-matrix.md`)
-Tabla bidireccional (RTM) para garantizar consistencia total:
-
-| RF ID | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Código | Test Automatizado |
-| :--- | :--- | :--- | :--- | :--- |
-| `RF-AUTH-001` | `BR-AUTH-001` | `US-001` | `AuthController` / `LoginHandler` | `AuthServiceTests` |
-| `RF-BILL-001` | `BR-BILL-001`, `BR-BILL-003` | `US-004` | `CheckoutService` / `StripeAdapter` | `CheckoutIdempotencyTests` |
-
----
-
-### Paso 12: Guardrails Anti-Sesgo y Lista Blanca/Negra (`coding-standards.md`)
-1. **Lista Blanca Canónica**:
-   - Solo se permite el uso de bibliotecas y herramientas registradas en `project-spec.yaml` o los manifiestos de paquetes detectados.
-2. **Lista Negra Estricta**:
-   - Prohibido alucinar o sugerir paquetes externos que dupliquen capacidades ya resueltas en el proyecto.
-3. **Invariante de Contexto Soberano**:
-   - Antes de iniciar especificaciones (`spec-author`) o código (`implementer`), la IA debe consultar obligatoriamente `project-docs/knowledge/` y respetar todas las reglas `BR-*`.
-
----
-
-### Paso 13: Documentación Modular Granular (`modules/`)
-Para cada Bounded Context identificado:
-- Crear `project-docs/knowledge/modules/{modulo}/`.
-- Redactar `module-spec.md` (responsabilidades y contratos), `rules.md` (invariantes locales) y `sequence.md` (flujo detallado).
-
----
-
-### Paso 14: Consolidación y Sincronización Automática
-1. Generar o actualizar `project-docs/knowledge/knowledge-index.json`.
-2. **Ejecutar obligatoriamente**:
-   ```bash
-   node project-docs/sync-data.js
-   ```
-   Esto valida la estructura, actualiza los índices y asegura que el tablero interactivo refleje de inmediato la documentación actualizada.
-
----
-
-## Protocolo de Mantenimiento Incremental (Docs-as-Code)
-
-> [!TIP]
-> **Modificaciones Futuras de Reglas de Negocio o Requerimientos**:  
-> Si una regla de negocio o requerimiento cambia más adelante, **NO es necesario re-analizar todo el proyecto**.  
-> Edita directamente el archivo puntual en `project-docs/knowledge/` (`business-rules.md`, `functional-requirements.md` o el módulo en `modules/{modulo}/`) y ejecuta `node project-docs/sync-data.js`.  
-> Los agentes y desarrolladores leerán automáticamente la regla actualizada en su siguiente ciclo sin regenerar toda la base de conocimiento.
+- [ ] **Agnosticismo y Fidelidad al Proyecto Real**: Se analizaron tanto las partes modernas como las legacy (si existen), sin inventar tecnologías que no estén en el repositorio.
+- [ ] **Manejo de Archivos Masivos**: Si hubo archivos >800 líneas, se inspeccionaron por símbolos y rangos sin perder reglas de negocio.
+- [ ] **Doble Salida Completa**: Existen todos los archivos divididos en `project-docs/knowledge/` **Y** existe el megadocumento unificado `project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`.
+- [ ] **Módulos Profundos (5 archivos + 6 diagramas por módulo)**: Cada módulo en `modules/{modulo}/` cuenta con `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md` y `technical-debt-refactoring.md`.
+- [ ] **12 Tipos de Diagramas con Geometría Exacta**: Todos los diagramas Mermaid usan las formas geométricas correctas (cilindros, hexágonos, subrutinas, banderas, rombos) y tienen IDs alfanuméricos limpios con etiquetas entrecomilladas.
