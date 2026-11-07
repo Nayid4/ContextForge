@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderMarkdown, extractTableOfContents } from '../../project-docs/src/shared/MarkdownViewer.js';
+import { renderMarkdown, extractTableOfContents } from '../../src/shared/MarkdownViewer.js';
 
 describe('White-Box Testing: Ramificaciones y Grafos de Decisión en MarkdownViewer', () => {
   test('Branch Coverage: Renderizado de todas las alertas GitHub (NOTE, TIP, IMPORTANT, WARNING, CAUTION, DANGER, Desconocido)', () => {

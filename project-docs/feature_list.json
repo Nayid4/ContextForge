@@ -714,6 +714,105 @@
         "El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla"
       ],
       "closedAt": "2026-11-03T14:26:00Z"
+    },
+    {
+      "id": 10,
+      "type": "feature",
+      "name": "harness_root_cleanliness_encapsulation",
+      "title": "Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés",
+      "description": "Reorganizar la arquitectura de archivos del arnés para que la raíz contenga exclusivamente los archivos y carpetas indispensables de adopción (.agents/, .github/, .opencode/, project-docs/, AGENTS.md, opencode.json, project-spec.yaml, verify.sh), encapsulando el tooling npm, scripts, suites de prueba y specs dentro de project-docs/ para prevenir cualquier colisión al copiar y pegar el arnés en proyectos externos (.NET, Python, Java, Go, etc.).",
+      "module": "agent-orchestrator",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-010/harness_root_cleanliness_encapsulation",
+      "spec_folder": "specs/010_harness_root_cleanliness_encapsulation",
+      "status": "done",
+      "closedAt": "2026-11-07T10:05:00Z",
+      "acceptance": [
+        "La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)",
+        "Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión",
+        "Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente",
+        "Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js",
+        "El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json",
+        "ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md",
+        "verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)",
+        "El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas",
+        "El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga"
+      ],
+      "user_story": {
+        "as_a": "Ingeniero / Arquitecto de Software",
+        "i_want": "tener una raíz de proyecto limpia donde todos los archivos internos del arnés estén encapsulados en project-docs/",
+        "so_that": "pueda copiar y pegar el arnés en cualquier proyecto cliente (.NET, Python, Java, Go, Node) sin colisiones de package.json, tests o archivos sueltos en la raíz"
+      },
+      "subtasks": [
+        {
+          "id": "INT-010-DEV",
+          "type": "development",
+          "title": "Encapsulamiento de tooling npm, scripts, tests y configuración dentro de project-docs/",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Mover package.json, package-lock.json y playwright.config.js a project-docs/",
+            "Reubicar tests/ a project-docs/tests/ y scripts/ a project-docs/scripts/",
+            "Reubicar kickstart.json a project-docs/kickstart.json",
+            "Actualizar rutas en serve.js, sync-data.js, playwright.config.js y tests",
+            "Actualizar verify.sh para invocar npm con --prefix project-docs",
+            "Reubicar/unificar ANTIGRAVITY.md en .agents/ANTIGRAVITY.md y actualizar AGENTS.md"
+          ]
+        },
+        {
+          "id": "INT-010-QA",
+          "type": "qa",
+          "title": "Verificación multinivel, auditoría de raíz limpia y pruebas E2E",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Verificar que la raíz del proyecto contenga únicamente los archivos mínimos canónicos",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Verificar compilación de bundle y servidor con tooling encapsulado en project-docs/",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Ejecutar suite completa de tests (unit, whitebox, blackbox, system, load) desde project-docs/tests/",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Ejecutar pruebas de aceptación E2E con Playwright en modo headless",
+              "status": "passed"
+            },
+            {
+              "id": "TC-05",
+              "title": "Ejecutar verify.sh completo y validar salida en verde 100%",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T10:05:00Z",
+        "dev_summary": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
+        "tests_executed": [
+          "16 Unit tests (node:test)",
+          "12 White-Box tests (node:test)",
+          "8 Black-Box tests (node:test)",
+          "7 System tests (node:test)",
+          "1 Load test (node:test)",
+          "5 Smoke ATDD tests (node:test)",
+          "10 Playwright E2E Acceptance tests (Chrome headless)"
+        ],
+        "screenshots": [
+          "specs/010_harness_root_cleanliness_encapsulation/evidence/01-dashboard-scrum-table.png",
+          "specs/010_harness_root_cleanliness_encapsulation/evidence/02-modal-scrum-subtasks.png",
+          "specs/010_harness_root_cleanliness_encapsulation/evidence/03-knowledge-base-deepwiki.png"
+        ]
+      }
     }
   ]
 }

@@ -3,9 +3,9 @@ id: MOD-ORCH-RULES
 title: "Módulo: agent-orchestrator — Requerimientos & Reglas de Negocio"
 module: "agent-orchestrator"
 status: "Publicado"
-version: "4.0.0"
-last_updated: "2026-11-03"
-tags: ["requirements", "rules", "stories", "tasks"]
+version: "4.2.0"
+last_updated: "2026-11-07"
+tags: ["requirements", "rules", "stories", "tasks", "scrum-subtasks", "qa-evidence"]
 ---
 
 # Módulo: agent-orchestrator — Requerimientos & Reglas de Negocio
@@ -24,6 +24,13 @@ tags: ["requirements", "rules", "stories", "tasks"]
 ### `RF-ORCH-002`: Puerta Humana Obligatoria para Aprobación de Spec
 - **Enunciado Formal**: Antes de pasar una tarea a estado `in_progress` o iniciar la fase de implementación, el sistema **debe** invocar la herramienta `ask_question` para obtener la aprobación explícita y documentada del usuario humano al 100%.
 
+### `RF-ORCH-003`: Partición en Subtareas Scrum Jira DEV/QA y Captura de Evidencias
+- **Enunciado Formal**: Durante la redacción del spec y la verificación final, el sistema **debe** particionar la tarea en subtareas Jira de Desarrollo (`DEV`) y Aseguramiento de Calidad (`QA`), y **debe** generar capturas de pantalla visuales de los flujos principales en `specs/{NNN}_{name}/evidence/`.
+- **Criterio Gherkin**:
+  - *Given* una tarea aprobada y probada
+  - *When* se ejecuta la verificación de aceptación
+  - *Then* se generan las capturas PNG en el directorio de evidencias y el modal de detalle del tablero muestra badges interactivos `DEV: done` y `QA: done`.
+
 ---
 
 ## 2. Reglas de Negocio Locales (BR-*)
@@ -33,6 +40,7 @@ tags: ["requirements", "rules", "stories", "tasks"]
 | `BR-ORCH-001` | Crítica | `length(branch) <= 80 && type in ['feature', 'bugfix']` | `.opencode/rules/branches.md` | Aborta con error de convención |
 | `BR-ORCH-002` | Crítica | `spec_approved == true` antes de delegar a `implementer` | `.agents/rules/antigravity-harness.md` | Bloquea ejecución con `ask_question` |
 | `BR-ORCH-003` | Crítica | `reviewer.can_edit_code == false` | `.agents/agents/reviewer.md` | Prohibido editar código fuente |
+| `BR-ORCH-004` | Alta | `subtasks.dev == 'done' && subtasks.qa == 'done' && evidence_files.length >= 1` | `verify-spec` y `Modal.js` | Impide marcar la tarea como `done` |
 
 ---
 
@@ -44,3 +52,11 @@ tags: ["requirements", "rules", "stories", "tasks"]
 - **Tareas de Ingeniería (TI-*)**:
   - `TI-ORCH-01`: Implementar validador regex de nombres de rama y contador de caracteres $\le 80$.
   - `TI-ORCH-02`: Añadir suite de pruebas BVA (79c, 80c, 81c) en `tests/blackbox/bva-inputs.test.js`.
+
+### `HU-ORCH-02`: Desglose Scrum DEV/QA y Evidencias Visuales
+- *Como* auditor de calidad / Scrum Master, *quiero* que cada User Story cuente con subtareas independientes de DEV y QA y evidencias gráficas generadas automáticamente, *para* auditar la aceptación visual sin ejecutar manualmente el navegador.
+- **Story Points**: 5 SP (Fibonacci)
+- **Tareas de Ingeniería (TI-*)**:
+  - `TI-ORCH-03`: Implementar runner de capturas headless en `scripts/capture-evidence.js`.
+  - `TI-ORCH-04`: Integrar visualización de subtareas DEV/QA y visor de evidencias en `project-docs/src/shared/Modal.js`.
+  - `TI-ORCH-05`: Añadir pruebas E2E con Playwright en `tests/acceptance/scrum-evidence-capture.spec.js`.

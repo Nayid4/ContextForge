@@ -1,21 +1,22 @@
 {
-  "name": "ai-agentic-sdd-engineering-harness",
+  "name": "ai-agentic-sdd-engineering-harness-docs",
   "version": "2.5.0",
   "type": "module",
-  "description": "Arnés universal y agnóstico de ingeniería de software dirigida por especificaciones (Spec Driven Development) para agentes de IA",
-  "main": "project-docs/src/main.js",
+  "description": "Tablero interactivo, base de conocimiento y arnés de pruebas para SDD",
+  "main": "src/main.js",
   "scripts": {
     "test": "node --test tests/unit/**/*.test.js",
     "test:unit": "node --test tests/unit/**/*.test.js",
     "test:e2e": "node --test tests/e2e/**/*.test.js",
-    "build": "npx esbuild project-docs/src/main.js --bundle --outfile=project-docs/dist/app.bundle.js --format=iife",
-    "sync": "node project-docs/sync-data.js",
-    "start": "node project-docs/serve.js",
+    "build": "npx esbuild src/main.js --bundle --outfile=dist/app.bundle.js --format=iife",
+    "sync": "node sync-data.js",
+    "start": "node serve.js",
     "test:acceptance": "npx playwright test",
     "test:whitebox": "node --test tests/whitebox/**/*.test.js",
     "test:blackbox": "node --test tests/blackbox/**/*.test.js",
     "test:system": "node --test tests/system/**/*.test.js",
     "test:load": "node --test tests/load/**/*.test.js",
+    "evidence": "node scripts/capture-evidence.js",
     "test:all": "node --test tests/unit/**/*.test.js tests/e2e/**/*.test.js tests/whitebox/**/*.test.js tests/blackbox/**/*.test.js tests/system/**/*.test.js tests/load/**/*.test.js && npx playwright test"
   },
   "keywords": [

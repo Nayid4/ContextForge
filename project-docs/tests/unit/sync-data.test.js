@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 test('sync-data y data-fallback cargan los 22 documentos vivos con metadatos correctos', () => {
-  const fallbackPath = path.resolve('project-docs/data-fallback.js');
+  const fallbackPath = fs.existsSync('data-fallback.js') ? path.resolve('data-fallback.js') : path.resolve('project-docs/data-fallback.js');
   assert.ok(fs.existsSync(fallbackPath), 'data-fallback.js debe existir');
 
   const content = fs.readFileSync(fallbackPath, 'utf8');

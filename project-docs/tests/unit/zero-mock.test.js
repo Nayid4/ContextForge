@@ -6,10 +6,10 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..', '..');
+const DOCS_DIR = path.resolve(__dirname, '..', '..');
 
 test('Zero-Mock Gate: project-spec.json no debe contener mocks residuales de e-commerce ni lorem ipsum', () => {
-  const specPath = path.join(ROOT_DIR, 'project-docs', 'project-spec.json');
+  const specPath = path.join(DOCS_DIR, 'project-spec.json');
   assert.ok(fs.existsSync(specPath), 'project-spec.json debe existir');
 
   const content = fs.readFileSync(specPath, 'utf-8').toLowerCase();
@@ -20,7 +20,7 @@ test('Zero-Mock Gate: project-spec.json no debe contener mocks residuales de e-c
 });
 
 test('Zero-Mock Gate: knowledge-index.json debe indexar los 5 módulos soberanos del arnés', () => {
-  const kIndexPath = path.join(ROOT_DIR, 'project-docs', 'knowledge', 'knowledge-index.json');
+  const kIndexPath = path.join(DOCS_DIR, 'knowledge', 'knowledge-index.json');
   assert.ok(fs.existsSync(kIndexPath), 'knowledge-index.json debe existir');
 
   const data = JSON.parse(fs.readFileSync(kIndexPath, 'utf-8'));

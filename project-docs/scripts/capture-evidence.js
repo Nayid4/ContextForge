@@ -9,7 +9,18 @@ import path from 'path';
 
 async function runEvidenceCapture() {
   const targetTask = process.argv[2] || '009';
-  const evidenceDir = path.resolve(process.cwd(), `specs/${targetTask}_scrum_spec_subtasks_and_qa_evidence/evidence`);
+  const ROOT_DIR = fs.existsSync(path.resolve(process.cwd(), 'specs'))
+    ? process.cwd()
+    : path.resolve(process.cwd(), '..');
+  
+  const specsDir = path.resolve(ROOT_DIR, 'specs');
+  let targetSpecFolder = fs.existsSync(specsDir) 
+    ? fs.readdirSync(specsDir).find(f => f.startsWith(`${targetTask}_`))
+    : null;
+  if (!targetSpecFolder) {
+    targetSpecFolder = `${targetTask}_evidence`;
+  }
+  const evidenceDir = path.resolve(specsDir, targetSpecFolder, 'evidence');
   
   if (!fs.existsSync(evidenceDir)) {
     fs.mkdirSync(evidenceDir, { recursive: true });
@@ -18,12 +29,12 @@ async function runEvidenceCapture() {
   console.log(`[EVIDENCE] Iniciando captura de evidencias para tarea ${targetTask}...`);
   console.log(`[EVIDENCE] Directorio de salida: ${evidenceDir}`);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
 
   try {
-    const fileUrl = 'file:///' + path.resolve(process.cwd(), 'project-docs/index.html').replace(/\\/g, '/');
+    const fileUrl = 'file:///' + path.resolve(ROOT_DIR, 'project-docs/index.html').replace(/\\/g, '/');
     await page.goto(fileUrl);
     await page.waitForTimeout(1000);
 
@@ -32,8 +43,9 @@ async function runEvidenceCapture() {
     await page.screenshot({ path: tableShot });
     console.log(`[OK] Captura 1 guardada: ${tableShot}`);
 
-    // 2. Open Modal for task 9
-    const detailBtn = page.locator('button[data-action="view-detail"][data-id="9"]').first();
+    // 2. Open Modal for target task
+    const detailId = parseInt(targetTask, 10).toString();
+    const detailBtn = page.locator(`button[data-action="view-detail"][data-id="${detailId}"]`).first();
     if (await detailBtn.count() > 0) {
       await detailBtn.click();
       await page.waitForTimeout(500);

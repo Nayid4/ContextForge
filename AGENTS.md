@@ -10,19 +10,22 @@ Arnés de ingeniería dirigida por specs (Spec Driven Development) para desarrol
 ├── <backend>/           # API/servidor - nombre, lenguaje y framework dependen del proyecto
 ├── <frontend>/          # UI/cliente (opcional) - nombre, lenguaje y framework dependen del proyecto
 ├── infra/               # Infraestructura (Docker, IaC, etc.) - opcional según el proyecto
-├── project-docs/        # Documentación y Tablero de seguimiento (Screaming Arch + Tailwind v4 + Vanilla JS)
+├── project-docs/        # Documentación, pruebas internas y Tablero de seguimiento
 ├── .agents/             # Configuración homologada para Google Antigravity
 │   ├── rules/           # Reglas de flujo, branching y arnés
 │   ├── agents/          # Roles especializados (leader, spec-author, implementer, reviewer)
-│   └── skills/          # Skills homologadas para Antigravity
+│   ├── skills/          # Skills homologadas para Antigravity
+│   └── ANTIGRAVITY.md   # Guía de orquestación nativa para Antigravity 2.0
 ├── .github/             # Configuración homologada de GitHub Copilot
 │   ├── instructions/    # Reglas homologadas (commits, branches, skills-sync, project-status)
 │   └── skills/          # Skills homologadas para Copilot
 ├── .opencode/           # Configuración de opencode
 │   ├── rules/           # Reglas de commits, branches y sincronización
 │   └── skills/          # Skills de opencode (fuente de verdad)
-├── ANTIGRAVITY.md       # Guía de referencia para Google Antigravity
+├── AGENTS.md            # Reglas generales del arnés y orquestación
 ├── opencode.json        # Configuración principal de opencode
+├── project-spec.yaml    # Especificación técnica del proyecto y arnés
+├── verify.sh            # Script de verificación integral del arnés
 └── README.md            # Documentación general del arnés
 ```
 

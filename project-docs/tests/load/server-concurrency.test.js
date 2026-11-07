@@ -8,7 +8,7 @@ describe('Load & Performance Testing: Simulación de Concurrencia y Medición de
   let server;
   const LOAD_PORT = 3335;
   const BASE_URL = `http://127.0.0.1:${LOAD_PORT}`;
-  const rootDir = process.cwd();
+  const rootDir = fs.existsSync('index.html') ? path.resolve('..') : process.cwd();
 
   before(async () => {
     server = http.createServer((req, res) => {

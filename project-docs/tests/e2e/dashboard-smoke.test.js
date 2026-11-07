@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 test('Smoke Test: Archivos y enlaces críticos del tablero interactivo', () => {
-  const indexPath = path.resolve('project-docs/index.html');
-  const bundlePath = path.resolve('project-docs/dist/app.bundle.js');
-  const fallbackPath = path.resolve('project-docs/data-fallback.js');
+  const indexPath = fs.existsSync('index.html') ? path.resolve('index.html') : path.resolve('project-docs/index.html');
+  const bundlePath = fs.existsSync('dist/app.bundle.js') ? path.resolve('dist/app.bundle.js') : path.resolve('project-docs/dist/app.bundle.js');
+  const fallbackPath = fs.existsSync('data-fallback.js') ? path.resolve('data-fallback.js') : path.resolve('project-docs/data-fallback.js');
 
   assert.ok(fs.existsSync(indexPath), 'index.html debe existir');
   assert.ok(fs.existsSync(bundlePath), 'dist/app.bundle.js debe existir');
@@ -33,7 +33,7 @@ test('Smoke Test: Evaluación del bundle y renderizado sin excepciones', () => {
   };
   global.localStorage = { getItem: () => 'dark', setItem: () => {} };
 
-  const bundlePath = path.resolve('project-docs/dist/app.bundle.js');
+  const bundlePath = fs.existsSync('dist/app.bundle.js') ? path.resolve('dist/app.bundle.js') : path.resolve('project-docs/dist/app.bundle.js');
   assert.doesNotThrow(() => {
     // Importa el script empaquetado para asegurar que no contenga referencias nulas
     const code = fs.readFileSync(bundlePath, 'utf8');

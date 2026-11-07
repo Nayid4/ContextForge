@@ -28,7 +28,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'node project-docs/serve.js',
+    command: 'node serve.js',
     url: 'http://127.0.0.1:3333/project-docs/index.html',
     reuseExistingServer: !process.env.CI,
     timeout: 15 * 1000,

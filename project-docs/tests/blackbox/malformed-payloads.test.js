@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderMarkdown, extractTableOfContents } from '../../project-docs/src/shared/MarkdownViewer.js';
+import { renderMarkdown, extractTableOfContents } from '../../src/shared/MarkdownViewer.js';
 
 describe('Black-Box Testing: Payloads Malformados, Inyección Adversaria y Resiliencia', () => {
   test('Resiliencia: Bloque de código sin cerrar (unclosed code fence)', () => {
