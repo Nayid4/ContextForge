@@ -26,6 +26,7 @@ import { renderArchitectureDocs, renderArchitectureView } from './features/archi
 import { renderDependencyGraphView, renderDependencyGraph, DependencyTreeComponent } from './features/graph/index.js';
 import { renderConstellation3DView, SpaceView3D } from './features/constellation/index.js';
 import { renderAnalyticsView } from './features/analytics/index.js';
+import { renderHarnessView } from './modules/Harness/index.js';
 
 class App {
   constructor() {
@@ -120,7 +121,7 @@ class App {
 
     const state = store.getState();
     const planeData = state.planeData || {};
-    const issues = planeData.issues || state.features || [];
+    const issues = (planeData.issues && planeData.issues.length > 0) ? planeData.issues : (state.features || []);
     const states = planeData.states || [];
     const cycles = planeData.cycles || [];
     const modules = planeData.modules || [];
@@ -186,7 +187,8 @@ class App {
       graph: 'Grafo & Árbol de Dependencias',
       tree: 'Árbol Jerárquico de Requerimientos',
       constellation: 'Constelación Piramidal 3D',
-      analytics: 'Analítica, Velocidad & Rendimiento'
+      analytics: 'Analítica, Velocidad & Rendimiento',
+      harness: 'Orquestación de Agentes & Gobernanza SDD'
     };
     const viewTitle = viewTitles[currentView] || 'Tareas';
 
@@ -274,6 +276,12 @@ class App {
       mainContentHtml = `
         <div class="flex-1 overflow-y-auto">
           ${renderAnalyticsView({ issues, states, cycles, modules })}
+        </div>
+      `;
+    } else if (currentView === 'harness' || currentView === 'agents') {
+      mainContentHtml = `
+        <div class="flex-1 overflow-y-auto">
+          ${renderHarnessView()}
         </div>
       `;
     }
@@ -445,7 +453,8 @@ class App {
       const viewDetailBtn = e.target.closest('button[data-action="view-detail"]');
       if (viewDetailBtn) {
         const id = viewDetailBtn.getAttribute('data-id');
-        const issues = store.getState().planeData?.issues || store.getState().features || [];
+        const pdIssues = store.getState().planeData?.issues;
+        const issues = (pdIssues && pdIssues.length > 0) ? pdIssues : (store.getState().features || []);
         const match = issues.find(i => String(i.id) === String(id) || String(i.id) === `INT-${String(id).padStart(3, '0')}` || String(i.sequence_id) === String(id));
         if (match) {
           this.openIssueModal(match.id);
@@ -1039,6 +1048,12 @@ function getBlockTypeLabel(type) {
 
 // Inicialización de la aplicación
 const app = new App();
-document.addEventListener('DOMContentLoaded', () => {
-  app.init();
-});
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
+  } else {
+    app.init();
+  }
+}

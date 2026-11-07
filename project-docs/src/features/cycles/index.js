@@ -1,3 +1,5 @@
-export { renderCyclesView } from './views/CyclesView.js';
-export { BurnDownChart } from './components/BurnDownChart.js';
-export { CycleCard } from './components/CycleCard.js';
+/**
+ * Re-export canónico del dominio Cycles desde modules/Cycles/index.js
+ * Mantiene compatibilidad total hacia atrás con la arquitectura Screaming unificada.
+ */
+export * from '../../modules/Cycles/index.js';

@@ -26,17 +26,20 @@ harness_anginnering/
 ├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)
 ├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)
 ├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code
-│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4
-│   │   ├── core/        # Núcleo técnico (api, detector, router, store)
-│   │   ├── features/    # Vertical Slices del Dominio (stats, current-spec, knowledge-base, etc.)
-│   │   └── shared/      # Componentes UI reutilizables (Badge, Button, Icons, MarkdownViewer)
+│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)
+│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)
+│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)
+│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)
+│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás
+│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)
 │   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)
+│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias
 │   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)
-└── tests/               # Suite de Verificación en 8 Niveles (Unit, E2E, Whitebox, Blackbox, System, Load, Acceptance)
+└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)
 ```
 
-### 1.2 Topología Macro y Dualidad Offline-First
-- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) en puerto dinámico con cabeceras CORS permisivas, compresión y entrega estática.
+### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)
+- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.
 - **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.
 
 ---

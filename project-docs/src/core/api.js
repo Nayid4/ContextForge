@@ -275,5 +275,6 @@ export const api = {
   fetchPlaneData,
   updatePlaneIssue,
   updatePlanePage,
-  startAutoSync
+  startAutoSync,
+  startPolling: startAutoSync
 };

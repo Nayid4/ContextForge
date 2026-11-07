@@ -55,24 +55,56 @@ flowchart TD
 
 ## Nivel 3: Diagrama de Componentes del Tablero Web (C3)
 
-Desglose interno de la aplicación web en `project-docs/`:
+Desglose interno de la aplicación web en `project-docs/` bajo Screaming Architecture modular:
 
 ```mermaid
-flowchart LR
-  subgraph DashboardComponents["project-docs/src/"]
-    compRouter["Enrutador por Pestañas<br/>(router.js)"]
-    compStore["Store Reactivo Central<br/>(store.js)"]
-    compDetector["Detector de Entorno & Agente<br/>(detector.js)"]
-    compMarkdown["Lector Editorial & Parser Bloques<br/>(MarkdownViewer.js)"]
-    compThree["Constelación 3D Piramidal<br/>(SpaceView3D.js)"]
-    compMermaid["Visor & Editor Draw.io<br/>(MermaidViewer.js)"]
-    compOmnibox["Buscador Global Ctrl+K<br/>(Omnibox Modal)"]
+flowchart TD
+  subgraph ClientApp["Tablero Screaming Architecture (project-docs/src/)"]
+    subgraph CoreLayer["Núcleo Transversal (src/core/)"]
+      compStore["Store Observer Reactivo<br/>(store.js)"]
+      compRouter["Hash Router con URL Params<br/>(router.js)"]
+      compBus["EventBus Desacoplado<br/>(event-bus.js)"]
+      compClient["API Client con Resiliencia<br/>(api-client.js)"]
+      compSqlite["Adaptador SQLite WAL<br/>(db.js & sqlite-sync.js)"]
+    end
+
+    subgraph DomainModules["Módulos de Negocio Screaming (src/modules/)"]
+      modProjects["Projects<br/>(Workspaces, Metadata, KPIs)"]
+      modIssues["Issues<br/>(Kanban, Lista, Scrum, Jira DEV/QA)"]
+      modCycles["Cycles<br/>(Sprints, SVG Burn-down)"]
+      modPages["Pages<br/>(ContextForge Reader, Dual Editor)"]
+      modHarness["Harness<br/>(Agentes, Gobernanza, Skills)"]
+    end
+
+    subgraph SharedLayer["Componentes Compartidos (src/shared/)"]
+      sharedLayout["MasterLayout / Sidebar / TopBar"]
+      sharedIcons["Iconografía 100% SVG Nativo"]
+      sharedUtils["renderList / DOM / Markdown"]
+    end
   end
 
   compRouter --> compStore
-  compDetector --> compStore
-  compStore --> compMarkdown
-  compStore --> compThree
-  compStore --> compMermaid
-  compStore --> compOmnibox
+  compBus --> compStore
+  DomainModules --> compStore
+  DomainModules --> compClient
+  compClient --> compSqlite
+  DomainModules --> sharedLayer
+```
+
+---
+
+## Nivel 4: Persistencia Dual Determinista (C4 / Data Storage)
+
+```mermaid
+flowchart LR
+  subgraph DataSources["Fuentes de Persistencia Dual"]
+    sqliteDB["SQLite Relacional WAL<br/>(project-docs/data/harness.db)"]
+    markdownFiles["Documentos Vivos Markdown<br/>(project-docs/knowledge/ & specs/)"]
+    jsonFallback["Data Fallback Resiliente<br/>(project-docs/data-fallback.js)"]
+  end
+
+  serverSync["Servidor Local & Sync Bridge<br/>(serve.js & sync-data.js)"]
+  serverSync -->|"Persistencia Transaccional"| sqliteDB
+  serverSync -->|"Exportación Soberana"| markdownFiles
+  serverSync -->|"Bundle Offline"| jsonFallback
 ```

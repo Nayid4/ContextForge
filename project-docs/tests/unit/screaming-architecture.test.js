@@ -80,3 +80,26 @@ test('Functional Component Helper: renderList bucles declarativos', () => {
   const nullRender = renderList(null, () => '');
   assert.equal(nullRender, '');
 });
+
+test('Screaming Architecture: Validación de Módulos de Dominio (src/modules/)', () => {
+  const MODULES_DIR = path.join(SRC_DIR, 'modules');
+  assert.ok(fs.existsSync(MODULES_DIR), 'La carpeta src/modules/ debe existir');
+
+  const expectedModules = ['Cycles', 'Harness', 'Issues', 'Pages', 'Projects'];
+  const actualDirs = fs.readdirSync(MODULES_DIR).filter(item => {
+    return fs.statSync(path.join(MODULES_DIR, item)).isDirectory();
+  }).sort();
+
+  assert.deepEqual(actualDirs, expectedModules, 'src/modules/ debe contener los dominios canónicos');
+
+  for (const mod of expectedModules) {
+    const modPath = path.join(MODULES_DIR, mod);
+    assert.ok(fs.existsSync(path.join(modPath, 'index.js')), `${mod} debe tener index.js`);
+    assert.ok(fs.existsSync(path.join(modPath, 'components')), `${mod} debe tener components/`);
+    assert.ok(fs.existsSync(path.join(modPath, 'pages')), `${mod} debe tener pages/`);
+    assert.ok(fs.existsSync(path.join(modPath, 'services')), `${mod} debe tener services/`);
+    assert.ok(fs.existsSync(path.join(modPath, 'store')), `${mod} debe tener store/`);
+  }
+
+  assert.ok(fs.existsSync(path.join(MODULES_DIR, 'index.js')), 'src/modules/ debe tener un index.js central');
+});

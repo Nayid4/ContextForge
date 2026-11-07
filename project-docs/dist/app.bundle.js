@@ -10,7 +10,7 @@
     }
     return "dark";
   };
-  var initialState = {
+  var defaultInitialState = {
     project: "Proyecto",
     features: [],
     currentSpec: {},
@@ -67,27 +67,99 @@
     // 'graph' | 'tree'
   };
   var Store = class {
-    constructor(state = initialState) {
+    constructor(state = defaultInitialState) {
+      this.initialState = { ...state };
       this.state = { ...state };
       this.listeners = /* @__PURE__ */ new Set();
+      this.keyListeners = /* @__PURE__ */ new Map();
       this.syncThemeDom();
     }
+    /**
+     * Retorna una copia congelada o referencial del estado actual.
+     * @returns {typeof defaultInitialState}
+     */
     getState() {
       return this.state;
     }
+    /**
+     * Actualiza el estado mediante un objeto parcial o una función actualizadora.
+     * Notifica a todos los suscriptores generales y por clave afectada.
+     * @param {Partial<typeof defaultInitialState> | ((prevState: typeof defaultInitialState) => Partial<typeof defaultInitialState>)} updater 
+     */
     setState(updater) {
-      const nextPartial = typeof updater === "function" ? updater(this.state) : updater;
-      this.state = { ...this.state, ...nextPartial };
+      const prevState = this.state;
+      const nextPartial = typeof updater === "function" ? updater(prevState) : updater;
+      if (!nextPartial || typeof nextPartial !== "object") return;
+      this.state = { ...prevState, ...nextPartial };
+      const changedKeys = Object.keys(nextPartial);
+      for (const key of changedKeys) {
+        if (prevState[key] !== this.state[key] && this.keyListeners.has(key)) {
+          const keySubs = this.keyListeners.get(key);
+          for (const sub of keySubs) {
+            try {
+              sub(this.state[key], prevState[key], this.state);
+            } catch (err) {
+              console.error(`Error en suscriptor de clave "${key}":`, err);
+            }
+          }
+        }
+      }
       this.notify();
     }
+    /**
+     * Suscribe un listener al estado completo.
+     * @param {(state: typeof defaultInitialState) => void} listener 
+     * @returns {() => void} Función de desuscripción
+     */
     subscribe(listener) {
+      if (typeof listener !== "function") {
+        throw new TypeError("El listener debe ser una funci\xF3n");
+      }
       this.listeners.add(listener);
       return () => this.listeners.delete(listener);
     }
+    /**
+     * Suscribe un listener específico a una propiedad particular del estado.
+     * @param {string} key - Nombre de la propiedad a observar
+     * @param {(newValue: any, oldValue: any, fullState: any) => void} listener 
+     * @returns {() => void} Función de desuscripción
+     */
+    subscribeKey(key, listener) {
+      if (typeof listener !== "function") {
+        throw new TypeError("El listener de clave debe ser una funci\xF3n");
+      }
+      if (!this.keyListeners.has(key)) {
+        this.keyListeners.set(key, /* @__PURE__ */ new Set());
+      }
+      this.keyListeners.get(key).add(listener);
+      return () => {
+        const subs = this.keyListeners.get(key);
+        if (subs) {
+          subs.delete(listener);
+          if (subs.size === 0) {
+            this.keyListeners.delete(key);
+          }
+        }
+      };
+    }
+    /**
+     * Notifica a todos los suscriptores registrados.
+     */
     notify() {
       for (const listener of this.listeners) {
-        listener(this.state);
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en suscriptor de Store:", err);
+        }
       }
+    }
+    /**
+     * Restablece el estado completo a sus valores iniciales.
+     */
+    resetState() {
+      this.state = { ...this.initialState };
+      this.notify();
     }
     // --- Theme Management ---
     syncThemeDom() {
@@ -543,47 +615,168 @@
     fetchPlaneData,
     updatePlaneIssue,
     updatePlanePage,
-    startAutoSync
+    startAutoSync,
+    startPolling: startAutoSync
   };
 
   // project-docs/src/core/router.js
-  var router = {
-    init(callback) {
-      const handleHash = () => {
-        const rawHash = (typeof window !== "undefined" && window.location?.hash ? window.location.hash.replace("#", "").trim() : "") || "issues";
-        let domainView = "issues";
-        if (rawHash === "features" || rawHash === "issues" || rawHash === "plane" || rawHash === "plane-issues") {
-          domainView = "issues";
-        } else if (rawHash === "cycles" || rawHash === "plane-cycles") {
-          domainView = "cycles";
-        } else if (rawHash === "modules" || rawHash === "plane-modules") {
-          domainView = "modules";
-        } else if (rawHash === "pages" || rawHash === "knowledge" || rawHash === "plane-pages") {
-          domainView = "pages";
-        } else if (rawHash === "architecture" || rawHash === "c4" || rawHash === "stack") {
-          domainView = "architecture";
-        } else if (rawHash === "graph" || rawHash === "tree" || rawHash === "depgraph" || rawHash === "dependencies") {
-          domainView = "graph";
-        } else if (rawHash === "constellation" || rawHash === "three" || rawHash === "space3d" || rawHash === "3d") {
-          domainView = "constellation";
-        } else if (rawHash === "analytics" || rawHash === "metrics" || rawHash === "stats") {
-          domainView = "analytics";
-        } else {
-          domainView = rawHash;
-        }
-        if (callback) callback(domainView, rawHash);
-      };
-      if (typeof window !== "undefined") {
-        window.addEventListener("hashchange", handleHash);
-        handleHash();
+  var Router = class {
+    constructor() {
+      this.currentRoute = "issues";
+      this.currentParams = {};
+      this.callbacks = /* @__PURE__ */ new Set();
+      this.routeHandlers = /* @__PURE__ */ new Map();
+      this.isListening = false;
+    }
+    /**
+     * Parsea un hash crudo extrayendo la ruta normalizada y sus parámetros de consulta.
+     * @param {string} rawHash 
+     * @returns {{ route: string, params: Record<string, string>, rawHash: string }}
+     */
+    parseHash(rawHash = "") {
+      const cleanHash = (rawHash || "").replace(/^#\/?/, "").trim();
+      if (!cleanHash) {
+        return { route: "issues", params: {}, rawHash: "" };
       }
-    },
-    navigate(domainView) {
-      if (typeof window !== "undefined") {
-        window.location.hash = domainView;
+      const [pathPart, queryPart] = cleanHash.split("?");
+      const rawRoute = (pathPart || "issues").toLowerCase().trim();
+      const params = {};
+      if (queryPart) {
+        const searchParams = new URLSearchParams(queryPart);
+        for (const [key, val] of searchParams.entries()) {
+          params[key] = val;
+        }
+      }
+      let route = "issues";
+      if (["features", "issues", "plane", "plane-issues"].includes(rawRoute)) {
+        route = "issues";
+      } else if (["cycles", "plane-cycles"].includes(rawRoute)) {
+        route = "cycles";
+      } else if (["modules", "plane-modules"].includes(rawRoute)) {
+        route = "modules";
+      } else if (["pages", "knowledge", "plane-pages"].includes(rawRoute)) {
+        route = "pages";
+      } else if (["architecture", "c4", "stack"].includes(rawRoute)) {
+        route = "architecture";
+      } else if (["graph", "tree", "depgraph", "dependencies"].includes(rawRoute)) {
+        route = "graph";
+      } else if (["constellation", "three", "space3d", "3d"].includes(rawRoute)) {
+        route = "constellation";
+      } else if (["analytics", "metrics", "stats"].includes(rawRoute)) {
+        route = "analytics";
+      } else if (["agents", "harness", "orchestrator"].includes(rawRoute)) {
+        route = "harness";
+      } else {
+        route = rawRoute;
+      }
+      return { route, params, rawHash: cleanHash };
+    }
+    _dispatch(route, rawHash, params) {
+      this.currentRoute = route;
+      this.currentParams = params;
+      for (const cb of this.callbacks) {
+        try {
+          cb(route, rawHash, params);
+        } catch (err) {
+          console.error("Error en router callback global:", err);
+        }
+      }
+      if (this.routeHandlers.has(route)) {
+        const handlers = Array.from(this.routeHandlers.get(route));
+        for (const handler of handlers) {
+          try {
+            handler(params, rawHash);
+          } catch (err) {
+            console.error(`Error en handler de ruta "${route}":`, err);
+          }
+        }
       }
     }
+    /**
+     * Inicializa la escucha de cambios de hash en window.
+     * @param {Function} [globalCallback] 
+     */
+    init(globalCallback) {
+      if (globalCallback && typeof globalCallback === "function") {
+        this.callbacks.add(globalCallback);
+      }
+      const handleHashChange = () => {
+        const rawHash = typeof window !== "undefined" && window.location?.hash ? window.location.hash : "";
+        const { route, params } = this.parseHash(rawHash);
+        this._dispatch(route, rawHash, params);
+      };
+      if (typeof window !== "undefined" && !this.isListening) {
+        if (typeof window.addEventListener === "function") {
+          window.addEventListener("hashchange", handleHashChange);
+        }
+        this.isListening = true;
+        handleHashChange();
+      }
+    }
+    /**
+     * Navega a una ruta con parámetros opcionales.
+     * @param {string} route 
+     * @param {Record<string, any>} [params] 
+     */
+    navigate(route, params = {}) {
+      let hash = `#${route}`;
+      const keys = Object.keys(params);
+      if (keys.length > 0) {
+        const searchParams = new URLSearchParams();
+        for (const key of keys) {
+          if (params[key] !== void 0 && params[key] !== null && params[key] !== "") {
+            searchParams.append(key, String(params[key]));
+          }
+        }
+        const qs = searchParams.toString();
+        if (qs) {
+          hash += `?${qs}`;
+        }
+      }
+      if (typeof window !== "undefined" && window.location) {
+        window.location.hash = hash;
+      } else {
+        const parsed = this.parseHash(hash);
+        this._dispatch(parsed.route, hash, parsed.params);
+      }
+    }
+    /**
+     * Registra un listener para una ruta específica.
+     * @param {string} route 
+     * @param {Function} handler 
+     * @returns {Function} Función para desuscribir.
+     */
+    on(route, handler) {
+      if (!this.routeHandlers.has(route)) {
+        this.routeHandlers.set(route, /* @__PURE__ */ new Set());
+      }
+      this.routeHandlers.get(route).add(handler);
+      return () => {
+        const handlers = this.routeHandlers.get(route);
+        if (handlers) {
+          handlers.delete(handler);
+          if (handlers.size === 0) {
+            this.routeHandlers.delete(route);
+          }
+        }
+      };
+    }
+    /**
+     * Obtiene la ruta activa normalizada.
+     * @returns {string}
+     */
+    getRoute() {
+      return this.currentRoute;
+    }
+    /**
+     * Obtiene los parámetros de la URL activa.
+     * @returns {Record<string, string>}
+     */
+    getParams() {
+      return { ...this.currentParams };
+    }
   };
+  var router = new Router();
 
   // project-docs/src/core/detector.js
   async function detectEnvironment(projectData = {}) {
@@ -715,7 +908,7 @@
     };
   }
 
-  // project-docs/src/shared/Icons.js
+  // project-docs/src/shared/ui/Icons.js
   function createIcon(svgInner, defaultCls = "w-4 h-4") {
     const fn = (cls = defaultCls) => `
     <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -744,7 +937,7 @@
     refresh: createIcon('<path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'),
     close: createIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
     search: createIcon('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>'),
-    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
+    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
     eyeOff: createIcon('<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'),
     filter: createIcon('<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'),
     share: createIcon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>'),
@@ -831,7 +1024,7 @@
     return items.map((item, index) => renderItemFn(item, index, items)).join("");
   }
 
-  // project-docs/src/features/layout/components/PlaneSidebar.js
+  // project-docs/src/shared/ui/PlaneSidebar.js
   function renderPlaneSidebar({
     currentView = "issues",
     activeWorkspace = "Harness Engineering",
@@ -841,7 +1034,7 @@
     moduleCount = 0,
     pageCount = 0,
     isCollapsed = false
-  }) {
+  } = {}) {
     const navItems = [
       { id: "issues", legacyTab: "features", label: "Tareas (Issues)", icon: "kanban", count: issueCount },
       { id: "cycles", legacyTab: "history", label: "Ciclos (Cycles)", icon: "cycle", count: cycleCount },
@@ -851,18 +1044,19 @@
       { id: "graph", legacyTab: "graph", label: "Grafo de Dependencias", icon: "gitTree" },
       { id: "tree", legacyTab: "tree", label: "\xC1rbol Jer\xE1rquico", icon: "gitTree" },
       { id: "constellation", legacyTab: "three", label: "Constelaci\xF3n 3D", icon: "cube" },
-      { id: "analytics", label: "M\xE9tricas & Burn-down", icon: "activity" }
+      { id: "analytics", label: "M\xE9tricas & Burn-down", icon: "activity" },
+      { id: "harness", label: "Agentes & Gobernanza", icon: "bot" }
     ];
     const renderNavItem = (item) => {
       const isActive = currentView === item.id;
       const iconFn = Icons[item.icon] || Icons.terminal;
       const tabAttr = item.legacyTab ? `data-tab="${item.legacyTab}"` : "";
       return `
-      <button data-plane-nav="${item.id}" ${tabAttr} class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${isActive ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/25 shadow-sm font-semibold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 border border-transparent"}">
+      <button data-plane-nav="${item.id}" ${tabAttr} class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${isActive ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/25 shadow-xs font-semibold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 border border-transparent"}">
         ${iconFn("w-4 h-4 shrink-0")}
         ${!isCollapsed ? `
           <span class="flex-1 text-left truncate">${item.label}</span>
-          ${item.count !== void 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 font-mono font-medium">${item.count}</span>` : ""}
+          ${item.count !== void 0 && item.count !== null ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 font-mono font-medium">${item.count}</span>` : ""}
         ` : ""}
       </button>
     `;
@@ -937,15 +1131,15 @@
   `;
   }
 
-  // project-docs/src/features/layout/components/PlaneTopBar.js
+  // project-docs/src/shared/ui/PlaneTopBar.js
   function renderPlaneTopBar({
     currentView = "issues",
     viewTitle = "Tareas (Work Items)",
     activeProject = "Arn\xE9s SDD Multi-Agente",
     theme = "dark"
-  }) {
+  } = {}) {
     return `
-    <header class="h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 flex items-center justify-between gap-4 sticky top-0 z-20">
+    <header class="h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 flex items-center justify-between gap-4 sticky top-0 z-20 select-none">
       <!-- Breadcrumbs -->
       <div class="flex items-center gap-2 text-xs">
         <span class="text-zinc-400 font-medium">${activeProject}</span>
@@ -977,13 +1171,13 @@
   `;
   }
 
-  // project-docs/src/features/layout/components/OmniboxModal.js
+  // project-docs/src/shared/ui/OmniboxModal.js
   function renderOmniboxModal({
     isOpen = false,
     query = "",
     issues = [],
     pages = []
-  }) {
+  } = {}) {
     if (!isOpen) return "";
     const q = (query || "").toLowerCase().trim();
     const matchedIssues = issues.filter(
@@ -998,7 +1192,7 @@
         <span class="text-xs font-mono font-bold text-indigo-400 shrink-0">${issue.id}</span>
         <span class="text-xs text-zinc-200 truncate group-hover:text-white font-medium">${issue.title}</span>
       </div>
-      <span class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono shrink-0">${issue.state_name || issue.state_id}</span>
+      <span class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono shrink-0">${issue.state_name || issue.state_id || "issue"}</span>
     </div>
   `;
     const renderPageResult = (page) => `
@@ -1012,7 +1206,7 @@
     </div>
   `;
     return `
-    <div id="omnibox-modal" data-backdrop="plane-omnibox" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start justify-center pt-20 px-4 animate-in fade-in duration-150">
+    <div id="omnibox-modal" data-backdrop="plane-omnibox" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-start justify-center pt-20 px-4 animate-in fade-in duration-150">
       <div class="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         <!-- Input Header -->
         <div class="p-4 border-b border-zinc-800 flex items-center gap-3">
@@ -1061,14 +1255,14 @@
   `;
   }
 
-  // project-docs/src/features/layout/views/MasterLayout.js
+  // project-docs/src/shared/ui/MasterLayout.js
   function renderMasterLayout({
     sidebarProps = {},
     topBarProps = {},
     omniboxProps = {},
     mainContentHtml = "",
     modalHtml = ""
-  }) {
+  } = {}) {
     return `
     <div id="plane-app-root" class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-row font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
       <!-- 1. Left Sidebar -->
@@ -1079,7 +1273,7 @@
         <!-- Top Navigation Bar -->
         ${renderPlaneTopBar(topBarProps)}
 
-        <!-- Feature View Container -->
+        <!-- Domain Feature View Container -->
         <main id="tab-content" class="flex-1 flex flex-col min-h-0 overflow-y-auto">
           ${mainContentHtml}
         </main>
@@ -1177,8 +1371,537 @@
   `;
   }
 
-  // project-docs/src/features/issues/components/IssueRow.js
-  function IssueRow(issue) {
+  // project-docs/src/core/api-client.js
+  var ApiClient = class {
+    constructor(baseUrl = "") {
+      this.baseUrl = baseUrl;
+    }
+    /**
+     * Determina si la aplicación se está ejecutando en modo offline (file:///)
+     * @returns {boolean}
+     */
+    isOffline() {
+      return typeof window !== "undefined" && window.location?.protocol === "file:";
+    }
+    /**
+     * Obtiene datos de respaldo embebidos en window.__FALLBACK_DATA__
+     * @returns {Record<string, any>}
+     */
+    getFallbackData() {
+      if (typeof window !== "undefined" && window.__FALLBACK_DATA__) {
+        return window.__FALLBACK_DATA__;
+      }
+      return {};
+    }
+    /**
+     * Realiza una petición GET segura con soporte de fallback.
+     * @param {string} endpoint 
+     * @param {RequestInit & { bypassCache?: boolean }} [options] 
+     * @returns {Promise<any>}
+     */
+    async get(endpoint, options = {}) {
+      if (this.isOffline()) {
+        return this.resolveOfflineFallback(endpoint);
+      }
+      const { bypassCache = false, ...fetchOpts } = options;
+      const url = bypassCache ? `${this.baseUrl}${endpoint}${endpoint.includes("?") ? "&" : "?"}_t=${Date.now()}` : `${this.baseUrl}${endpoint}`;
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { "Accept": "application/json" },
+          cache: bypassCache ? "no-store" : "default",
+          ...fetchOpts
+        });
+        if (!res.ok) {
+          throw new Error(`Error HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      } catch (err) {
+        const fallback = this.resolveOfflineFallback(endpoint);
+        if (fallback !== null) return fallback;
+        throw err;
+      }
+    }
+    /**
+     * Realiza una petición POST segura.
+     * @param {string} endpoint 
+     * @param {any} body 
+     * @param {RequestInit} [options] 
+     * @returns {Promise<any>}
+     */
+    async post(endpoint, body = {}, options = {}) {
+      if (this.isOffline()) {
+        console.warn(`Operaci\xF3n POST "${endpoint}" no persistida en servidor (modo offline file:///)`);
+        return { ok: true, offline: true };
+      }
+      const url = `${this.baseUrl}${endpoint}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(body),
+        ...options
+      });
+      if (!res.ok) {
+        throw new Error(`Error HTTP POST ${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    }
+    /**
+     * Resuelve datos desde el objeto de fallback según el endpoint solicitado.
+     * @param {string} endpoint 
+     * @returns {any}
+     */
+    resolveOfflineFallback(endpoint) {
+      const fallback = this.getFallbackData();
+      const clean = endpoint.toLowerCase();
+      if (clean.includes("feature_list") || clean.includes("/api/features")) {
+        return fallback.featureList || { project: "Proyecto (Modo Local)", features: [] };
+      }
+      if (clean.includes("current.json") || clean.includes("/api/spec/current")) {
+        return fallback.currentSpec || {};
+      }
+      if (clean.includes("history.json") || clean.includes("/api/history")) {
+        return fallback.historyData || { records: [] };
+      }
+      if (clean.includes("project-spec.json") || clean.includes("/api/spec/project")) {
+        return fallback.projectSpec || null;
+      }
+      if (clean.includes("knowledge") || clean.includes("/api/knowledge")) {
+        return fallback.knowledgeIndex || null;
+      }
+      if (clean.includes("plane") || clean.includes("/api/plane")) {
+        return fallback.planeData || {
+          workspace: { id: "ws-default", name: "Harness Workspace" },
+          project: { id: "proj-default", name: "Arn\xE9s SDD" },
+          states: [],
+          cycles: [],
+          modules: [],
+          issues: [],
+          pages: []
+        };
+      }
+      return null;
+    }
+    /**
+     * Carga todo el conjunto de datos del proyecto para el arnés.
+     * @param {{ bypassCache?: boolean }} [options] 
+     * @returns {Promise<Record<string, any>>}
+     */
+    async fetchAll(options = {}) {
+      if (this.isOffline()) {
+        const fb = this.getFallbackData();
+        const fList = fb.featureList || { project: "Proyecto (Modo Local)", features: [] };
+        return {
+          project: fList.project || "Proyecto",
+          features: Array.isArray(fList.features) ? fList.features : [],
+          currentSpec: fb.currentSpec || {},
+          historyData: fb.historyData || { records: [] },
+          projectSpec: fb.projectSpec || null,
+          knowledgeIndex: fb.knowledgeIndex || null,
+          protocol: "file:"
+        };
+      }
+      const { bypassCache = false } = options;
+      const cacheBuster = bypassCache ? `?_t=${Date.now()}` : "";
+      const [featuresRes, currentRes, historyRes, specRes, knowledgeRes] = await Promise.allSettled([
+        fetch(`feature_list.json${cacheBuster}`),
+        fetch(`progres/current.json${cacheBuster}`),
+        fetch(`progres/history.json${cacheBuster}`),
+        fetch(`project-spec.json${cacheBuster}`),
+        fetch(`knowledge/knowledge-index.json${cacheBuster}`)
+      ]);
+      const readJson = async (res) => {
+        if (res.status === "fulfilled" && res.value.ok) {
+          try {
+            return await res.value.json();
+          } catch (_) {
+            return null;
+          }
+        }
+        return null;
+      };
+      const fData = await readJson(featuresRes);
+      const cData = await readJson(currentRes);
+      const hData = await readJson(historyRes);
+      const sData = await readJson(specRes);
+      const kData = await readJson(knowledgeRes);
+      const fallback = this.getFallbackData();
+      return {
+        project: fData && fData.project || "Proyecto",
+        features: fData && Array.isArray(fData.features) ? fData.features : fallback.featureList?.features || [],
+        currentSpec: cData || fallback.currentSpec || {},
+        historyData: hData || fallback.historyData || { records: [] },
+        projectSpec: sData || fallback.projectSpec || null,
+        knowledgeIndex: kData || fallback.knowledgeIndex || null,
+        protocol: "http:"
+      };
+    }
+    /**
+     * Carga el estado estructurado de Plane (SQLite / fallback).
+     * @param {{ bypassCache?: boolean }} [options] 
+     * @returns {Promise<Record<string, any>>}
+     */
+    async fetchPlaneData(options = {}) {
+      if (this.isOffline()) {
+        return this.resolveOfflineFallback("plane");
+      }
+      try {
+        return await this.get("/api/plane/data", options);
+      } catch (_) {
+        return this.resolveOfflineFallback("plane");
+      }
+    }
+    /**
+     * Solicita una sincronización SQLite forzada al servidor local.
+     * @returns {Promise<any>}
+     */
+    async syncSQLite() {
+      try {
+        return await this.post("/api/plane/sync", {});
+      } catch (err) {
+        console.warn("Sincronizaci\xF3n SQLite no disponible:", err.message);
+        return { ok: false, error: err.message };
+      }
+    }
+  };
+  var apiClient = new ApiClient();
+
+  // project-docs/src/modules/Issues/services/issue.service.js
+  var CANONICAL_STATES = [
+    { id: "state-backlog", name: "Backlog", color: "bg-zinc-500", group: "backlog", sequence: 1 },
+    { id: "state-todo", name: "Por Hacer", color: "bg-sky-500", group: "unstarted", sequence: 2 },
+    { id: "state-in-progress", name: "En Progreso", color: "bg-amber-500", group: "started", sequence: 3 },
+    { id: "state-in-review", name: "En Revisi\xF3n", color: "bg-purple-500", group: "started", sequence: 4 },
+    { id: "state-done", name: "Completado", color: "bg-emerald-500", group: "completed", sequence: 5 },
+    { id: "state-cancelled", name: "Cancelado", color: "bg-rose-500", group: "cancelled", sequence: 6 }
+  ];
+  var IssueService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+      this.states = [...CANONICAL_STATES];
+    }
+    /**
+     * Obtiene todos los estados configurados en el proyecto.
+     * @returns {Array<{ id: string, name: string, color: string, group: string, sequence: number }>}
+     */
+    getStates() {
+      return this.states;
+    }
+    /**
+     * Carga todas las tareas con datos enriquecidos.
+     * @param {{ bypassCache?: boolean }} [options] 
+     * @returns {Promise<Array<Record<string, any>>>}
+     */
+    async getIssues(options = {}) {
+      try {
+        const planeData = await this.client.fetchPlaneData(options);
+        if (planeData && Array.isArray(planeData.issues) && planeData.issues.length > 0) {
+          if (Array.isArray(planeData.states) && planeData.states.length > 0) {
+            this.states = planeData.states;
+          }
+          return planeData.issues;
+        }
+      } catch (err) {
+        console.warn("Error obteniendo issues desde API, usando fallback:", err.message);
+      }
+      const allData = await this.client.fetchAll(options);
+      const features = Array.isArray(allData.features) ? allData.features : [];
+      return this.transformFeaturesToIssues(features);
+    }
+    /**
+     * Transforma la lista canónica de features de feature_list.json a formato IssueDTO de Plane.
+     * @param {Array<Record<string, any>>} features 
+     * @returns {Array<Record<string, any>>}
+     */
+    transformFeaturesToIssues(features) {
+      return features.map((f, idx) => {
+        let stateId = "state-backlog";
+        let stateName = "Backlog";
+        if (f.status === "done") {
+          stateId = "state-done";
+          stateName = "Completado";
+        } else if (f.status === "in_progress") {
+          stateId = "state-in-progress";
+          stateName = "En Progreso";
+        } else if (f.status === "spec_ready") {
+          stateId = "state-todo";
+          stateName = "Por Hacer";
+        } else if (f.status === "blocked") {
+          stateId = "state-cancelled";
+          stateName = "Cancelado";
+        }
+        const rawSubtasks = Array.isArray(f.subtasks) ? f.subtasks : [];
+        const subtasks = rawSubtasks.map((s) => ({
+          id: s.id,
+          type: s.type || "development",
+          title: s.title,
+          status: s.status || "pending",
+          assignee: s.assignee || "implementer"
+        }));
+        const doneSubtasks = subtasks.filter((s) => s.status === "done" || s.status === "passed").length;
+        return {
+          id: `INT-${String(f.id).padStart(3, "0")}`,
+          sequence_id: f.id,
+          title: f.title || f.name,
+          name: f.name,
+          description: f.description || "",
+          state_id: stateId,
+          state_name: stateName,
+          priority: (f.priority || "p2").toLowerCase(),
+          assignee_role: "implementer",
+          module_name: f.module || "General",
+          subtasks,
+          subtasks_count: subtasks.length,
+          subtasks_done: doneSubtasks,
+          acceptance_criteria: Array.isArray(f.acceptance) ? f.acceptance : [],
+          user_story: f.user_story || null,
+          user_story_as_a: f.user_story?.as_a || "",
+          user_story_i_want: f.user_story?.i_want || "",
+          user_story_so_that: f.user_story?.so_that || "",
+          branch: f.branch || `feature/INT-${String(f.id).padStart(3, "0")}/${f.name}`,
+          raw_feature: f
+        };
+      });
+    }
+    /**
+     * Obtiene una tarea específica por su ID.
+     * @param {string | number} id 
+     * @param {Array<Record<string, any>>} [issuesCache] 
+     * @returns {Promise<Record<string, any> | null>}
+     */
+    async getIssueById(id, issuesCache = null) {
+      const list = issuesCache || await this.getIssues();
+      const strId = String(id).toUpperCase();
+      const numId = parseInt(strId.replace(/\D/g, ""), 10);
+      return list.find(
+        (i) => String(i.id).toUpperCase() === strId || i.sequence_id === numId || i.id === `INT-${String(numId).padStart(3, "0")}`
+      ) || null;
+    }
+    /**
+     * Actualiza el estado de una tarea y lo persiste localmente y en SQLite si está disponible.
+     * @param {string} issueId 
+     * @param {string} targetStateId 
+     * @returns {Promise<{ ok: boolean, issueId: string, stateId: string }>}
+     */
+    async updateIssueState(issueId, targetStateId) {
+      const targetState = this.states.find((s) => s.id === targetStateId);
+      const stateName = targetState ? targetState.name : targetStateId;
+      try {
+        await this.client.post("/api/plane/issues/state", {
+          id: issueId,
+          state_id: targetStateId,
+          state_name: stateName
+        });
+      } catch (_) {
+      }
+      return { ok: true, issueId, stateId: targetStateId };
+    }
+    /**
+     * Actualiza el estado de una subtarea individual.
+     * @param {string} issueId 
+     * @param {string} subtaskId 
+     * @param {string} status 
+     * @returns {Promise<{ ok: boolean, issueId: string, subtaskId: string, status: string }>}
+     */
+    async updateSubtask(issueId, subtaskId, status) {
+      try {
+        await this.client.post("/api/plane/issues/subtask", {
+          issue_id: issueId,
+          subtask_id: subtaskId,
+          status
+        });
+      } catch (_) {
+      }
+      return { ok: true, issueId, subtaskId, status };
+    }
+    /**
+     * Calcula estadísticas resumidas sobre la lista de tareas.
+     * @param {Array<Record<string, any>>} issues 
+     * @returns {Record<string, any>}
+     */
+    calculateMetrics(issues = []) {
+      const total = issues.length;
+      const completed = issues.filter((i) => i.state_id === "state-done").length;
+      const inProgress = issues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+      const pending = issues.filter((i) => i.state_id === "state-backlog" || i.state_id === "state-todo").length;
+      const percentage = total > 0 ? Math.round(completed / total * 100) : 0;
+      return {
+        total,
+        completed,
+        inProgress,
+        pending,
+        percentage
+      };
+    }
+  };
+  var issueService = new IssueService();
+
+  // project-docs/src/modules/Issues/store/issue.store.js
+  var initialIssueState = {
+    viewMode: "board",
+    // 'board' | 'list' | 'calendar' | 'spreadsheet'
+    filters: {
+      state: "all",
+      priority: "all",
+      assignee: "all",
+      module: "all",
+      search: ""
+    },
+    groupBy: "state",
+    // 'state' | 'priority' | 'assignee'
+    orderBy: "sequence",
+    // 'sequence' | 'priority' | 'title'
+    selectedIssueId: null,
+    isDetailModalOpen: false,
+    issues: [],
+    states: [...CANONICAL_STATES],
+    loading: false,
+    error: null
+  };
+  var IssueStore = class {
+    constructor(initial = initialIssueState) {
+      this.state = {
+        ...initial,
+        filters: { ...initial.filters }
+      };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      if (typeof listener !== "function") throw new TypeError("El listener debe ser una funci\xF3n");
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en suscriptor de IssueStore:", err);
+        }
+      }
+    }
+    // --- Mutators ---
+    setViewMode(viewMode) {
+      if (["board", "list", "calendar", "spreadsheet"].includes(viewMode)) {
+        this.setState({ viewMode });
+      }
+    }
+    setFilter(key, value) {
+      this.setState({
+        filters: { ...this.state.filters, [key]: value }
+      });
+    }
+    resetFilters() {
+      this.setState({
+        filters: {
+          state: "all",
+          priority: "all",
+          assignee: "all",
+          module: "all",
+          search: ""
+        }
+      });
+    }
+    setGroupBy(groupBy) {
+      if (["state", "priority", "assignee"].includes(groupBy)) {
+        this.setState({ groupBy });
+      }
+    }
+    setOrderBy(orderBy) {
+      this.setState({ orderBy });
+    }
+    setIssues(issues) {
+      this.setState({ issues: Array.isArray(issues) ? issues : [] });
+    }
+    setStates(states) {
+      if (Array.isArray(states) && states.length > 0) {
+        this.setState({ states });
+      }
+    }
+    setSelectedIssueId(selectedIssueId) {
+      this.setState({
+        selectedIssueId,
+        isDetailModalOpen: Boolean(selectedIssueId)
+      });
+    }
+    openDetailModal(issueId) {
+      this.setState({
+        selectedIssueId: issueId,
+        isDetailModalOpen: true
+      });
+    }
+    closeDetailModal() {
+      this.setState({
+        selectedIssueId: null,
+        isDetailModalOpen: false
+      });
+    }
+    // --- Selectors ---
+    getSelectedIssue() {
+      if (!this.state.selectedIssueId) return null;
+      const strId = String(this.state.selectedIssueId).toUpperCase();
+      const numId = parseInt(strId.replace(/\D/g, ""), 10);
+      return this.state.issues.find(
+        (i) => String(i.id).toUpperCase() === strId || i.sequence_id === numId || i.id === `INT-${String(numId).padStart(3, "0")}`
+      ) || null;
+    }
+    getFilteredIssues() {
+      const { issues, filters, orderBy } = this.state;
+      const q = (filters.search || "").trim().toLowerCase();
+      const filtered = issues.filter((issue) => {
+        if (q) {
+          const matchTitle = (issue.title || "").toLowerCase().includes(q);
+          const matchId = (issue.id || "").toLowerCase().includes(q);
+          const matchDesc = (issue.description || "").toLowerCase().includes(q);
+          if (!matchTitle && !matchId && !matchDesc) return false;
+        }
+        if (filters.state !== "all" && issue.state_id !== filters.state) {
+          return false;
+        }
+        if (filters.priority !== "all") {
+          const p = (issue.priority || "").toLowerCase();
+          if (p !== filters.priority.toLowerCase()) return false;
+        }
+        if (filters.assignee !== "all") {
+          const a = (issue.assignee_role || issue.assignee || "").toLowerCase();
+          if (!a.includes(filters.assignee.toLowerCase())) return false;
+        }
+        if (filters.module !== "all") {
+          const m = (issue.module_name || issue.module || "").toLowerCase();
+          if (m !== filters.module.toLowerCase()) return false;
+        }
+        return true;
+      });
+      return filtered.sort((a, b) => {
+        if (orderBy === "priority") {
+          const weights = { urgent: 4, high: 3, medium: 2, low: 1, none: 0 };
+          return (weights[b.priority] || 0) - (weights[a.priority] || 0);
+        }
+        if (orderBy === "title") {
+          return (a.title || "").localeCompare(b.title || "");
+        }
+        const seqA = a.sequence_id || parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+        const seqB = b.sequence_id || parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+        return seqA - seqB;
+      });
+    }
+  };
+  var issueStore = new IssueStore();
+
+  // project-docs/src/modules/Issues/components/IssueCard.js
+  function IssueCard(issue) {
+    if (!issue) return "";
     const priorityIcons = {
       urgent: Icons.priorityUrgent("w-3.5 h-3.5 text-rose-500 shrink-0"),
       high: Icons.priorityHigh("w-3.5 h-3.5 text-amber-500 shrink-0"),
@@ -1187,7 +1910,91 @@
     };
     const pIcon = priorityIcons[(issue.priority || "none").toLowerCase()] || Icons.priorityLow("w-3.5 h-3.5 text-zinc-500 shrink-0");
     const totalSubtasks = issue.subtasks_count || (issue.subtasks ? issue.subtasks.length : 0);
-    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed).length : 0);
+    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed || s.status === "passed").length : 0);
+    const percentSubtasks = totalSubtasks > 0 ? Math.round(doneSubtasks / totalSubtasks * 100) : 0;
+    return `
+    <div
+      data-issue-id="${issue.id}"
+      class="plane-issue-card group p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/60 shadow-md hover:shadow-lg transition-all cursor-pointer select-none space-y-2.5"
+    >
+      <!-- Card Header: ID, Priority & Action Menu -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span title="Prioridad: ${issue.priority || "None"}">
+            ${pIcon}
+          </span>
+          <span class="text-xs font-mono font-bold text-indigo-400">
+            ${issue.id}
+          </span>
+        </div>
+
+        <!-- Quick move state buttons -->
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            data-action="quick-state"
+            data-target-state="state-in-progress"
+            data-issue-id="${issue.id}"
+            class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-amber-400 transition-colors"
+            title="Mover a En Progreso"
+          >
+            ${Icons.play("w-3 h-3")}
+          </button>
+          <button
+            data-action="quick-state"
+            data-target-state="state-done"
+            data-issue-id="${issue.id}"
+            class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-emerald-400 transition-colors"
+            title="Marcar como Completado"
+          >
+            ${Icons.check("w-3 h-3")}
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Title -->
+      <h4 class="text-xs font-medium text-zinc-100 group-hover:text-white line-clamp-2 leading-snug">
+        ${issue.title}
+      </h4>
+
+      <!-- Subtasks Jira Progress -->
+      ${totalSubtasks > 0 ? `
+        <div class="space-y-1 pt-1">
+          <div class="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+            <span>Subtareas Jira</span>
+            <span>${doneSubtasks}/${totalSubtasks} (${percentSubtasks}%)</span>
+          </div>
+          <div class="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-500 rounded-full" style="width: ${percentSubtasks}%"></div>
+          </div>
+        </div>
+      ` : ""}
+
+      <!-- Footer: Module Tag & Assignee Role -->
+      <div class="flex items-center justify-between pt-1 border-t border-zinc-800/60 text-[10px] text-zinc-400">
+        <span class="px-2 py-0.5 rounded bg-zinc-800/80 font-mono truncate max-w-[120px]" title="M\xF3dulo">
+          ${issue.module_name || "Harness"}
+        </span>
+        <div class="flex items-center gap-1.5 font-mono text-zinc-400">
+          ${Icons.bot("w-3 h-3 text-indigo-400")}
+          <span>${issue.assignee_role || "implementer"}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Issues/components/IssueRow.js
+  function IssueRow(issue) {
+    if (!issue) return "";
+    const priorityIcons = {
+      urgent: Icons.priorityUrgent("w-3.5 h-3.5 text-rose-500 shrink-0"),
+      high: Icons.priorityHigh("w-3.5 h-3.5 text-amber-500 shrink-0"),
+      medium: Icons.priorityMedium("w-3.5 h-3.5 text-blue-500 shrink-0"),
+      low: Icons.priorityLow("w-3.5 h-3.5 text-zinc-400 shrink-0")
+    };
+    const pIcon = priorityIcons[(issue.priority || "none").toLowerCase()] || Icons.priorityLow("w-3.5 h-3.5 text-zinc-500 shrink-0");
+    const totalSubtasks = issue.subtasks_count || (issue.subtasks ? issue.subtasks.length : 0);
+    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed || s.status === "passed").length : 0);
     const percentSubtasks = totalSubtasks > 0 ? Math.round(doneSubtasks / totalSubtasks * 100) : 0;
     return `
     <tr
@@ -1202,7 +2009,7 @@
         </div>
       </td>
 
-      <!-- Title & Badges -->
+      <!-- Title & Badges DEV / QA -->
       <td class="py-3 px-4 min-w-[240px]">
         <div class="flex items-center gap-2">
           <button
@@ -1234,370 +2041,81 @@
 
       <!-- Module -->
       <td class="py-3 px-4 w-36 hidden md:table-cell">
-        <span class="px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/60 text-[10px] text-zinc-300 font-mono truncate max-w-[120px] block">
-          ${issue.module_name || "Harness Core"}
+        <span class="text-[11px] font-mono text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded truncate max-w-[120px] inline-block">
+          ${issue.module_name || "Harness"}
         </span>
       </td>
 
       <!-- Assignee Agent -->
       <td class="py-3 px-4 w-32 hidden lg:table-cell">
-        <span class="flex items-center gap-1 text-[11px] text-zinc-400 font-medium">
-          ${Icons.user("w-3 h-3 text-indigo-400")}
-          <span class="truncate">${issue.assignee_role || issue.assignee_name || "leader"}</span>
-        </span>
+        <div class="flex items-center gap-1.5 text-zinc-400 font-mono text-[11px]">
+          ${Icons.bot("w-3.5 h-3.5 text-indigo-400")}
+          <span>${issue.assignee_role || "implementer"}</span>
+        </div>
       </td>
 
       <!-- State Badge -->
       <td class="py-3 px-4 w-32 text-right">
-        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${issue.state_id === "state-done" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : issue.state_id === "state-in-progress" ? "bg-amber-500/15 border-amber-500/30 text-amber-400" : issue.state_id === "state-in-review" ? "bg-purple-500/15 border-purple-500/30 text-purple-400" : "bg-zinc-800 border-zinc-700 text-zinc-400"}">
-          ${issue.state_name || issue.state_id}
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${issue.state_id === "state-done" ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30" : issue.state_id === "state-in-progress" || issue.state_id === "state-in-review" ? "bg-amber-950/60 text-amber-400 border border-amber-500/30" : "bg-zinc-800 text-zinc-400 border border-zinc-700/50"}">
+          <span class="w-1.5 h-1.5 rounded-full ${issue.state_id === "state-done" ? "bg-emerald-400" : issue.state_id === "state-in-progress" || issue.state_id === "state-in-review" ? "bg-amber-400" : "bg-zinc-500"}"></span>
+          ${issue.state_name || "Backlog"}
         </span>
       </td>
     </tr>
   `;
   }
 
-  // project-docs/src/features/issues/components/IssueCard.js
-  function IssueCard(issue) {
-    const priorityIcons = {
-      urgent: Icons.priorityUrgent("w-3.5 h-3.5 text-rose-500 shrink-0"),
-      high: Icons.priorityHigh("w-3.5 h-3.5 text-amber-500 shrink-0"),
-      medium: Icons.priorityMedium("w-3.5 h-3.5 text-blue-500 shrink-0"),
-      low: Icons.priorityLow("w-3.5 h-3.5 text-zinc-400 shrink-0")
-    };
-    const pIcon = priorityIcons[(issue.priority || "none").toLowerCase()] || Icons.priorityLow("w-3.5 h-3.5 text-zinc-500 shrink-0");
-    const totalSubtasks = issue.subtasks_count || (issue.subtasks ? issue.subtasks.length : 0);
-    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed).length : 0);
-    const percentSubtasks = totalSubtasks > 0 ? Math.round(doneSubtasks / totalSubtasks * 100) : 0;
-    return `
-    <div
-      data-issue-id="${issue.id}"
-      class="plane-issue-card group p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/60 shadow-md hover:shadow-lg transition-all cursor-pointer select-none space-y-2.5"
-    >
-      <!-- Card Header: ID, Priority & Action Menu -->
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span title="Prioridad: ${issue.priority || "None"}">
-            ${pIcon}
-          </span>
-          <span class="text-xs font-mono font-bold text-indigo-400">
-            ${issue.id}
-          </span>
-        </div>
-
-        <!-- Quick move state buttons -->
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button data-action="quick-state" data-target-state="state-in-progress" data-issue-id="${issue.id}" class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-amber-400" title="Pasar a En Progreso">
-            ${Icons.play("w-3 h-3")}
-          </button>
-          <button data-action="quick-state" data-target-state="state-done" data-issue-id="${issue.id}" class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-emerald-400" title="Marcar como Completado">
-            ${Icons.check("w-3 h-3")}
-          </button>
-        </div>
-      </div>
-
-      <!-- Card Title -->
-      <h4 class="text-xs font-medium text-zinc-100 group-hover:text-white line-clamp-2 leading-snug">
-        ${issue.title}
-      </h4>
-
-      <!-- Subtasks Progress -->
-      ${totalSubtasks > 0 ? `
-        <div class="space-y-1 pt-1">
-          <div class="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
-            <span>Subtareas Jira</span>
-            <span>${doneSubtasks}/${totalSubtasks} (${percentSubtasks}%)</span>
-          </div>
-          <div class="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div class="h-full bg-emerald-500 rounded-full" style="width: ${percentSubtasks}%"></div>
-          </div>
-        </div>
-      ` : ""}
-
-      <!-- Card Footer: Module & Assignee -->
-      <div class="pt-1 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-400">
-        <span class="truncate max-w-[110px] font-mono text-zinc-400">
-          ${issue.module_name || "General"}
-        </span>
-
-        <span class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 font-mono">
-          ${Icons.user("w-2.5 h-2.5 text-indigo-400")}
-          <span>${issue.assignee_role || "Agent"}</span>
-        </span>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/issues/components/IssueDetailModal.js
-  function IssueDetailModal({
-    issue = null,
-    states = [],
-    cycles = [],
-    modules = []
-  }) {
-    if (!issue) return "";
-    const subtotal = issue.subtasks ? issue.subtasks.length : 0;
-    const completed = issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.status === "passed").length : 0;
-    const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : 0;
-    const renderAcceptanceCriterion = (crit) => `
-    <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs text-zinc-300">
-      <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.check("w-3.5 h-3.5")}</span>
-      <span>${crit}</span>
-    </div>
-  `;
-    const renderSubtaskItem = (sub) => {
-      const isPassed = sub.status === "done" || sub.status === "passed";
-      const isQa = sub.type === "qa";
+  // project-docs/src/modules/Issues/components/IssueBoard.js
+  function IssueBoard({
+    issues = [],
+    states = []
+  } = {}) {
+    const activeStates = states && states.length > 0 ? states : CANONICAL_STATES;
+    const renderColumn = (state) => {
+      const colIssues = issues.filter((i) => i.state_id === state.id);
       return `
-      <div class="p-3 rounded-xl border ${isPassed ? "border-emerald-500/20 bg-emerald-950/10" : "border-zinc-800 bg-zinc-900/40"} flex items-start justify-between gap-3 text-xs">
-        <div class="flex items-start gap-2.5">
-          <span class="p-0.5 rounded ${isPassed ? "text-emerald-400" : "text-zinc-500"} mt-0.5">
-            ${isPassed ? Icons.checkCircle("w-4 h-4") : Icons.clock("w-4 h-4")}
-          </span>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-[11px] font-semibold text-zinc-300">${sub.id}</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isQa ? "bg-purple-900/40 text-purple-300" : "bg-blue-900/40 text-blue-300"}">
-                ${isQa ? "QA Subtask" : "DEV Subtask"}
-              </span>
-            </div>
-            <p class="text-zinc-200 mt-1">${sub.title}</p>
+      <div
+        data-state-column="${state.id}"
+        class="w-72 sm:w-80 shrink-0 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 flex flex-col max-h-[calc(100vh-12rem)] shadow-lg select-none"
+      >
+        <!-- Column Header -->
+        <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between gap-2 bg-zinc-900/40 rounded-t-2xl">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full ${state.color || "bg-zinc-400"} shrink-0 shadow-xs"></span>
+            <span class="text-xs font-bold text-zinc-200 truncate tracking-tight">${state.name}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono font-medium">
+              ${colIssues.length}
+            </span>
           </div>
         </div>
 
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium ${isPassed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-400"}">
-          ${sub.status.toUpperCase()}
-        </span>
+        <!-- Column Cards Container -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-3">
+          ${renderList(colIssues, IssueCard, () => `
+            <div class="p-6 text-center rounded-xl border border-dashed border-zinc-800/80 text-[11px] text-zinc-500">
+              Sin tareas en este estado
+            </div>
+          `)}
+        </div>
       </div>
     `;
     };
     return `
-    <div id="plane-issue-modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn">
-      <div id="plane-issue-modal-card" role="dialog" class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/50">
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md bg-zinc-800 text-indigo-400 border border-zinc-700/60">
-              ${issue.id}
-            </span>
-            <span class="text-zinc-500">/</span>
-            <span class="text-xs text-zinc-400 font-medium truncate max-w-sm">
-              ${issue.module_name || "Harness"}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button id="plane-modal-close" data-action="close-modal" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors" title="Cerrar modal">
-              ${Icons.close("w-4 h-4")}
-            </button>
-          </div>
-        </div>
-
-        <!-- Modal Body (Two Columns: Main Details + Metadata Sidebar) -->
-        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto">
-          <!-- Main Content (Left) -->
-          <div class="flex-1 p-6 space-y-6 lg:border-r border-zinc-800 overflow-y-auto">
-            <!-- Title -->
-            <div>
-              <h2 class="text-lg font-bold text-zinc-100 tracking-tight leading-snug">
-                ${issue.title}
-              </h2>
-            </div>
-
-            <!-- User Story Callout -->
-            <div class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5 text-xs">
-              <div class="font-semibold text-zinc-300 flex items-center gap-1.5">
-                ${Icons.lightbulb("w-3.5 h-3.5 text-amber-400")}
-                <span>Historia de Usuario (Scrum)</span>
-              </div>
-              <div class="text-zinc-400 pl-5 space-y-0.5">
-                <p><strong class="text-zinc-300">Como:</strong> ${issue.user_story_as_a || "Desarrollador / Agente"}</p>
-                <p><strong class="text-zinc-300">Quiero:</strong> ${issue.user_story_i_want || issue.title}</p>
-                <p><strong class="text-zinc-300">Para:</strong> ${issue.user_story_so_that || "garantizar la calidad y trazabilidad integral del software"}</p>
-              </div>
-            </div>
-
-            <!-- Description / Specification -->
-            <div class="space-y-2">
-              <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Descripci\xF3n & Alcance</h3>
-              <div class="text-xs text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/80">
-                ${issue.description || "Sin descripci\xF3n detallada."}
-              </div>
-            </div>
-
-            <!-- Acceptance Criteria -->
-            ${issue.acceptance && issue.acceptance.length > 0 ? `
-              <div class="space-y-2">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Criterios de Aceptaci\xF3n (EARS)</h3>
-                <div class="space-y-2">
-                  ${renderList(issue.acceptance, renderAcceptanceCriterion)}
-                </div>
-              </div>
-            ` : ""}
-
-            <!-- Subtasks Section (Jira DEV & QA) -->
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Subtareas Jira DEV / QA</h4>
-                <span class="text-xs font-mono text-zinc-400">${completed} de ${subtotal} (${percent}%)</span>
-              </div>
-
-              <div class="space-y-2">
-                ${issue.subtasks && issue.subtasks.length > 0 ? renderList(issue.subtasks, renderSubtaskItem) : `
-                  <div class="space-y-2">
-                    <div class="p-3 rounded-xl border border-emerald-500/20 bg-emerald-950/10 flex items-start justify-between gap-3 text-xs">
-                      <div class="flex items-start gap-2.5">
-                        <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.checkCircle("w-4 h-4")}</span>
-                        <div>
-                          <div class="flex items-center gap-2">
-                            <span class="font-mono text-[11px] font-semibold text-zinc-300">${issue.id}-DEV</span>
-                            <span class="text-[10px] px-1.5 py-0.2 rounded font-medium bg-blue-900/40 text-blue-300">DEV Subtask</span>
-                          </div>
-                          <p class="text-zinc-200 mt-1">Implementaci\xF3n t\xE9cnica y suites de pruebas</p>
-                        </div>
-                      </div>
-                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DONE</span>
-                    </div>
-                    <div class="p-3 rounded-xl border border-emerald-500/20 bg-emerald-950/10 flex items-start justify-between gap-3 text-xs">
-                      <div class="flex items-start gap-2.5">
-                        <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.checkCircle("w-4 h-4")}</span>
-                        <div>
-                          <div class="flex items-center gap-2">
-                            <span class="font-mono text-[11px] font-semibold text-zinc-300">${issue.id}-QA</span>
-                            <span class="text-[10px] px-1.5 py-0.2 rounded font-medium bg-purple-900/40 text-purple-300">QA Subtask</span>
-                          </div>
-                          <p class="text-zinc-200 mt-1">Auditor\xEDa de calidad y verificaci\xF3n integral</p>
-                        </div>
-                      </div>
-                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DONE</span>
-                    </div>
-                  </div>
-                `}
-              </div>
-            </div>
-
-            <!-- Definition of Done Section -->
-            <div class="space-y-3">
-              <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Definition of Done (DoD)</h4>
-              <div class="space-y-1.5 text-xs text-zinc-300">
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800">
-                  <span class="text-emerald-400">${Icons.check("w-3.5 h-3.5")}</span>
-                  <span>100% de subtareas Jira DEV implementadas con tests unitarios y suites multinivel</span>
-                </div>
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800">
-                  <span class="text-emerald-400">${Icons.check("w-3.5 h-3.5")}</span>
-                  <span>100% de subtareas Jira QA verificadas con evidencias de ejecuci\xF3n</span>
-                </div>
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800">
-                  <span class="text-emerald-400">${Icons.check("w-3.5 h-3.5")}</span>
-                  <span>Script aut\xF3nomo verify.sh pasa al 100% (c\xF3digo de salida 0)</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Evidence Section if completed -->
-            ${issue.evidence_summary ? `
-              <div class="p-4 rounded-xl bg-emerald-950/10 border border-emerald-500/20 space-y-1 text-xs">
-                <span class="font-semibold text-emerald-400 flex items-center gap-1.5">
-                  ${Icons.shield("w-3.5 h-3.5")} Resumen de Cierre & Verificaci\xF3n
-                </span>
-                <p class="text-zinc-300 mt-1">${issue.evidence_summary}</p>
-              </div>
-            ` : ""}
-          </div>
-
-          <!-- Metadata Sidebar (Right) -->
-          <div class="w-full lg:w-72 p-6 bg-zinc-950/90 space-y-5 text-xs shrink-0">
-            <!-- State Selector -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Estado (Workflow)</label>
-              <select
-                id="modal-state-select"
-                data-issue-id="${issue.id}"
-                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
-              >
-                ${renderList(states, (s) => `
-                  <option value="${s.id}" ${s.id === issue.state_id ? "selected" : ""}>
-                    ${s.name}
-                  </option>
-                `)}
-              </select>
-            </div>
-
-            <!-- Priority Selector -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Prioridad</label>
-              <select
-                id="modal-priority-select"
-                data-issue-id="${issue.id}"
-                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-colors capitalize"
-              >
-                <option value="urgent" ${issue.priority === "urgent" ? "selected" : ""}>Urgente</option>
-                <option value="high" ${issue.priority === "high" ? "selected" : ""}>Alta</option>
-                <option value="medium" ${issue.priority === "medium" ? "selected" : ""}>Media</option>
-                <option value="low" ${issue.priority === "low" ? "selected" : ""}>Baja</option>
-                <option value="none" ${issue.priority === "none" ? "selected" : ""}>Ninguna</option>
-              </select>
-            </div>
-
-            <!-- Assignee -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Agente Asignado</label>
-              <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
-                ${Icons.bot("w-4 h-4 text-indigo-400")}
-                <span class="font-medium">${issue.assignee_role || "leader"}</span>
-              </div>
-            </div>
-
-            <!-- Cycle (Sprint) -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Ciclo (Sprint)</label>
-              <div class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs truncate">
-                ${issue.cycle_name || "Sin ciclo"}
-              </div>
-            </div>
-
-            <!-- Module (Epic) -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">M\xF3dulo (Epic)</label>
-              <div class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs truncate">
-                ${issue.module_name || "Harness Core"}
-              </div>
-            </div>
-
-            <!-- Branch -->
-            ${issue.branch ? `
-              <div class="space-y-1.5">
-                <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Rama Git (INT-*)</label>
-                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-zinc-300 break-all select-all">
-                  ${issue.branch}
-                </div>
-              </div>
-            ` : ""}
-
-            <!-- Spec Folder -->
-            ${issue.spec_folder ? `
-              <div class="space-y-1.5">
-                <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Especificaci\xF3n Formal</label>
-                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-indigo-400 break-all truncate">
-                  ${issue.spec_folder}
-                </div>
-              </div>
-            ` : ""}
-          </div>
-        </div>
+    <div id="plane-board-container" class="p-6 overflow-x-auto min-h-full">
+      <div class="flex items-start gap-4 pb-4">
+        ${renderList(activeStates, renderColumn)}
       </div>
     </div>
   `;
   }
 
-  // project-docs/src/features/issues/views/IssueListView.js
-  function renderIssueListView({
+  // project-docs/src/modules/Issues/components/IssueList.js
+  function IssueList({
     issues = [],
     states = [],
     groupBy = "state"
-  }) {
+  } = {}) {
+    const activeStates = states && states.length > 0 ? states : CANONICAL_STATES;
     if (issues.length === 0) {
       return `
       <div class="p-12 text-center space-y-3">
@@ -1611,8 +2129,8 @@
     }
     if (groupBy === "state") {
       return `
-      <div class="p-4">
-        <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-sm">
+      <div id="plane-list-container" class="p-4">
+        <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-xs">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-zinc-900/80 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -1624,7 +2142,7 @@
                 <th class="py-2.5 px-4 w-32 text-right">Estado</th>
               </tr>
             </thead>
-            ${renderList(states, (state) => {
+            ${renderList(activeStates, (state) => {
         const stateIssues = issues.filter((i) => i.state_id === state.id);
         if (stateIssues.length === 0) return "";
         return `
@@ -1650,8 +2168,8 @@
     `;
     }
     return `
-    <div class="p-4">
-      <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-sm">
+    <div id="plane-list-container" class="p-4">
+      <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-xs">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-zinc-900/80 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -1663,7 +2181,7 @@
               <th class="py-2.5 px-4 w-32 text-right">Estado</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-zinc-800/40">
             ${renderList(issues, IssueRow)}
           </tbody>
         </table>
@@ -1672,351 +2190,580 @@
   `;
   }
 
-  // project-docs/src/features/issues/views/IssueBoardView.js
-  function renderIssueBoardView({
-    issues = [],
-    states = []
-  }) {
-    const defaultStates = states.length > 0 ? states : [
-      { id: "state-backlog", name: "Backlog", color: "bg-zinc-500" },
-      { id: "state-todo", name: "Por Hacer", color: "bg-sky-500" },
-      { id: "state-in-progress", name: "En Progreso", color: "bg-amber-500" },
-      { id: "state-in-review", name: "En Revisi\xF3n", color: "bg-purple-500" },
-      { id: "state-done", name: "Completado", color: "bg-emerald-500" },
-      { id: "state-cancelled", name: "Cancelado", color: "bg-rose-500" }
-    ];
-    const renderColumn = (state) => {
-      const colIssues = issues.filter((i) => i.state_id === state.id);
+  // project-docs/src/modules/Issues/components/IssueDetailModal.js
+  function IssueDetailModal({
+    issue = null,
+    states = [],
+    cycles = [],
+    modules = []
+  } = {}) {
+    if (!issue) return "";
+    const activeStates = states && states.length > 0 ? states : CANONICAL_STATES;
+    const rawSubtasks = Array.isArray(issue.subtasks) ? issue.subtasks : [];
+    const subtotal = rawSubtasks.length;
+    const completed = rawSubtasks.filter((s) => s.status === "done" || s.status === "passed" || s.completed).length;
+    const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : 0;
+    const acceptanceCriteria = Array.isArray(issue.acceptance_criteria) ? issue.acceptance_criteria : Array.isArray(issue.acceptance) ? issue.acceptance : [];
+    const renderAcceptanceCriterion = (crit) => `
+    <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs text-zinc-300">
+      <span class="p-0.5 rounded text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3.5 h-3.5")}</span>
+      <span class="leading-relaxed">${crit}</span>
+    </div>
+  `;
+    const renderSubtaskItem = (sub) => {
+      const isPassed = sub.status === "done" || sub.status === "passed";
+      const isQa = sub.type === "qa";
       return `
-      <div
-        data-state-column="${state.id}"
-        class="w-72 sm:w-80 shrink-0 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 flex flex-col max-h-[calc(100vh-12rem)] shadow-lg"
-      >
-        <!-- Column Header -->
-        <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between gap-2 bg-zinc-900/40 rounded-t-2xl">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="w-2.5 h-2.5 rounded-full ${state.color || "bg-zinc-400"} shrink-0 shadow-sm"></span>
-            <span class="text-xs font-bold text-zinc-200 truncate tracking-tight">${state.name}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono font-medium">
-              ${colIssues.length}
-            </span>
+      <div class="p-3 rounded-xl border ${isPassed ? "border-emerald-500/20 bg-emerald-950/10" : "border-zinc-800 bg-zinc-900/40"} flex items-start justify-between gap-3 text-xs">
+        <div class="flex items-start gap-2.5 min-w-0">
+          <span class="p-0.5 rounded ${isPassed ? "text-emerald-400" : "text-zinc-500"} mt-0.5 shrink-0">
+            ${isPassed ? Icons.checkCircle("w-4 h-4") : Icons.clock("w-4 h-4")}
+          </span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[11px] font-semibold text-zinc-300">${sub.id}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isQa ? "bg-purple-900/40 text-purple-300" : "bg-blue-900/40 text-blue-300"}">
+                ${isQa ? "QA Subtask" : "DEV Subtask"}
+              </span>
+            </div>
+            <p class="text-zinc-200 mt-1 leading-snug">${sub.title}</p>
           </div>
         </div>
 
-        <!-- Column Cards Container -->
-        <div class="flex-1 overflow-y-auto p-3 space-y-3">
-          ${renderList(colIssues, IssueCard, () => `
-            <div class="p-6 text-center rounded-xl border border-dashed border-zinc-800/80 text-[11px] text-zinc-400">
-              Sin tareas en este estado
-            </div>
-          `)}
-        </div>
+        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium shrink-0 ${isPassed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-400"}">
+          ${String(sub.status || "pending").toUpperCase()}
+        </span>
       </div>
     `;
     };
-    return `
-    <div class="p-6 overflow-x-auto min-h-full">
-      <div class="flex items-start gap-4 pb-4">
-        ${renderList(defaultStates, renderColumn)}
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/issues/views/IssueCalendarView.js
-  function renderIssueCalendarView({
-    issues = [],
-    cycles = []
-  }) {
-    const renderTimelineItem = (issue) => `
-    <div
-      data-issue-id="${issue.id}"
-      class="plane-issue-row p-3 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-between gap-4 transition-all cursor-pointer"
-    >
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="text-xs font-mono font-bold text-indigo-400 shrink-0">${issue.id}</span>
-        <span class="text-xs text-zinc-200 font-medium truncate">${issue.title}</span>
-      </div>
-
-      <div class="flex items-center gap-3 shrink-0 text-xs">
-        <span class="text-[11px] font-mono text-zinc-400">${issue.cycle_name || "Sprint Activo"}</span>
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono ${issue.state_id === "state-done" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-300"}">
-          ${issue.state_name || issue.state_id}
-        </span>
-      </div>
+    const dodItems = [
+      "Especificaci\xF3n t\xE9cnica y trazabilidad R-to-Tests 100% aprobada",
+      "Tests unitarios y pruebas de aceptaci\xF3n pasando en verde",
+      "Cero emojis unicode en c\xF3digo fuente, interfaz y pruebas",
+      "Rama sem\xE1ntica INT-* verificada (m\xE1ximo 80 caracteres)",
+      "Evidencia de verificaci\xF3n y capturas de pantalla documentadas"
+    ];
+    const renderDodItem = (item) => `
+    <div class="flex items-center gap-2.5 text-xs text-zinc-300">
+      <span class="text-emerald-400 shrink-0">${Icons.checkCircle("w-3.5 h-3.5")}</span>
+      <span>${item}</span>
     </div>
   `;
     return `
-    <div class="p-6 space-y-6 max-w-6xl mx-auto">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-sm font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            ${Icons.calendar("w-4 h-4 text-indigo-400")}
-            <span>Cronograma Temporal de Tareas (Calendar & Timeline)</span>
-          </h2>
-          <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal por ciclos e iteraciones de entrega.</p>
+    <div id="plane-issue-modal-backdrop" data-action="close-modal-backdrop" class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-150">
+      <div id="plane-issue-modal-card" role="dialog" aria-modal="true" aria-labelledby="plane-modal-issue-title" class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/50">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md bg-zinc-800 text-indigo-400 border border-zinc-700/60">
+              ${issue.id}
+            </span>
+            <span class="text-zinc-600">/</span>
+            <span class="text-xs text-zinc-400 font-medium truncate max-w-sm">
+              ${issue.module_name || "Harness"}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="plane-modal-close" data-action="close-modal" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors" title="Cerrar modal (ESC)" aria-label="Cerrar">
+              ${Icons.close("w-4 h-4")}
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body (Two Columns: Main Details + Metadata Sidebar) -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto">
+          <!-- Main Content (Left) -->
+          <div class="flex-1 p-6 space-y-6 lg:border-r border-zinc-800 overflow-y-auto">
+            <!-- Title -->
+            <div>
+              <h2 id="plane-modal-issue-title" class="text-lg font-bold text-zinc-100 tracking-tight leading-snug">
+                ${issue.title}
+              </h2>
+            </div>
+
+            <!-- User Story Scrum Callout -->
+            <div class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2 text-xs">
+              <div class="font-semibold text-zinc-300 flex items-center gap-2">
+                ${Icons.lightbulb("w-4 h-4 text-amber-400")}
+                <span>Historia de Usuario (Scrum)</span>
+              </div>
+              <div class="text-zinc-400 pl-6 space-y-1">
+                <p><strong class="text-indigo-400 uppercase text-[11px] mr-1">Como:</strong> ${issue.user_story_as_a || issue.user_story?.as_a || "Desarrollador / Agente"}</p>
+                <p><strong class="text-indigo-400 uppercase text-[11px] mr-1">Quiero:</strong> ${issue.user_story_i_want || issue.user_story?.i_want || issue.title}</p>
+                <p><strong class="text-indigo-400 uppercase text-[11px] mr-1">Para:</strong> ${issue.user_story_so_that || issue.user_story?.so_that || "garantizar la calidad y trazabilidad integral del software"}</p>
+              </div>
+            </div>
+
+            <!-- Description / Scope -->
+            <div class="space-y-2">
+              <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Descripci\xF3n & Alcance</h3>
+              <div class="text-xs text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/80">
+                ${issue.description || "Sin descripci\xF3n adicional para esta tarea."}
+              </div>
+            </div>
+
+            <!-- Acceptance Criteria (EARS) -->
+            ${acceptanceCriteria.length > 0 ? `
+              <div class="space-y-3">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Criterios de Aceptaci\xF3n (EARS / DoR)
+                </h3>
+                <div class="space-y-2">
+                  ${renderList(acceptanceCriteria, renderAcceptanceCriterion)}
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- Subtasks Jira (DEV & QA) -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Subtareas Jira \xB7 Subtareas T\xE9cnicas Jira (${subtotal})
+                </h4>
+                <span class="text-xs font-mono text-zinc-400">${completed}/${subtotal} completadas (${percent}%)</span>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+              </div>
+
+              <div class="space-y-2 pt-1">
+                ${renderList(rawSubtasks, renderSubtaskItem, () => `
+                  <div class="p-4 text-center rounded-xl border border-dashed border-zinc-800 text-xs text-zinc-500">
+                    No hay subtareas registradas para esta tarea
+                  </div>
+                `)}
+              </div>
+            </div>
+
+            <!-- Definition of Done (DoD) Checklist -->
+            <div class="space-y-3 p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+              <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                ${Icons.shield("w-4 h-4 text-emerald-400")}
+                <span>Definition of Done (DoD)</span>
+              </h4>
+              <div class="space-y-2 pl-2">
+                ${renderList(dodItems, renderDodItem)}
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata Sidebar (Right) -->
+          <div class="w-full lg:w-80 p-6 bg-zinc-900/30 space-y-6 text-xs">
+            <!-- Properties Section -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-zinc-400 uppercase tracking-wider text-[11px]">Propiedades</h4>
+
+              <!-- State Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Estado</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span class="w-2.5 h-2.5 rounded-full ${issue.state_id === "state-done" ? "bg-emerald-400" : "bg-amber-400"}"></span>
+                  <span class="font-medium text-zinc-200">${issue.state_name || "En Progreso"}</span>
+                </div>
+              </div>
+
+              <!-- Priority Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Prioridad</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-zinc-200 uppercase">
+                  ${Icons.priorityHigh("w-3.5 h-3.5 text-amber-500")}
+                  <span>${issue.priority || "P0"}</span>
+                </div>
+              </div>
+
+              <!-- Assignee Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Agente Asignado</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  ${Icons.bot("w-4 h-4 text-indigo-400")}
+                  <span class="font-mono text-zinc-200">${issue.assignee_role || "implementer"}</span>
+                </div>
+              </div>
+
+              <!-- Module Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">M\xF3dulo</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
+                  ${Icons.moduleIcon("w-4 h-4 text-purple-400")}
+                  <span>${issue.module_name || "Harness SDD"}</span>
+                </div>
+              </div>
+
+              <!-- Git Branch -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Rama Git de Trabajo</label>
+                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] break-all flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    ${Icons.gitBranch("w-3.5 h-3.5 text-indigo-400 shrink-0")}
+                    <span class="truncate">${issue.branch || `feature/INT-${String(issue.sequence_id || "001").padStart(3, "0")}/${issue.name || "task"}`}</span>
+                  </div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-emerald-400 shrink-0 font-mono">&le;80c</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="space-y-2">
-        ${renderList(issues, renderTimelineItem, "No hay tareas programadas")}
-      </div>
     </div>
   `;
   }
 
-  // project-docs/src/features/issues/views/IssueSpreadsheetView.js
-  function renderIssueSpreadsheetView({
-    issues = []
-  }) {
-    const renderTableRow = (issue, idx) => `
-    <tr
-      data-issue-id="${issue.id}"
-      class="plane-issue-row border-b border-zinc-800/50 hover:bg-zinc-900/60 transition-colors cursor-pointer text-xs"
-    >
-      <td class="p-3 text-center text-zinc-500 font-mono">${idx + 1}</td>
-      <td class="p-3 font-mono font-bold text-indigo-400">${issue.id}</td>
-      <td class="p-3 font-medium text-zinc-200 truncate max-w-xs">${issue.title}</td>
-      <td class="p-3">
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono ${issue.state_id === "state-done" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : issue.state_id === "state-in-progress" ? "bg-amber-500/15 text-amber-400 border border-amber-500/30" : "bg-zinc-800 text-zinc-400"}">
-          ${issue.state_name || issue.state_id}
-        </span>
-      </td>
-      <td class="p-3 font-mono text-[11px] text-zinc-300 capitalize">${issue.priority || "none"}</td>
-      <td class="p-3 text-zinc-400 font-mono text-[11px]">${issue.assignee_role || "leader"}</td>
-      <td class="p-3 text-zinc-400 font-mono text-[11px]">${issue.module_name || "Harness Core"}</td>
-      <td class="p-3 text-zinc-400 font-mono text-[11px]">${issue.cycle_name || "Sprint Activo"}</td>
-    </tr>
-  `;
-    return `
-    <div class="p-6 overflow-x-auto">
-      <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 overflow-hidden shadow-xl">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-zinc-900/80 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              <th class="p-3 text-center w-12">#</th>
-              <th class="p-3 w-28">ID</th>
-              <th class="p-3">T\xEDtulo de la Tarea</th>
-              <th class="p-3 w-32">Estado</th>
-              <th class="p-3 w-28">Prioridad</th>
-              <th class="p-3 w-32">Agente</th>
-              <th class="p-3 w-36">M\xF3dulo</th>
-              <th class="p-3 w-36">Ciclo</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-zinc-800/40">
-            ${renderList(issues, renderTableRow, () => `
-              <tr>
-                <td colspan="8" class="p-8 text-center text-xs text-zinc-400">
-                  No hay tareas registradas en la hoja de c\xE1lculo
-                </td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
+  // project-docs/src/modules/Issues/index.js
+  function renderIssueListView(props = {}) {
+    return IssueList(props);
+  }
+  function renderIssueBoardView(props = {}) {
+    return IssueBoard(props);
+  }
+  function renderIssueCalendarView(props = {}) {
+    return IssueBoard(props);
+  }
+  function renderIssueSpreadsheetView(props = {}) {
+    return IssueList({ ...props, groupBy: "none" });
   }
 
-  // project-docs/src/features/cycles/components/BurnDownChart.js
+  // project-docs/src/modules/Cycles/services/cycle.service.js
+  var CycleService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+    }
+    /**
+     * Obtiene todos los ciclos de sprint configurados.
+     * @param {{ bypassCache?: boolean }} [options]
+     * @returns {Promise<Array<Record<string, any>>>}
+     */
+    async getCycles(options = {}) {
+      const planeData = await this.client.fetchPlaneData(options);
+      if (planeData && Array.isArray(planeData.cycles) && planeData.cycles.length > 0) {
+        return planeData.cycles;
+      }
+      return [];
+    }
+    /**
+     * Obtiene un ciclo específico por su identificador.
+     * @param {string} cycleId
+     * @returns {Promise<Record<string, any>|null>}
+     */
+    async getCycleById(cycleId) {
+      const cycles = await this.getCycles();
+      return cycles.find((c) => c.id === cycleId) || null;
+    }
+    /**
+     * Calcula las métricas de avance de un ciclo dado un conjunto de tareas.
+     * @param {Record<string, any>} cycle
+     * @param {Array<Record<string, any>>} issues
+     * @returns {Record<string, any>}
+     */
+    calculateCycleMetrics(cycle = {}, issues = []) {
+      const cycleIssues = issues.filter((i) => i.cycle_id === cycle.id);
+      const total = cycleIssues.length;
+      const done = cycleIssues.filter((i) => i.state_id === "state-done").length;
+      const inProgress = cycleIssues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+      const backlog = total - done - inProgress;
+      const percent = total > 0 ? Math.round(done / total * 100) : 0;
+      return {
+        total,
+        done,
+        inProgress,
+        backlog,
+        percent,
+        issues: cycleIssues
+      };
+    }
+    /**
+     * Genera la serie de puntos temporales para el gráfico de Burn-down vectorial.
+     * @param {Record<string, any>} cycle
+     * @param {Array<Record<string, any>>} issues
+     * @returns {Array<{ label: string, remaining: number, ideal: number }>}
+     */
+    calculateBurnDownPoints(cycle = {}, issues = []) {
+      const { total, done } = this.calculateCycleMetrics(cycle, issues);
+      const safeTotal = Math.max(total, 1);
+      return [
+        { label: "D\xEDa 1", remaining: total, ideal: total },
+        { label: "D\xEDa 4", remaining: Math.max(0, total - Math.round(done * 0.3)), ideal: Math.round(safeTotal * 0.8) },
+        { label: "D\xEDa 7", remaining: Math.max(0, total - Math.round(done * 0.6)), ideal: Math.round(safeTotal * 0.6) },
+        { label: "D\xEDa 10", remaining: Math.max(0, total - done), ideal: Math.round(safeTotal * 0.4) },
+        { label: "D\xEDa 14", remaining: Math.max(0, total - done), ideal: 0 }
+      ];
+    }
+  };
+  var cycleService = new CycleService();
+
+  // project-docs/src/modules/Cycles/store/cycle.store.js
+  var initialCycleState = {
+    cycles: [],
+    selectedCycleId: null,
+    filterStatus: "all"
+    // 'all' | 'active' | 'completed' | 'draft'
+  };
+  var CycleStore = class {
+    constructor(initialState = initialCycleState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en CycleStore listener:", err);
+        }
+      }
+    }
+    setCycles(cycles) {
+      this.setState({ cycles });
+    }
+    selectCycle(cycleId) {
+      this.setState({ selectedCycleId: cycleId });
+    }
+    setFilterStatus(filterStatus) {
+      this.setState({ filterStatus });
+    }
+    getFilteredCycles() {
+      const { cycles, filterStatus } = this.state;
+      if (filterStatus === "all") return cycles;
+      return cycles.filter((c) => c.status === filterStatus);
+    }
+    reset() {
+      this.state = { ...initialCycleState };
+      this.notify();
+    }
+  };
+  var cycleStore = new CycleStore();
+
+  // project-docs/src/modules/Cycles/components/BurnDownChart.js
   function BurnDownChart({
     points = [],
     svgWidth = 600,
     svgHeight = 160,
-    padding = 30,
-    maxVal = 10,
-    idealPath = "",
-    realPath = "",
-    getX = () => 0,
-    getY = () => 0
-  }) {
-    return `
-    <div class="space-y-2 pt-2">
-      <div class="flex items-center justify-between text-xs text-zinc-400">
-        <span class="font-medium text-zinc-300">Gr\xE1fico de Burn-down de Tareas</span>
-        <div class="flex items-center gap-4 text-[11px]">
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-zinc-600 border-dashed"></span> Ideal</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-indigo-400"></span> Real</span>
-        </div>
+    padding = 30
+  } = {}) {
+    if (!points || points.length === 0) {
+      return `
+      <div class="h-40 flex items-center justify-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+        Sin datos de avance para generar el gr\xE1fico burn-down
       </div>
-
-      <div class="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800/80 overflow-x-auto">
-        <svg viewBox="0 0 ${svgWidth} ${svgHeight}" class="w-full h-40 max-w-full">
-          <!-- Grid lines -->
-          <line x1="${padding}" y1="${getY(0)}" x2="${svgWidth - padding}" y2="${getY(0)}" stroke="#27272a" stroke-width="1"/>
-          <line x1="${padding}" y1="${getY(maxVal / 2)}" x2="${svgWidth - padding}" y2="${getY(maxVal / 2)}" stroke="#27272a" stroke-width="1" stroke-dasharray="2 2"/>
-          <line x1="${padding}" y1="${getY(maxVal)}" x2="${svgWidth - padding}" y2="${getY(maxVal)}" stroke="#27272a" stroke-width="1"/>
-
-          <!-- Ideal Line (Dashed) -->
-          <path d="${idealPath}" fill="none" stroke="#52525b" stroke-width="2" stroke-dasharray="4 4"/>
-
-          <!-- Real Line -->
-          <path d="${realPath}" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
-
-          <!-- Points -->
-          ${renderList(points, (p, idx) => `
-            <circle cx="${getX(idx)}" cy="${getY(p.remaining)}" r="4" fill="#818cf8" stroke="#1e1b4b" stroke-width="2"/>
-            <text x="${getX(idx)}" y="${svgHeight - 8}" font-size="9" fill="#71717a" text-anchor="middle" font-family="monospace">${p.label}</text>
-          `)}
-        </svg>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/cycles/components/CycleCard.js
-  function CycleCard({ cycle, issues = [] }) {
-    const cycleIssues = issues.filter((i) => i.cycle_id === cycle.id);
-    const total = cycleIssues.length;
-    const done = cycleIssues.filter((i) => i.state_id === "state-done").length;
-    const percent = total > 0 ? Math.round(done / total * 100) : 0;
-    const isActive = cycle.status === "active";
-    return `
-    <div class="p-4 rounded-xl border ${isActive ? "border-indigo-500/30 bg-indigo-950/10" : "border-zinc-800 bg-zinc-900/40"} space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full ${isActive ? "bg-emerald-500 animate-pulse" : "bg-zinc-500"}"></span>
-          <span class="text-xs font-bold text-zinc-100">${cycle.name}</span>
-          ${isActive ? `
-            <span class="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 font-mono text-[10px] font-semibold">ACTIVO</span>
-          ` : `
-            <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 font-mono text-[10px]">CERRADO</span>
-          `}
-        </div>
-
-        <div class="text-xs font-mono text-zinc-400">
-          <span>${cycle.start_date || "N/A"} al ${cycle.end_date || "N/A"}</span>
-        </div>
-      </div>
-
-      <p class="text-xs text-zinc-400 line-clamp-2">${cycle.description || ""}</p>
-
-      <!-- Progress Bar -->
-      <div class="space-y-1">
-        <div class="flex justify-between text-[11px] font-mono text-zinc-400">
-          <span>${done}/${total} tareas completadas</span>
-          <span class="${percent === 100 ? "text-emerald-400" : "text-zinc-300"} font-bold">${percent}%</span>
-        </div>
-        <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-          <div class="h-full bg-indigo-500 rounded-full" style="width: ${percent}%"></div>
-        </div>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/cycles/views/CyclesView.js
-  function renderCyclesView({
-    cycles = [],
-    issues = [],
-    onSelectIssue = () => {
+    `;
     }
-  }) {
-    const activeCycle = cycles.find((c) => c.status === "active") || cycles[cycles.length - 1] || {};
-    const activeIssues = issues.filter((i) => i.cycle_id === activeCycle.id);
-    const total = activeIssues.length;
-    const done = activeIssues.filter((i) => i.state_id === "state-done").length;
-    const inProgress = activeIssues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
-    const backlog = total - done - inProgress;
-    const percent = total > 0 ? Math.round(done / total * 100) : 0;
-    const points = [
-      { label: "D\xEDa 1", remaining: total, ideal: total },
-      { label: "D\xEDa 4", remaining: Math.max(0, total - Math.round(done * 0.3)), ideal: Math.round(total * 0.8) },
-      { label: "D\xEDa 7", remaining: Math.max(0, total - Math.round(done * 0.6)), ideal: Math.round(total * 0.6) },
-      { label: "D\xEDa 10", remaining: Math.max(0, total - done), ideal: Math.round(total * 0.4) },
-      { label: "D\xEDa 14", remaining: Math.max(0, total - done), ideal: 0 }
-    ];
-    const svgWidth = 600;
-    const svgHeight = 160;
-    const padding = 30;
-    const maxVal = Math.max(total, 5);
+    const maxVal = Math.max(...points.map((p) => Math.max(p.ideal, p.remaining)), 5);
     const getX = (idx) => padding + idx * ((svgWidth - padding * 2) / (points.length - 1));
     const getY = (val) => svgHeight - padding - val / maxVal * (svgHeight - padding * 2);
     const idealPath = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${getX(idx)} ${getY(p.ideal)}`).join(" ");
     const realPath = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${getX(idx)} ${getY(p.remaining)}`).join(" ");
+    const areaPath = `${realPath} L ${getX(points.length - 1)} ${svgHeight - padding} L ${getX(0)} ${svgHeight - padding} Z`;
     return `
-    <div class="p-6 space-y-8 max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            ${Icons.cycle("w-5 h-5 text-indigo-400")}
-            <span>Ciclos de Desarrollo (Sprints Plane)</span>
-          </h2>
-          <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal de iteraciones \xE1giles, burn-down y velocidad de entrega.</p>
+    <div class="w-full overflow-x-auto select-none" role="img" aria-label="Gr\xE1fico de Burn-down de Tareas">
+      <svg viewBox="0 0 ${svgWidth} ${svgHeight}" class="w-full h-40 text-zinc-400">
+        <defs>
+          <linearGradient id="burndownGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"></stop>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0"></stop>
+          </linearGradient>
+        </defs>
+
+        <!-- Ejes y L\xEDneas Gu\xEDa -->
+        <line x1="${padding}" y1="${svgHeight - padding}" x2="${svgWidth - padding}" y2="${svgHeight - padding}" stroke="#27272a" stroke-width="1"></line>
+        <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${svgHeight - padding}" stroke="#27272a" stroke-width="1"></line>
+        <line x1="${padding}" y1="${getY(maxVal / 2)}" x2="${svgWidth - padding}" y2="${getY(maxVal / 2)}" stroke="#27272a" stroke-dasharray="4 4" stroke-width="1"></line>
+
+        <!-- \xC1rea bajo la curva -->
+        <path d="${areaPath}" fill="url(#burndownGrad)"></path>
+
+        <!-- Trayectoria Ideal (L\xEDnea punteada) -->
+        <path d="${idealPath}" fill="none" stroke="#71717a" stroke-width="2" stroke-dasharray="4 4"></path>
+
+        <!-- Trayectoria Real (L\xEDnea s\xF3lida) -->
+        <path d="${realPath}" fill="none" stroke="#6366f1" stroke-width="2.5"></path>
+
+        <!-- Puntos Reales con tooltip -->
+        ${points.map((p, idx) => `
+          <circle cx="${getX(idx)}" cy="${getY(p.remaining)}" r="4" class="fill-indigo-500 stroke-zinc-950 stroke-2 hover:r-6 transition-all cursor-pointer">
+            <title>${p.label}: ${p.remaining} tareas restantes</title>
+          </circle>
+          <text x="${getX(idx)}" y="${svgHeight - 10}" text-anchor="middle" class="text-[10px] fill-zinc-400 font-mono">
+            ${p.label}
+          </text>
+        `).join("")}
+      </svg>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Cycles/components/CycleCard.js
+  function CycleCard({
+    cycle = {},
+    metrics = {},
+    isActive = false
+  } = {}) {
+    const percent = metrics.percent || 0;
+    const total = metrics.total || 0;
+    const done = metrics.done || 0;
+    const isCompleted = cycle.status === "completed";
+    const statusBadge = isCompleted ? '<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono text-[10px] font-semibold">FINALIZADO</span>' : '<span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">ACTIVO</span>';
+    return `
+    <div class="p-5 rounded-2xl border ${isActive ? "border-indigo-500/40 bg-zinc-900/60 shadow-lg" : "border-zinc-800 bg-zinc-900/30 hover:border-zinc-700"} space-y-4 transition-all">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          ${Icons.cycle("w-4 h-4 text-indigo-400")}
+          <h4 class="text-sm font-bold text-zinc-200 tracking-tight">${cycle.name || "Ciclo"}</h4>
+        </div>
+        ${statusBadge}
+      </div>
+
+      <p class="text-xs text-zinc-400 line-clamp-2">${cycle.description || "Sin descripci\xF3n para este ciclo."}</p>
+
+      <div class="space-y-2 pt-2 border-t border-zinc-800/60 text-xs">
+        <div class="flex items-center justify-between text-zinc-400">
+          <span>Avance de entrega</span>
+          <span class="font-mono font-bold text-zinc-200">${done}/${total} tareas (${percent}%)</span>
+        </div>
+        <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+          <div class="h-full bg-indigo-500 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
         </div>
       </div>
 
-      <!-- Active Cycle Hero Card -->
-      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-6 shadow-xl">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <h2 class="text-base font-bold text-white tracking-tight">${activeCycle.name || "Ciclo Activo"}</h2>
-              <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">
-                ACTIVO
-              </span>
-            </div>
-            <p class="text-xs text-zinc-400 max-w-xl">${activeCycle.description || ""}</p>
-          </div>
+      <div class="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
+        <span>${cycle.start_date || "N/A"}</span>
+        <span>${cycle.end_date || "N/A"}</span>
+      </div>
+    </div>
+  `;
+  }
 
-          <div class="flex items-center gap-6">
-            <div class="text-right">
-              <span class="text-[11px] text-zinc-400 uppercase font-semibold">Rango del Ciclo</span>
-              <div class="text-xs font-mono font-bold text-zinc-200 mt-0.5">${activeCycle.start_date || "N/A"} al ${activeCycle.end_date || "N/A"}</div>
-            </div>
-            <div class="text-right">
-              <span class="text-[11px] text-zinc-400 uppercase font-semibold">Progreso</span>
-              <div class="text-xs font-mono font-bold text-emerald-400 mt-0.5">${percent}%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Metric KPI Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-zinc-400">Total Tareas</span>
-            <div class="text-lg font-bold text-zinc-100 font-mono">${total}</div>
-          </div>
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-emerald-400">Completadas</span>
-            <div class="text-lg font-bold text-emerald-400 font-mono">${done}</div>
-          </div>
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-amber-400">En Progreso</span>
-            <div class="text-lg font-bold text-amber-400 font-mono">${inProgress}</div>
-          </div>
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-zinc-400">Pendientes</span>
-            <div class="text-lg font-bold text-zinc-400 font-mono">${backlog}</div>
-          </div>
-        </div>
-
-        <!-- Interactive SVG Burn-down Chart Component -->
-        ${BurnDownChart({
-      points,
-      svgWidth,
-      svgHeight,
-      padding,
-      maxVal,
-      idealPath,
-      realPath,
-      getX,
-      getY
+  // project-docs/src/modules/Cycles/components/CycleList.js
+  function CycleList({
+    cycles = [],
+    issues = [],
+    activeCycleId = null,
+    calculateMetrics = () => ({})
+  } = {}) {
+    if (!cycles || cycles.length === 0) {
+      return `
+      <div class="p-8 text-center border border-dashed border-zinc-800 rounded-2xl text-xs text-zinc-500">
+        No hay ciclos registrados en el proyecto
+      </div>
+    `;
+    }
+    return `
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${renderList(cycles, (cycle) => {
+      const metrics = calculateMetrics(cycle, issues);
+      return CycleCard({
+        cycle,
+        metrics,
+        isActive: cycle.id === activeCycleId
+      });
     })}
-      </div>
+    </div>
+  `;
+  }
 
-      <!-- All Cycles List -->
-      <div class="space-y-4">
-        <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Historial de Ciclos (${cycles.length})</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${renderList(cycles, (c) => CycleCard({ cycle: c, issues }))}
+  // project-docs/src/modules/Cycles/pages/CyclesPage.js
+  function CyclesPage({
+    cycles = [],
+    issues = []
+  } = {}) {
+    const activeCycle = cycles.find((c) => c.status === "active") || cycles[cycles.length - 1] || {};
+    const metrics = cycleService.calculateCycleMetrics(activeCycle, issues);
+    const points = cycleService.calculateBurnDownPoints(activeCycle, issues);
+    return `
+    <div class="flex-1 flex flex-col bg-zinc-950 overflow-y-auto">
+      <div class="p-6 space-y-8 max-w-7xl mx-auto w-full">
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+              ${Icons.cycle("w-5 h-5 text-indigo-400")}
+              <span>Ciclos de Desarrollo (Sprints Plane)</span>
+            </h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal de iteraciones \xE1giles, burn-down y velocidad de entrega.</p>
+          </div>
+        </div>
+
+        <!-- Active Cycle Hero Card -->
+        <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-6 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h3 class="text-base font-bold text-white tracking-tight">${activeCycle.name || "Ciclo Activo"}</h3>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">
+                  ACTIVO
+                </span>
+              </div>
+              <p class="text-xs text-zinc-400 max-w-xl">${activeCycle.description || ""}</p>
+            </div>
+
+            <div class="flex items-center gap-6">
+              <div class="text-right">
+                <span class="text-[11px] text-zinc-400 uppercase font-semibold">Rango del Ciclo</span>
+                <div class="text-xs font-mono font-bold text-zinc-200 mt-0.5">${activeCycle.start_date || "N/A"} al ${activeCycle.end_date || "N/A"}</div>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-zinc-400 uppercase font-semibold">Progreso</span>
+                <div class="text-xs font-mono font-bold text-emerald-400 mt-0.5">${metrics.done}/${metrics.total} (${metrics.percent}%)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Burn-down Chart Component -->
+          <div class="bg-zinc-950/70 p-4 rounded-xl border border-zinc-800/80 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-zinc-300">Gr\xE1fico de Burn-down de Tareas</span>
+              <div class="flex items-center gap-4 text-[11px] text-zinc-400">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-3 h-0.5 bg-zinc-500 border-dashed inline-block"></span>
+                  <span>L\xEDnea Ideal</span>
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span class="w-3 h-0.5 bg-indigo-500 inline-block"></span>
+                  <span>Avance Real</span>
+                </span>
+              </div>
+            </div>
+
+            ${BurnDownChart({ points })}
+          </div>
+        </div>
+
+        <!-- All Sprints / Cycles Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Historial de Ciclos (${cycles.length})</h3>
+            <span class="text-xs font-mono text-zinc-400">Sprints & Entregas</span>
+          </div>
+
+          ${CycleList({
+      cycles,
+      issues,
+      activeCycleId: activeCycle.id,
+      calculateMetrics: (c, iss) => cycleService.calculateCycleMetrics(c, iss)
+    })}
         </div>
       </div>
     </div>
   `;
+  }
+
+  // project-docs/src/modules/Cycles/index.js
+  function renderCyclesView(props = {}) {
+    return CyclesPage(props);
   }
 
   // project-docs/src/features/modules/components/ModuleCard.js
@@ -2107,8 +2854,154 @@
   `;
   }
 
+  // project-docs/src/modules/Pages/services/page.service.js
+  var PageService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+    }
+    /**
+     * Carga la lista completa de páginas de conocimiento.
+     * @param {{ bypassCache?: boolean }} [options]
+     * @returns {Promise<Array<Record<string, any>>>}
+     */
+    async getPages(options = {}) {
+      const planeData = await this.client.fetchPlaneData(options);
+      if (planeData && Array.isArray(planeData.pages) && planeData.pages.length > 0) {
+        return planeData.pages;
+      }
+      const allData = await this.client.fetchAll(options);
+      if (allData.knowledgeIndex && allData.knowledgeIndex.docs) {
+        return Object.entries(allData.knowledgeIndex.docs).map(([key, content], idx) => {
+          const titleMatch = content.match(/^#\s+(.+)$/m);
+          const title = titleMatch ? titleMatch[1].trim() : key;
+          const words = content.trim().split(/\s+/).filter(Boolean).length;
+          const readingTime = Math.max(1, Math.ceil(words / 200));
+          return {
+            id: `page-${key.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+            title,
+            file_path: key,
+            shelf: this.resolveShelf(key),
+            word_count: words,
+            reading_time_min: readingTime,
+            content_markdown: content
+          };
+        });
+      }
+      return [];
+    }
+    /**
+     * Obtiene una página por su ID con su contenido Markdown.
+     * @param {string} pageId
+     * @returns {Promise<Record<string, any>|null>}
+     */
+    async getPageById(pageId) {
+      const pages = await this.getPages();
+      return pages.find((p) => p.id === pageId) || null;
+    }
+    /**
+     * Guarda o actualiza el contenido Markdown de una página.
+     * @param {string} pageId
+     * @param {string} markdownContent
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    async savePageMarkdown(pageId, markdownContent) {
+      return this.client.updatePlanePage(pageId, markdownContent);
+    }
+    /**
+     * Determina el estante canónico a partir de la ruta del archivo.
+     * @param {string} filePath
+     * @returns {string}
+     */
+    resolveShelf(filePath = "") {
+      const p = filePath.toLowerCase();
+      if (p.includes("c4") || p.includes("architecture")) return "architecture";
+      if (p.includes("business-rule") || p.includes("invariants")) return "business_rules";
+      if (p.includes("requirements") || p.includes("user-stor")) return "requirements";
+      if (p.includes("adr") || p.includes("decision")) return "adrs";
+      if (p.includes("standard") || p.includes("service")) return "standards";
+      if (p.includes("module")) return "modules";
+      if (p.includes("spec")) return "specs";
+      return "standards";
+    }
+    /**
+     * Calcula métricas de lectura de un texto en Markdown.
+     * @param {string} markdown
+     * @returns {{ words: number, readingTimeMin: number }}
+     */
+    calculateReadingMetrics(markdown = "") {
+      const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+      const readingTimeMin = Math.max(1, Math.ceil(words / 200));
+      return { words, readingTimeMin };
+    }
+  };
+  var pageService = new PageService();
+
+  // project-docs/src/modules/Pages/store/page.store.js
+  var initialPageState = {
+    pages: [],
+    activePageId: null,
+    activePageContent: "",
+    searchQuery: "",
+    editorMode: "reader",
+    // 'reader' | 'editor'
+    activeShelf: "all"
+  };
+  var PageStore = class {
+    constructor(initialState = initialPageState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en PageStore listener:", err);
+        }
+      }
+    }
+    setPages(pages) {
+      this.setState({ pages });
+    }
+    selectPage(pageId, content = "") {
+      this.setState({ activePageId: pageId, activePageContent: content });
+    }
+    setEditorMode(mode) {
+      this.setState({ editorMode: mode });
+    }
+    setSearchQuery(searchQuery) {
+      this.setState({ searchQuery });
+    }
+    getFilteredPages() {
+      const { pages, searchQuery, activeShelf } = this.state;
+      return pages.filter((p) => {
+        if (activeShelf !== "all" && p.shelf !== activeShelf) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (p.title || "").toLowerCase().includes(q) || p.file_path && p.file_path.toLowerCase().includes(q);
+      });
+    }
+    reset() {
+      this.state = { ...initialPageState };
+      this.notify();
+    }
+  };
+  var pageStore = new PageStore();
+
   // project-docs/src/shared/MarkdownViewer.js
-  function renderMarkdown(content = "") {
+  function renderMarkdown2(content = "") {
     if (!content || typeof content !== "string") return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
     return parseMarkdownNative(content);
   }
@@ -3384,7 +4277,7 @@
           <!-- Contenido Principal del Art\xEDculo (Columna de Lectura) -->
           <div class="lg:col-span-9 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px]">
             <article id="doc-active-body" class="prose dark:prose-invert max-w-3xl mx-auto text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
-              ${renderMarkdown(activeDocContent)}
+              ${renderMarkdown2(activeDocContent)}
             </article>
           </div>
 
@@ -3476,7 +4369,7 @@
                 <span class="text-emerald-500 font-semibold">\u25CF Scroll Sincronizado</span>
               </div>
               <div id="doc-editor-live-preview" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 overflow-y-auto h-[560px] prose dark:prose-invert max-w-none text-xs">
-                ${renderMarkdown(activeDocContent)}
+                ${renderMarkdown2(activeDocContent)}
               </div>
             </div>
 
@@ -6092,6 +6985,372 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
   `;
   }
 
+  // project-docs/src/modules/Harness/services/harness.service.js
+  var CANONICAL_AGENTS = [
+    {
+      id: "leader",
+      name: "L\xEDder T\xE9cnico & Orquestador",
+      role: "Agente Principal (Master Leader)",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Orquesta el ciclo de vida SDD, valida entorno y ramas sem\xE1nticas INT-*, coordina subagentes y puertas humanas con ask_question.",
+      responsibilities: [
+        "Validaci\xF3n de rama base (main/master/dev) y creaci\xF3n de rama de trabajo <= 80c",
+        "Orquestaci\xF3n de invocaci\xF3n de subagentes (spec-author, implementer, reviewer)",
+        "Puerta de aprobaci\xF3n humana con ask_question",
+        "Pregunta de integraci\xF3n (merge o PR) y cierre de ciclo"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "run_command", "ask_question", "invoke_subagent", "send_message"]
+    },
+    {
+      id: "spec-author",
+      name: "Autor de Especificaciones SDD",
+      role: "Subagente Especialista en Requerimientos",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Redacta specifications t\xE9cnicas, decisiones arquitect\xF3nicas y subtareas Jira DEV/QA bajo el est\xE1ndar Scrum en project-docs/specs/.",
+      responsibilities: [
+        "Redacci\xF3n de User Stories Scrum (Como/Quiero/Para)",
+        "Definici\xF3n de criterios de aceptaci\xF3n con sintaxis EARS",
+        "Desglose formal de subtareas Jira DEV y QA",
+        "Listado de Definition of Done (DoD) y Definition of Ready (DoR)"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "search_web"]
+    },
+    {
+      id: "implementer",
+      name: "Implementador Agn\xF3stico & QA on-demand",
+      role: "Subagente de Construcci\xF3n y Pruebas",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Ejecuta las tareas t\xE9cnicas, escribe c\xF3digo de producci\xF3n y pruebas automatizadas (TDD, SDD o FTD), ejecutando verify.sh y registrando trazabilidad R-to-Tests.",
+      responsibilities: [
+        "Implementaci\xF3n guiada por pruebas (TDD primero rojo, luego verde)",
+        "Construcci\xF3n de c\xF3digo de producci\xF3n desacoplado",
+        "Ejecuci\xF3n del pipeline de verificaci\xF3n multinivel (verify.sh)",
+        "Documentaci\xF3n de trazabilidad de pruebas unitarias y E2E"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "run_command"]
+    },
+    {
+      id: "reviewer",
+      name: "Revisor de Calidad & Auditor\xEDa QA",
+      role: "Subagente Auditor Independiente",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Audita que la feature cumpla al 100% con su spec, matriz R-to-Tests, arquitectura screaming, cierre de subtareas Jira DEV/QA y capturas de evidencia. No edita c\xF3digo.",
+      responsibilities: [
+        "Auditor\xEDa estricta de cumplimiento de especificaci\xF3n sin modificar c\xF3digo",
+        "Verificaci\xF3n de capturas de pantalla de evidencia en project-docs/specs/.../evidence/",
+        "Inspecci\xF3n de cero emojis unicode en c\xF3digo fuente",
+        "Validaci\xF3n de cierre determinista de subtareas Jira DEV y QA"
+      ],
+      tools: ["read_file", "run_command"]
+    }
+  ];
+  var CANONICAL_SKILLS = [
+    { name: "technical-audit", description: "Auditor\xEDa t\xE9cnica y generaci\xF3n de project-spec.yaml", synced: true },
+    { name: "project-knowledge", description: "Extracci\xF3n de base de conocimiento soberana C4, UML y reglas", synced: true },
+    { name: "generate-verify", description: "Generaci\xF3n de script verify.sh multinivel", synced: true },
+    { name: "verification", description: "Documentaci\xF3n y consulta de niveles de verificaci\xF3n", synced: true },
+    { name: "requirements-analysis", description: "An\xE1lisis de requerimientos y generaci\xF3n de feature_list.json", synced: true },
+    { name: "generate-spec", description: "Generaci\xF3n de spec t\xE9cnico formal, tareas y decisiones", synced: true },
+    { name: "implement-tdd", description: "Implementaci\xF3n guiada por pruebas (TDD)", synced: true },
+    { name: "implement-sdd", description: "Implementaci\xF3n dirigida por spec por fases (SDD)", synced: true },
+    { name: "implement-ftd", description: "Implementaci\xF3n \xE1gil para cambios menores (FTD)", synced: true },
+    { name: "write-unit-tests", description: "Escritura de tests unitarios agn\xF3sticos al lenguaje", synced: true },
+    { name: "acceptance-testing", description: "Pruebas de aceptaci\xF3n con Playwright, caja blanca/negra y carga", synced: true },
+    { name: "targeted-qa", description: "Pruebas focalizadas de QA bajo demanda", synced: true },
+    { name: "verify-spec", description: "Reconciliaci\xF3n de metadata y verificaci\xF3n de cierre", synced: true },
+    { name: "api-test-plan", description: "Plan de pruebas API REST markdown y .http", synced: true },
+    { name: "execute-api-test-plan", description: "Ejecuci\xF3n de plan API con curl y hallazgos", synced: true },
+    { name: "sync-skills", description: "Sincronizaci\xF3n triple de skills hacia Copilot y Antigravity", synced: true },
+    { name: "start-feature", description: "Orquestaci\xF3n de ciclo SDD para nueva feature o bugfix", synced: true },
+    { name: "sdd-workflow", description: "Gu\xEDa y ejecuci\xF3n del flujo integral SDD multi-agente", synced: true }
+  ];
+  var HarnessService = class {
+    constructor() {
+      this.agents = [...CANONICAL_AGENTS];
+      this.skills = [...CANONICAL_SKILLS];
+    }
+    getAgents() {
+      return this.agents;
+    }
+    getAgentById(id) {
+      return this.agents.find((a) => a.id === id) || null;
+    }
+    getSkills() {
+      return this.skills;
+    }
+    getGovernanceOverview() {
+      return {
+        branchingConvention: "{feature|bugfix}/INT-{numero}/{nombre} (m\xE1ximo 80 caracteres)",
+        commitFormat: "feat(scope): descripci\xF3n / fix(scope): descripci\xF3n",
+        tripleSyncRoot: ".opencode/skills/ (fuente de verdad) -> .github/skills/ y .agents/skills/",
+        zeroEmojiInvariant: "100% c\xF3digo fuente, marcado y documentaci\xF3n sin caracteres emoji unicode",
+        rootCleanliness: "Estrictamente 4 directorios (.agents, .git, .github, .opencode, project-docs) y 4 archivos en ra\xEDz"
+      };
+    }
+  };
+  var harnessService = new HarnessService();
+
+  // project-docs/src/modules/Harness/store/harness.store.js
+  var initialHarnessState = {
+    agents: [...CANONICAL_AGENTS],
+    skills: [...CANONICAL_SKILLS],
+    selectedAgentId: "leader",
+    activeTab: "agents"
+    // 'agents' | 'skills' | 'rules'
+  };
+  var HarnessStore = class {
+    constructor(initialState = initialHarnessState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en HarnessStore listener:", err);
+        }
+      }
+    }
+    selectAgent(agentId) {
+      this.setState({ selectedAgentId: agentId });
+    }
+    setActiveTab(activeTab) {
+      this.setState({ activeTab });
+    }
+    reset() {
+      this.state = { ...initialHarnessState };
+      this.notify();
+    }
+  };
+  var harnessStore = new HarnessStore();
+
+  // project-docs/src/modules/Harness/components/AgentCard.js
+  function AgentCard({
+    agent = {},
+    isSelected = false
+  } = {}) {
+    const isMaster = agent.id === "leader";
+    const roleBadge = isMaster ? '<span class="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 font-mono text-[10px] font-semibold">MASTER LEADER</span>' : '<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono text-[10px] font-semibold">SUBAGENTE</span>';
+    return `
+    <div
+      data-agent-id="${agent.id}"
+      class="p-5 rounded-2xl border ${isSelected ? "border-indigo-500/50 bg-indigo-950/20 shadow-lg" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"} flex flex-col justify-between space-y-4 transition-all"
+    >
+      <div class="space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0 shadow-sm">
+              ${agent.id ? agent.id.slice(0, 2).toUpperCase() : "AG"}
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-zinc-100 tracking-tight">${agent.name}</h4>
+              <p class="text-[11px] text-zinc-400 font-medium">${agent.role}</p>
+            </div>
+          </div>
+          ${roleBadge}
+        </div>
+
+        <p class="text-xs text-zinc-300 leading-relaxed">${agent.description}</p>
+
+        <!-- Responsabilidades -->
+        <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+          <span class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Responsabilidades</span>
+          <div class="space-y-1">
+            ${renderList(agent.responsibilities || [], (resp) => `
+              <div class="flex items-start gap-2 text-xs text-zinc-300">
+                <span class="p-0.5 text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3 h-3")}</span>
+                <span class="leading-snug">${resp}</span>
+              </div>
+            `)}
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer: Tools -->
+      <div class="pt-3 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5">
+        <span class="text-[10px] text-zinc-400 uppercase font-semibold mr-1">Tools:</span>
+        ${renderList(agent.tools || [], (tool) => `
+          <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">
+            ${tool}
+          </span>
+        `)}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/AgentList.js
+  function AgentList({
+    agents = [],
+    selectedAgentId = "leader"
+  } = {}) {
+    return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${renderList(agents, (agent) => AgentCard({
+      agent,
+      isSelected: agent.id === selectedAgentId
+    }))}
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
+  function SkillSyncStatus({
+    skills = []
+  } = {}) {
+    return `
+    <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/40">
+        <div>
+          <h4 class="text-sm font-bold text-zinc-100 tracking-tight">Matriz de Sincronizaci\xF3n Triple de Skills</h4>
+          <p class="text-xs text-zinc-400 mt-0.5">Homologaci\xF3n bidireccional entre opencode, GitHub Copilot y Google Antigravity.</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-semibold">
+          100% HOMOLOGADO
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-zinc-900/60 text-zinc-400 uppercase font-semibold text-[10px] tracking-wider border-b border-zinc-800">
+            <tr>
+              <th class="px-6 py-3">Skill</th>
+              <th class="px-6 py-3">Descripci\xF3n</th>
+              <th class="px-4 py-3 text-center">opencode</th>
+              <th class="px-4 py-3 text-center">Copilot</th>
+              <th class="px-4 py-3 text-center">Antigravity</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/60 font-mono">
+            ${renderList(skills, (skill) => `
+              <tr class="hover:bg-zinc-900/30 transition-colors">
+                <td class="px-6 py-3.5 font-bold text-indigo-400">/${skill.name}</td>
+                <td class="px-6 py-3.5 font-sans text-zinc-300 font-normal">${skill.description}</td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/HarnessOverview.js
+  function HarnessOverview({
+    governance = {}
+  } = {}) {
+    return `
+    <div class="space-y-6">
+      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            ${Icons.shield("w-5 h-5")}
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white tracking-tight">Gobernanza del Arn\xE9s SDD Multi-Agente</h3>
+            <p class="text-xs text-zinc-400">Invariantes estrictas de calidad, control de ramas y arquitectura anti-sesgo.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Ramas Sem\xE1nticas (&le;80c)</span>
+            <p class="text-xs font-mono text-indigo-300 font-medium">${governance.branchingConvention || "{feature|bugfix}/INT-*"}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Formato de Commits</span>
+            <p class="text-xs font-mono text-emerald-300 font-medium">${governance.commitFormat || "feat(scope): desc"}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Pureza Anti-Emoji</span>
+            <p class="text-xs font-mono text-amber-300 font-medium">${governance.zeroEmojiInvariant || "0 emojis en todo el c\xF3digo"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/pages/HarnessPage.js
+  function HarnessPage({
+    agents = [],
+    skills = [],
+    selectedAgentId = "leader"
+  } = {}) {
+    const activeAgents = agents && agents.length > 0 ? agents : harnessService.getAgents();
+    const activeSkills = skills && skills.length > 0 ? skills : harnessService.getSkills();
+    const governance = harnessService.getGovernanceOverview();
+    return `
+    <div class="flex-1 flex flex-col bg-zinc-950 overflow-y-auto">
+      <div class="p-6 space-y-8 max-w-7xl mx-auto w-full">
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+              ${Icons.bot("w-5 h-5 text-indigo-400")}
+              <span>Orquestaci\xF3n de Agentes & Gobernanza SDD</span>
+            </h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, habilidades homologadas y verificaci\xF3n de reglas.</p>
+          </div>
+        </div>
+
+        <!-- Governance Overview Banner -->
+        ${HarnessOverview({ governance })}
+
+        <!-- Agents Grid -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">
+              Equipo de Agentes Especializados (${activeAgents.length})
+            </h3>
+            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD</span>
+          </div>
+
+          ${AgentList({ agents: activeAgents, selectedAgentId })}
+        </div>
+
+        <!-- Skills Triple Sync Section -->
+        <div class="space-y-4">
+          ${SkillSyncStatus({ skills: activeSkills })}
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/index.js
+  function renderHarnessView(props = {}) {
+    return HarnessPage(props);
+  }
+
   // project-docs/src/main.js
   var App = class {
     constructor() {
@@ -6171,7 +7430,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (!this.root) return;
       const state = store.getState();
       const planeData = state.planeData || {};
-      const issues = planeData.issues || state.features || [];
+      const issues = planeData.issues && planeData.issues.length > 0 ? planeData.issues : state.features || [];
       const states = planeData.states || [];
       const cycles = planeData.cycles || [];
       const modules = planeData.modules || [];
@@ -6228,7 +7487,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         graph: "Grafo & \xC1rbol de Dependencias",
         tree: "\xC1rbol Jer\xE1rquico de Requerimientos",
         constellation: "Constelaci\xF3n Piramidal 3D",
-        analytics: "Anal\xEDtica, Velocidad & Rendimiento"
+        analytics: "Anal\xEDtica, Velocidad & Rendimiento",
+        harness: "Orquestaci\xF3n de Agentes & Gobernanza SDD"
       };
       const viewTitle = viewTitles[currentView] || "Tareas";
       let mainContentHtml = "";
@@ -6311,6 +7571,12 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         mainContentHtml = `
         <div class="flex-1 overflow-y-auto">
           ${renderAnalyticsView({ issues, states, cycles, modules })}
+        </div>
+      `;
+      } else if (currentView === "harness" || currentView === "agents") {
+        mainContentHtml = `
+        <div class="flex-1 overflow-y-auto">
+          ${renderHarnessView()}
         </div>
       `;
       }
@@ -6458,7 +7724,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         const viewDetailBtn = e.target.closest('button[data-action="view-detail"]');
         if (viewDetailBtn) {
           const id = viewDetailBtn.getAttribute("data-id");
-          const issues = store.getState().planeData?.issues || store.getState().features || [];
+          const pdIssues = store.getState().planeData?.issues;
+          const issues = pdIssues && pdIssues.length > 0 ? pdIssues : store.getState().features || [];
           const match = issues.find((i) => String(i.id) === String(id) || String(i.id) === `INT-${String(id).padStart(3, "0")}` || String(i.sequence_id) === String(id));
           if (match) {
             this.openIssueModal(match.id);
@@ -6525,7 +7792,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               const docs = store.getState().knowledgeIndex?.docs || {};
               const content = docs[docKey] || "";
               if (textarea) textarea.value = content;
-              if (preview) preview.innerHTML = renderMarkdown(content);
+              if (preview) preview.innerHTML = renderMarkdown2(content);
               editorContainer.classList.remove("hidden");
               readerContainer.classList.add("hidden");
               if (btnText) btnText.textContent = "Modo Lectura";
@@ -6588,7 +7855,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           if (docKey) {
             store.saveDoc(docKey, newContent);
             const bodyEl = document.getElementById("doc-active-body");
-            if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
+            if (bodyEl) bodyEl.innerHTML = renderMarkdown2(newContent);
             const tocEl = document.getElementById("doc-active-toc");
             if (tocEl) tocEl.innerHTML = renderTocHtml(extractTableOfContents(newContent));
             document.getElementById("doc-editor-view-container")?.classList.add("hidden");
@@ -6730,7 +7997,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         if (e.target.id === "doc-editor-textarea") {
           const preview = document.getElementById("doc-editor-live-preview");
           if (preview) {
-            preview.innerHTML = renderMarkdown(e.target.value);
+            preview.innerHTML = renderMarkdown2(e.target.value);
           }
           return;
         }
@@ -6817,13 +8084,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
       if (brEl) brEl.textContent = meta.ruleCount || 0;
       if (rfEl) rfEl.textContent = meta.reqCount || 0;
-      if (bodyEl) bodyEl.innerHTML = renderMarkdown(content);
+      if (bodyEl) bodyEl.innerHTML = renderMarkdown2(content);
       if (tocEl) {
         const toc = extractTableOfContents(content);
         tocEl.innerHTML = renderTocHtml(toc);
       }
       if (textarea) textarea.value = content;
-      if (livePreview) livePreview.innerHTML = renderMarkdown(content);
+      if (livePreview) livePreview.innerHTML = renderMarkdown2(content);
       if (openInEditor) {
         readerContainer?.classList.add("hidden");
         editorContainer?.classList.remove("hidden");
@@ -6965,7 +8232,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     }
   }
   var app = new App();
-  document.addEventListener("DOMContentLoaded", () => {
-    app.init();
-  });
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        app.init();
+      });
+    } else {
+      app.init();
+    }
+  }
 })();

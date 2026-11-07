@@ -1130,6 +1130,129 @@
           "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 14,
+      "type": "feature",
+      "name": "screaming_modules_core_shared",
+      "title": "Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
+      "description": "Reestructuracion modular estricta orientada a dominios de negocio bajo Screaming Architecture pura: src/modules/ (Projects, Issues, Cycles, Pages, Harness), src/core/ (Store Observer Pub-Sub, Router hash con URL params, EventBus, ApiClient, persistencia SQLite WAL) y src/shared/ (Icons 100% SVG nativo, renderList funcional, MasterLayout, Sidebar, TopBar, Omnibox). Soporte para persistencia dual (SQLite + Markdown), cero emojis, arquitectura desacoplada para agentes y skills, y cobertura completa en 9 niveles de verificacion.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-014/screaming_modules_core_shared",
+      "spec_folder": "project-docs/specs/014_screaming_modules_core_shared",
+      "status": "done",
+      "acceptance": [
+        "Screaming Architecture pura en project-docs/src/modules/ con dominios Projects, Issues, Cycles, Pages y Harness encapsulados con components/, pages/, services/, store/ y barriles index.js.",
+        "Nucleo transversal reactivo en project-docs/src/core/ con Store Observer Pub-Sub, Router hash con soporte de query parameters, EventBus desacoplado y ApiClient con fallback offline.",
+        "Capa compartida agnostica en project-docs/src/shared/ con 40+ iconos vectoriales 100% SVG nativos, utilidades funcionales renderList y shell MasterLayout unificado.",
+        "Persistencia dual determinista con SQLite WAL (project-docs/data/harness.db) y espejo continuo en archivos Markdown en disco para agentes y CLI.",
+        "Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright, tests de whitebox, blackbox, sistema y carga pasando al 100% en verde.",
+        "Zero emojis en codigo fuente, interfaces y documentacion, con cumplimiento de limite de 80 caracteres en ramas y pureza estricta en la raiz del proyecto."
+      ],
+      "user_story": {
+        "as_a": "Desarrollador y Agente de IA",
+        "i_want": "un frontend modular bajo Screaming Architecture con dominios de negocio encapsulados (Projects, Issues, Cycles, Pages, Harness) y nucleo reactivo transversal",
+        "so_that": "el arnes opere con alta cohesion, bajo acoplamiento y maxima mantenibilidad tanto en navegador como en CLI y agentes"
+      },
+      "subtasks": [
+        {
+          "id": "INT-014-DEV",
+          "type": "development",
+          "title": "Implementacion transversal modular en src/core, src/shared y src/modules",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Implementar src/core/ con store Observer Pub-Sub, router hash con parametros, event-bus y api-client con fallback",
+            "Implementar src/shared/ con biblioteca de 40+ iconos 100% SVG nativo, helper renderList y MasterLayout",
+            "Implementar dominio src/modules/Issues/ con issue.service, issue.store, IssueBoard, IssueList y modal Scrum/EARS/Jira",
+            "Implementar dominios complementarios src/modules/Projects/, Cycles/ con burn-down SVG, Pages/ y Harness/",
+            "Crear barril central src/modules/index.js y recompilar app.bundle.js con esbuild"
+          ]
+        },
+        {
+          "id": "INT-014-QA",
+          "type": "qa",
+          "title": "Auditoria de arquitectura modular, verificacion unitaria, whitebox, blackbox, sistema, carga y Playwright",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar estructura Screaming Architecture pura y barriles en src/modules, src/core y src/shared",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar store reactivo Observer Pub-Sub y navegacion hash con query params",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Validar modal de detalle de Issue con User Story, EARS y subtareas Jira DEV/QA",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Validar suites de prueba unitaria (66/66), whitebox, blackbox, sistema, carga y Playwright (14/14)",
+              "status": "passed"
+            },
+            {
+              "id": "TC-05",
+              "title": "Validar Zero Emojis y pureza extrema de la raiz (4 carpetas, 4 archivos)",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T18:35:00.000Z",
+        "dev_summary": "Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.",
+        "files_modified": [
+          "project-docs/src/core/store.js",
+          "project-docs/src/core/router.js",
+          "project-docs/src/core/event-bus.js",
+          "project-docs/src/core/api-client.js",
+          "project-docs/src/shared/ui/Icons.js",
+          "project-docs/src/shared/ui/Badge.js",
+          "project-docs/src/shared/ui/BaseModal.js",
+          "project-docs/src/shared/ui/MasterLayout.js",
+          "project-docs/src/shared/ui/PlaneSidebar.js",
+          "project-docs/src/shared/ui/PlaneTopBar.js",
+          "project-docs/src/shared/ui/OmniboxModal.js",
+          "project-docs/src/shared/utils/renderList.js",
+          "project-docs/src/shared/utils/dom.js",
+          "project-docs/src/shared/utils/dates.js",
+          "project-docs/src/shared/utils/markdown.js",
+          "project-docs/src/modules/Projects/",
+          "project-docs/src/modules/Issues/",
+          "project-docs/src/modules/Cycles/",
+          "project-docs/src/modules/Pages/",
+          "project-docs/src/modules/Harness/",
+          "project-docs/src/modules/index.js",
+          "project-docs/dist/app.bundle.js",
+          "project-docs/tests/unit/core-shared.test.js",
+          "project-docs/tests/unit/issues.test.js",
+          "project-docs/tests/unit/modules.test.js"
+        ],
+        "tests_executed": [
+          "npm test (66 unit tests)",
+          "npm run test:e2e (5 smoke tests)",
+          "npm run test:whitebox (12 branch tests)",
+          "npm run test:blackbox (13 resilience tests)",
+          "npm run test:system (12 integration tests)",
+          "npm run test:load (100 reqs concurrency test)",
+          "npm run test:acceptance (14 Playwright E2E tests)",
+          "bash project-docs/verify.sh (9 verification levels)"
+        ],
+        "screenshots": [
+          "project-docs/specs/014_screaming_modules_core_shared/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/014_screaming_modules_core_shared/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/014_screaming_modules_core_shared/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/014_screaming_modules_core_shared/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 }
