@@ -107,7 +107,12 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
 
 15. Cuando `reviewer` **apruebe** la implementación, ejecuta el cierre dentro de la rama de trabajo:
     - Ejecuta `bash project-docs/verify.sh` para confirmar que todo el entorno y la solución siguen en verde.
-    - Sincroniza datos del tablero con `node project-docs/sync-data.js`.
+    - Registra el cierre de la tarea y la bitácora IA en el modelo relacional Plane (`project-docs/data/harness.db` + `knowledge/ai-runs-log.md`):
+      ```bash
+      node project-docs/cli.js issue update INT-{NNN} --state done --role leader
+      node project-docs/cli.js ai log --skill sdd-workflow --role leader --issue INT-{NNN} --type SDD_CYCLE_CLOSURE --summary "Cierre verificado e integracion de ciclo SDD"
+      node project-docs/sync-data.js
+      ```
     - Actualiza `feature_list.json`: marca la tarea con `status: "done"`, registra `executor` y `completed_at`, y actualiza los contadores de `metadata`.
     - Mueve el resumen de la sesión desde `project-docs/progres/current.json` al historial `project-docs/progres/history.json`.
     - Genera el commit semántico en la rama: `feat({scope}): {descripción}` o `fix({scope}): {descripción}`.

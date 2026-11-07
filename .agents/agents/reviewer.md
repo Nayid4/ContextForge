@@ -88,4 +88,9 @@ Al terminar tu auditoría, genera obligatoriamente el reporte formal:
 ...
 ```
 
-Si el veredicto es **[RECHAZADO]**, documenta los motivos exactos y reasigna la tarea al `implementer`. Si es **[APROBADO]**, notifica al `leader` para proceder al cierre formal con `/verify-spec`.
+Si el veredicto es **[RECHAZADO]**, documenta los motivos exactos y reasigna la tarea al `implementer`. Si es **[APROBADO]**, envía las evidencias y el dictamen al modelo relacional Plane (`project-docs/data/harness.db` + `.md`) y notifica al `leader` para proceder al cierre formal con `/verify-spec`:
+```bash
+node project-docs/cli.js issue evidence INT-{NNN} --type verification-report --title "Auditoria Reviewer Independiente (review_{name}.md)" --file "project-docs/progres/review_{name}.md" --skill review
+node project-docs/cli.js ai log --skill review --role reviewer --issue INT-{NNN} --type INDEPENDENT_QA_REVIEW --summary "Auditoria independiente aprobada al 100%" --artifacts "project-docs/progres/review_{name}.md,project-docs/specs/{NNN}_{name}/evidence.md"
+node project-docs/sync-data.js
+```

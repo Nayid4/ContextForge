@@ -87,11 +87,18 @@ Ejemplos que **no** son FTD:
 3. Verificar cada AC **por inspección del diff**, no por test nuevo. Para cada AC, señalar la línea del diff que lo satisface.
 4. Si el cambio es visual, describir cómo comprobarlo a mano (ruta de la pantalla, qué mirar), porque la suite no lo cubre.
 
-### Fase 4: Cierre (tests only) y handoff
+### Fase 4: Cierre (tests only), Registro en Modelo Plane SQLite + Markdown y Handoff
 
 1. Marcar en `tasks.md` las tareas de implementación como `[x]`. La tarea de tests unitarios **no se marca como agregada por este skill**: si el spec la exige y este cambio no la satisface, es señal de que la técnica correcta era otra. Reportarlo.
-2. Reportar: qué se cambió, evidencia por AC, resultado de la suite comparado con el baseline.
-3. **Entregar a `verify-spec`** — este skill **NO** cierra el spec. El cierre de metadata lo hace `verify-spec`, que debe:
+2. Enviar el registro del cambio ágil FTD y la verificación de regresión al modelo relacional SQLite (`harness.db`) y al espejo Markdown:
+   ```bash
+   node project-docs/cli.js issue update INT-<NNN> --state in_review --role implementer
+   node project-docs/cli.js issue comment INT-<NNN> --role implementer --skill implement-ftd --message "Cambio FTD aplicado y verificado contra suite de regresion"
+   node project-docs/cli.js ai log --skill implement-ftd --role implementer --issue INT-<NNN> --type FTD_IMPLEMENTATION --summary "Implementacion agil FTD verificada por diff y suite de regresion"
+   node project-docs/sync-data.js
+   ```
+3. Reportar: qué se cambió, evidencia por AC, resultado de la suite comparado con el baseline.
+4. **Entregar a `verify-spec`** — este skill **NO** cierra el spec. El cierre de metadata lo hace `verify-spec`, que debe:
    - Marcar los checkboxes de `spec.md` y `tasks.md`
    - Actualizar `Status` de `spec.md` a `Done`
    - `feature_list.json`: status → `done`, `closedAt` → fecha

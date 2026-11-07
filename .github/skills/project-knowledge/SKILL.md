@@ -211,9 +211,14 @@ Cubre rigurosamente toda la estructura del estándar IEEE 830 Sección 3:
 1. **Generación de `MASTER-PROJECT-KNOWLEDGE.md`**:
    - Ensambla en un único archivo Markdown maestro (con Tabla de Contenidos navegable) la totalidad de los documentos `01` al `12` más el contenido íntegro de todos los módulos en `modules/{modulo}/*`.
    - Prohibido resumir o recortar diagramas o tablas al crear el archivo maestro; debe funcionar como el *gemelo cognitivo* completo del software en un solo archivo.
-2. **Actualización de `knowledge-index.json` y Ejecución de Sincronización**:
+2. **Actualización de `knowledge-index.json` e Ingesta en el Modelo Plane SQLite + Markdown**:
    - Actualiza `project-docs/knowledge/knowledge-index.json` con todos los documentos, conteos reales y el grafo de relaciones.
-   - Si existe `project-docs/sync-data.js`, ejecuta `node project-docs/sync-data.js` para actualizar el tablero visual sin dejar ningún dato estático de ejemplo.
+   - Envía todos los documentos Markdown generados hacia las tablas `pages` y `page_versions` de `project-docs/data/harness.db` y registra la ejecución de IA en `ai_runs` y `knowledge/ai-runs-log.md`:
+     ```bash
+     node project-docs/cli.js sync
+     node project-docs/cli.js ai log --skill project-knowledge --role spec-author --type KNOWLEDGE_EXTRACTION --summary "Extraccion de base de conocimiento soberana C4, UML, reglas BR-* y DeepWiki" --artifacts "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md,project-docs/knowledge/knowledge-index.json"
+     node project-docs/sync-data.js
+     ```
 
 ---
 

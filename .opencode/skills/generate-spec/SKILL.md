@@ -201,10 +201,18 @@ Antes de confirmar la activacion, verificar las 5 condiciones:
 
 Si **cualquiera** falla: **NO** confirmar la activacion. Reparar el paso que falta y volver a correr este gate. Si la falla viene de haber quedado en modo plan sin persistir, hay que pasar explicitamente a build/agente y ejecutar el Paso 6 completo.
 
-**6.6 Confirmar activacion** (solo si el gate paso)
+**6.6 Enviar Spec al Modelo Plane SQLite + Markdown y Confirmar Activacion** (solo si el gate paso)
+
+Persistir el spec generado, su estado y la trazabilidad de la skill en `project-docs/data/harness.db` (`issues`, `pages`, `page_versions`, `issue_activities`, `ai_runs`) y en `knowledge/ai-runs-log.md`:
+
+```bash
+node project-docs/cli.js issue update INT-<NNN> --state in_progress --role spec-author
+node project-docs/cli.js ai log --skill generate-spec --role spec-author --issue INT-<NNN> --type SPEC_GENERATION --summary "Generacion de especificacion formal SDD, criterios EARS y subtareas DEV/QA" --artifacts "project-docs/specs/<NNN>_<name>/requirements.md,project-docs/specs/<NNN>_<name>/design.md,project-docs/specs/<NNN>_<name>/tasks.md"
+node project-docs/sync-data.js
+```
 
 Informar al usuario:
-- "Spec activado correctamente"
+- "Spec activado correctamente y sincronizado en SQLite (harness.db) y Markdown"
 - "current.json actualizado"
 - "feature_list.json actualizado a in_progress"
 - "Directorio: project-docs/<module>/specs/<NNN>-<feature-name>/"

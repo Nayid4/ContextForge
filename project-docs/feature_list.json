@@ -907,7 +907,7 @@
       "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
       "description": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
       "module": "dashboard-visualizer",
-      "priority": "P0",
+      "priority": "URGENT",
       "weight": 100,
       "branch": "feature/INT-012/plane_style_sqlite_project_management",
       "spec_folder": "project-docs/specs/012_plane_style_sqlite_project_management",
@@ -935,43 +935,14 @@
           "type": "development",
           "title": "Motor SQLite relacional, API REST en serve.js y vistas completas estilo Plane",
           "assignee": "implementer",
-          "status": "done",
-          "tasks": [
-            "Crear modulo de base de datos SQLite project-docs/src/core/db.js con node:sqlite nativo",
-            "Implementar motor de sincronizacion bidireccional project-docs/src/core/sqlite-sync.js",
-            "Agregar endpoints REST en serve.js para consultas y mutaciones de Plane con auto-sync a disco",
-            "Desarrollar componentes PlaneLayout, IssueListView, IssueBoardView, IssueCalendarView, IssueSpreadsheetView",
-            "Desarrollar vistas CyclesView, ModulesView, PlanePagesView e IssueDetailModal"
-          ]
+          "status": "done"
         },
         {
           "id": "INT-012-QA",
           "type": "qa",
           "title": "Pruebas unitarias de SQLite, sincronizacion de archivos y pruebas de aceptacion Playwright",
           "assignee": "reviewer",
-          "status": "done",
-          "test_cases": [
-            {
-              "id": "TC-01",
-              "title": "Verificar esquema SQLite, consultas de agrupacion y persistencia relacional",
-              "status": "passed"
-            },
-            {
-              "id": "TC-02",
-              "title": "Verificar sincronizacion bidireccional SQLite <-> Markdown (.md) y JSON",
-              "status": "passed"
-            },
-            {
-              "id": "TC-03",
-              "title": "Verificar navegacion e interaccion fluida entre vistas de Plane con Playwright",
-              "status": "passed"
-            },
-            {
-              "id": "TC-04",
-              "title": "Verificar Zero-Emoji Gate y pureza extrema de la raiz",
-              "status": "passed"
-            }
-          ]
+          "status": "done"
         }
       ],
       "evidence": {
@@ -1015,8 +986,13 @@
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/02-plane-issue-detail-modal.png",
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/03-plane-cycles-burndown.png",
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/04-plane-pages-docs.png"
-        ]
-      }
+        ],
+        "verification_report": "project-docs/specs/012_plane_sqlite_ai_platform/verification-report.md"
+      },
+      "dependencies": [
+        11,
+        11
+      ]
     },
     {
       "id": 13,
@@ -1355,6 +1331,87 @@
           "project-docs/specs/015_screaming_modules_plane_unification/evidence/02-plane-issue-detail-modal.png",
           "project-docs/specs/015_screaming_modules_plane_unification/evidence/03-plane-cycles-burndown.png",
           "project-docs/specs/015_screaming_modules_plane_unification/evidence/04-plane-pages-docs.png"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "type": "feature",
+      "name": "plane_data_model_ai_tracking",
+      "title": "Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+      "description": "Implementacion integral del modelo de datos relacional de Makeplane (Plane) y su subsistema de Inteligencia Artificial en SQLite (project-docs/data/harness.db con 26 tablas: workspaces, users con is_bot=1, workspace_members, api_tokens, projects, states, labels, estimates, estimate_points, issue_types, cycles, cycle_issues, modules, module_issues, issues, subtasks, issue_assignees, issue_labels, issue_relations, issue_activities, issue_comments, issue_evidences, pages, page_versions, issue_views, ai_configs, ai_runs) sincronizado bidireccionalmente con archivos Markdown (knowledge/ai-runs-log.md, specs/, feature_list.json). Ampliacion de CLI, API REST, vistas Screaming (IssueDetailModal, AiEngineMonitor en HarnessPage) y homologacion de las 21 skills SDD para enviar toda informacion, evidencia y reporte al proyecto.",
+      "module": "harness-core",
+      "priority": "P0",
+      "weight": 100,
+      "dependencies": [
+        12,
+        14,
+        15
+      ],
+      "branch": "feature/INT-016/plane_data_model_ai_tracking",
+      "spec_folder": "project-docs/specs/016_plane_data_model_ai_tracking",
+      "status": "done",
+      "acceptance": [
+        "26 tablas relacionales del modelo Plane e IA operativas en project-docs/data/harness.db con integridad referencial y migracion automatica.",
+        "Sincronizacion bidireccional de ejecuciones IA (ai_runs) hacia project-docs/knowledge/ai-runs-log.md y de evidencias/relaciones hacia feature_list.json.",
+        "CLI soberana (project-docs/cli.js) y API REST (project-docs/serve.js) soportando registro de ai log, issue evidence, issue comment, issue relate, page upsert y user list.",
+        "Visualizacion de etiquetas Plane, puntos Fibonacci, relaciones, evidencias QA, ai_configs, api_tokens bot y bitacora ai_runs en IssueDetailModal y HarnessPage.",
+        "21 skills SDD homologadas en .opencode/skills/, .github/skills/ y .agents/skills/ configuradas para enviar toda documentacion, evidencia y reporte al proyecto."
+      ],
+      "user_story": {
+        "as_a": "Arquitecto de Software, Desarrollador y Agente de IA",
+        "i_want": "el modelo de datos relacional completo de Plane (26 tablas) con trazabilidad IA en SQLite y Markdown conectado a todas las skills del arnes",
+        "so_that": "cualquier documento, especificacion, evidencia QA o reporte generado por una skill quede registrado y vinculado automaticamente en el proyecto"
+      },
+      "subtasks": [
+        {
+          "id": "INT-016-DEV",
+          "type": "development",
+          "title": "Implementacion de 26 tablas Plane + IA en SQLite, sincronizacion Markdown, CLI, API, UI y 21 Skills",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Expandir project-docs/src/core/db.js a 26 tablas relacionales de Plane e IA",
+            "Expandir project-docs/src/core/sqlite-sync.js con funciones de registro de skills, evidencias, comentarios, relaciones y ai-runs-log.md",
+            "Ampliar project-docs/cli.js y project-docs/serve.js con comandos y endpoints de ingesta IA y QA",
+            "Actualizar IssueDetailModal.js, AiEngineMonitor.js y HarnessPage.js",
+            "Actualizar y sincronizar las 21 skills en .opencode/skills/, .github/skills/ y .agents/skills/"
+          ]
+        },
+        {
+          "id": "INT-016-QA",
+          "type": "qa",
+          "title": "Verificacion de las 26 tablas SQLite, CLI IA, paridad triple de 21 skills y 9 niveles de verify.sh",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar creacion e integridad de las 26 tablas relacionales en sqlite-db.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar comandos CLI ai list, ai log, user list, issue evidence e issue list en cli.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Validar paridad triple de las 21 skills y ejecucion de verify.sh en 9 niveles",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T19:35:00.000Z",
+        "dev_summary": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+        "verification_report": "project-docs/specs/016_plane_data_model_ai_tracking/verification-report.md",
+        "qa_screenshots": [
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/04-plane-pages-docs.png"
         ]
       }
     }

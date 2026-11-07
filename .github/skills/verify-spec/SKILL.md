@@ -162,8 +162,15 @@ Crear/actualizar `<spec-dir>/verification-report.md`:
   3. Actualizar `feature_list.json`: `status` → `done`, `closedAt` → fecha actual
   4. Agregar registro a `history.json` (si no existe ya; no duplicar `featureId`)
   5. Resetear `current.json` a `{}`
+  6. **Enviar reporte oficial, evidencias y estado de cierre al Modelo Plane SQLite + Markdown**:
+     ```bash
+     node project-docs/cli.js issue evidence INT-<NNN> --type verification-report --title "Reporte Oficial de Verificacion SDD" --file "project-docs/specs/<NNN>_<name>/verification-report.md" --skill verify-spec
+     node project-docs/cli.js issue update INT-<NNN> --state done --role reviewer
+     node project-docs/cli.js ai log --skill verify-spec --role reviewer --issue INT-<NNN> --type QA_VERIFICATION_CLOSURE --summary "Cierre verificado en 9 niveles y reconciliacion SQLite + Markdown" --artifacts "project-docs/specs/<NNN>_<name>/verification-report.md,project-docs/specs/<NNN>_<name>/evidence.md"
+     node project-docs/sync-data.js
+     ```
 
-  **6. Reconciliar antes de reportar APROBADO.** Ejecutar los asserts del Paso 5. Ningun spec se cierra con asserts en rojo.
+  **7. Reconciliar antes de reportar APROBADO.** Ejecutar los asserts del Paso 5. Ningun spec se cierra con asserts en rojo.
 
 - Si **NO APROBADO**: dejar todo en su estado actual (`in_progress`), NO cerrar el spec. Solo entregar el reporte de hallazgos.
 

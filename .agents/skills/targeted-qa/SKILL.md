@@ -104,6 +104,14 @@ Escribe el reporte en `project-docs/qa/report-{target}-{timestamp}.md`:
 - `{ruta-al-test}`
 ```
 
+### Paso 6: Envío del Reporte y Hallazgos al Modelo Plane SQLite + Markdown
+Una vez generado el reporte en disco, persiste el documento y la trazabilidad de ejecución en `project-docs/data/harness.db` (`pages`, `page_versions`, `issue_evidences`, `ai_runs`) y en `knowledge/ai-runs-log.md`:
+```bash
+node project-docs/cli.js page upsert --path "knowledge/qa-report-{target}.md" --title "Reporte de Auditoria QA: {target}" --shelf requirements --file "project-docs/qa/report-{target}-{timestamp}.md" --role reviewer
+node project-docs/cli.js ai log --skill targeted-qa --role reviewer --type TARGETED_QA_AUDIT --summary "Auditoria focalizada de QA sobre {target}" --artifacts "project-docs/qa/report-{target}-{timestamp}.md"
+node project-docs/sync-data.js
+```
+
 ---
 
 ## 3. Reglas Criticas

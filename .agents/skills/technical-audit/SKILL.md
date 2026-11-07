@@ -134,9 +134,14 @@ scripts:
    - docker-compose.yml
    - Servicios definidos
 
-7. **Sincronización con el Tablero Visual (project-docs/)**
+7. **Sincronización con el Modelo de Datos Plane SQLite + Markdown (`project-docs/`)**
    - Generar el gemelo en formato JSON en `project-docs/project-spec.json`.
-   - Ejecutar `node project-docs/sync-data.js` (o actualizar `project-docs/data-fallback.js`) para que el visor de Arquitectura & Stack refleje el stack de inmediato sin necesidad de recargar.
+   - Enviar el registro de auditoría e indexar los artefactos en el modelo relacional SQLite (`ai_runs` y `pages`) y en el espejo Markdown (`knowledge/ai-runs-log.md`):
+     ```bash
+     node project-docs/cli.js ai log --skill technical-audit --role leader --type TECHNICAL_AUDIT --summary "Auditoria tecnica de runtime, servicios y dependencias en project-spec.yaml" --artifacts "project-docs/project-spec.yaml,project-docs/project-spec.json"
+     node project-docs/sync-data.js
+     ```
+   - Esto garantiza que el visor de Arquitectura & Stack y la bitácora IA en Plane reflejen el stack de inmediato tanto en servidor como en modo offline (`file:///`).
 
 ## Referencia Previa
 Si se proporciona un archivo YAML/JSON existente:

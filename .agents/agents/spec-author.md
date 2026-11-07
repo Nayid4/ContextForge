@@ -52,7 +52,7 @@ Estructura obligatoria:
 - **Prioridad**: {priority}
 - **Estado**: spec_ready
 - **Rama Git**: {type}/INT-{NNN}/{name} (≤80 caracteres)
-- **Persistencia**: 100% JSON (Cero SQL)
+- **Persistencia Dual**: SQLite Relacional (`project-docs/data/harness.db`) + Espejo Markdown/JSON (`.md` / `feature_list.json`)
 
 ## 1. Historia de Usuario (Scrum User Story)
 > **COMO** <rol del usuario / desarrollador / QA>,  
@@ -114,9 +114,14 @@ Checklist estructurado en **Subtareas Jira DEV y QA**:
 - [ ] TC-04 — Verificación en project-docs/verify.sh y generación de evidence.md: ... Cubre: R1.
 ```
 
-### 4. Actualiza `project-docs/feature_list.json`
+### 4. Actualiza `project-docs/feature_list.json` y el Modelo Plane SQLite + Markdown
 
-Agrega o actualiza la tarea con `user_story`, `definition_of_ready`, `definition_of_done`, `subtasks` (`DEV` y `QA`) y cambia su estado a `"spec_ready"`.
+Agrega o actualiza la tarea con `user_story`, `definition_of_ready`, `definition_of_done`, `subtasks` (`DEV` y `QA`), cambia su estado a `"spec_ready"`, y sincroniza los artefactos generados en `harness.db` (`issues`, `pages`, `page_versions`, `ai_runs`):
+```bash
+node project-docs/cli.js issue update INT-{NNN} --state spec_ready --role spec-author
+node project-docs/cli.js ai log --skill generate-spec --role spec-author --issue INT-{NNN} --type SPEC_GENERATION --summary "Generacion de requirements.md, design.md y tasks.md para INT-{NNN}" --artifacts "project-docs/specs/{NNN}_{name}/requirements.md,project-docs/specs/{NNN}_{name}/design.md,project-docs/specs/{NNN}_{name}/tasks.md"
+node project-docs/sync-data.js
+```
 
 ---
 

@@ -52,4 +52,8 @@ Resumir al usuario:
 - **Fuente intocable:** `.opencode/skills/` es siempre el origen; esta skill nunca escribe en él.
 - **Destinos permitidos:** solo escribe en `.github/skills/` y `.agents/skills/`.
 - **Sin borrados:** las skills de los espejos que no existen en la fuente se reportan, nunca se eliminan.
-- **Verificación final:** confirmar con un diff que `.opencode/skills/`, `.github/skills/` y `.agents/skills/` quedaron sincronizados.
+- **Verificación final y Registro en SQLite:** confirmar con un diff que `.opencode/skills/`, `.github/skills/` y `.agents/skills/` quedaron sincronizados, y registrar la ejecución en `harness.db`:
+  ```bash
+  node project-docs/cli.js ai log --skill sync-skills --role leader --type SKILL_TRIPLE_SYNC --summary "Sincronizacion triple de skills (.opencode -> .github & .agents)"
+  node project-docs/sync-data.js
+  ```

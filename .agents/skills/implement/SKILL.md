@@ -8,7 +8,7 @@ description: >-
 
 # `/implement` — Implementar las tasks de la tarea activa
 
-Ejecuta la Fase 4 (Implementación) para la feature o bugfix activa siguiendo la base de conocimiento soberana `project-docs/knowledge/` y la especificación en `project-docs/specs/{NNN}_{name}/`.
+Ejecuta la Fase 4 (Implementación) para la feature o bugfix activa siguiendo la base de conocimiento soberana `project-docs/knowledge/` y la especificación en `project-docs/specs/{NNN}_{name}/`, enviando todo avance y evidencia al modelo relacional Plane (`harness.db` + `.md`).
 
 ---
 
@@ -23,7 +23,7 @@ Ejecuta la Fase 4 (Implementación) para la feature o bugfix activa siguiendo la
 
 ## Procedimiento
 
-1. **Asegura `status: "in_progress"`** en `project-docs/feature_list.json` y en `project-docs/progres/current.json`.
+1. **Asegura `status: "in_progress"`** en `project-docs/feature_list.json`, `project-docs/progres/current.json` y SQLite (`node project-docs/cli.js issue update INT-{NNN} --state in_progress --role implementer`).
 2. **Delega o ejecuta el rol `implementer`**:
    - Si estás en el agente `leader`, lanza el subagente `implementer` mediante `invoke_subagent`:
      - `TypeName`: `"implementer"`
@@ -36,9 +36,13 @@ Ejecuta la Fase 4 (Implementación) para la feature o bugfix activa siguiendo la
      - Escribe el código y los tests correspondientes.
      - Tras cada bloque de cambios, corre los comandos de compilación y pruebas definidos en `project-docs/project-spec.yaml`.
      - Marca `[x]` la task completada en `project-docs/specs/{NNN}_{name}/tasks.md` y en `project-docs/progres/current.json`.
-3. **Documenta la trazabilidad `R<n> ↔ Tests` en `project-docs/progres/impl_{name}.md`**:
+3. **Documenta la trazabilidad `R<n> <-> Tests` en `project-docs/progres/impl_{name}.md`**:
    - Incluye la tabla que mapea cada `R<n>` de `requirements.md` con el test concreto que lo verifica.
-4. **Verificación previa a revisión**:
-   - Build limpio (0 errores, 0 warnings bloqueantes).
-   - 100% de tests en verde.
-   - Sincronización del tablero: `node project-docs/sync-data.js`.
+4. **Verificación y Envío al Modelo Plane SQLite + Markdown**:
+   - Build limpio (0 errores, 0 warnings bloqueantes) y 100% de tests en verde.
+   - Registra la evidencia de trazabilidad y la ejecución de la skill en `harness.db`:
+     ```bash
+     node project-docs/cli.js issue evidence INT-{NNN} --type report --title "Trazabilidad R-to-Tests (impl_{name}.md)" --file "project-docs/progres/impl_{name}.md" --skill implement
+     node project-docs/cli.js ai log --skill implement --role implementer --issue INT-{NNN} --type CODE_IMPLEMENTATION --summary "Ejecucion de tasks.md, codigo de produccion y trazabilidad R-to-Tests" --artifacts "project-docs/progres/impl_{name}.md"
+     node project-docs/sync-data.js
+     ```

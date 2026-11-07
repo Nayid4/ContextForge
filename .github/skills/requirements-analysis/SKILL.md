@@ -145,11 +145,16 @@ Para cada feature, identificar:
 
 > **REGLA:** Una feature solo puede comenzarse si TODAS sus dependencias tienen status `done`.
 
-### Paso 8: Generar JSON
-1. Actualizar `feature_list.json` manteniendo estructura completa
+### Paso 8: Generar JSON y Enviar al Modelo de Datos Plane (SQLite + Markdown)
+1. Actualizar `project-docs/feature_list.json` manteniendo estructura completa
 2. Validar JSON válido
 3. Mantener reglas del proyecto
-4. Confirmar con usuario antes de guardar
+4. Sincronizar las nuevas features, historias de usuario, criterios EARS, subtareas y relaciones de dependencia (`issue_relations`, `cycle_issues`, `module_issues`, `issue_labels`) hacia `project-docs/data/harness.db` y registrar la ejecución de la skill:
+   ```bash
+   node project-docs/cli.js sync
+   node project-docs/cli.js ai log --skill requirements-analysis --role spec-author --type REQUIREMENTS_ELICITATION --summary "Analisis de requerimientos, historias de usuario y grafo de dependencias en feature_list.json" --artifacts "project-docs/feature_list.json"
+   node project-docs/sync-data.js
+   ```
 
 ## Formato de Feature
 

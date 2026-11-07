@@ -12,6 +12,7 @@ export { AgentCard } from './components/AgentCard.js';
 export { AgentList } from './components/AgentList.js';
 export { SkillSyncStatus } from './components/SkillSyncStatus.js';
 export { HarnessOverview } from './components/HarnessOverview.js';
+export { AiEngineMonitor } from './components/AiEngineMonitor.js';
 
 // Master Page
 import { HarnessPage } from './pages/HarnessPage.js';

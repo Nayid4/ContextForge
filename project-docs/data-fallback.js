@@ -914,7 +914,7 @@ window.__FALLBACK_DATA__ = {
       "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
       "description": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
       "module": "dashboard-visualizer",
-      "priority": "P0",
+      "priority": "URGENT",
       "weight": 100,
       "branch": "feature/INT-012/plane_style_sqlite_project_management",
       "spec_folder": "project-docs/specs/012_plane_style_sqlite_project_management",
@@ -942,43 +942,14 @@ window.__FALLBACK_DATA__ = {
           "type": "development",
           "title": "Motor SQLite relacional, API REST en serve.js y vistas completas estilo Plane",
           "assignee": "implementer",
-          "status": "done",
-          "tasks": [
-            "Crear modulo de base de datos SQLite project-docs/src/core/db.js con node:sqlite nativo",
-            "Implementar motor de sincronizacion bidireccional project-docs/src/core/sqlite-sync.js",
-            "Agregar endpoints REST en serve.js para consultas y mutaciones de Plane con auto-sync a disco",
-            "Desarrollar componentes PlaneLayout, IssueListView, IssueBoardView, IssueCalendarView, IssueSpreadsheetView",
-            "Desarrollar vistas CyclesView, ModulesView, PlanePagesView e IssueDetailModal"
-          ]
+          "status": "done"
         },
         {
           "id": "INT-012-QA",
           "type": "qa",
           "title": "Pruebas unitarias de SQLite, sincronizacion de archivos y pruebas de aceptacion Playwright",
           "assignee": "reviewer",
-          "status": "done",
-          "test_cases": [
-            {
-              "id": "TC-01",
-              "title": "Verificar esquema SQLite, consultas de agrupacion y persistencia relacional",
-              "status": "passed"
-            },
-            {
-              "id": "TC-02",
-              "title": "Verificar sincronizacion bidireccional SQLite <-> Markdown (.md) y JSON",
-              "status": "passed"
-            },
-            {
-              "id": "TC-03",
-              "title": "Verificar navegacion e interaccion fluida entre vistas de Plane con Playwright",
-              "status": "passed"
-            },
-            {
-              "id": "TC-04",
-              "title": "Verificar Zero-Emoji Gate y pureza extrema de la raiz",
-              "status": "passed"
-            }
-          ]
+          "status": "done"
         }
       ],
       "evidence": {
@@ -1022,8 +993,13 @@ window.__FALLBACK_DATA__ = {
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/02-plane-issue-detail-modal.png",
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/03-plane-cycles-burndown.png",
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/04-plane-pages-docs.png"
-        ]
-      }
+        ],
+        "verification_report": "project-docs/specs/012_plane_sqlite_ai_platform/verification-report.md"
+      },
+      "dependencies": [
+        11,
+        11
+      ]
     },
     {
       "id": 13,
@@ -1364,6 +1340,87 @@ window.__FALLBACK_DATA__ = {
           "project-docs/specs/015_screaming_modules_plane_unification/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 16,
+      "type": "feature",
+      "name": "plane_data_model_ai_tracking",
+      "title": "Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+      "description": "Implementacion integral del modelo de datos relacional de Makeplane (Plane) y su subsistema de Inteligencia Artificial en SQLite (project-docs/data/harness.db con 26 tablas: workspaces, users con is_bot=1, workspace_members, api_tokens, projects, states, labels, estimates, estimate_points, issue_types, cycles, cycle_issues, modules, module_issues, issues, subtasks, issue_assignees, issue_labels, issue_relations, issue_activities, issue_comments, issue_evidences, pages, page_versions, issue_views, ai_configs, ai_runs) sincronizado bidireccionalmente con archivos Markdown (knowledge/ai-runs-log.md, specs/, feature_list.json). Ampliacion de CLI, API REST, vistas Screaming (IssueDetailModal, AiEngineMonitor en HarnessPage) y homologacion de las 21 skills SDD para enviar toda informacion, evidencia y reporte al proyecto.",
+      "module": "harness-core",
+      "priority": "P0",
+      "weight": 100,
+      "dependencies": [
+        12,
+        14,
+        15
+      ],
+      "branch": "feature/INT-016/plane_data_model_ai_tracking",
+      "spec_folder": "project-docs/specs/016_plane_data_model_ai_tracking",
+      "status": "done",
+      "acceptance": [
+        "26 tablas relacionales del modelo Plane e IA operativas en project-docs/data/harness.db con integridad referencial y migracion automatica.",
+        "Sincronizacion bidireccional de ejecuciones IA (ai_runs) hacia project-docs/knowledge/ai-runs-log.md y de evidencias/relaciones hacia feature_list.json.",
+        "CLI soberana (project-docs/cli.js) y API REST (project-docs/serve.js) soportando registro de ai log, issue evidence, issue comment, issue relate, page upsert y user list.",
+        "Visualizacion de etiquetas Plane, puntos Fibonacci, relaciones, evidencias QA, ai_configs, api_tokens bot y bitacora ai_runs en IssueDetailModal y HarnessPage.",
+        "21 skills SDD homologadas en .opencode/skills/, .github/skills/ y .agents/skills/ configuradas para enviar toda documentacion, evidencia y reporte al proyecto."
+      ],
+      "user_story": {
+        "as_a": "Arquitecto de Software, Desarrollador y Agente de IA",
+        "i_want": "el modelo de datos relacional completo de Plane (26 tablas) con trazabilidad IA en SQLite y Markdown conectado a todas las skills del arnes",
+        "so_that": "cualquier documento, especificacion, evidencia QA o reporte generado por una skill quede registrado y vinculado automaticamente en el proyecto"
+      },
+      "subtasks": [
+        {
+          "id": "INT-016-DEV",
+          "type": "development",
+          "title": "Implementacion de 26 tablas Plane + IA en SQLite, sincronizacion Markdown, CLI, API, UI y 21 Skills",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Expandir project-docs/src/core/db.js a 26 tablas relacionales de Plane e IA",
+            "Expandir project-docs/src/core/sqlite-sync.js con funciones de registro de skills, evidencias, comentarios, relaciones y ai-runs-log.md",
+            "Ampliar project-docs/cli.js y project-docs/serve.js con comandos y endpoints de ingesta IA y QA",
+            "Actualizar IssueDetailModal.js, AiEngineMonitor.js y HarnessPage.js",
+            "Actualizar y sincronizar las 21 skills en .opencode/skills/, .github/skills/ y .agents/skills/"
+          ]
+        },
+        {
+          "id": "INT-016-QA",
+          "type": "qa",
+          "title": "Verificacion de las 26 tablas SQLite, CLI IA, paridad triple de 21 skills y 9 niveles de verify.sh",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar creacion e integridad de las 26 tablas relacionales en sqlite-db.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar comandos CLI ai list, ai log, user list, issue evidence e issue list en cli.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Validar paridad triple de las 21 skills y ejecucion de verify.sh en 9 niveles",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T19:35:00.000Z",
+        "dev_summary": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+        "verification_report": "project-docs/specs/016_plane_data_model_ai_tracking/verification-report.md",
+        "qa_screenshots": [
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/016_plane_data_model_ai_tracking/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 },
@@ -1512,6 +1569,39 @@ window.__FALLBACK_DATA__ = {
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture pura de 9 dominios; helper declarativo renderList; unificacion en diseno Plane eliminando el layout legacy; CLI soberana node project-docs/cli.js para IA y terminal; y persistencia relacional SQLite con espejo continuo en Markdown."
+    },
+    {
+      "id": 14,
+      "type": "feature",
+      "name": "screaming_modules_core_shared",
+      "title": "Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
+      "branch": "feature/INT-014/screaming_modules_core_shared",
+      "completed_at": "2026-11-07T18:35:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Implementacion modular integral bajo Screaming Architecture en src/modules/, src/core/ y src/shared/ con Store Pub/Sub y persistencia dual."
+    },
+    {
+      "id": 15,
+      "type": "feature",
+      "name": "screaming_modules_plane_unification",
+      "title": "Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
+      "branch": "feature/INT-015/screaming_modules_plane_unification",
+      "completed_at": "2026-11-07T18:58:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Eliminacion definitiva de src/features/ y consolidacion de los 10 dominios canonicos en src/modules/ con diseno Plane."
+    },
+    {
+      "id": 16,
+      "type": "feature",
+      "name": "plane_data_model_ai_tracking",
+      "title": "Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+      "branch": "feature/INT-016/plane_data_model_ai_tracking",
+      "completed_at": "2026-11-07T19:35:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Implementacion de las 26 tablas relacionales de Plane e IA en SQLite (harness.db), sincronizacion bidireccional con knowledge/ai-runs-log.md, ampliacion de CLI/API/UI y conexion de las 21 skills SDD para enviar evidencias y reportes al proyecto."
     }
   ]
 },
@@ -1887,7 +1977,7 @@ window.__FALLBACK_DATA__ = {
       "level": "Persistencia",
       "title": "Diagrama Entidad-Relación (ERD)",
       "description": "erDiagram",
-      "mermaid": "erDiagram\r\n  PROJECT ||--o{ FEATURE : \"contiene\"\r\n  PROJECT ||--|| PROJECT_SPEC : \"especificado por\"\r\n  FEATURE ||--|{ ACCEPTANCE_CRITERIA : \"valida con\"\r\n  FEATURE ||--o{ TASK : \"descompone en\"\r\n  FEATURE ||--o{ BUSINESS_RULE : \"satisface\"\r\n  KNOWLEDGE_INDEX ||--o{ DOCUMENT : \"cataloga\"\r\n  DOCUMENT ||--o{ SHELF : \"pertenece a\"\r\n  DOCUMENT ||--o{ BUSINESS_RULE : \"documenta\"\r\n\r\n  PROJECT {\r\n    string name PK\r\n    string description\r\n    string version\r\n    string tech_stack\r\n    string runtime\r\n  }\r\n\r\n  FEATURE {\r\n    int id PK\r\n    string type\r\n    string name\r\n    string title\r\n    string module\r\n    string priority\r\n    string branch\r\n    string status\r\n  }\r\n\r\n  TASK {\r\n    string id PK\r\n    string title\r\n    bool done\r\n  }\r\n\r\n  BUSINESS_RULE {\r\n    string id PK\r\n    string module\r\n    string severity\r\n    string title\r\n    string description\r\n  }\r\n\r\n  DOCUMENT {\r\n    string key PK\r\n    string filename\r\n    string title\r\n    string shelf\r\n    int readingTime\r\n    int wordCount\r\n    int ruleCount\r\n  }"
+      "mermaid": "erDiagram\n  WORKSPACE ||--o{ WORKSPACE_MEMBER : \"agrupa\"\n  USER ||--o{ WORKSPACE_MEMBER : \"pertenece\"\n  USER ||--o{ API_TOKEN : \"autentica (is_bot=1)\"\n  WORKSPACE ||--o{ PROJECT : \"contiene\"\n  WORKSPACE ||--o{ AI_CONFIG : \"configura LLM\"\n  PROJECT ||--o{ STATE : \"define flujo\"\n  PROJECT ||--o{ LABEL : \"clasifica\"\n  PROJECT ||--o{ ESTIMATE : \"mide\"\n  ESTIMATE ||--o{ ESTIMATE_POINT : \"escala Fibonacci\"\n  PROJECT ||--o{ ISSUE_TYPE : \"tipifica\"\n  PROJECT ||--o{ CYCLE : \"planifica sprints\"\n  PROJECT ||--o{ MODULE : \"delimita dominios\"\n  PROJECT ||--o{ ISSUE_VIEW : \"guarda filtros\"\n  PROJECT ||--o{ ISSUE : \"gestiona\"\n  PROJECT ||--o{ PAGE : \"documenta\"\n  ISSUE ||--o{ SUBTASK : \"desglosa DEV/QA\"\n  ISSUE ||--o{ ISSUE_ASSIGNEE : \"asigna bot/humano\"\n  ISSUE ||--o{ ISSUE_LABEL : \"etiqueta\"\n  ISSUE ||--o{ ISSUE_RELATION : \"relaciona / bloquea\"\n  ISSUE ||--o{ ISSUE_ACTIVITY : \"audita mutaciones\"\n  ISSUE ||--o{ ISSUE_COMMENT : \"comenta skills\"\n  ISSUE ||--o{ ISSUE_EVIDENCE : \"vincula QA y capturas\"\n  ISSUE ||--o{ AI_RUN : \"registra ejecucion IA\"\n  CYCLE ||--o{ CYCLE_ISSUE : \"compromete\"\n  MODULE ||--o{ MODULE_ISSUE : \"encapsula\"\n  PAGE ||--o{ PAGE_VERSION : \"versiona snapshots\"\n\n  WORKSPACE {\n    string id PK\n    string name\n    string slug\n    string owner_id\n    string organization_size\n    string timezone\n  }\n\n  USER {\n    string id PK\n    string username\n    string display_name\n    string role\n    int is_bot\n    string bot_type\n  }\n\n  ISSUE {\n    string id PK\n    string project_id FK\n    int sequence_id\n    string title\n    string state_id FK\n    string priority\n    string type_id FK\n    int point\n    string assignee_role\n    string cycle_id FK\n    string module_id FK\n    string branch\n  }\n\n  AI_RUN {\n    string id PK\n    string issue_id FK\n    string page_id FK\n    string agent_role\n    string skill_name\n    string task_type\n    string provider\n    string model\n    string prompt_summary\n    string status\n  }\n\n  ISSUE_EVIDENCE {\n    string id PK\n    string issue_id FK\n    string subtask_id\n    string type\n    string title\n    string file_path\n    string created_by_skill\n  }\n\n  PAGE {\n    string id PK\n    string project_id FK\n    string file_path\n    string title\n    string shelf\n    int word_count\n    int reading_time_min\n  }"
     }
   ],
   "business_rules": [
@@ -2023,10 +2113,11 @@ window.__FALLBACK_DATA__ = {
     "03-capabilities-and-features.md": "---\r\nid: DOC-SYS-CAPABILITIES-FEATURES\r\ntitle: \"Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional (DeepWiki Pattern)\"\r\nmodule: \"global\"\r\nstatus: \"Publicado\"\r\nversion: \"4.2.0\"\r\nlast_updated: \"2026-11-07\"\r\ntags: [\"deepwiki\", \"capabilities\", \"features\", \"mindmap\", \"user-journeys\", \"functional-decomposition\", \"deep-linking\", \"scrum-subtasks\", \"qa-evidence\"]\r\n---\r\n\r\n# Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional\r\n\r\n> [!NOTE]\r\n> Este documento implementa el patrón de ingeniería inversa funcional de **DeepWiki / OpenDeepWiki**. Descompone el sistema en capacidades de alto nivel, features granulares, mapa mental de dependencias, flujos de usuario de extremo a extremo (*User Journeys*) y vínculos directos al código fuente (*Deep Source Linking*) para eliminar puntos ciegos y alucinaciones en agentes de IA.\r\n\r\n---\r\n\r\n## 1. Mapa Mental de Funcionalidades del Sistema (Mermaid Mindmap)\r\n\r\n```mermaid\r\nmindmap\r\n  root((AI Agentic SDD Harness))\r\n    Orquestación Multi-Agente\r\n      Control de Ramas INT-000 ≤80c\r\n      Redactor de Specs spec-author\r\n      Puerta Humana ask_question\r\n      Implementador TDD/SDD implementer\r\n      Auditor Independiente reviewer\r\n      Subtareas Scrum DEV/QA\r\n      Captura de Evidencias Visuales\r\n      Puerta de Integración Merge/PR\r\n    Sincronización Triple\r\n      Fuente de Verdad .opencode\r\n      Espejo Copilot .github\r\n      Espejo Antigravity .agents\r\n      Auditoría de Paridad sync-skills\r\n    Base de Conocimiento Soberana\r\n      Descubrimiento Forense en 2 Fases\r\n      Atlas de Diagramas C4 y UML\r\n      Catálogo de Invariantes BR-*\r\n      Diccionario de Datos y ERD\r\n      5 Bounded Contexts Especializados\r\n      Megadocumento MASTER-*.md\r\n      Desglose Funcional DeepWiki\r\n    Tablero Visual project-docs\r\n      Navegación en 3 Niveles\r\n      Lector Editorial 780px + TOC\r\n      Editor Dual ContextForge\r\n      Buscador Omnibox Ctrl+K\r\n      Constelación 3D Three.js\r\n      Interoperabilidad Offline file:///\r\n    Aseguramiento de Calidad QA\r\n      Pipeline project-docs/verify.sh 9 Niveles\r\n      Pruebas Unitarias Nativas\r\n      Pruebas Caja Blanca Branch Coverage\r\n      Pruebas Caja Negra BVA\r\n      Pruebas de Sistema e Interoperabilidad\r\n      Pruebas de Carga y Rendimiento\r\n      Aceptación E2E Playwright con Chrome\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo Jerárquico de Capacidades y Features Granulares\r\n\r\n### Capacidad 1: Orquestación Multi-Agente SDD (`agent-orchestrator`)\r\n\r\n#### Feature 1.1: Control y Aislamiento Estricto de Ramas Git\r\n- **Propósito**: Garantizar que ninguna tarea contamine las ramas base (`main`, `master`, `dev`), aislando el trabajo en ramas efímeras rastreables.\r\n- **Entrada / Disparador**: Solicitud de nueva feature o inicio de ciclo `/sdd-workflow`.\r\n- **Precondiciones**: Estado de working tree limpio en la rama base.\r\n- **Invariante**: Longitud total del nombre de la rama $\\le 80$ caracteres. Prefijo obligatorio `{feature|bugfix}/INT-{numero}/{nombre_descriptivo}`.\r\n- **Ciclo de Ejecución**:\r\n  1. Valida que la rama base sea válida.\r\n  2. Calcula la longitud del nombre propuesto.\r\n  3. Ejecuta `git checkout -b {feature|bugfix}/INT-{numero}/{nombre}`.\r\n- **Salida / Artefacto**: Rama local activa en Git.\r\n- **Código Fuente**: [`.agents/rules/antigravity-harness.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/rules/antigravity-harness.md), [`.opencode/rules/branches.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/rules/branches.md).\r\n- **Pruebas Automatizadas**: [`tests/unit/branching-rules.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/branching-rules.test.js), [`tests/blackbox/bva-inputs.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/blackbox/bva-inputs.test.js).\r\n\r\n#### Feature 1.2: Redacción Formal de Especificaciones Técnicas (`spec-author`)\r\n- **Propósito**: Redactar el contrato técnico antes de escribir código, previniendo desviaciones funcionales y sobre-ingeniería.\r\n- **Entrada / Disparador**: Invocación de subagente `spec-author` o skill `/generate-spec`.\r\n- **Precondiciones**: Consulta obligatoria previa de `project-docs/knowledge/` para respetar la arquitectura soberana.\r\n- **Ciclo de Ejecución**:\r\n  1. Lee el item correspondiente en `project-docs/feature_list.json`.\r\n  2. Genera `project-docs/specs/{NNN}_{name}/requirements.md` siguiendo sintaxis EARS.\r\n  3. Genera `project-docs/specs/{NNN}_{name}/design.md` con decisiones ADRs y diagramas Mermaid.\r\n  4. Genera `project-docs/specs/{NNN}_{name}/tasks.md` con tareas secuenciales y técnica recomendada (TDD / SDD / FTD).\r\n  5. Marca el estado como `spec_ready` en `progress/current.json`.\r\n- **Salida / Artefacto**: Carpeta de especificación formal completa.\r\n- **Código Fuente**: [`.agents/agents/spec-author.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/spec-author.md), [`.agents/skills/generate-spec/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/generate-spec/SKILL.md).\r\n\r\n#### Feature 1.3: Puerta de Aprobación Humana Interactiva\r\n- **Propósito**: Asegurar la soberanía humana sobre el alcance y arquitectura antes de autorizar la codificación.\r\n- **Entrada / Disparador**: Finalización de la redacción del spec (`spec_ready`).\r\n- **Comportamiento**: La IA bloquea la ejecución y despliega el modal interactivo nativo `ask_question`.\r\n- **Opciones**:\r\n  - `(Recommended) Aprobar spec al 100% e iniciar implementación`\r\n  - `Solicitar correcciones o ajustes en el spec`\r\n  - `Rechazar spec`\r\n- **Invariante**: Queda prohibido escribir código de producción sin la opción de aprobación humana explícita.\r\n- **Código Fuente**: [`.agents/rules/antigravity-harness.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/rules/antigravity-harness.md).\r\n\r\n#### Feature 1.4: Implementación Guiada por Pruebas TDD/SDD (`implementer`)\r\n- **Propósito**: Escribir código de producción y pruebas automatizadas que satisfagan al 100% la especificación aprobada.\r\n- **Entrada / Disparador**: Aprobación humana del spec (`in_progress`).\r\n- **Ciclo de Ejecución**:\r\n  1. Si la técnica es TDD: escribe pruebas que fallen (rojo) $\\to$ implementa código mínimo (verde) $\\to$ refactoriza.\r\n  2. Si la técnica es SDD: implementa fases de diseño $\\to$ cubre con tests unitarios y de aceptación.\r\n  3. Ejecuta `project-docs/verify.sh` de forma iterativa hasta verde total.\r\n  4. Documenta la matriz de trazabilidad Requerimiento $\\leftrightarrow$ Tests en `progress/impl_{name}.md`.\r\n- **Salida / Artefacto**: Código productivo, suite de tests y bitácora de trazabilidad.\r\n- **Código Fuente**: [`.agents/agents/implementer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/implementer.md), [`.agents/skills/implement/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/implement/SKILL.md).\r\n\r\n#### Feature 1.5: Auditoría de Calidad Imparcial (`reviewer`)\r\n- **Propósito**: Validar de manera independiente que la implementación cumpla con el spec sin incurrir en conflictos de interés.\r\n- **Invariante**: El revisor **NO tiene herramientas para editar archivos ni código**.\r\n- **Ciclo de Ejecución**:\r\n  1. Audita el código generado contra los criterios de aceptación de `requirements.md`.\r\n  2. Verifica que ninguna regla `BR-*` haya sido alterada o vulnerada.\r\n  3. Comprueba el paso del 100% de las pruebas en `project-docs/verify.sh`.\r\n  4. Emite veredicto: APROBADO o RECHAZADO con lista de hallazgos.\r\n- **Código Fuente**: [`.agents/agents/reviewer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/reviewer.md), [`.agents/skills/review/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/review/SKILL.md).\r\n\r\n#### Feature 1.6: Gestión de Subtareas Scrum Jira DEV/QA y Captura de Evidencias Visuales\r\n- **Propósito**: Descomponer la User Story en subtareas formales de Jira (desarrollo `DEV` y aseguramiento de calidad `QA`), con trazabilidad a criterios de aceptación, DoD y captura automática de evidencias gráficas (screenshots headless) para auditoría.\r\n- **Entrada / Disparador**: Generación de spec (`generate-spec`) y ejecución de pruebas de aceptación (`npm run test:acceptance` o `node scripts/capture-evidence.js`).\r\n- **Precondiciones**: Existencia de `project-docs/specs/{NNN}_{name}/tasks.md` estructurado con subtareas `INT-{id}-DEV` e `INT-{id}-QA`.\r\n- **Invariante**: Ninguna feature puede cerrarse sin que ambas subtareas (`DEV` y `QA`) estén completadas y existan capturas de pantalla de evidencia en `project-docs/specs/{NNN}_{name}/evidence/`.\r\n- **Salida / Artefacto**: Modal interactivo en el tablero con badges DEV/QA, trazabilidad DoD y capturas PNG en `evidence/`.\r\n- **Código Fuente**: [`scripts/capture-evidence.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/scripts/capture-evidence.js), [`project-docs/src/shared/Modal.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/shared/Modal.js), [`project-docs/src/features/feature-list/FeatureTable.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/features/feature-list/FeatureTable.js).\r\n- **Pruebas Automatizadas**: [`tests/acceptance/scrum-evidence-capture.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/scrum-evidence-capture.spec.js).\r\n\r\n---\r\n\r\n### Capacidad 2: Motor de Sincronización Triple (`triple-sync-engine`)\r\n\r\n#### Feature 2.1: Gestión de Fuente de Verdad y Replicación\r\n- **Propósito**: Mantener paridad absoluta en las 18 skills entre las tres plataformas soportadas (opencode, GitHub Copilot y Google Antigravity).\r\n- **Fuente de Verdad**: `.opencode/skills/`\r\n- **Espejos Homologados**: `.github/skills/` y `.agents/skills/`.\r\n- **Mecanismo**: Skill `/sync-skills` audita y propaga diferencias sin alterar la fuente.\r\n- **Código Fuente**: [`.opencode/skills/sync-skills/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/sync-skills/SKILL.md).\r\n\r\n---\r\n\r\n### Capacidad 3: Base de Conocimiento Soberana (`knowledge-engine`)\r\n\r\n#### Feature 3.1: Protocolo de Descubrimiento Forense en 2 Fases\r\n- **Propósito**: Eliminar el desbordamiento de contexto (*context truncation*) en repositorios de gran escala.\r\n- **Fase 1 (Topología Global)**: Escaneo superficial de directorios, manifiestos de paquetes y configuraciones sin leer cuerpos completos de código.\r\n- **Fase 2 (Extracción Profunda)**: Análisis focalizado delimitado por cada Bounded Context.\r\n- **Salida**: Documentos globales 01, 02, 03, 04 y carpetas `modules/{modulo}/`.\r\n- **Código Fuente**: [`.opencode/skills/project-knowledge/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/project-knowledge/SKILL.md).\r\n\r\n#### Feature 3.2: Megadocumento Maestro Consolidado (`MASTER-PROJECT-KNOWLEDGE.md`)\r\n- **Propósito**: Proporcionar un dossier unificado en un solo archivo para inicializar LLMs sin sesgo ni necesidad de múltiples lecturas.\r\n- **Estructura**: Capítulos formales (Negocio IEEE 830, Arquitectura AS-IS, Modelado C4, Bounded Contexts con CRC, INVEST, ERD, Reglas `BR-*`, Servicios Externos y RTM).\r\n- **Código Fuente**: [`project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md).\r\n\r\n#### Feature 3.3: Desglose de 5 Artefactos Especializados por Bounded Context\r\n- **Propósito**: Documentar granularmente cada subdominio estratégico con 5 documentos formales:\r\n  1. `module-spec.md`: Alcance, lenguaje ubicuo y tarjetas CRC (Clase, Responsabilidades, Colaboradores).\r\n  2. `requirements-and-rules.md`: Matriz de requerimientos `RF-*`, invariantes `BR-*`, `HU-*` y `TI-*`.\r\n  3. `data-and-transactions.md`: Persistencia, entidades, concurrencia optimista/pesimista y bloqueos ACID.\r\n  4. `diagrams.md`: Suite de diagramas Mermaid dedicados (Contexto, Contenedor, Componentes, Secuencia, Estado y ERD).\r\n  5. `technical-debt-refactoring.md`: Deuda técnica, olores de código, brechas de pruebas y plan de mitigación.\r\n- **Código Fuente**: [`project-docs/knowledge/modules/`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/modules/).\r\n\r\n---\r\n\r\n### Capacidad 4: Tablero Visual y Lector Editorial (`dashboard-visualizer`)\r\n\r\n#### Feature 4.1: Navegación por Perspectivas en 3 Niveles\r\n- **Propósito**: Permitir que el usuario explore la documentación sin mezclar arbitrariamente información global con detalles de módulos.\r\n- **Tiers Disponibles**:\r\n  - **Tier 1 (Visión Global & Arquitectura)**: Documentos canónicos, modelo C4 destacado, resumen IEEE 830 y 6 estantes temáticos.\r\n  - **Tier 2 (Módulos & Bounded Contexts)**: Pestañas interactivas de módulos con sus 5 artefactos formales.\r\n  - **Tier 3 (Dossier Maestro Consolidado)**: Panel dedicado para `MASTER-PROJECT-KNOWLEDGE.md` con botones para leer, copiar y descargar.\r\n- **Código Fuente**: [`project-docs/src/features/knowledge-base/KnowledgeBase.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/features/knowledge-base/KnowledgeBase.js).\r\n\r\n#### Feature 4.2: Editor Dual ContextForge con Scroll Sincronizado\r\n- **Propósito**: Ofrecer edición técnica simultánea en Markdown y Bloques Visuales con previsualización en vivo.\r\n- **Características**: Scroll sincronizado proporcional bidireccional, renderizado de Mermaid y reordenamiento de bloques.\r\n- **Código Fuente**: [`project-docs/src/main.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/main.js).\r\n\r\n#### Feature 4.3: Interoperabilidad Offline (`file:///`) y Fallback Autocontenido\r\n- **Propósito**: Permitir que el tablero funcione abriendo `index.html` directamente en el navegador sin necesidad de servidor HTTP ni riesgo de errores de CORS.\r\n- **Mecanismo**: `data-fallback.js` inyecta `window.__FALLBACK_DATA__` con todos los metadatos y documentos Markdown.\r\n- **Código Fuente**: [`project-docs/data-fallback.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/data-fallback.js), [`project-docs/sync-data.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/sync-data.js).\r\n\r\n---\r\n\r\n### Capacidad 5: Suite Integral de Aseguramiento de Calidad (`testing-qa-suite`)\r\n\r\n#### Feature 5.1: Pipeline de Verificación Determinista en 9 Niveles (`project-docs/verify.sh`)\r\n- **Propósito**: Ejecutar un barrido exhaustivo de calidad en una sola instrucción.\r\n- **Niveles Validados**:\r\n  1. Compilación y bundling (`esbuild`).\r\n  2. Pruebas unitarias nativas (Node.js test runner).\r\n  3. Pruebas de aceptación smoke ATDD.\r\n  4. Pruebas de caja blanca (Branch Coverage).\r\n  5. Pruebas de caja negra (Análisis de Valores Límite BVA y resiliencia).\r\n  6. Pruebas de sistema e interoperabilidad offline.\r\n  7. Pruebas de carga y concurrencia.\r\n  8. Pruebas de aceptación E2E en navegador real con Playwright.\r\n  9. Sincronización y consistencia de datos offline.\r\n- **Código Fuente**: [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh).\r\n\r\n---\r\n\r\n## 3. Flujos de Usuario Extremo a Extremo (*User Journeys*)\r\n\r\n### Journey 1: Desarrollador realizando el Onboarding de un Proyecto Externo\r\n```mermaid\r\nsequenceDiagram\r\n  autonumber\r\n  actor Dev as \"Ingeniero Humano\"\r\n  participant AG as \"AI Harness Agent\"\r\n  participant Core as \"Pipeline de Skills\"\r\n  participant Dash as \"Tablero Visual\"\r\n\r\n  Dev->>AG: \"Adopta este proyecto y prepáralo con el arnés\"\r\n  AG->>Core: \"/technical-audit -> genera project-docs/project-spec.yaml\"\r\n  AG->>Core: \"/generate-verify -> genera project-docs/verify.sh\"\r\n  AG->>Core: \"/project-knowledge -> extrae C4, UML, ERD, BR-* y MASTER-*.md\"\r\n  AG->>Core: \"/requirements-analysis -> genera feature_list.json\"\r\n  AG->>Core: \"node project-docs/sync-data.js\"\r\n  AG->>Dash: \"Tablero listo en project-docs/index.html\"\r\n  AG-->>Dev: \"Proyecto auditado y blindado contra alucinaciones\"\r\n```\r\n\r\n### Journey 2: Ciclo de Vida Autónomo de una Feature (SDD)\r\n```mermaid\r\nsequenceDiagram\r\n  autonumber\r\n  actor Dev as \"Ingeniero Humano\"\r\n  participant Leader as \"Leader Agent\"\r\n  participant Spec as \"spec-author\"\r\n  participant Impl as \"implementer\"\r\n  participant Rev as \"reviewer\"\r\n\r\n  Dev->>Leader: \"/start-feature INT-005\"\r\n  Leader->>Leader: \"Crea rama feature/INT-005/{name} (≤80c)\"\r\n  Leader->>Spec: \"Redacta specs consultando project-docs/knowledge/\"\r\n  Spec-->>Leader: \"specs/005/ completado (spec_ready)\"\r\n  Leader->>Dev: \"⏸ ask_question: ¿Aprobar spec al 100%?\"\r\n  Dev-->>Leader: \"Aprobado (in_progress)\"\r\n  Leader->>Impl: \"Implementa código y tests (TDD/SDD)\"\r\n  Impl->>Impl: \"Ejecuta ./project-docs/verify.sh hasta 100% verde\"\r\n  Impl-->>Leader: \"Trazabilidad R<->Tests completada\"\r\n  Leader->>Rev: \"Audita sin editar código\"\r\n  Rev-->>Leader: \"Aprobado (0 hallazgos)\"\r\n  Leader->>Leader: \"/verify-spec cierra metadata y crea commit semántico\"\r\n  Leader->>Dev: \"⏸ ask_question: ¿Integrar a rama base master?\"\r\n  Dev-->>Leader: \"Sí, fusionar\"\r\n  Leader->>Leader: \"git merge fast-forward\"\r\n```\r\n\r\n### Journey 3: Auto-Mejora y Refactorización del Propio Arnés\r\n```mermaid\r\nsequenceDiagram\r\n  autonumber\r\n  actor Dev as \"Ingeniero Humano\"\r\n  participant Leader as \"Leader Agent\"\r\n  participant QA as \"Suite de Testing\"\r\n  participant Code as \"Código del Arnés\"\r\n\r\n  Dev->>Leader: \"Refactoriza el visor y agrega desglose DeepWiki\"\r\n  Leader->>QA: \"Ejecuta línea base (project-docs/verify.sh + Playwright)\"\r\n  QA-->>Leader: \"Línea base en verde\"\r\n  Leader->>Code: \"Aplica refactorización (cero emojis, 3 tiers, SVG icons)\"\r\n  Leader->>QA: \"Re-ejecuta project-docs/verify.sh multinivel\"\r\n  QA-->>Leader: \"Todos los niveles en verde\"\r\n  Leader->>Code: \"Commit semántico feat(knowledge): ...\"\r\n  Leader-->>Dev: \"Auto-mejora completada con 100% de tests passing\"\r\n```\r\n\r\n---\r\n\r\n## 4. Matriz de Trazabilidad Funcional y Deep Linking a Código Fuente\r\n\r\n| ID Capacidad | Feature | Componente Fuente | Suite de Pruebas Asociada |\r\n| :--- | :--- | :--- | :--- |\r\n| `CAP-ORCH-001` | Validación de Ramas Git (≤80c) | [`.agents/rules/antigravity-harness.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/rules/antigravity-harness.md) | [`tests/unit/branching-rules.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/branching-rules.test.js) |\r\n| `CAP-ORCH-002` | Puertas de Aprobación Humana | `ask_question` modal | [`tests/e2e/atdd-frontend.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/e2e/atdd-frontend.test.js) |\r\n| `CAP-ORCH-003` | Auditoría de Calidad Sin Edición | [`.agents/agents/reviewer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/reviewer.md) | Inspección de permisos de herramientas |\r\n| `CAP-ORCH-004` | Subtareas Scrum Jira DEV/QA & Evidencias | [`scripts/capture-evidence.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/scripts/capture-evidence.js) | [`tests/acceptance/scrum-evidence-capture.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/scrum-evidence-capture.spec.js) |\r\n| `CAP-SYNC-001` | Paridad de 18 Skills en 3 Espejos | [`.opencode/skills/sync-skills/`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/sync-skills/) | [`tests/system/offline-fallback.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/system/offline-fallback.test.js) |\r\n| `CAP-KNOW-001` | Descubrimiento Forense en 2 Fases | [`.opencode/skills/project-knowledge/`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/project-knowledge/) | [`tests/whitebox/sync-pipeline.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/whitebox/sync-pipeline.test.js) |\r\n| `CAP-KNOW-002` | Dossier Consolidado MASTER-*.md | [`project-docs/knowledge/MASTER-*.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md) | [`tests/unit/sync-data.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/sync-data.test.js) |\r\n| `CAP-DASH-001` | Lector y Editor Dual ContextForge | [`project-docs/src/main.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/main.js) | [`tests/acceptance/dual-editor.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/dual-editor.spec.js) |\r\n| `CAP-DASH-002` | Interoperabilidad Offline `file:///` | [`project-docs/data-fallback.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/data-fallback.js) | [`tests/system/offline-fallback.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/system/offline-fallback.test.js) |\r\n| `CAP-TEST-001` | Pipeline de Verificación `project-docs/verify.sh` | [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh) | Ejecución integral de las 9 fases |\r\n| `CAP-TEST-002` | Aceptación E2E en Navegador Real | [`tests/acceptance/*.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/) | `npx playwright test` (10 escenarios) |\r\n",
     "04-domain-ddd-and-crc.md": "---\r\nid: DOC-DDD-CRC\r\ntitle: \"Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC\"\r\nmodule: \"global\"\r\nstatus: \"Publicado\"\r\nversion: \"4.0.0\"\r\nlast_updated: \"2026-11-03\"\r\ntags: [\"ddd\", \"ubiquitous-language\", \"context-map\", \"crc-cards\", \"strategic-ddd\"]\r\n---\r\n\r\n# Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC\r\n\r\n> [!NOTE]\r\n> Especificación formal del diseño guiado por el dominio (DDD Estratégico y Táctico), mapa de contextos y catálogo de Tarjetas CRC (*Class-Responsibility-Collaborator*).\r\n\r\n---\r\n\r\n## 1. Clasificación de Subdominios (DDD Estratégico)\r\n\r\n1. **Core Domain (Dominio Central)**:\r\n   - **`agent-orchestrator`**: Orquestación del ciclo de vida SDD, ciclo de subagentes especializados, cumplimiento estricto de convenciones de branching y puertas humanas con `ask_question`.\r\n2. **Supporting Subdomains (Subdominios de Soporte)**:\r\n   - **`triple-sync-engine`**: Motor de sincronización triple y garantía de paridad entre OpenCode, Copilot y Antigravity.\r\n   - **`knowledge-engine`**: Motor de ingesta y preservación de contexto soberano Docs-as-Code anti-sesgo.\r\n   - **`dashboard-visualizer`**: Tablero interactivo, lector editorial, editor dual ContextForge y visualizador 3D.\r\n   - **`testing-qa-suite`**: Automatización del arnés de verificación en 8 niveles y runner de `project-docs/verify.sh`.\r\n3. **Generic Subdomains (Subdominios Genéricos)**:\r\n   - Control de versiones (Git), motor de renderizado Markdown y Three.js.\r\n\r\n---\r\n\r\n## 2. Diccionario de Lenguaje Ubicuo (Ubiquitous Language)\r\n\r\n| Término Ubicuo | Definición Funcional y Técnica | Equivalente en Código / Artefactos |\r\n|---|---|---|\r\n| **Harness (Arnés)** | Conjunto de reglas, scripts, skills y roles que guían y restringen a los agentes de IA. | `.agents/`, `.opencode/`, `.github/`, `project-docs/verify.sh` |\r\n| **Spec-Driven Development (SDD)** | Metodología donde ninguna línea de código se escribe antes de aprobar formalmente su spec. | `project-docs/specs/{NNN}_{name}/`, `generate-spec` |\r\n| **Human Gate (Puerta Humana)** | Pausa obligatoria del flujo que bloquea la ejecución del agente hasta confirmación del humano. | Herramienta nativa `ask_question` |\r\n| **Rama INT-*** | Rama de trabajo dedicada que cumple `{feature\\|bugfix}/INT-{numero}/{nombre}` $\\le 80$ caracteres. | Convención en `AGENTS.md` y `branches.md` |\r\n| **Docs-as-Code** | Práctica de gestionar la documentación en Markdown versionado junto al código fuente. | `project-docs/knowledge/**` |\r\n| **Triple Sincronización** | Replicación unidireccional obligatoria desde `.opencode/` hacia Copilot y Antigravity. | `sync-skills` y `skills-sync.md` |\r\n| **Fallback Data** | Objeto embebido en JS que permite abrir el tablero vía `file:///` sin servidores ni CORS. | `project-docs/data-fallback.js` |\r\n\r\n---\r\n\r\n## 3. Catálogo Maestro de Tarjetas CRC (Class-Responsibility-Collaborator)\r\n\r\n### Tarjeta CRC 1: `LeaderAgent`\r\n- **Estereotipo DDD**: `<<AgentOrchestrator>>`\r\n- **Responsabilidades**:\r\n  1. Validar entorno de trabajo y rama base (`main`, `master`, `dev`).\r\n  2. Crear la rama de trabajo `{feature|bugfix}/INT-{numero}/{nombre_rama}` ($\\le 80$ caracteres).\r\n  3. Delegar tareas secuenciales en subagentes (`spec-author`, `implementer`, `reviewer`).\r\n  4. Detener el flujo y solicitar aprobación humana mediante `ask_question`.\r\n- **Colaboradores**: `GitCLI`, `SpecAuthorAgent`, `ImplementerAgent`, `ReviewerAgent`, `AskQuestionModal`.\r\n\r\n### Tarjeta CRC 2: `SpecAuthorAgent`\r\n- **Estereotipo DDD**: `<<RequirementsEngineer>>`\r\n- **Responsabilidades**:\r\n  1. Redactar especificaciones técnicas (`requirements.md`, `design.md`, `tasks.md`).\r\n  2. Aplicar sintaxis formal de requerimientos EARS e IEEE 830.\r\n  3. Recomendar técnica de implementación (TDD, SDD o FTD).\r\n  4. Marcar la tarea como `spec_ready` sin tocar código fuente ni tests.\r\n- **Colaboradores**: `KnowledgeIndex`, `FeatureList`, `LeaderAgent`.\r\n\r\n### Tarjeta CRC 3: `ImplementerAgent`\r\n- **Estereotipo DDD**: `<<SoftwareDeveloper>>`\r\n- **Responsabilidades**:\r\n  1. Implementar código de producción siguiendo la técnica aprobada.\r\n  2. Escribir tests unitarios y de integración según la convención del stack.\r\n  3. Ejecutar verificaciones automatizadas (`npm test`, `project-docs/verify.sh`).\r\n  4. Registrar la trazabilidad bidireccional $R \\leftrightarrow Tests$ en `progress/impl_{name}.md`.\r\n- **Colaboradores**: `ProjectSpec`, `TestRunner`, `LeaderAgent`, `ReviewerAgent`.\r\n\r\n### Tarjeta CRC 4: `ReviewerAgent`\r\n- **Estereotipo DDD**: `<<QualityAuditor>>`\r\n- **Responsabilidades**:\r\n  1. Auditar de forma imparcial el cumplimiento del 100% de los criterios del spec.\r\n  2. Verificar cobertura de código, compilación y ausencia de errores de arquitectura.\r\n  3. Emitir reporte de aprobación o hallazgos sin editar código bajo ninguna circunstancia.\r\n- **Colaboradores**: `ProjectSpec`, `TasksList`, `LeaderAgent`.\r\n\r\n### Tarjeta CRC 5: `KnowledgeEngine`\r\n- **Estereotipo DDD**: `<<KnowledgeRepository>>`\r\n- **Responsabilidades**:\r\n  1. Escanear el código fuente y extraer modelos C4, UML, ERD y reglas `BR-*`.\r\n  2. Generar y mantener la base de conocimiento en `project-docs/knowledge/`.\r\n  3. Compilar el archivo maestro unificado `MASTER-PROJECT-KNOWLEDGE.md`.\r\n  4. Actualizar el grafo de relaciones en `knowledge-index.json`.\r\n- **Colaboradores**: `SyncDataScript`, `DashboardStore`, `MarkdownParser`.\r\n",
     "adr-catalog.md": "# Catálogo de Decisiones de Arquitectura (ADR Catalog)\r\n\r\n> [!NOTE]\r\n> Registro canónico de Decisiones de Arquitectura (ADR) según el formato Michael Nygard. Documenta el qué, el por qué y las consecuencias técnicas asumidas para evitar refactorizaciones regresivas por parte de agentes de IA.\r\n\r\n---\r\n\r\n## ADR-001: Desacoplamiento Universal de Subagentes (Multi-Stack Agnostic)\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: Anteriormente los subagentes `implementer` y `reviewer` ejecutaban comandos fijos de `.NET` (`dotnet build /warnaserror`), fallando en repositorios políglotas o basados en Node.js, Python o Go.\r\n- **Decisión**: Los subagentes inspeccionan dinámicamente el bloque `checks` de `project-docs/project-spec.yaml` para obtener los comandos específicos de compilación y pruebas del proyecto objetivo.\r\n- **Consecuencias**: El arnés opera de manera transparente sobre cualquier stack tecnológico preservando la misma disciplina SDD.\r\n\r\n---\r\n\r\n## ADR-002: Sincronización Triple de Skills con Fuente de Verdad Única\r\n- **Fecha**: 2026-11-01\r\n- **Estado**: Aceptado\r\n- **Contexto**: El desarrollo asistido por IA ocurre a menudo en múltiples plataformas (Google Antigravity, OpenCode, GitHub Copilot). Mantener skills dispersas producía drift funcional.\r\n- **Decisión**: Establecer `.opencode/skills/` como la única fuente canónica y generar espejos automáticos en `.github/skills/` y `.agents/skills/` mediante la skill `/sync-skills`.\r\n- **Consecuencias**: Paridad total de capacidades en las tres herramientas sin duplicación manual.\r\n\r\n---\r\n\r\n## ADR-003: Pruebas Automatizadas Nativas con Node.js Test Runner\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: El arnés requería pruebas automatizadas para sus serializadores y sincronizadores, pero añadir frameworks pesados como Jest o Mocha introducía sobrecarga de instalación y dependencias vulnerables.\r\n- **Decisión**: Utilizar el ejecutor nativo `node --test` integrado en Node.js v18+.\r\n- **Consecuencias**: Tiempos de ejecución inferiores a 200ms con cero dependencias externas en tiempo de ejecución.\r\n\r\n---\r\n\r\n## ADR-004: Arquitectura Screaming & Tailwind CSS v4 en el Tablero Visual\r\n- **Fecha**: 2026-11-01\r\n- **Estado**: Aceptado\r\n- **Contexto**: La interfaz de seguimiento en `project-docs/` necesitaba ser modular, mantenible y liviana sin depender de frameworks de compilación SPA como React o Angular.\r\n- **Decisión**: Organizar el código bajo Screaming Architecture (`src/features/` por dominio) utilizando Vanilla JS moderno (ES Modules) y Tailwind CSS v4 en el navegador (`@tailwindcss/browser@4`).\r\n- **Consecuencias**: Modularidad limpia, código ligero y soporte nativo para temas claro/oscuro.\r\n\r\n---\r\n\r\n## ADR-005: Editor Dual ContextForge con Scroll Sincronizado Proporcional\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: Los desarrolladores y arquitectos requerían tanto la velocidad del editor de texto Markdown como la comodidad estructurada de bloques visuales para manipular requerimientos y diagramas.\r\n- **Decisión**: Implementar un conmutador de modo dual (`Modo Markdown` / `Modo Bloques`) con serialización bidireccional instantánea y sincronización de scroll proporcional basada en el ratio de desplazamiento con flags de exclusión mutua.\r\n- **Consecuencias**: Edición fluida sin pérdida de formato ni bloqueos por loops de eventos.\r\n\r\n---\r\n\r\n## ADR-006: Constelación 3D en Jerarquía Piramidal Three.js\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: La representación en grafo 3D anterior colocaba los nodos en un único plano caótico, provocando colisión de etiquetas e imposibilidad de comprender la jerarquía del sistema.\r\n- **Decisión**: Distribuir los nodos en 4 niveles arquitectónicos verticales ($Y=+165$ Ápice, $Y=+55$ Core, $Y=-55$ Features, $Y=-165$ Base) con distribución radial armónica y curvas cuadráticas de Bezier.\r\n- **Consecuencias**: Comprensión visual inmediata de la criticidad y dependencias del sistema.\r\n\r\n---\r\n\r\n## ADR-007: Compatibilidad Offline Total (Zero-Server Fallback)\r\n- **Fecha**: 2026-11-01\r\n- **Estado**: Aceptado\r\n- **Contexto**: En entornos restringidos o sin conexión a internet, los navegadores bloquean peticiones `fetch()` locales bajo el protocolo `file:///` por políticas de CORS.\r\n- **Decisión**: Generar automáticamente `project-docs/data-fallback.js` antes de cada compilación para embeber los datos en `window.__FALLBACK_DATA__`.\r\n- **Consecuencias**: El tablero funciona al 100% abriendo directamente `index.html` con doble clic.\r\n",
+    "ai-runs-log.md": "# Registro Soberano de Ejecuciones IA y Skills SDD (Plane AI Audit Log)\n\nDocumento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y reporte emitido por las skills y subagentes del arnes.\n\n| ID Ejecucion | Fecha | Rol Agente | Skill Invocada | Tarea / Pagina | Tipo | Estado | Resumen |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| `airun-INT-016-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-016 |\n| `airun-INT-016-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-016` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD |\n| `airun-INT-015-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-015` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-015 |\n| `airun-INT-015-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-015` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane |\n| `airun-INT-014-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-014` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-014 |\n| `airun-INT-014-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-014` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence |\n| `airun-INT-013-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-013` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-013 |\n| `airun-INT-013-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-013` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana |\n| `airun-INT-012-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-012` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-012 |\n| `airun-INT-012-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-012` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-012: Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown |\n| `airun-INT-011-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-011` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-011 |\n| `airun-INT-011-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-011` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-011: Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/ |\n| `airun-INT-010-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-010` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-010 |\n| `airun-INT-010-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-010` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-010: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés |\n| `airun-INT-009-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-009` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-009 |\n| `airun-INT-009-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-009` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-009: Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON |\n| `airun-INT-008-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-008` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-008 |\n| `airun-INT-008-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-008` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright |\n| `airun-INT-007-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-007` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-007 |\n| `airun-INT-007-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-007` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés |\n| `airun-INT-006-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-006` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-006 |\n| `airun-INT-006-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-006` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado |\n| `airun-INT-005-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-005` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-005 |\n| `airun-INT-005-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-005` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js |\n| `airun-INT-004-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-004` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-004 |\n| `airun-INT-004-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-004` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-004: Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis |\n| `airun-INT-003-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-003` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-003 |\n| `airun-INT-003-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-003` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-003: Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento |\n| `airun-INT-002-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-002` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-002 |\n| `airun-INT-002-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-002` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-002: Motor de Sincronización Triple de Skills |\n| `airun-INT-001-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-001` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-001 |\n| `airun-INT-001-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-001` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-001: Refactorización Integral y Desacoplamiento Agnóstico del Arnés |\n| `airun-1794080183826-5kpr` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD |\n\n## Detalle de Artefactos y Reportes Generados por IA\n\n### [airun-INT-016-verify] /verify-spec (reviewer) -> INT-016\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-016\n- **Resultado / Hallazgos:** Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.\n- **Artefactos Sincronizados:** `project-docs/specs/016_plane_data_model_ai_tracking/verification-report.md`\n\n### [airun-INT-016-spec] /generate-spec (spec-author) -> INT-016\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/016_plane_data_model_ai_tracking` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/016_plane_data_model_ai_tracking/requirements.md`, `project-docs/specs/016_plane_data_model_ai_tracking/design.md`, `project-docs/specs/016_plane_data_model_ai_tracking/tasks.md`\n\n### [airun-INT-015-verify] /verify-spec (reviewer) -> INT-015\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-015\n- **Resultado / Hallazgos:** Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.\n- **Artefactos Sincronizados:** `project-docs/specs/015_screaming_modules_plane_unification/verification-report.md`\n\n### [airun-INT-015-spec] /generate-spec (spec-author) -> INT-015\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/015_screaming_modules_plane_unification` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/015_screaming_modules_plane_unification/requirements.md`, `project-docs/specs/015_screaming_modules_plane_unification/design.md`, `project-docs/specs/015_screaming_modules_plane_unification/tasks.md`\n\n### [airun-INT-014-verify] /verify-spec (reviewer) -> INT-014\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-014\n- **Resultado / Hallazgos:** Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.\n- **Artefactos Sincronizados:** `project-docs/specs/014_screaming_modules_core_shared/verification-report.md`\n\n### [airun-INT-014-spec] /generate-spec (spec-author) -> INT-014\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/014_screaming_modules_core_shared` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/014_screaming_modules_core_shared/requirements.md`, `project-docs/specs/014_screaming_modules_core_shared/design.md`, `project-docs/specs/014_screaming_modules_core_shared/tasks.md`\n\n### [airun-INT-013-verify] /verify-spec (reviewer) -> INT-013\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-013\n- **Resultado / Hallazgos:** Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.\n- **Artefactos Sincronizados:** `project-docs/specs/013_screaming_architecture_plane_refactor/verification-report.md`\n\n### [airun-INT-013-spec] /generate-spec (spec-author) -> INT-013\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/013_screaming_architecture_plane_refactor` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/013_screaming_architecture_plane_refactor/requirements.md`, `project-docs/specs/013_screaming_architecture_plane_refactor/design.md`, `project-docs/specs/013_screaming_architecture_plane_refactor/tasks.md`\n\n### [airun-INT-012-verify] /verify-spec (reviewer) -> INT-012\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-012\n- **Resultado / Hallazgos:** Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.\n- **Artefactos Sincronizados:** `project-docs/specs/012_plane_style_sqlite_project_management/verification-report.md`\n\n### [airun-INT-012-spec] /generate-spec (spec-author) -> INT-012\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-012: Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/012_plane_style_sqlite_project_management` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/012_plane_style_sqlite_project_management/requirements.md`, `project-docs/specs/012_plane_style_sqlite_project_management/design.md`, `project-docs/specs/012_plane_style_sqlite_project_management/tasks.md`\n\n### [airun-INT-011-verify] /verify-spec (reviewer) -> INT-011\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-011\n- **Resultado / Hallazgos:** Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.\n- **Artefactos Sincronizados:** `project-docs/specs/011_encapsulate_specs_and_scripts/verification-report.md`\n\n### [airun-INT-011-spec] /generate-spec (spec-author) -> INT-011\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-011: Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/011_encapsulate_specs_and_scripts` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/011_encapsulate_specs_and_scripts/requirements.md`, `project-docs/specs/011_encapsulate_specs_and_scripts/design.md`, `project-docs/specs/011_encapsulate_specs_and_scripts/tasks.md`\n\n### [airun-INT-010-verify] /verify-spec (reviewer) -> INT-010\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-010\n- **Resultado / Hallazgos:** Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.\n- **Artefactos Sincronizados:** `project-docs/specs/010_harness_root_cleanliness_encapsulation/verification-report.md`\n\n### [airun-INT-010-spec] /generate-spec (spec-author) -> INT-010\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-010: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/010_harness_root_cleanliness_encapsulation` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/010_harness_root_cleanliness_encapsulation/requirements.md`, `project-docs/specs/010_harness_root_cleanliness_encapsulation/design.md`, `project-docs/specs/010_harness_root_cleanliness_encapsulation/tasks.md`\n\n### [airun-INT-009-verify] /verify-spec (reviewer) -> INT-009\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-009\n- **Resultado / Hallazgos:** Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.\n- **Artefactos Sincronizados:** `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/verification-report.md`\n\n### [airun-INT-009-spec] /generate-spec (spec-author) -> INT-009\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-009: Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/requirements.md`, `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/design.md`, `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/tasks.md`\n\n### [airun-INT-008-verify] /verify-spec (reviewer) -> INT-008\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-008\n- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.\n- **Artefactos Sincronizados:** `project-docs/specs/008_playwright_acceptance_testing/verification-report.md`\n\n### [airun-INT-008-spec] /generate-spec (spec-author) -> INT-008\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/008_playwright_acceptance_testing` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/008_playwright_acceptance_testing/requirements.md`, `project-docs/specs/008_playwright_acceptance_testing/design.md`, `project-docs/specs/008_playwright_acceptance_testing/tasks.md`\n\n### [airun-INT-007-verify] /verify-spec (reviewer) -> INT-007\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-007\n- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.\n- **Artefactos Sincronizados:** `project-docs/specs/007_automated_unit_testing_suite/verification-report.md`\n\n### [airun-INT-007-spec] /generate-spec (spec-author) -> INT-007\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/007_automated_unit_testing_suite` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/007_automated_unit_testing_suite/requirements.md`, `project-docs/specs/007_automated_unit_testing_suite/design.md`, `project-docs/specs/007_automated_unit_testing_suite/tasks.md`\n\n### [airun-INT-006-verify] /verify-spec (reviewer) -> INT-006\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-006\n- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.\n- **Artefactos Sincronizados:** `project-docs/specs/006_omnibox_global_search/verification-report.md`\n\n### [airun-INT-006-spec] /generate-spec (spec-author) -> INT-006\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/006_omnibox_global_search` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/006_omnibox_global_search/requirements.md`, `project-docs/specs/006_omnibox_global_search/design.md`, `project-docs/specs/006_omnibox_global_search/tasks.md`\n\n### [airun-INT-005-verify] /verify-spec (reviewer) -> INT-005\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-005\n- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.\n- **Artefactos Sincronizados:** `project-docs/specs/005_pyramidal_3d_constellation/verification-report.md`\n\n### [airun-INT-005-spec] /generate-spec (spec-author) -> INT-005\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js\n- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/005_pyramidal_3d_constellation` con historia de usuario Scrum y subtareas DEV/QA.\n- **Artefactos Sincronizados:** `project-docs/specs/005_pyramidal_3d_constellation/requirements.md`, `project-docs/specs/005_pyramidal_3d_constellation/design.md`, `project-docs/specs/005_pyramidal_3d_constellation/tasks.md`\n\n### [airun-INT-004-verify] /verify-spec (reviewer) -> INT-004\n- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`\n- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-004\n- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.\n- **Artefactos Sincronizados:** `project-docs/specs/004_dashboard_editorial_dual_editor/verification-report.md`\n",
     "business-rules.md": "# Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)\r\n\r\n> [!IMPORTANT]\r\n> Invariantes de cumplimiento estricto para desarrolladores y agentes de IA. Ninguna implementación, spec o refactorización puede violar estas reglas.\r\n\r\n---\r\n\r\n## Módulo: agent-orchestrator\r\n\r\n### BR-ORCH-001: Formato y Longitud Estricta de Ramas Git\r\n- **Severidad**: Crítica\r\n- **Fórmula**: `length({type}/INT-{numero}/{nombre_rama}) <= 80`\r\n- **Valores permitidos de type**: Exclusivamente `feature` o `bugfix`.\r\n- **Descripción**: Toda rama de trabajo debe crearse desde la rama base, tener un prefijo `INT-` con número de ticket y no superar 80 caracteres.\r\n- **Comportamiento ante Violación**: La rama es rechazada y el agente debe solicitar corrección al humano.\r\n\r\n### BR-ORCH-002: Puerta Humana Obligatoria para Aprobación de Spec\r\n- **Severidad**: Crítica\r\n- **Descripción**: Queda estrictamente prohibido pasar una tarea a `in_progress` o iniciar implementación sin aprobación explícita del humano mediante la herramienta `ask_question`.\r\n- **Comportamiento ante Violación**: Detención inmediata del ciclo SDD.\r\n\r\n### BR-ORCH-003: Subagente Revisor No Modifica Código\r\n- **Severidad**: Crítica\r\n- **Descripción**: El subagente `reviewer` evalúa de forma independiente e imparcial la trazabilidad, build y tests. Bajo ninguna circunstancia edita código de producción o pruebas.\r\n- **Comportamiento ante Violación**: Se anula el veredicto y se reasigna al `implementer`.\r\n\r\n---\r\n\r\n## Módulo: triple-sync-engine\r\n\r\n### BR-SYNC-001: Fuente de Verdad Inviolable en .opencode/\r\n- **Severidad**: Crítica\r\n- **Descripción**: La carpeta `.opencode/skills/` es la única fuente de verdad para las 18 skills del arnés. Los cambios se propagan de forma unidireccional a `.github/skills/` y `.agents/skills/`.\r\n- **Comportamiento ante Violación**: Cualquier cambio aislado en espejos se sobrescribe al sincronizar.\r\n\r\n### BR-SYNC-002: Paridad Estricta de Frontmatter\r\n- **Severidad**: Alta\r\n- **Descripción**: Todo archivo `SKILL.md` debe contener exactamente el mismo bloque YAML `name` y `description` en las tres plataformas.\r\n- **Comportamiento ante Violación**: Reporte de inconsistencia en `/sync-skills`.\r\n\r\n---\r\n\r\n## Módulo: knowledge-engine\r\n\r\n### BR-KNOW-001: Sintaxis Mermaid Ultra-Estricta\r\n- **Severidad**: Crítica\r\n- **Descripción**: Para garantizar que los diagramas se rendericen sin errores en cualquier parser web o visor markdown, todo ID de nodo debe ser estrictamente alfanumérico sin guiones (`nodeAuth`) y todo texto descriptivo debe estar entre comillas dobles (`[\"Texto seguro\"]`).\r\n- **Comportamiento ante Violación**: Diagrama marcado como inválido en tiempo de validación.\r\n\r\n### BR-KNOW-002: Consulta Obligatoria Anti-Sesgo de la Base de Conocimiento\r\n- **Severidad**: Crítica\r\n- **Descripción**: Antes de proponer nuevas historias, redactar requerimientos o implementar código, los agentes DEBEN consultar `project-docs/knowledge/` para evitar reinventar capacidades o violar directrices.\r\n- **Comportamiento ante Violación**: Prohibición estricta de alucinar librerías externas o duplicar endpoints.\r\n\r\n---\r\n\r\n## Módulo: dashboard-visualizer\r\n\r\n### BR-DASH-001: Compatibilidad Offline Total (Protocolo file:///)\r\n- **Severidad**: Crítica\r\n- **Descripción**: El visor en `project-docs/index.html` debe ser 100% navegable con doble clic directo sin servidor local mediante la carga inmediata de `data-fallback.js`.\r\n- **Comportamiento ante Violación**: El script `sync-data.js` actualiza automáticamente el fallback tras cada compilación.\r\n\r\n### BR-DASH-002: Scroll Sincronizado Proporcional Anti-Bloqueo\r\n- **Severidad**: Alta\r\n- **Descripción**: La sincronización de scroll entre el editor Markdown y la vista previa utiliza flags de exclusión mutua para impedir bucles infinitos de eventos de scroll.\r\n- **Comportamiento ante Violación**: Desactivación temporal del listener para restaurar fluidez.\r\n\r\n---\r\n\r\n## Módulo: testing-qa-suite\r\n\r\n### BR-TEST-001: 100% de Tests en Verde para Cierre de Spec\r\n- **Severidad**: Crítica\r\n- **Descripción**: Ninguna feature o bugfix puede cerrarse como `done` si existe un solo test fallando en la suite de pruebas del proyecto.\r\n- **Comportamiento ante Violación**: `verify-spec` rechaza el cierre y exige corrección.\r\n\r\n### BR-TEST-002: Ejecutor de Pruebas Nativo sin Bloat\r\n- **Severidad**: Alta\r\n- **Descripción**: Las pruebas unitarias del arnés se ejecutan mediante `node --test` para asegurar tiempos de respuesta inferiores a 500ms y cero dependencias externas en testing.\r\n- **Comportamiento ante Violación**: Se rechaza la inclusión de dependencias redundantes.\r\n",
     "c4-model.md": "# Modelo C4 — AI Agentic SDD Engineering Harness\r\n\r\n> [!NOTE]\r\n> Arquitectura de Sistema, Contenedores y Componentes del Arnés de Ingeniería Dirigida por Especificaciones (SDD).\r\n\r\n---\r\n\r\n## Nivel 1: Diagrama de Contexto del Sistema (C1)\r\n\r\nMuestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:\r\n\r\n```mermaid\r\nflowchart TD\r\n  userDeveloper[\"Desarrollador / Ingeniero de Software\"]\r\n  agentLeader[\"Agente Principal (Leader)\"]\r\n  harnessSystem[\"AI Agentic SDD Engineering Harness\"]\r\n  gitSystem[\"Sistema de Control de Versiones (Git / GitHub)\"]\r\n  browserUser[\"Navegador Web (Dashboard / Tablero Visual)\"]\r\n\r\n  userDeveloper -->|\"Define requerimientos y aprueba specs\"| harnessSystem\r\n  agentLeader -->|\"Orquesta tareas e invoca subagentes\"| harnessSystem\r\n  harnessSystem -->|\"Crea ramas INT-* y commits semánticos\"| gitSystem\r\n  harnessSystem -->|\"Genera y sincroniza datos en tiempo real\"| browserUser\r\n  browserUser -->|\"Permite lectura editorial y edición dual\"| userDeveloper\r\n```\r\n\r\n---\r\n\r\n## Nivel 2: Diagrama de Contenedores (C2)\r\n\r\nDescompone el arnés en sus subsistemas y aplicaciones principales:\r\n\r\n```mermaid\r\nflowchart TD\r\n  subgraph HarnessContainers[\"Contenedores del Arnés SDD\"]\r\n    containerOrchestrator[\"Orquestador Multi-Agente<br/>(Leader, Spec-Author, Implementer, Reviewer)\"]\r\n    containerTripleSync[\"Motor de Sincronización Triple<br/>(.opencode / .github / .agents)\"]\r\n    containerKnowledge[\"Motor de Base de Conocimiento<br/>(Docs-as-Code, C4, UML, BR-*, ADRs)\"]\r\n    containerDashboard[\"Tablero de Seguimiento Interactivo<br/>(Tailwind v4, Three.js, Editor Dual)\"]\r\n    containerTestRunner[\"Suite de Pruebas Automatizadas<br/>(Node.js Test Runner, Smoke Tests)\"]\r\n  end\r\n\r\n  gitRepo[\"Repositorio Git Local\"]\r\n  userView[\"Navegador (file:/// o HTTP)\"]\r\n\r\n  containerOrchestrator -->|\"Escribe specs y código\"| gitRepo\r\n  containerTripleSync -->|\"Mantiene paridad de 18 skills\"| containerOrchestrator\r\n  containerKnowledge -->|\"Alimenta contexto anti-sesgo\"| containerOrchestrator\r\n  containerDashboard -->|\"Lee metadatos de specs y progreso\"| gitRepo\r\n  containerDashboard -->|\"Renderiza vistas interactivas\"| userView\r\n  containerTestRunner -->|\"Verifica build, tests y convenciones\"| containerOrchestrator\r\n```\r\n\r\n---\r\n\r\n## Nivel 3: Diagrama de Componentes del Tablero Web (C3)\r\n\r\nDesglose interno de la aplicación web en `project-docs/` bajo Screaming Architecture modular:\r\n\r\n```mermaid\r\nflowchart TD\r\n  subgraph ClientApp[\"Tablero Screaming Architecture (project-docs/src/)\"]\r\n    subgraph CoreLayer[\"Núcleo Transversal (src/core/)\"]\r\n      compStore[\"Store Observer Reactivo<br/>(store.js)\"]\r\n      compRouter[\"Hash Router con URL Params<br/>(router.js)\"]\r\n      compBus[\"EventBus Desacoplado<br/>(event-bus.js)\"]\r\n      compClient[\"API Client con Resiliencia<br/>(api-client.js)\"]\r\n      compSqlite[\"Adaptador SQLite WAL<br/>(db.js & sqlite-sync.js)\"]\r\n    end\r\n\r\n    subgraph DomainModules[\"Módulos de Negocio Screaming (src/modules/)\"]\r\n      modProjects[\"Projects<br/>(Workspaces, Metadata, KPIs)\"]\r\n      modIssues[\"Issues<br/>(Kanban, Lista, Scrum, Jira DEV/QA)\"]\r\n      modCycles[\"Cycles<br/>(Sprints, SVG Burn-down)\"]\r\n      modPages[\"Pages<br/>(ContextForge Reader, Dual Editor)\"]\r\n      modHarness[\"Harness<br/>(Agentes, Gobernanza, Skills)\"]\r\n    end\r\n\r\n    subgraph SharedLayer[\"Componentes Compartidos (src/shared/)\"]\r\n      sharedLayout[\"MasterLayout / Sidebar / TopBar\"]\r\n      sharedIcons[\"Iconografía 100% SVG Nativo\"]\r\n      sharedUtils[\"renderList / DOM / Markdown\"]\r\n    end\r\n  end\r\n\r\n  compRouter --> compStore\r\n  compBus --> compStore\r\n  DomainModules --> compStore\r\n  DomainModules --> compClient\r\n  compClient --> compSqlite\r\n  DomainModules --> sharedLayer\r\n```\r\n\r\n---\r\n\r\n## Nivel 4: Persistencia Dual Determinista (C4 / Data Storage)\r\n\r\n```mermaid\r\nflowchart LR\r\n  subgraph DataSources[\"Fuentes de Persistencia Dual\"]\r\n    sqliteDB[\"SQLite Relacional WAL<br/>(project-docs/data/harness.db)\"]\r\n    markdownFiles[\"Documentos Vivos Markdown<br/>(project-docs/knowledge/ & specs/)\"]\r\n    jsonFallback[\"Data Fallback Resiliente<br/>(project-docs/data-fallback.js)\"]\r\n  end\r\n\r\n  serverSync[\"Servidor Local & Sync Bridge<br/>(serve.js & sync-data.js)\"]\r\n  serverSync -->|\"Persistencia Transaccional\"| sqliteDB\r\n  serverSync -->|\"Exportación Soberana\"| markdownFiles\r\n  serverSync -->|\"Bundle Offline\"| jsonFallback\r\n```\r\n",
     "coding-standards.md": "# Estándares de Codificación & Guardrails Anti-Sesgo\r\n\r\n> [!IMPORTANT]\r\n> Directrices obligatorias para desarrolladores y agentes de IA. Diseñadas para eliminar el sesgo algorítmico, prevenir alucinaciones de paquetes y mantener una arquitectura limpia.\r\n\r\n---\r\n\r\n## 1. Convenciones de Nomenclatura y Control de Versiones\r\n\r\n- **Ramas Git**:\r\n  - Exclusivamente dos tipos: `feature` y `bugfix`.\r\n  - Estructura obligatoria: `{type}/INT-{numero}/{nombre_rama_de_lo_realizado}`.\r\n  - Longitud máxima estricta: **80 caracteres**.\r\n  - Ejemplo: `feature/INT-001/refactor_harness_architecture`.\r\n- **Commits Semánticos**:\r\n  - Formato: `feat(scope): descripción` o `fix(scope): descripción`.\r\n  - Tipos válidos: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.\r\n  - Idioma: Inglés para commits y código fuente; español para documentación técnica y comentarios explicativos.\r\n\r\n---\r\n\r\n## 2. Guardrails Anti-Alucinación (Inviolables para Agentes de IA)\r\n\r\n1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `package.json` o `project-docs/project-spec.yaml`.\r\n2. **Invariante de Conocimiento Previo**: Antes de implementar una solución, el agente debe verificar si ya existe una función, componente o regla en `project-docs/knowledge/`.\r\n3. **Respeto a las Reglas de Negocio (BR-*)**: Ningún código puede modificar o relajar una regla de negocio sin una actualización previa y aprobada de la especificación.\r\n4. **Cero Código Muerto**: Prohibido dejar código comentado, banderas de depuración (`console.log`, `debugger`) o secretos hardcodeados.\r\n\r\n---\r\n\r\n## 3. Arquitectura del Código Frontend (`project-docs/src/`)\r\n\r\n- **Vanilla JS Modular**: Usar ES Modules puros (`import` / `export`) organizados por dominios en `src/features/`.\r\n- **Separación de Responsabilidades**: Las funciones de renderizado devuelven cadenas HTML puras; los controladores de eventos se enlazan mediante selectores o `data-action`.\r\n- **Inmutabilidad en el Store**: El estado global (`store.js`) se actualiza mediante acciones atómicas notificando a los suscriptores.\r\n",
-    "data-dictionary.md": "# Diccionario de Datos & Persistencia Docs-as-Code\r\n\r\n> [!NOTE]\r\n> Especificación formal de los esquemas de persistencia JSON y YAML del arnés de ingeniería SDD.\r\n\r\n---\r\n\r\n## 1. Diagrama Entidad-Relación (ERD) del Arnés\r\n\r\n```mermaid\r\nerDiagram\r\n  PROJECT ||--o{ FEATURE : \"contiene\"\r\n  PROJECT ||--|| PROJECT_SPEC : \"especificado por\"\r\n  FEATURE ||--|{ ACCEPTANCE_CRITERIA : \"valida con\"\r\n  FEATURE ||--o{ TASK : \"descompone en\"\r\n  FEATURE ||--o{ BUSINESS_RULE : \"satisface\"\r\n  KNOWLEDGE_INDEX ||--o{ DOCUMENT : \"cataloga\"\r\n  DOCUMENT ||--o{ SHELF : \"pertenece a\"\r\n  DOCUMENT ||--o{ BUSINESS_RULE : \"documenta\"\r\n\r\n  PROJECT {\r\n    string name PK\r\n    string description\r\n    string version\r\n    string tech_stack\r\n    string runtime\r\n  }\r\n\r\n  FEATURE {\r\n    int id PK\r\n    string type\r\n    string name\r\n    string title\r\n    string module\r\n    string priority\r\n    string branch\r\n    string status\r\n  }\r\n\r\n  TASK {\r\n    string id PK\r\n    string title\r\n    bool done\r\n  }\r\n\r\n  BUSINESS_RULE {\r\n    string id PK\r\n    string module\r\n    string severity\r\n    string title\r\n    string description\r\n  }\r\n\r\n  DOCUMENT {\r\n    string key PK\r\n    string filename\r\n    string title\r\n    string shelf\r\n    int readingTime\r\n    int wordCount\r\n    int ruleCount\r\n  }\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo de Esquemas JSON / YAML\r\n\r\n### 2.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)\r\n- `project.name`: Nombre canónico del sistema.\r\n- `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).\r\n- `runtime.language`: Lenguaje de programación principal.\r\n- `modules[]`: Colección de módulos con `id`, `name`, `tech`, `features`.\r\n- `checks.build`: Comando de compilación (`npm run build`, `dotnet build`, etc.).\r\n- `checks.test`: Comando de pruebas (`npm test`, `pytest`, `dotnet test`).\r\n- `checks.verify`: Comando de verificación integral (`node project-docs/sync-data.js`).\r\n\r\n### 2.2 `feature_list.json` (Backlog Canónico de Tareas)\r\n- `features[].id`: Número secuencial único (`INT-001`).\r\n- `features[].type`: `feature` o `bugfix`.\r\n- `features[].name`: Identificador en `snake_case` descriptivo.\r\n- `features[].branch`: Rama Git `{type}/INT-{id}/{name}` ($\\le 80$ caracteres).\r\n- `features[].status`: `pending` | `spec_ready` | `in_progress` | `done` | `blocked`.\r\n- `features[].acceptance`: Lista de criterios de aceptación verificables.\r\n\r\n### 2.3 `knowledge-index.json` (Índice de la Base de Conocimiento)\r\n- `docs{}`: Mapa de clave de archivo a contenido Markdown completo.\r\n- `docMetadata{}`: Metadatos calculados (`readingTime`, `wordCount`, `ruleCount`, `reqCount`, `adrCount`, `shelf`).\r\n- `shelves{}`: Clasificación en 6 estantes temáticos (`architecture`, `business_rules`, `requirements`, `adrs`, `standards`, `modules`).\r\n- `business_rules[]`: Catálogo estructurado de invariantes con `id`, `module`, `severity`, `title`, `description`.\r\n- `coding_standards`: Guardrails anti-sesgo y directrices de nombrado.\r\n",
+    "data-dictionary.md": "# Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)\n\n> [!NOTE]\n> Especificación formal del modelo relacional completo de Plane (26 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.\n\n---\n\n## 1. Diagrama Entidad-Relación (ERD) del Arnés & Plane AI\n\n```mermaid\nerDiagram\n  WORKSPACE ||--o{ WORKSPACE_MEMBER : \"agrupa\"\n  USER ||--o{ WORKSPACE_MEMBER : \"pertenece\"\n  USER ||--o{ API_TOKEN : \"autentica (is_bot=1)\"\n  WORKSPACE ||--o{ PROJECT : \"contiene\"\n  WORKSPACE ||--o{ AI_CONFIG : \"configura LLM\"\n  PROJECT ||--o{ STATE : \"define flujo\"\n  PROJECT ||--o{ LABEL : \"clasifica\"\n  PROJECT ||--o{ ESTIMATE : \"mide\"\n  ESTIMATE ||--o{ ESTIMATE_POINT : \"escala Fibonacci\"\n  PROJECT ||--o{ ISSUE_TYPE : \"tipifica\"\n  PROJECT ||--o{ CYCLE : \"planifica sprints\"\n  PROJECT ||--o{ MODULE : \"delimita dominios\"\n  PROJECT ||--o{ ISSUE_VIEW : \"guarda filtros\"\n  PROJECT ||--o{ ISSUE : \"gestiona\"\n  PROJECT ||--o{ PAGE : \"documenta\"\n  ISSUE ||--o{ SUBTASK : \"desglosa DEV/QA\"\n  ISSUE ||--o{ ISSUE_ASSIGNEE : \"asigna bot/humano\"\n  ISSUE ||--o{ ISSUE_LABEL : \"etiqueta\"\n  ISSUE ||--o{ ISSUE_RELATION : \"relaciona / bloquea\"\n  ISSUE ||--o{ ISSUE_ACTIVITY : \"audita mutaciones\"\n  ISSUE ||--o{ ISSUE_COMMENT : \"comenta skills\"\n  ISSUE ||--o{ ISSUE_EVIDENCE : \"vincula QA y capturas\"\n  ISSUE ||--o{ AI_RUN : \"registra ejecucion IA\"\n  CYCLE ||--o{ CYCLE_ISSUE : \"compromete\"\n  MODULE ||--o{ MODULE_ISSUE : \"encapsula\"\n  PAGE ||--o{ PAGE_VERSION : \"versiona snapshots\"\n\n  WORKSPACE {\n    string id PK\n    string name\n    string slug\n    string owner_id\n    string organization_size\n    string timezone\n  }\n\n  USER {\n    string id PK\n    string username\n    string display_name\n    string role\n    int is_bot\n    string bot_type\n  }\n\n  ISSUE {\n    string id PK\n    string project_id FK\n    int sequence_id\n    string title\n    string state_id FK\n    string priority\n    string type_id FK\n    int point\n    string assignee_role\n    string cycle_id FK\n    string module_id FK\n    string branch\n  }\n\n  AI_RUN {\n    string id PK\n    string issue_id FK\n    string page_id FK\n    string agent_role\n    string skill_name\n    string task_type\n    string provider\n    string model\n    string prompt_summary\n    string status\n  }\n\n  ISSUE_EVIDENCE {\n    string id PK\n    string issue_id FK\n    string subtask_id\n    string type\n    string title\n    string file_path\n    string created_by_skill\n  }\n\n  PAGE {\n    string id PK\n    string project_id FK\n    string file_path\n    string title\n    string shelf\n    int word_count\n    int reading_time_min\n  }\n```\n\n---\n\n## 2. Catálogo de las 26 Tablas Relacionales SQLite (`project-docs/data/harness.db`)\n\n### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)\n1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).\n2. `users`: Usuarios humanos e identidades de subagentes IA (`is_bot = 1`, `bot_type` para `leader`, `spec-author`, `implementer`, `reviewer`).\n3. `workspace_members`: Membresía y permisos RBAC por espacio de trabajo.\n4. `api_tokens`: Tokens de servicio (`user_type = 1` para bots) empleados por skills y agentes.\n5. `ai_configs`: Configuración del motor IA (`LLM_PROVIDER`, `LLM_MODEL`, `DUAL_PERSISTENCE_ENGINE`).\n6. `ai_runs`: Registro inmutable de cada invocación de skill o subagente IA, sincronizado automáticamente con `project-docs/knowledge/ai-runs-log.md`.\n\n### 2.2 Gestión de Proyectos, Tareas y Trazabilidad (`projects`, `issues`, `evidences`)\n7. `projects`: Configuración del proyecto (`proj-harness`, identificador `INT`, flags de vistas).\n8. `states`: Máquina de estados Kanban (`Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Cancelled`).\n9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).\n10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.\n12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).\n13. `cycles`: Sprints de iteración con fechas de inicio/fin y progreso.\n14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).\n15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.\n16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).\n17. `issue_assignees`: Asignación relacional entre tareas y agentes bot/humanos.\n18. `issue_labels`: Tabla puente muchos-a-muchos entre `issues` y `labels`.\n19. `issue_relations`: Grafo de dependencias entre tareas (`blocked_by`, `blocks`, `relates_to`).\n20. `issue_activities`: Bitácora de auditoría (`IssueActivity`) de cada cambio de estado, evidencia o ejecución de skill.\n21. `issue_comments`: Comentarios técnicos en Markdown emitidos por agentes o skills.\n22. `issue_evidences`: Artefactos de evidencia QA, reportes de verificación, planes API y capturas Playwright E2E vinculados a cada tarea.\n23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.\n25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.\n\n### 2.3 Gestión Documental Viva (`pages`, `page_versions`)\n26. `pages` y `page_versions`: Todos los documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` indexados con conteo de palabras, tiempo de lectura y snapshots históricos de versión (`PageVersion`).\n\n---\n\n## 3. Catálogo de Esquemas JSON / YAML & Sincronización Dual\n\n### 3.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)\n- `project.name`: Nombre canónico del sistema.\n- `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).\n- `runtime.language`: Lenguaje de programación principal.\n- `checks.build`, `checks.test`, `checks.verify`: Comandos de verificación ejecutables.\n\n### 3.2 `project-docs/feature_list.json` (Espejo JSON de Tareas)\n- Sincronizado bidireccionalmente con las tablas `issues`, `subtasks`, `issue_relations` e `issue_evidences` mediante `project-docs/src/core/sqlite-sync.js`.\n\n### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)\n- Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.\n",
     "external-services.md": "# Catálogo de Integraciones y Servicios Externos\r\n\r\n> [!NOTE]\r\n> Matriz de servicios adyacentes, protocolos de comunicación, variables de configuración y políticas de contingencia del arnés de ingeniería.\r\n\r\n---\r\n\r\n## Matriz de Servicios y Dependencias\r\n\r\n| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |\r\n| :--- | :--- | :--- | :--- | :--- |\r\n| **Google Antigravity** | Agentic IDE & CLI | Native Subagent Protocol / IPC | N/A (Entorno IDE) | Operar mediante CLI estándar o shell local |\r\n| **OpenCode** | CLI Engine | CLI Exec / Local JSON | N/A | Lectura directa de `.opencode/rules/` |\r\n| **GitHub Copilot** | AI Assistant | Instructions / Markdown | N/A | Carga desde `.github/instructions/` |\r\n| **Git / GitHub** | Control de Versiones | CLI Git / HTTPS / SSH | `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL` | Modo local desconectado en rama `{type}/INT-*` |\r\n| **Tailwind CSS v4** | CSS Runtime | CDN `@tailwindcss/browser@4` | N/A | Estilos base incrustados en `<style>` |\r\n| **Three.js** | 3D Graphics Engine | CDN `three.min.js r128` | N/A | Vista alternativa en Árbol SVG y Grafo DAG |\r\n| **Mermaid.js** | Diagram Engine | CDN `mermaid.min.js v10` | N/A | Previsualización de código Mermaid con botón de copia |\r\n",
     "functional-requirements.md": "# Especificación de Requerimientos del Sistema (SRS IEEE 830 / ISO 29148)\r\n\r\n> [!NOTE]\r\n> Requerimientos Funcionales (`RF-*`) y Requerimientos No Funcionales (`RNF-*`) bajo clasificación FURPS+ para el Arnés de Ingeniería SDD.\r\n\r\n---\r\n\r\n## 1. Requerimientos Funcionales (`RF-*`)\r\n\r\n### Módulo: agent-orchestrator\r\n- **RF-ORCH-001**: El orquestador DEBE validar que toda rama de trabajo cumpla con la expresión regular `^(feature|bugfix)/INT-\\d{3,4}/[a-z0-9_]+$` y una longitud menor o igual a 80 caracteres.\r\n- **RF-ORCH-002**: El orquestador DEBE invocar de manera aislada al subagente `spec-author` con workspace heredado (`Workspace: \"inherit\"`) para redactar la especificación formal antes de escribir código.\r\n- **RF-ORCH-003**: El orquestador DEBE pausar la ejecución mediante `ask_question` para solicitar aprobación humana del spec generado antes de permitir el inicio de la fase de implementación.\r\n- **RF-ORCH-004**: Al concluir la implementación, el orquestador DEBE invocar de forma independiente al subagente `reviewer` para emitir veredicto formal de calidad y trazabilidad.\r\n\r\n### Módulo: triple-sync-engine\r\n- **RF-SYNC-001**: El motor DEBE comparar el árbol de skills en `.opencode/skills/` contra `.github/skills/` y `.agents/skills/` para identificar diferencias de contenido o metadatos.\r\n- **RF-SYNC-002**: La skill `/sync-skills` DEBE replicar archivos de forma no destructiva preservando el frontmatter YAML y el formato Markdown.\r\n\r\n### Módulo: knowledge-engine\r\n- **RF-KNOW-001**: La skill `/project-knowledge` DEBE realizar el descubrimiento en 2 fases para evitar desbordamiento de contexto (escaneo topológico previo a inspección de código).\r\n- **RF-KNOW-002**: El generador de diagramas DEBE sanitizar identificadores y textos en sintaxis Mermaid estricta con comillas dobles para evitar fallos del parser en tiempo de ejecución.\r\n\r\n### Módulo: dashboard-visualizer\r\n- **RF-DASH-001**: El tablero DEBE presentar una biblioteca organizada en 6 estantes temáticos con tarjeta Hero destacada y filtros rápidos por categoría.\r\n- **RF-DASH-002**: El lector de artículos DEBE renderizar el documento con columna centrada a 780px, interlineado de 1.75em, anclas de encabezados y barra lateral flotante con la Tabla de Contenidos (TOC).\r\n- **RF-DASH-003**: El editor dual DEBE permitir alternar instantáneamente entre modo Markdown split-pane y modo Bloques Visuales ContextForge con scroll sincronizado proporcional y reordenamiento de tarjetas.\r\n- **RF-DASH-004**: El buscador Omnibox DEBE responder al atajo `Ctrl+K` o `Cmd+K` y permitir búsqueda en tiempo real sobre tareas, documentos, reglas e índices.\r\n- **RF-DASH-005**: La vista 3D DEBE estructurar los nodos en 4 niveles piramidales en Three.js con anillos translúcidos y distribución armónica radial sin solapamiento de etiquetas.\r\n\r\n### Módulo: testing-qa-suite\r\n- **RF-TEST-001**: La suite DEBE ejecutar pruebas unitarias automatizadas mediante el ejecutor nativo `node --test` reportando resultados en menos de 500ms.\r\n- **RF-TEST-002**: La suite DEBE incluir pruebas de aceptación tipo smoke para validar la integridad del bundle web y la compatibilidad con el protocolo `file:///`.\r\n\r\n---\r\n\r\n## 2. Requerimientos No Funcionales (`RNF-*`) bajo FURPS+\r\n\r\n### Functionality (Seguridad e Integridad)\r\n- **RNF-SEC-001**: Prohibición estricta de credenciales, tokens de API o connection strings hardcodeados en los archivos de especificación o base de conocimiento.\r\n- **RNF-SEC-002**: Aislamiento estricto de subagentes impidiendo que el subagente `reviewer` modifique código de producción o pruebas.\r\n\r\n### Usability (Experiencia Editorial & Heurísticas)\r\n- **RNF-USAB-001**: Cumplimiento de WCAG AAA en contraste de texto y soporte nativo de modo claro y oscuro sin parpadeo (FOUC).\r\n- **RNF-USAB-002**: Búsqueda con debouncing para no bloquear la digitación del usuario en inputs de búsqueda (180ms - 260ms).\r\n\r\n### Reliability (Confiabilidad & Cero-Server)\r\n- **RNF-RELI-001**: Disponibilidad offline del 100% de la documentación y tablero interactivo mediante `data-fallback.js` sin requerir servidor HTTP ni sufrir bloqueos CORS.\r\n- **RNF-RELI-002**: Gestión adecuada del ciclo de vida en Three.js con limpieza completa de memoria (`mount`/`unmount`) al cambiar de pestaña para prevenir fugas de memoria.\r\n\r\n### Performance (Rendimiento)\r\n- **RNF-PERF-001**: Tiempo de carga inicial del tablero web inferior a 800ms en modo local.\r\n- **RNF-PERF-002**: Ejecución de la suite completa de pruebas unitarias en menos de 500ms.\r\n\r\n### Supportability (Mantenibilidad & Extensibilidad)\r\n- **RNF-SUPP-001**: Arquitectura modular Screaming Architecture en Vanilla JS sin dependencias de frameworks pesados de frontend (React, Vue, Angular) en tiempo de ejecución.\r\n- **RNF-SUPP-002**: Agnóstico al lenguaje: el arnés debe poder auditar e interactuar con proyectos en Node.js, .NET, Python, Go y Rust.\r\n",
     "MASTER-PROJECT-KNOWLEDGE.md": "---\r\nid: DOC-MASTER-KNOWLEDGE\r\ntitle: \"Dossier Maestro Consolidado de Ingeniería — AI Agentic SDD Engineering Harness\"\r\nmodule: \"global\"\r\nstatus: \"Publicado\"\r\nversion: \"4.2.0\"\r\nlast_updated: \"2026-11-07\"\r\ntags: [\"master-dossier\", \"single-file-context\", \"sdd\", \"ieee-830\", \"c4-model\", \"uml\", \"ddd\"]\r\n---\r\n\r\n# Dossier Maestro Consolidado de Ingeniería Soberana (MASTER-PROJECT-KNOWLEDGE)\r\n\r\n> [!NOTE]\r\n> Documento unificado y autocontenido que consolida el 100% del conocimiento arquitectónico, de negocio, requerimientos, módulos y diagramas del **AI Agentic SDD Engineering Harness**. Diseñado para lectura continua, auditoría técnica integral e inyección en motores LLM de gran ventana de contexto (NotebookLM, Claude Projects, ChatGPT).\r\n\r\n---\r\n\r\n## Tabla de Contenidos\r\n\r\n1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)\r\n2. [Capítulo 2: Diagnóstico AS-IS de la Arquitectura, Flujos de Datos y Patrones](#capítulo-2-diagnóstico-as-is-de-la-arquitectura-flujos-de-datos-y-patrones)\r\n3. [Capítulo 3: Atlas Completo de Diagramas de Arquitectura (C4) y UML 2.5](#capítulo-3-atlas-completo-de-diagramas-de-arquitectura-c4-y-uml-25)\r\n4. [Capítulo 4: Inventario de Capacidades y Especificación Formal de Requisitos (SRS)](#capítulo-4-inventario-de-capacidades-y-especificación-formal-de-requisitos-srs)\r\n5. [Capítulo 5: Catálogo Ágil INVEST, Desglose SPIDR y Tareas de Ingeniería (TI-*)](#capítulo-5-catálogo-ágil-invest-desglose-spidr-y-tareas-de-ingeniería-ti-)\r\n6. [Capítulo 6: Diccionario de Datos, ERD Crow's Foot y Persistencia Híbrida](#capítulo-6-diccionario-de-datos-erd-crows-foot-y-persistencia-híbrida)\r\n7. [Capítulo 7: Catálogo Maestro de Reglas de Negocio (BR-*), ADRs y Servicios Externos](#capítulo-7-catálogo-maestro-de-reglas-de-negocio-br--adrs-y-servicios-externos)\r\n8. [Capítulo 8: Enciclopedia de Módulos & Bounded Contexts](#capítulo-8-enciclopedia-de-módulos--bounded-contexts)\r\n   - [8.1 Módulo: agent-orchestrator](#81-módulo-agent-orchestrator)\r\n   - [8.2 Módulo: dashboard-visualizer](#82-módulo-dashboard-visualizer)\r\n   - [8.3 Módulo: knowledge-engine](#83-módulo-knowledge-engine)\r\n   - [8.4 Módulo: testing-qa-suite](#84-módulo-testing-qa-suite)\r\n   - [8.5 Módulo: triple-sync-engine](#85-módulo-triple-sync-engine)\r\n9. [Capítulo 9: Estándares de Código, Guardrails Anti-Sesgo y Matriz de Trazabilidad (RTM)](#capítulo-9-estándares-de-código-guardrails-anti-sesgo-y-matriz-de-trazabilidad-rtm)\r\n\r\n---\r\n\r\n## Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)\r\n\r\n### 1.1 Declaración Formal de la Visión\r\n> **PARA** ingenieros de software, arquitectos de soluciones y equipos de desarrollo asistidos por IA,  \r\n> **QUIENES** experimentan alucinaciones, código desalineado con el dominio y regresiones al usar agentes de programación en bases de código medianas y complejas,  \r\n> **EL** AI Agentic SDD Engineering Harness,  \r\n> **QUE ES UN** arnés de ingeniería de software agnóstico basado en Docs-as-Code, orquestación multi-agente y verificación formal en 8 niveles,  \r\n> **QUE** garantiza una precisión funcional $\\ge 95\\%$ en el código generado por IA mediante un ciclo cerrado y determinista (Especificación EARS $\\to$ Puerta Humana $\\to$ Implementación TDD/SDD $\\to$ Revisión Imparcial $\\to$ Verificación Automatizada), triple sincronización de skills y tablero visual offline.\r\n\r\n### 1.2 Alcance del Sistema\r\n- **Qué HACE**: Orquesta 4 subagentes (`leader`, `spec-author`, `implementer`, `reviewer`), valida ramas git $\\le 80$ caracteres, impone pausas interactivas con `ask_question`, mantiene paridad triple en 18 skills, y provee un tablero interactivo offline-first con editor dual y verificación en 8 niveles.\r\n- **Qué NO HACE**: No sustituye el criterio de arquitectura humano, no realiza `git push` sin autorización, no edita código en fase de revisión y no acopla el código a un runtime particular.\r\n\r\n---\r\n\r\n## Capítulo 2: Diagnóstico AS-IS de la Arquitectura, Flujos de Datos y Patrones\r\n\r\n### 2.1 Screaming Architecture y Organización\r\nEl proyecto aplica el principio de **Screaming Architecture**:\r\n- La raíz separa claramente la orquestación (`.agents/`, `.opencode/`, `.github/`), la interfaz y documentación (`project-docs/`) y el arnés de verificación (`project-docs/verify.sh`).\r\n- El frontend en `project-docs/src/` está modularizado bajo Screaming Architecture orientada a dominios de negocio:\r\n  * `core/`: Núcleo reactivo Observer / Pub-Sub (`store.js`), Hash Router (`router.js`), `event-bus.js`, `api-client.js` y persistencia SQLite (`db.js`).\r\n  * `modules/`: Dominios de negocio puros (`Projects`, `Issues`, `Cycles`, `Pages`, `Harness`).\r\n  * `shared/`: Componentes UI y utilidades (`MasterLayout.js`, `PlaneSidebar.js`, `PlaneTopBar.js`, `Icons.js`, `renderList.js`).\r\n  * `data/`: Persistencia relacional SQLite WAL (`harness.db`) con sincronización dual bidireccional hacia Markdown en disco.\r\n- El build se empaqueta en un bundle universal IIFE (`dist/app.bundle.js`) compatible con ejecución offline (`file:///`) y servidor HTTP (`serve.js`).\r\n\r\n### 2.2 Patrones de Diseño Detectados\r\n1. **Reactive Store (Pub/Sub)**: `store.js` gestiona el estado y propaga cambios a la vista reactivamente.\r\n2. **Fallback Data Cache**: `api.js` y `data-fallback.js` garantizan funcionamiento offline en protocolo `file:///`.\r\n3. **Triple Mirror Sync**: `.opencode/skills/` funciona como fuente canónica y sincroniza unidireccionalmente a `.github/` y `.agents/`.\r\n4. **Dual Editor Mode**: `MarkdownViewer.js` soporta edición textual de Markdown y manipulación visual por bloques con scroll sincronizado.\r\n\r\n---\r\n\r\n## Capítulo 3: Atlas Completo de Diagramas de Arquitectura (C4) y UML 2.5\r\n\r\n### 3.1 Modelo C4 — Contexto de Sistema (C1)\r\n```mermaid\r\nflowchart TD\r\n  userDev[\"Desarrollador / Ingeniero de Software\"]\r\n  agentLeader[\"Agente Principal (Leader)\"]\r\n  harnessSystem[\"AI Agentic SDD Engineering Harness\"]\r\n  gitSystem[\"Control de Versiones (Git Local / GitHub)\"]\r\n  browserUser[\"Navegador Web (Dashboard / Tablero Visual)\"]\r\n\r\n  userDev -->|\"Define requerimientos y aprueba specs\"| harnessSystem\r\n  agentLeader -->|\"Orquesta tareas e invoca subagentes\"| harnessSystem\r\n  harnessSystem -->|\"Crea ramas INT-* y commits semánticos\"| gitSystem\r\n  harnessSystem -->|\"Genera y sincroniza datos en tiempo real\"| browserUser\r\n  browserUser -->|\"Permite lectura editorial y edición dual\"| userDev\r\n```\r\n\r\n### 3.2 Modelo C4 — Contenedores del Arnés (C2)\r\n```mermaid\r\nflowchart TD\r\n  subgraph HarnessContainers[\"Contenedores del Arnés SDD\"]\r\n    containerOrchestrator[\"Orquestador Multi-Agente<br/>(Leader, Spec, Impl, Review)\"]\r\n    containerTripleSync[\"Motor de Sincronización Triple<br/>(.opencode / .github / .agents)\"]\r\n    containerKnowledge[\"Motor de Base de Conocimiento<br/>(Docs-as-Code, C4, UML, BR-*)\"]\r\n    containerDashboard[\"Tablero de Seguimiento Interactivo<br/>(Tailwind v4, Three.js, Editor Dual)\"]\r\n    containerTestRunner[\"Suite de Pruebas Automatizadas<br/>(Node.js Test Runner, Playwright)\"]\r\n  end\r\n\r\n  gitRepo[\"Repositorio Git Local\"]\r\n  userView[\"Navegador (file:/// o HTTP)\"]\r\n\r\n  containerOrchestrator -->|\"Escribe specs y código\"| gitRepo\r\n  containerTripleSync -->|\"Mantiene paridad de 18 skills\"| containerOrchestrator\r\n  containerKnowledge -->|\"Alimenta contexto anti-sesgo\"| containerOrchestrator\r\n  containerDashboard -->|\"Lee metadatos de specs y progreso\"| gitRepo\r\n  containerDashboard -->|\"Renderiza vistas interactivas\"| userView\r\n  containerTestRunner -->|\"Verifica build, tests y convenciones\"| containerOrchestrator\r\n```\r\n\r\n### 3.3 Modelo C4 — Componentes del Tablero Web (C3)\r\n```mermaid\r\nflowchart LR\r\n  subgraph DashboardComponents[\"project-docs/src/\"]\r\n    compRouter[\"Enrutador por Pestañas (router.js)\"]\r\n    compStore[\"Store Reactivo Central (store.js)\"]\r\n    compDetector[\"Detector de Entorno & Agente (detector.js)\"]\r\n    compMarkdown[\"Lector Editorial & Parser Bloques (MarkdownViewer.js)\"]\r\n    compThree[\"Constelación 3D Piramidal (SpaceView3D.js)\"]\r\n    compMermaid[\"Visor & Editor Draw.io (MermaidViewer.js)\"]\r\n    compOmnibox[\"Buscador Global Ctrl+K (Omnibox Modal)\"]\r\n  end\r\n\r\n  compRouter --> compStore\r\n  compDetector --> compStore\r\n  compStore --> compMarkdown\r\n  compStore --> compThree\r\n  compStore --> compMermaid\r\n  compStore --> compOmnibox\r\n```\r\n\r\n---\r\n\r\n## Capítulo 4: Inventario de Capacidades y Especificación Formal de Requisitos (SRS)\r\n\r\n### Requerimientos Funcionales Nucleares\r\n- **RF-ORCH-001**: Creación y validación de ramas `{type}/INT-{id}/{name}` con longitud $\\le 80$ caracteres.\r\n- **RF-ORCH-002**: Puerta humana obligatoria con `ask_question` previa a la implementación.\r\n- **RF-ORCH-003**: Partición formal en subtareas Scrum Jira DEV/QA y captura automatizada de evidencias visuales en `project-docs/specs/{NNN}_{name}/evidence/`.\r\n- **RF-DASH-001**: Operación offline nativa en protocolo `file:///` con carga instantánea de fallback.\r\n- **RF-DASH-002**: Editor dual Markdown/Bloques con scroll sincronizado.\r\n- **RF-SYNC-001**: Sincronización unidireccional de 18 skills desde `.opencode/`.\r\n- **RF-TEST-001**: Verificación integral en 9 niveles mediante `project-docs/verify.sh`.\r\n\r\n---\r\n\r\n## Capítulo 5: Catálogo Ágil INVEST, Desglose SPIDR y Tareas de Ingeniería (TI-*)\r\n\r\n### Historias de Usuario Principales\r\n1. **HU-ORCH-01**: Gobernanza de ramas y puertas humanas (3 SP).\r\n   - `TI-ORCH-01`: Validador regex de nombres de rama y contador $\\le 80$c.\r\n   - `TI-ORCH-02`: Suite BVA de ramas límite en pruebas de caja negra.\r\n2. **HU-DASH-01**: Experiencia editorial y editor dual en el tablero (5 SP).\r\n   - `TI-DASH-01`: Parser bidireccional Markdown $\\leftrightarrow$ Bloques.\r\n   - `TI-DASH-02`: Detección de protocolo `file:///` en `api.js`.\r\n3. **HU-SYNC-01**: Homologación triple de skills (2 SP).\r\n   - `TI-SYNC-01`: Script verificador de paridad de frontmatter YAML.\r\n4. **HU-ORCH-02**: Desglose Scrum DEV/QA y captura automatizada de evidencias (5 SP).\r\n   - `TI-ORCH-03`: Implementar runner de capturas headless en `scripts/capture-evidence.js`.\r\n   - `TI-ORCH-04`: Integrar visualización de subtareas DEV/QA y visor de evidencias en `Modal.js`.\r\n   - `TI-ORCH-05`: Añadir pruebas E2E con Playwright en `tests/acceptance/scrum-evidence-capture.spec.js`.\r\n\r\n---\r\n\r\n## Capítulo 6: Diccionario de Datos, ERD Crow's Foot y Persistencia Híbrida\r\n\r\n### Diagrama Entidad-Relación Global\r\n```mermaid\r\nerDiagram\r\n  PROJECT ||--o{ FEATURE : \"contiene\"\r\n  PROJECT ||--|| PROJECT_SPEC : \"especificado por\"\r\n  FEATURE ||--|{ ACCEPTANCE_CRITERIA : \"valida con\"\r\n  FEATURE ||--o{ TASK : \"descompone en\"\r\n  FEATURE ||--o{ BUSINESS_RULE : \"satisface\"\r\n  KNOWLEDGE_INDEX ||--o{ DOCUMENT : \"cataloga\"\r\n  DOCUMENT ||--o{ SHELF : \"pertenece a\"\r\n  DOCUMENT ||--o{ BUSINESS_RULE : \"documenta\"\r\n\r\n  PROJECT {\r\n    string name PK\r\n    string version\r\n    string runtime\r\n  }\r\n\r\n  FEATURE {\r\n    int id PK\r\n    string type\r\n    string name\r\n    string branch\r\n    string status\r\n  }\r\n\r\n  BUSINESS_RULE {\r\n    string id PK\r\n    string module\r\n    string severity\r\n    string title\r\n  }\r\n\r\n  DOCUMENT {\r\n    string key PK\r\n    string title\r\n    string shelf\r\n    int wordCount\r\n  }\r\n```\r\n\r\n---\r\n\r\n## Capítulo 7: Catálogo Maestro de Reglas de Negocio (BR-*), ADRs y Servicios Externos\r\n\r\n### Invariantes Críticas\r\n- **BR-ORCH-001**: Ramas Git obligatoriamente `{feature|bugfix}/INT-{numero}/{nombre}` y longitud $\\le 80$ caracteres.\r\n- **BR-ORCH-002**: Prohibido implementar código sin aprobación del spec al 100% mediante `ask_question`.\r\n- **BR-ORCH-003**: El subagente `reviewer` audita de forma imparcial y no modifica código.\r\n- **BR-ORCH-004**: Toda User Story cerrada debe contar con subtareas Scrum DEV/QA completadas y al menos una captura de pantalla de evidencia.\r\n- **BR-SYNC-001**: `.opencode/skills/` es la única fuente de verdad; los demás son espejos.\r\n- **BR-KNOW-001**: Sintaxis Mermaid ultra-estricta (IDs alfanuméricos simples y textos entrecomillados).\r\n- **BR-KNOW-002**: Consulta obligatoria de `project-docs/knowledge/` antes de codificar.\r\n- **BR-DASH-001**: Compatibilidad offline nativa en protocolo `file:///`.\r\n- **BR-DASH-002**: Cero emojis en interfaz y código; solo iconos SVG de `Icons.js`.\r\n\r\n---\r\n\r\n## Capítulo 8: Enciclopedia de Módulos & Bounded Contexts\r\n\r\n### 8.1 Módulo: agent-orchestrator\r\n- **Propósito**: Orquestación multi-agente, validación de ramas git, gobernanza de puertas humanas y subtareas Scrum DEV/QA.\r\n- **Tareas Asociadas**: `INT-001` (Refactorización del arnés) e `INT-009` (Subtareas Scrum Jira DEV/QA y evidencias de prueba).\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.2 Módulo: dashboard-visualizer\r\n- **Propósito**: Tablero web interactivo, métricas KPI, editor dual ContextForge y soporte offline `file:///`.\r\n- **Tareas Asociadas**: `INT-004`, `INT-005`, `INT-006`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.3 Módulo: knowledge-engine\r\n- **Propósito**: Extracción, preservación y estandarización de la base de conocimiento Docs-as-Code.\r\n- **Tareas Asociadas**: `INT-003`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.4 Módulo: testing-qa-suite\r\n- **Propósito**: Automatización de pruebas en 9 fases, runner de `project-docs/verify.sh` y Playwright E2E.\r\n- **Tareas Asociadas**: `INT-007`, `INT-008`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.5 Módulo: triple-sync-engine\r\n- **Propósito**: Sincronización triple y paridad absoluta de 18 skills entre OpenCode, Copilot y Antigravity.\r\n- **Tareas Asociadas**: `INT-002`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n---\r\n\r\n## Capítulo 9: Estándares de Código, Guardrails Anti-Sesgo y Matriz de Trazabilidad (RTM)\r\n\r\n### 9.1 Guardrails Anti-Sesgo para IA\r\n- **Lista Blanca Autorizada**: Vanilla JS (ES Modules), Tailwind CSS v4 (`@tailwindcss/browser@4`), Three.js (r128), Node.js Test Runner nativo (`node:test`), Playwright (`@playwright/test`), esbuild.\r\n- **Lista Negra Terminantemente Prohibida**: Frameworks pesados no autorizados (React, Vue o Angular en `project-docs`), librerías de estilos adicionales, emojis unicode en código de producción o commits directos a ramas base sin confirmación.\r\n\r\n### 9.2 Matriz de Trazabilidad Bidireccional (RTM)\r\n| Requerimiento (`RF-*`) | Regla (`BR-*`) | Historia (`HU-*`) | Componente Implementado | Suite de Pruebas | Estado |\r\n|---|---|---|---|---|---|\r\n| `RF-ORCH-001` | `BR-ORCH-001` | `HU-ORCH-01` | `.opencode/rules/branches.md` | `tests/unit/branching-rules.test.js`, `tests/blackbox/bva-inputs.test.js` | Cubierto |\r\n| `RF-ORCH-002` | `BR-ORCH-002` | `HU-ORCH-01` | `.agents/rules/antigravity-harness.md` | Manual con `ask_question` | Cubierto |\r\n| `RF-ORCH-003` | `BR-ORCH-004` | `HU-ORCH-02` | `scripts/capture-evidence.js`, `Modal.js` | `tests/acceptance/scrum-evidence-capture.spec.js` | Cubierto |\r\n| `RF-DASH-001` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/core/api.js` | `tests/system/offline-fallback.test.js` | Cubierto |\r\n| `RF-DASH-002` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/shared/MarkdownViewer.js` | `tests/acceptance/dual-editor.spec.js` | Cubierto |\r\n| `RF-DASH-003` | `BR-DASH-002` | `HU-DASH-01` | `project-docs/src/shared/Icons.js` | `tests/unit/ui-anti-emoji.test.js` | Cubierto |\r\n| `RF-SYNC-001` | `BR-SYNC-001` | `HU-SYNC-01` | `.agents/skills/sync-skills/` | `tests/whitebox/sync-pipeline.test.js` | Cubierto |\r\n| `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `project-docs/verify.sh` | Suite de 9 fases (16 unit, 12 wb, 8 bb, 7 sys, 1 load, 5 e2e, 10 acceptance) | Cubierto |\r\n",
@@ -2146,6 +2237,21 @@ window.__FALLBACK_DATA__ = {
       "isModule": false,
       "moduleName": null
     },
+    "ai-runs-log.md": {
+      "key": "ai-runs-log.md",
+      "filename": "ai-runs-log.md",
+      "title": "Registro Soberano de Ejecuciones IA y Skills SDD (Plane AI Audit Log)",
+      "summary": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
+      "shelf": "general",
+      "readingTime": 14,
+      "wordCount": 2699,
+      "lastModified": "2026-11-07",
+      "ruleCount": 0,
+      "reqCount": 0,
+      "adrCount": 0,
+      "isModule": false,
+      "moduleName": null
+    },
     "business-rules.md": {
       "key": "business-rules.md",
       "filename": "business-rules.md",
@@ -2194,11 +2300,11 @@ window.__FALLBACK_DATA__ = {
     "data-dictionary.md": {
       "key": "data-dictionary.md",
       "filename": "data-dictionary.md",
-      "title": "Diccionario de Datos & Persistencia Docs-as-Code",
+      "title": "Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)",
       "summary": "erDiagram",
       "shelf": "architecture",
-      "readingTime": 2,
-      "wordCount": 345,
+      "readingTime": 4,
+      "wordCount": 788,
       "lastModified": "2026-11-07",
       "ruleCount": 0,
       "reqCount": 0,
@@ -3549,16 +3655,176 @@ window.__FALLBACK_DATA__ = {
     "id": "ws-harness",
     "name": "Harness Engineering Workspace",
     "slug": "harness-engineering",
-    "created_at": "2026-11-07 15:48:41"
+    "created_at": "2026-11-07 15:48:41",
+    "owner_id": "user-leader",
+    "organization_size": "10-50",
+    "timezone": "America/Bogota",
+    "updated_at": "2026-11-07 19:39:03"
   },
   "project": {
     "id": "proj-harness",
     "workspace_id": "ws-harness",
-    "name": "Arnés de Ingeniería SDD Multi-Agente",
+    "name": "Arnes de Ingenieria SDD Multi-Agente",
     "slug": "harness-sdd",
-    "description": "Plataforma integral de ingeniería dirigida por specs con soporte multi-agente y gestión ágil",
-    "created_at": "2026-11-07 15:48:41"
+    "description": "Plataforma integral de ingenieria dirigida por specs con soporte multi-agente, modelo relacional Plane y persistencia dual SQLite + Markdown",
+    "created_at": "2026-11-07 15:48:41",
+    "identifier": "INT",
+    "network": 2,
+    "cycle_view": 1,
+    "module_view": 1,
+    "issue_views_view": 1,
+    "page_view": 1,
+    "inbox_view": 1,
+    "is_time_tracking_enabled": 1,
+    "is_issue_type_enabled": 1,
+    "estimate_id": "est-fibonacci",
+    "default_state_id": "state-backlog",
+    "default_assignee_id": "user-leader",
+    "project_lead_id": "user-leader",
+    "updated_at": "2026-11-07 19:39:03"
   },
+  "users": [
+    {
+      "id": "user-implementer",
+      "username": "implementer",
+      "email": "implementer@harness.ai",
+      "display_name": "Implementador Agnostico & TDD",
+      "role": "implementer",
+      "is_bot": 1,
+      "bot_type": "sdd-code-agent",
+      "avatar_svg": "terminal",
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "user-leader",
+      "username": "leader",
+      "email": "leader@harness.ai",
+      "display_name": "Lider Tecnico & Orquestador",
+      "role": "leader",
+      "is_bot": 1,
+      "bot_type": "sdd-orchestrator",
+      "avatar_svg": "shield",
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "user-reviewer",
+      "username": "reviewer",
+      "email": "reviewer@harness.ai",
+      "display_name": "Revisor de Calidad & Auditoria QA",
+      "role": "reviewer",
+      "is_bot": 1,
+      "bot_type": "sdd-qa-auditor",
+      "avatar_svg": "checkCircle",
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "user-spec-author",
+      "username": "spec-author",
+      "email": "spec-author@harness.ai",
+      "display_name": "Autor de Especificaciones SDD",
+      "role": "spec-author",
+      "is_bot": 1,
+      "bot_type": "sdd-spec-agent",
+      "avatar_svg": "fileText",
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "user-human-lead",
+      "username": "human-lead",
+      "email": "architect@harness.local",
+      "display_name": "Ingeniero Lider (Human Gate)",
+      "role": "human-lead",
+      "is_bot": 0,
+      "bot_type": "human",
+      "avatar_svg": "users",
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
+  "workspaceMembers": [
+    {
+      "id": "wm-leader",
+      "workspace_id": "ws-harness",
+      "user_id": "user-leader",
+      "role": 20,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "wm-spec-author",
+      "workspace_id": "ws-harness",
+      "user_id": "user-spec-author",
+      "role": 20,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "wm-implementer",
+      "workspace_id": "ws-harness",
+      "user_id": "user-implementer",
+      "role": 20,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "wm-reviewer",
+      "workspace_id": "ws-harness",
+      "user_id": "user-reviewer",
+      "role": 20,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "wm-human-lead",
+      "workspace_id": "ws-harness",
+      "user_id": "user-human-lead",
+      "role": 20,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
+  "apiTokens": [
+    {
+      "id": "tok-leader",
+      "workspace_id": "ws-harness",
+      "user_id": "user-leader",
+      "label": "SDD Master Orchestrator Token",
+      "user_type": 1,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "tok-spec",
+      "workspace_id": "ws-harness",
+      "user_id": "user-spec-author",
+      "label": "SDD Spec Author Bot Token",
+      "user_type": 1,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "tok-impl",
+      "workspace_id": "ws-harness",
+      "user_id": "user-implementer",
+      "label": "SDD Implementer & QA Bot Token",
+      "user_type": 1,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "tok-rev",
+      "workspace_id": "ws-harness",
+      "user_id": "user-reviewer",
+      "label": "SDD Reviewer & Auditor Bot Token",
+      "user_type": 1,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
   "states": [
     {
       "id": "state-backlog",
@@ -3566,7 +3832,12 @@ window.__FALLBACK_DATA__ = {
       "name": "Backlog",
       "color": "#71717a",
       "sequence": 10,
-      "group_name": "backlog"
+      "group_name": "backlog",
+      "description": "",
+      "slug": "backlog",
+      "is_triage": 0,
+      "is_default": 1,
+      "created_at": ""
     },
     {
       "id": "state-todo",
@@ -3574,7 +3845,12 @@ window.__FALLBACK_DATA__ = {
       "name": "Todo",
       "color": "#3b82f6",
       "sequence": 20,
-      "group_name": "unstarted"
+      "group_name": "unstarted",
+      "description": "",
+      "slug": "todo",
+      "is_triage": 0,
+      "is_default": 0,
+      "created_at": ""
     },
     {
       "id": "state-in-progress",
@@ -3582,7 +3858,12 @@ window.__FALLBACK_DATA__ = {
       "name": "In Progress",
       "color": "#eab308",
       "sequence": 30,
-      "group_name": "started"
+      "group_name": "started",
+      "description": "",
+      "slug": "in-progress",
+      "is_triage": 0,
+      "is_default": 0,
+      "created_at": ""
     },
     {
       "id": "state-in-review",
@@ -3590,7 +3871,12 @@ window.__FALLBACK_DATA__ = {
       "name": "In Review",
       "color": "#a855f7",
       "sequence": 40,
-      "group_name": "review"
+      "group_name": "review",
+      "description": "",
+      "slug": "in-review",
+      "is_triage": 0,
+      "is_default": 0,
+      "created_at": ""
     },
     {
       "id": "state-done",
@@ -3598,7 +3884,12 @@ window.__FALLBACK_DATA__ = {
       "name": "Done",
       "color": "#22c55e",
       "sequence": 50,
-      "group_name": "completed"
+      "group_name": "completed",
+      "description": "",
+      "slug": "done",
+      "is_triage": 0,
+      "is_default": 0,
+      "created_at": ""
     },
     {
       "id": "state-cancelled",
@@ -3606,7 +3897,189 @@ window.__FALLBACK_DATA__ = {
       "name": "Cancelled",
       "color": "#ef4444",
       "sequence": 60,
-      "group_name": "cancelled"
+      "group_name": "cancelled",
+      "description": "",
+      "slug": "cancelled",
+      "is_triage": 0,
+      "is_default": 0,
+      "created_at": ""
+    }
+  ],
+  "labels": [
+    {
+      "id": "lbl-feature",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "feature",
+      "description": "Nueva funcionalidad del sistema",
+      "color": "#6366f1",
+      "sort_order": 10,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "lbl-bugfix",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "bugfix",
+      "description": "Correccion determinista de defecto",
+      "color": "#ef4444",
+      "sort_order": 20,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "lbl-sdd",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "sdd-spec",
+      "description": "Desarrollo guiado por especificacion formal",
+      "color": "#8b5cf6",
+      "sort_order": 30,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "lbl-tdd",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "tdd-verified",
+      "description": "Cobertura de pruebas guiada por TDD",
+      "color": "#10b981",
+      "sort_order": 40,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "lbl-qa",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "qa-evidence",
+      "description": "Evidencia de verificacion multinivel y E2E",
+      "color": "#06b6d4",
+      "sort_order": 50,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "lbl-arch",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "screaming-arch",
+      "description": "Arquitectura Screaming orientada a dominios",
+      "color": "#f59e0b",
+      "sort_order": 60,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "lbl-ai",
+      "project_id": "proj-harness",
+      "parent_id": null,
+      "name": "ai-agent",
+      "description": "Trazabilidad de ejecucion de skills e IA",
+      "color": "#ec4899",
+      "sort_order": 70,
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
+  "estimates": [
+    {
+      "id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "name": "Fibonacci SDD Points",
+      "description": "Escala de estimacion agil para tareas SDD",
+      "type": "points",
+      "last_used": 1,
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
+  "estimatePoints": [
+    {
+      "id": "ep-1",
+      "estimate_id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "key_val": 0,
+      "description": "Cambio puntual o ajuste FTD",
+      "value": "1",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "ep-2",
+      "estimate_id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "key_val": 1,
+      "description": "Tarea acotada de complejidad baja",
+      "value": "2",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "ep-3",
+      "estimate_id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "key_val": 2,
+      "description": "Feature estandar con tests unitarios",
+      "value": "3",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "ep-5",
+      "estimate_id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "key_val": 3,
+      "description": "Feature multi-componente con E2E",
+      "value": "5",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "ep-8",
+      "estimate_id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "key_val": 4,
+      "description": "Arquitectura transversal o migracion",
+      "value": "8",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "ep-13",
+      "estimate_id": "est-fibonacci",
+      "project_id": "proj-harness",
+      "key_val": 5,
+      "description": "Rediseño estructural multi-dominio",
+      "value": "13",
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
+  "issueTypes": [
+    {
+      "id": "type-epic",
+      "project_id": "proj-harness",
+      "name": "Epic",
+      "description": "Iniciativa multi-modulo de alto nivel",
+      "logo_props": "{}",
+      "is_epic": 1,
+      "is_default": 0,
+      "level": 0,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "type-feature",
+      "project_id": "proj-harness",
+      "name": "Feature",
+      "description": "Historia de usuario o capacidad funcional SDD",
+      "logo_props": "{}",
+      "is_epic": 0,
+      "is_default": 1,
+      "level": 1,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "type-bugfix",
+      "project_id": "proj-harness",
+      "name": "Bugfix",
+      "description": "Correccion de error o anomalia tecnica",
+      "logo_props": "{}",
+      "is_epic": 0,
+      "is_default": 0,
+      "level": 1,
+      "is_active": 1,
+      "created_at": "2026-11-07 19:36:23"
     }
   ],
   "cycles": [
@@ -3614,31 +4087,43 @@ window.__FALLBACK_DATA__ = {
       "id": "cycle-1",
       "project_id": "proj-harness",
       "name": "Ciclo 1: Fundacional (Harness Core)",
-      "description": "Arquitectura base, sincronización de skills y tablero visual",
+      "description": "Arquitectura base, sincronizacion de skills y tablero visual",
       "start_date": "2026-10-15",
       "end_date": "2026-10-31",
       "status": "completed",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "owned_by_id": "user-leader",
+      "view_props": "{}",
+      "sort_order": 1000,
+      "progress_snapshot": "{}"
     },
     {
       "id": "cycle-2",
       "project_id": "proj-harness",
       "name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
-      "description": "Testing multinivel, Playwright E2E y pureza de raíz",
+      "description": "Testing multinivel, Playwright E2E y pureza de raiz",
       "start_date": "2026-11-01",
       "end_date": "2026-11-06",
       "status": "completed",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "owned_by_id": "user-leader",
+      "view_props": "{}",
+      "sort_order": 1000,
+      "progress_snapshot": "{}"
     },
     {
       "id": "cycle-3",
       "project_id": "proj-harness",
       "name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
-      "description": "Replicación UX Plane, persistencia SQLite y soporte espejo Markdown",
+      "description": "Replicacion UX Plane, modelo relacional completo y persistencia dual con Skills IA",
       "start_date": "2026-11-07",
       "end_date": "2026-11-20",
       "status": "active",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "owned_by_id": "user-leader",
+      "view_props": "{}",
+      "sort_order": 1000,
+      "progress_snapshot": "{}"
     }
   ],
   "modules": [
@@ -3646,10 +4131,17 @@ window.__FALLBACK_DATA__ = {
       "id": "mod-orchestrator",
       "project_id": "proj-harness",
       "name": "Agent Orchestrator",
-      "description": "Orquestación de agentes autónomos, roles y reglas de branching",
+      "description": "Orquestacion de agentes autonomos, roles y reglas de branching",
       "lead_role": "leader",
       "status": "completed",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "description_text": "",
+      "description_html": "",
+      "start_date": null,
+      "target_date": null,
+      "lead_id": "user-leader",
+      "view_props": "{}",
+      "sort_order": 1000
     },
     {
       "id": "mod-visualizer",
@@ -3658,16 +4150,30 @@ window.__FALLBACK_DATA__ = {
       "description": "Tablero visual, vistas Plane, grafos de dependencias y 3D",
       "lead_role": "implementer",
       "status": "in_progress",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "description_text": "",
+      "description_html": "",
+      "start_date": null,
+      "target_date": null,
+      "lead_id": "user-implementer",
+      "view_props": "{}",
+      "sort_order": 1000
     },
     {
       "id": "mod-core",
       "project_id": "proj-harness",
       "name": "Harness Core",
-      "description": "Scripts verify.sh, configuraciones y reglas del arnés",
+      "description": "Scripts verify.sh, configuraciones y reglas del arnes",
       "lead_role": "leader",
       "status": "completed",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "description_text": "",
+      "description_html": "",
+      "start_date": null,
+      "target_date": null,
+      "lead_id": "user-leader",
+      "view_props": "{}",
+      "sort_order": 1000
     },
     {
       "id": "mod-knowledge",
@@ -3676,16 +4182,796 @@ window.__FALLBACK_DATA__ = {
       "description": "Base de conocimiento Docs-as-Code soberana y DeepWiki",
       "lead_role": "spec-author",
       "status": "completed",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "description_text": "",
+      "description_html": "",
+      "start_date": null,
+      "target_date": null,
+      "lead_id": "user-spec-author",
+      "view_props": "{}",
+      "sort_order": 1000
     },
     {
       "id": "mod-qa",
       "project_id": "proj-harness",
       "name": "Testing QA Suite",
-      "description": "Verificación multinivel en 9 fases, Playwright E2E y suites de prueba",
+      "description": "Verificacion multinivel en 9 fases, Playwright E2E y suites de prueba",
       "lead_role": "reviewer",
       "status": "completed",
-      "created_at": "2026-11-07 15:48:41"
+      "created_at": "2026-11-07 15:48:41",
+      "description_text": "",
+      "description_html": "",
+      "start_date": null,
+      "target_date": null,
+      "lead_id": "user-reviewer",
+      "view_props": "{}",
+      "sort_order": 1000
+    }
+  ],
+  "views": [
+    {
+      "id": "view-all-issues",
+      "project_id": "proj-harness",
+      "workspace_id": "ws-harness",
+      "name": "Todas las Tareas SDD",
+      "description": "Vista maestra de todas las features y bugfixes del proyecto",
+      "query_json": "{}",
+      "filters_json": "{\"state\":\"all\",\"priority\":\"all\",\"assignee\":\"all\"}",
+      "display_filters_json": "{\"layout\":\"board\",\"group_by\":\"state\",\"order_by\":\"sequence_id\"}",
+      "display_properties_json": "{}",
+      "access": 1,
+      "is_locked": 0,
+      "sort_order": 10,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "view-active-cycle",
+      "project_id": "proj-harness",
+      "workspace_id": "ws-harness",
+      "name": "Sprint Activo (Ciclo 3)",
+      "description": "Tareas comprometidas en el ciclo de iteracion actual",
+      "query_json": "{}",
+      "filters_json": "{\"cycle_id\":\"cycle-3\",\"state\":\"all\"}",
+      "display_filters_json": "{\"layout\":\"list\",\"group_by\":\"priority\",\"order_by\":\"priority\"}",
+      "display_properties_json": "{}",
+      "access": 1,
+      "is_locked": 0,
+      "sort_order": 20,
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "view-qa-verified",
+      "project_id": "proj-harness",
+      "workspace_id": "ws-harness",
+      "name": "Auditadas por QA & Evidencias",
+      "description": "Features cerradas con reporte de verificacion y capturas E2E",
+      "query_json": "{}",
+      "filters_json": "{\"state\":\"state-done\",\"label\":\"lbl-qa\"}",
+      "display_filters_json": "{\"layout\":\"spreadsheet\",\"group_by\":\"module\",\"order_by\":\"updated_at\"}",
+      "display_properties_json": "{}",
+      "access": 1,
+      "is_locked": 0,
+      "sort_order": 30,
+      "created_at": "2026-11-07 19:36:23"
+    }
+  ],
+  "aiConfigs": [
+    {
+      "id": "aicfg-model",
+      "workspace_id": "ws-harness",
+      "key": "LLM_MODEL",
+      "value": "gemini-2.5-pro",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "category": "AI_ENGINE",
+      "is_encrypted": 0,
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "aicfg-provider",
+      "workspace_id": "ws-harness",
+      "key": "LLM_PROVIDER",
+      "value": "antigravity-gemini-native",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "category": "AI_ENGINE",
+      "is_encrypted": 0,
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "aicfg-branching",
+      "workspace_id": "ws-harness",
+      "key": "SEMANTIC_BRANCH_RULE",
+      "value": "{feature|bugfix}/INT-{id}/{slug} (<= 80 chars)",
+      "provider": "harness-core",
+      "model": "git-guard",
+      "category": "GOVERNANCE",
+      "is_encrypted": 0,
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "aicfg-sync",
+      "workspace_id": "ws-harness",
+      "key": "TRIPLE_SKILL_MIRROR",
+      "value": ".opencode/skills -> .github/skills & .agents/skills",
+      "provider": "harness-core",
+      "model": "sync-skills-v2",
+      "category": "GOVERNANCE",
+      "is_encrypted": 0,
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "aicfg-persistence",
+      "workspace_id": "ws-harness",
+      "key": "DUAL_PERSISTENCE_ENGINE",
+      "value": "SQLite WAL (harness.db) + Markdown Mirror (.md)",
+      "provider": "harness-core",
+      "model": "sqlite-3-wal",
+      "category": "STORAGE",
+      "is_encrypted": 0,
+      "updated_at": "2026-11-07 19:39:03"
+    }
+  ],
+  "aiRuns": [
+    {
+      "id": "airun-INT-016-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-016",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-016",
+      "response_markdown": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+      "artifacts_json": "[\"project-docs/specs/016_plane_data_model_ai_tracking/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-016-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-016",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+      "response_markdown": "Especificacion creada en `project-docs/specs/016_plane_data_model_ai_tracking` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/016_plane_data_model_ai_tracking/requirements.md\",\"project-docs/specs/016_plane_data_model_ai_tracking/design.md\",\"project-docs/specs/016_plane_data_model_ai_tracking/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-015-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-015",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-015",
+      "response_markdown": "Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.",
+      "artifacts_json": "[\"project-docs/specs/015_screaming_modules_plane_unification/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-015-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-015",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
+      "response_markdown": "Especificacion creada en `project-docs/specs/015_screaming_modules_plane_unification` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/015_screaming_modules_plane_unification/requirements.md\",\"project-docs/specs/015_screaming_modules_plane_unification/design.md\",\"project-docs/specs/015_screaming_modules_plane_unification/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-014-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-014",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-014",
+      "response_markdown": "Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.",
+      "artifacts_json": "[\"project-docs/specs/014_screaming_modules_core_shared/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-014-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-014",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
+      "response_markdown": "Especificacion creada en `project-docs/specs/014_screaming_modules_core_shared` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/014_screaming_modules_core_shared/requirements.md\",\"project-docs/specs/014_screaming_modules_core_shared/design.md\",\"project-docs/specs/014_screaming_modules_core_shared/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-013-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-013",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-013",
+      "response_markdown": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
+      "artifacts_json": "[\"project-docs/specs/013_screaming_architecture_plane_refactor/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-013-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-013",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "response_markdown": "Especificacion creada en `project-docs/specs/013_screaming_architecture_plane_refactor` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/013_screaming_architecture_plane_refactor/requirements.md\",\"project-docs/specs/013_screaming_architecture_plane_refactor/design.md\",\"project-docs/specs/013_screaming_architecture_plane_refactor/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-012-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-012",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-012",
+      "response_markdown": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
+      "artifacts_json": "[\"project-docs/specs/012_plane_style_sqlite_project_management/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-012-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-012",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-012: Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+      "response_markdown": "Especificacion creada en `project-docs/specs/012_plane_style_sqlite_project_management` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/012_plane_style_sqlite_project_management/requirements.md\",\"project-docs/specs/012_plane_style_sqlite_project_management/design.md\",\"project-docs/specs/012_plane_style_sqlite_project_management/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-011-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-011",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-011",
+      "response_markdown": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
+      "artifacts_json": "[\"project-docs/specs/011_encapsulate_specs_and_scripts/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-011-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-011",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-011: Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/",
+      "response_markdown": "Especificacion creada en `project-docs/specs/011_encapsulate_specs_and_scripts` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/011_encapsulate_specs_and_scripts/requirements.md\",\"project-docs/specs/011_encapsulate_specs_and_scripts/design.md\",\"project-docs/specs/011_encapsulate_specs_and_scripts/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-010-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-010",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-010",
+      "response_markdown": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
+      "artifacts_json": "[\"project-docs/specs/010_harness_root_cleanliness_encapsulation/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-010-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-010",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-010: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés",
+      "response_markdown": "Especificacion creada en `project-docs/specs/010_harness_root_cleanliness_encapsulation` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/010_harness_root_cleanliness_encapsulation/requirements.md\",\"project-docs/specs/010_harness_root_cleanliness_encapsulation/design.md\",\"project-docs/specs/010_harness_root_cleanliness_encapsulation/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-009-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-009",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-009",
+      "response_markdown": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
+      "artifacts_json": "[\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-009-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-009",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-009: Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON",
+      "response_markdown": "Especificacion creada en `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/requirements.md\",\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/design.md\",\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-008-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-008",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-008",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/008_playwright_acceptance_testing/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-008-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-008",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright",
+      "response_markdown": "Especificacion creada en `project-docs/specs/008_playwright_acceptance_testing` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/008_playwright_acceptance_testing/requirements.md\",\"project-docs/specs/008_playwright_acceptance_testing/design.md\",\"project-docs/specs/008_playwright_acceptance_testing/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-007-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-007",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-007",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/007_automated_unit_testing_suite/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-007-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-007",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés",
+      "response_markdown": "Especificacion creada en `project-docs/specs/007_automated_unit_testing_suite` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/007_automated_unit_testing_suite/requirements.md\",\"project-docs/specs/007_automated_unit_testing_suite/design.md\",\"project-docs/specs/007_automated_unit_testing_suite/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-006-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-006",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-006",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/006_omnibox_global_search/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-006-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-006",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado",
+      "response_markdown": "Especificacion creada en `project-docs/specs/006_omnibox_global_search` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/006_omnibox_global_search/requirements.md\",\"project-docs/specs/006_omnibox_global_search/design.md\",\"project-docs/specs/006_omnibox_global_search/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-005-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-005",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-005",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/005_pyramidal_3d_constellation/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-005-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-005",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js",
+      "response_markdown": "Especificacion creada en `project-docs/specs/005_pyramidal_3d_constellation` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/005_pyramidal_3d_constellation/requirements.md\",\"project-docs/specs/005_pyramidal_3d_constellation/design.md\",\"project-docs/specs/005_pyramidal_3d_constellation/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-004-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-004",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-004",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/004_dashboard_editorial_dual_editor/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-004-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-004",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-004: Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis",
+      "response_markdown": "Especificacion creada en `project-docs/specs/004_dashboard_editorial_dual_editor` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/004_dashboard_editorial_dual_editor/requirements.md\",\"project-docs/specs/004_dashboard_editorial_dual_editor/design.md\",\"project-docs/specs/004_dashboard_editorial_dual_editor/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-003-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-003",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-003",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/003_knowledge_base_dynamic_engine/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-003-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-003",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-003: Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento",
+      "response_markdown": "Especificacion creada en `project-docs/specs/003_knowledge_base_dynamic_engine` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/003_knowledge_base_dynamic_engine/requirements.md\",\"project-docs/specs/003_knowledge_base_dynamic_engine/design.md\",\"project-docs/specs/003_knowledge_base_dynamic_engine/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-002-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-002",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-002",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/002_triple_mirror_skills_sync/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-002-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-002",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-002: Motor de Sincronización Triple de Skills",
+      "response_markdown": "Especificacion creada en `project-docs/specs/002_triple_mirror_skills_sync` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/002_triple_mirror_skills_sync/requirements.md\",\"project-docs/specs/002_triple_mirror_skills_sync/design.md\",\"project-docs/specs/002_triple_mirror_skills_sync/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-001-verify",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-001",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-001",
+      "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "artifacts_json": "[\"project-docs/specs/001_refactor_harness_architecture/verification-report.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 2420,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-INT-001-spec",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-001",
+      "page_id": null,
+      "actor_id": "user-spec-author",
+      "agent_role": "spec-author",
+      "skill_name": "generate-spec",
+      "task_type": "SPEC_GENERATION",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-001: Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+      "response_markdown": "Especificacion creada en `project-docs/specs/001_refactor_harness_architecture` con historia de usuario Scrum y subtareas DEV/QA.",
+      "artifacts_json": "[\"project-docs/specs/001_refactor_harness_architecture/requirements.md\",\"project-docs/specs/001_refactor_harness_architecture/design.md\",\"project-docs/specs/001_refactor_harness_architecture/tasks.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1850,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "airun-1794080183826-5kpr",
+      "workspace_id": "ws-harness",
+      "project_id": "proj-harness",
+      "issue_id": "INT-016",
+      "page_id": null,
+      "actor_id": "user-reviewer",
+      "agent_role": "reviewer",
+      "skill_name": "verify-spec",
+      "task_type": "QA_VERIFICATION_CLOSURE",
+      "provider": "antigravity-gemini",
+      "model": "gemini-2.5-pro",
+      "prompt_summary": "Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD",
+      "response_markdown": "",
+      "artifacts_json": "[\"project-docs/src/core/db.js\",\"project-docs/src/core/sqlite-sync.js\",\"project-docs/cli.js\",\"project-docs/knowledge/ai-runs-log.md\"]",
+      "tokens_used": 0,
+      "duration_ms": 1200,
+      "status": "completed",
+      "created_at": "2026-11-07 19:36:23"
     }
   ],
   "issues": [
@@ -3708,12 +4994,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce\",\"Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests\",\"package.json y suite de tests unitarios están configurados y pasando en verde\",\"El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Auditoría real del repositorio, saneamiento de mocks e-commerce residuales, desacoplamiento universal de subagentes y configuración de tests automatizados.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
       "module_name": "Agent Orchestrator",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-001-DEV",
@@ -3732,6 +5033,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-001",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-001",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-001",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-001",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-001",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-001-created",
+          "issue_id": "INT-001",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/001_refactor_harness_architecture",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-001-done",
+          "issue_id": "INT-001",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-001",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-001-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-001",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-001",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/001_refactor_harness_architecture/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-001-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-001",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-001: Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+          "response_markdown": "Especificacion creada en `project-docs/specs/001_refactor_harness_architecture` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/001_refactor_harness_architecture/requirements.md\",\"project-docs/specs/001_refactor_harness_architecture/design.md\",\"project-docs/specs/001_refactor_harness_architecture/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -3760,12 +5182,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/\",\"Frontmatter name y description idénticos en los 3 espejos\",\"Skill sync-skills disponible para auditoría de discrepancias\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Mecanismo de replicación y paridad entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
       "module_name": "Harness Core",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-002-DEV",
@@ -3784,6 +5221,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-002",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-002",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-002",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-002",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-002",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-002-created",
+          "issue_id": "INT-002",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/002_triple_mirror_skills_sync",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-002-done",
+          "issue_id": "INT-002",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-002",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-002-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-002",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-002",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/002_triple_mirror_skills_sync/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-002-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-002",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-002: Motor de Sincronización Triple de Skills",
+          "response_markdown": "Especificacion creada en `project-docs/specs/002_triple_mirror_skills_sync` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/002_triple_mirror_skills_sync/requirements.md\",\"project-docs/specs/002_triple_mirror_skills_sync/design.md\",\"project-docs/specs/002_triple_mirror_skills_sync/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -3811,12 +5369,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Escaneo de topología en Fase 1 sin saturación de tokens\",\"Documentación profunda por módulo en Fase 2\",\"Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Protocolo de elicitación profunda en 2 fases con C4, UML, ERD, diccionario de datos, reglas BR-* y ADRs.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
       "module_name": "Knowledge Engine",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-003-DEV",
@@ -3835,6 +5408,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-003",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-003",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-003",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-003",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-003",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-003-created",
+          "issue_id": "INT-003",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/003_knowledge_base_dynamic_engine",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-003-done",
+          "issue_id": "INT-003",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-003",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-003-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-003",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-003",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/003_knowledge_base_dynamic_engine/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-003-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-003",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-003: Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento",
+          "response_markdown": "Especificacion creada en `project-docs/specs/003_knowledge_base_dynamic_engine` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/003_knowledge_base_dynamic_engine/requirements.md\",\"project-docs/specs/003_knowledge_base_dynamic_engine/design.md\",\"project-docs/specs/003_knowledge_base_dynamic_engine/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -3862,12 +5556,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Biblioteca organizada por estantes temáticos con tarjeta Hero destacada\",\"Lector de artículos con ancho centrado a 780px e interlineado 1.75em\",\"Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional\",\"Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde\",\"Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Interfaz visual con Tailwind CSS v4, iconografia SVG accesible (0 emojis), tabla tecnica de stack, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-004-DEV",
@@ -3886,6 +5595,134 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-004",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-004",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-004",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-004",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-004",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-004",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-004-created",
+          "issue_id": "INT-004",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/004_dashboard_editorial_dual_editor",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-004-done",
+          "issue_id": "INT-004",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-004",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-004-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-004",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-004",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/004_dashboard_editorial_dual_editor/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-004-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-004",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-004: Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis",
+          "response_markdown": "Especificacion creada en `project-docs/specs/004_dashboard_editorial_dual_editor` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/004_dashboard_editorial_dual_editor/requirements.md\",\"project-docs/specs/004_dashboard_editorial_dual_editor/design.md\",\"project-docs/specs/004_dashboard_editorial_dual_editor/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -3915,12 +5752,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)\",\"Distribución radial armónica para evitar colisión de etiquetas\",\"Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Visualización 3D espacial estructurada en 4 niveles arquitectónicos con anillos translúcidos y flujo de energía Bezier.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-005-DEV",
@@ -3939,6 +5791,134 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-005",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-005",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-005",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-005",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-005",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-005",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-005-created",
+          "issue_id": "INT-005",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/005_pyramidal_3d_constellation",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-005-done",
+          "issue_id": "INT-005",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-005",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-005-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-005",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-005",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/005_pyramidal_3d_constellation/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-005-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-005",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js",
+          "response_markdown": "Especificacion creada en `project-docs/specs/005_pyramidal_3d_constellation` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/005_pyramidal_3d_constellation/requirements.md\",\"project-docs/specs/005_pyramidal_3d_constellation/design.md\",\"project-docs/specs/005_pyramidal_3d_constellation/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -3966,12 +5946,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección\",\"Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts\",\"Navegación fluida por teclado (Up, Down, Enter, Escape)\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Buscador omnibox modal (Ctrl+K / Cmd+K) con filtrado reactivo de tareas, documentos, reglas y módulos.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-006-DEV",
@@ -3990,6 +5985,134 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-006",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-006",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-006",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-006",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-006",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-006",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-006-created",
+          "issue_id": "INT-006",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/006_omnibox_global_search",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-006-done",
+          "issue_id": "INT-006",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-006",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-006-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-006",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-006",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/006_omnibox_global_search/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-006-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-006",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado",
+          "response_markdown": "Especificacion creada en `project-docs/specs/006_omnibox_global_search` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/006_omnibox_global_search/requirements.md\",\"project-docs/specs/006_omnibox_global_search/design.md\",\"project-docs/specs/006_omnibox_global_search/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4017,12 +6140,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Suite de tests unitarios nativos ejecutables con npm test\",\"Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown\",\"Validación de cálculo de tiempos de lectura y clasificación en estantes\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Pruebas automatizadas con Node.js Test Runner para sync-data.js, serializadores de markdown, TOC y reglas de branching.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
       "module_name": "Testing QA Suite",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-007-DEV",
@@ -4041,6 +6179,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-007",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-007",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-007",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-007",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-007",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-007-created",
+          "issue_id": "INT-007",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/007_automated_unit_testing_suite",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-007-done",
+          "issue_id": "INT-007",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-007",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-007-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-007",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-007",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/007_automated_unit_testing_suite/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-007-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-007",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés",
+          "response_markdown": "Especificacion creada en `project-docs/specs/007_automated_unit_testing_suite` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/007_automated_unit_testing_suite/requirements.md\",\"project-docs/specs/007_automated_unit_testing_suite/design.md\",\"project-docs/specs/007_automated_unit_testing_suite/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4068,12 +6327,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Script de prueba automatizada verificando carga de index.html\",\"Verificación de renderizado de la constelación 3D y conmutación de pestañas\",\"Prueba de edición y persistencia en el editor dual\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Automatización integral de pruebas E2E, caja blanca y caja negra para validar el tablero, constelación 3D y editor dual.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
       "module_name": "Testing QA Suite",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-008-DEV",
@@ -4092,6 +6366,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-008",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-008",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-008",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-008",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-008",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-008-created",
+          "issue_id": "INT-008",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/008_playwright_acceptance_testing",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-008-done",
+          "issue_id": "INT-008",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-008",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-008-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-008",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-008",
+          "response_markdown": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+          "artifacts_json": "[\"project-docs/specs/008_playwright_acceptance_testing/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-008-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-008",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright",
+          "response_markdown": "Especificacion creada en `project-docs/specs/008_playwright_acceptance_testing` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/008_playwright_acceptance_testing/requirements.md\",\"project-docs/specs/008_playwright_acceptance_testing/design.md\",\"project-docs/specs/008_playwright_acceptance_testing/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4119,12 +6514,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Los specs incorporan estructura Scrum con User Story (Como/Quiero/Para), DoR y DoD\",\"Cada tarea principal desglosa una Subtarea de Desarrollo (DEV) y una Subtarea de QA estilo Jira\",\"Al cerrar la tarea se documenta en el spec y en JSON qué se hizo, qué pruebas se realizaron y capturas de pantalla\",\"Toda la persistencia se realiza 100% en JSON sin bases de datos SQL\",\"El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla\"]",
       "evidence_summary": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Estandarización de especificaciones con User Stories Scrum (Como/Quiero/Para), desglose formal de subtareas de Desarrollo (DEV) y de QA estilo Jira, y protocolo de cierre con evidencias técnicas y capturas de pantalla integradas en JSON.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
       "module_name": "Agent Orchestrator",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-009-DEV",
@@ -4143,6 +6553,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-009",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-009",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-009",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-009",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-009",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-009-created",
+          "issue_id": "INT-009",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-009-done",
+          "issue_id": "INT-009",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-009",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-009-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-009",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-009",
+          "response_markdown": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
+          "artifacts_json": "[\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-009-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-009",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-009: Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON",
+          "response_markdown": "Especificacion creada en `project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/requirements.md\",\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/design.md\",\"project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4172,12 +6703,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)\",\"Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión\",\"Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente\",\"Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js\",\"El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json\",\"ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md\",\"verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)\",\"El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas\",\"El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga\"]",
       "evidence_summary": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Reorganizar la arquitectura de archivos del arnés para que la raíz contenga exclusivamente los archivos y carpetas indispensables de adopción (.agents/, .github/, .opencode/, project-docs/, AGENTS.md, opencode.json, project-spec.yaml, verify.sh), encapsulando el tooling npm, scripts, suites de prueba y specs dentro de project-docs/ para prevenir cualquier colisión al copiar y pegar el arnés en proyectos externos (.NET, Python, Java, Go, etc.).",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
       "module_name": "Agent Orchestrator",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-010-DEV",
@@ -4196,6 +6742,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-010",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-010",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-010",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-010",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-010",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-010-created",
+          "issue_id": "INT-010",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/010_harness_root_cleanliness_encapsulation",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-010-done",
+          "issue_id": "INT-010",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-010",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-010-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-010",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-010",
+          "response_markdown": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
+          "artifacts_json": "[\"project-docs/specs/010_harness_root_cleanliness_encapsulation/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-010-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-010",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-010: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés",
+          "response_markdown": "Especificacion creada en `project-docs/specs/010_harness_root_cleanliness_encapsulation` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/010_harness_root_cleanliness_encapsulation/requirements.md\",\"project-docs/specs/010_harness_root_cleanliness_encapsulation/design.md\",\"project-docs/specs/010_harness_root_cleanliness_encapsulation/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4229,12 +6896,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La carpeta specs/ reside exclusivamente dentro de project-docs/specs/\",\"El archivo project-spec.yaml reside en project-docs/project-spec.yaml\",\"El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación\",\"La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)\",\"Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/\",\"Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/\",\"El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde\",\"El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0\"]",
       "evidence_summary": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Reubicar specs/, verify.sh y project-spec.yaml dentro de project-docs/ para dejar la raíz con exclusivamente 4 carpetas (.agents/, .github/, .opencode/, project-docs/) y 4 archivos indispensables (AGENTS.md, opencode.json, README.md, .gitignore). Actualizar exhaustivamente todos los agentes y skills de Antigravity, Copilot y OpenCode para crear y consumir archivos en las nuevas rutas.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
       "module_name": "Agent Orchestrator",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-011-DEV",
@@ -4253,6 +6935,127 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-011",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-011",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-011",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-011",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-011",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-011-created",
+          "issue_id": "INT-011",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/011_encapsulate_specs_and_scripts",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-011-done",
+          "issue_id": "INT-011",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-011",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-011-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-011",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-011",
+          "response_markdown": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
+          "artifacts_json": "[\"project-docs/specs/011_encapsulate_specs_and_scripts/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-011-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-011",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-011: Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/",
+          "response_markdown": "Especificacion creada en `project-docs/specs/011_encapsulate_specs_and_scripts` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/011_encapsulate_specs_and_scripts/requirements.md\",\"project-docs/specs/011_encapsulate_specs_and_scripts/design.md\",\"project-docs/specs/011_encapsulate_specs_and_scripts/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4285,12 +7088,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.\",\"Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.\",\"Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).\",\"Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).\",\"Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.\",\"Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.\",\"Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.\",\"Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.\",\"Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).\",\"Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-012-DEV",
@@ -4309,6 +7127,158 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-012",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-012",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-012",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-012",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-012",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-012",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel-INT-012-blocked-by-INT-011",
+          "issue_id": "INT-012",
+          "related_issue_id": "INT-011",
+          "relation_type": "blocked_by",
+          "created_at": "2026-11-07 19:37:50"
+        }
+      ],
+      "activities": [
+        {
+          "id": "act-INT-012-created",
+          "issue_id": "INT-012",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/012_plane_style_sqlite_project_management",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-012-done",
+          "issue_id": "INT-012",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-012",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [
+        {
+          "id": "ev-INT-012-report",
+          "issue_id": "INT-012",
+          "subtask_id": "INT-012-QA-1",
+          "type": "verification-report",
+          "title": "Reporte de Verificacion (INT-012)",
+          "file_path": "project-docs/specs/012_plane_sqlite_ai_platform/verification-report.md",
+          "asset_url": "",
+          "file_size": 0,
+          "report_markdown": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
+          "metrics_json": "{\"status\":\"passed\",\"verified\":true}",
+          "created_by_skill": "verify-spec",
+          "is_uploaded": 1,
+          "created_at": "2026-11-07 19:37:50"
+        }
+      ],
+      "ai_runs": [
+        {
+          "id": "airun-INT-012-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-012",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-012",
+          "response_markdown": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
+          "artifacts_json": "[\"project-docs/specs/012_plane_style_sqlite_project_management/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-012-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-012",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-012: Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+          "response_markdown": "Especificacion creada en `project-docs/specs/012_plane_style_sqlite_project_management` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/012_plane_style_sqlite_project_management/requirements.md\",\"project-docs/specs/012_plane_style_sqlite_project_management/design.md\",\"project-docs/specs/012_plane_style_sqlite_project_management/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4343,12 +7313,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).\",\"Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.\",\"Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.\",\"Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.\",\"Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.\",\"Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.\",\"Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.\",\"Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
       "created_at": "2026-11-07 16:47:57",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Refactorizacion arquitectonica integral del frontend bajo Screaming Architecture: cada dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) encapsula sus propios componentes, vistas y helpers con bucles funcionales de renderizado (estilo React en Vanilla JS). Unificacion total del tablero en una experiencia unica inspirada en Plane sin depender del tablero clasico, diseno UI/UX y graficos mejorados (burn-down, C4, constelacion 3D), y CLI soberana ('node project-docs/cli.js') para manipulacion y consulta directa de tareas y base de conocimiento por agentes de IA, skills y terminal.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-013-DEV",
@@ -4367,6 +7352,134 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-013",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-013",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-013",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-013",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-013",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-013",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-013-created",
+          "issue_id": "INT-013",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/013_screaming_architecture_plane_refactor",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-013-done",
+          "issue_id": "INT-013",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-013",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-013-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-013",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-013",
+          "response_markdown": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
+          "artifacts_json": "[\"project-docs/specs/013_screaming_architecture_plane_refactor/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-013-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-013",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+          "response_markdown": "Especificacion creada en `project-docs/specs/013_screaming_architecture_plane_refactor` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/013_screaming_architecture_plane_refactor/requirements.md\",\"project-docs/specs/013_screaming_architecture_plane_refactor/design.md\",\"project-docs/specs/013_screaming_architecture_plane_refactor/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4399,12 +7512,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/modules/ con dominios Projects, Issues, Cycles, Pages y Harness encapsulados con components/, pages/, services/, store/ y barriles index.js.\",\"Nucleo transversal reactivo en project-docs/src/core/ con Store Observer Pub-Sub, Router hash con soporte de query parameters, EventBus desacoplado y ApiClient con fallback offline.\",\"Capa compartida agnostica en project-docs/src/shared/ con 40+ iconos vectoriales 100% SVG nativos, utilidades funcionales renderList y shell MasterLayout unificado.\",\"Persistencia dual determinista con SQLite WAL (project-docs/data/harness.db) y espejo continuo en archivos Markdown en disco para agentes y CLI.\",\"Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright, tests de whitebox, blackbox, sistema y carga pasando al 100% en verde.\",\"Zero emojis en codigo fuente, interfaces y documentacion, con cumplimiento de limite de 80 caracteres en ramas y pureza estricta en la raiz del proyecto.\"]",
       "evidence_summary": "Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.",
       "created_at": "2026-11-07 18:35:47",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Reestructuracion modular estricta orientada a dominios de negocio bajo Screaming Architecture pura: src/modules/ (Projects, Issues, Cycles, Pages, Harness), src/core/ (Store Observer Pub-Sub, Router hash con URL params, EventBus, ApiClient, persistencia SQLite WAL) y src/shared/ (Icons 100% SVG nativo, renderList funcional, MasterLayout, Sidebar, TopBar, Omnibox). Soporte para persistencia dual (SQLite + Markdown), cero emojis, arquitectura desacoplada para agentes y skills, y cobertura completa en 9 niveles de verificacion.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-014-DEV",
@@ -4423,6 +7551,134 @@ window.__FALLBACK_DATA__ = {
           "assignee_role": "reviewer",
           "status": "done",
           "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-014",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-014",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-014",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-014",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-014",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-014",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-014-created",
+          "issue_id": "INT-014",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/014_screaming_modules_core_shared",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-014-done",
+          "issue_id": "INT-014",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-014",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-014-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-014",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-014",
+          "response_markdown": "Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.",
+          "artifacts_json": "[\"project-docs/specs/014_screaming_modules_core_shared/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-014-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-014",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
+          "response_markdown": "Especificacion creada en `project-docs/specs/014_screaming_modules_core_shared` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/014_screaming_modules_core_shared/requirements.md\",\"project-docs/specs/014_screaming_modules_core_shared/design.md\",\"project-docs/specs/014_screaming_modules_core_shared/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
         }
       ],
       "acceptance": [
@@ -4453,12 +7709,27 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Eliminacion fisica completa de project-docs/src/features/ sin directorios residuales.\",\"Consolidacion estricta de 10 modulos en project-docs/src/modules/ con components/, pages/, services/, store/ y barriles index.js.\",\"Punto de entrada src/main.js consumiendo exclusivamente src/modules/ y src/shared/ui/.\",\"Diseno visual coherente estilo Plane en todas las vistas con paleta dark slate y 0 emojis.\",\"Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright y los 9 niveles de verify.sh en verde.\"]",
       "evidence_summary": "Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.",
       "created_at": "2026-11-07 18:59:13",
-      "updated_at": "2026-11-07 18:59:13",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Erradicacion definitiva de la carpeta legacy project-docs/src/features/ y consolidacion de los 10 dominios canonicos bajo Screaming Architecture pura en project-docs/src/modules/ (Analytics, Architecture, Constellation, Cycles, Graph, Harness, Issues, Modules, Pages, Projects). Diseno uniforme estilo Plane con paleta dark slate, cero emojis, iconografia 100% SVG nativa y 100% de verificacion en verde.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
       "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
       "module_name": "Dashboard Visualizer",
+      "type_name": "Feature",
       "subtasks": [
         {
           "id": "INT-015-DEV",
@@ -4479,12 +7750,464 @@ window.__FALLBACK_DATA__ = {
           "sequence": 2
         }
       ],
+      "labels": [
+        {
+          "issue_id": "INT-015",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-015",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-015",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-015",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        },
+        {
+          "issue_id": "INT-015",
+          "id": "lbl-arch",
+          "name": "screaming-arch",
+          "color": "#f59e0b",
+          "description": "Arquitectura Screaming orientada a dominios"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-015",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [],
+      "activities": [
+        {
+          "id": "act-INT-015-created",
+          "issue_id": "INT-015",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/015_screaming_modules_plane_unification",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-015-done",
+          "issue_id": "INT-015",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-015",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [],
+      "ai_runs": [
+        {
+          "id": "airun-INT-015-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-015",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-015",
+          "response_markdown": "Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.",
+          "artifacts_json": "[\"project-docs/specs/015_screaming_modules_plane_unification/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-015-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-015",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
+          "response_markdown": "Especificacion creada en `project-docs/specs/015_screaming_modules_plane_unification` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/015_screaming_modules_plane_unification/requirements.md\",\"project-docs/specs/015_screaming_modules_plane_unification/design.md\",\"project-docs/specs/015_screaming_modules_plane_unification/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
       "acceptance": [
         "Eliminacion fisica completa de project-docs/src/features/ sin directorios residuales.",
         "Consolidacion estricta de 10 modulos en project-docs/src/modules/ con components/, pages/, services/, store/ y barriles index.js.",
         "Punto de entrada src/main.js consumiendo exclusivamente src/modules/ y src/shared/ui/.",
         "Diseno visual coherente estilo Plane en todas las vistas con paleta dark slate y 0 emojis.",
         "Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright y los 9 niveles de verify.sh en verde."
+      ]
+    },
+    {
+      "id": "INT-016",
+      "project_id": "proj-harness",
+      "sequence_id": 16,
+      "title": "Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+      "description": "Implementacion integral del modelo de datos relacional de Makeplane (Plane) y su subsistema de Inteligencia Artificial en SQLite (project-docs/data/harness.db con 26 tablas: workspaces, users con is_bot=1, workspace_members, api_tokens, projects, states, labels, estimates, estimate_points, issue_types, cycles, cycle_issues, modules, module_issues, issues, subtasks, issue_assignees, issue_labels, issue_relations, issue_activities, issue_comments, issue_evidences, pages, page_versions, issue_views, ai_configs, ai_runs) sincronizado bidireccionalmente con archivos Markdown (knowledge/ai-runs-log.md, specs/, feature_list.json). Ampliacion de CLI, API REST, vistas Screaming (IssueDetailModal, AiEngineMonitor en HarnessPage) y homologacion de las 21 skills SDD para enviar toda informacion, evidencia y reporte al proyecto.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-3",
+      "module_id": "mod-core",
+      "spec_folder": "project-docs/specs/016_plane_data_model_ai_tracking",
+      "branch": "feature/INT-016/plane_data_model_ai_tracking",
+      "user_story_as_a": "Arquitecto de Software, Desarrollador y Agente de IA",
+      "user_story_i_want": "el modelo de datos relacional completo de Plane (26 tablas) con trazabilidad IA en SQLite y Markdown conectado a todas las skills del arnes",
+      "user_story_so_that": "cualquier documento, especificacion, evidencia QA o reporte generado por una skill quede registrado y vinculado automaticamente en el proyecto",
+      "acceptance_criteria": "[\"26 tablas relacionales del modelo Plane e IA operativas en project-docs/data/harness.db con integridad referencial y migracion automatica.\",\"Sincronizacion bidireccional de ejecuciones IA (ai_runs) hacia project-docs/knowledge/ai-runs-log.md y de evidencias/relaciones hacia feature_list.json.\",\"CLI soberana (project-docs/cli.js) y API REST (project-docs/serve.js) soportando registro de ai log, issue evidence, issue comment, issue relate, page upsert y user list.\",\"Visualizacion de etiquetas Plane, puntos Fibonacci, relaciones, evidencias QA, ai_configs, api_tokens bot y bitacora ai_runs en IssueDetailModal y HarnessPage.\",\"21 skills SDD homologadas en .opencode/skills/, .github/skills/ y .agents/skills/ configuradas para enviar toda documentacion, evidencia y reporte al proyecto.\"]",
+      "evidence_summary": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+      "created_at": "2026-11-07 19:36:23",
+      "updated_at": "2026-11-07 19:39:03",
+      "workspace_id": "ws-harness",
+      "description_html": "",
+      "description_stripped": "Implementacion integral del modelo de datos relacional de Makeplane (Plane) y su subsistema de Inteligencia Artificial en SQLite (project-docs/data/harness.db con 26 tablas: workspaces, users con is_bot=1, workspace_members, api_tokens, projects, states, labels, estimates, estimate_points, issue_types, cycles, cycle_issues, modules, module_issues, issues, subtasks, issue_assignees, issue_labels, issue_relations, issue_activities, issue_comments, issue_evidences, pages, page_versions, issue_views, ai_configs, ai_runs) sincronizado bidireccionalmente con archivos Markdown (knowledge/ai-runs-log.md, specs/, feature_list.json). Ampliacion de CLI, API REST, vistas Screaming (IssueDetailModal, AiEngineMonitor en HarnessPage) y homologacion de las 21 skills SDD para enviar toda informacion, evidencia y reporte al proyecto.",
+      "parent_id": null,
+      "type_id": "type-feature",
+      "point": 5,
+      "estimate_point_id": "ep-5",
+      "start_date": null,
+      "target_date": null,
+      "completed_at": "2026-11-07T12:00:00Z",
+      "sort_order": 1000,
+      "is_draft": 0,
+      "external_source": "harness-sdd",
+      "external_id": null,
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
+      "module_name": "Harness Core",
+      "type_name": "Feature",
+      "subtasks": [
+        {
+          "id": "INT-016-DEV",
+          "issue_id": "INT-016",
+          "type": "development",
+          "title": "Implementacion de 26 tablas Plane + IA en SQLite, sincronizacion Markdown, CLI, API, UI y 21 Skills",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-016-QA",
+          "issue_id": "INT-016",
+          "type": "qa",
+          "title": "Verificacion de las 26 tablas SQLite, CLI IA, paridad triple de 21 skills y 9 niveles de verify.sh",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "labels": [
+        {
+          "issue_id": "INT-016",
+          "id": "lbl-feature",
+          "name": "feature",
+          "color": "#6366f1",
+          "description": "Nueva funcionalidad del sistema"
+        },
+        {
+          "issue_id": "INT-016",
+          "id": "lbl-sdd",
+          "name": "sdd-spec",
+          "color": "#8b5cf6",
+          "description": "Desarrollo guiado por especificacion formal"
+        },
+        {
+          "issue_id": "INT-016",
+          "id": "lbl-tdd",
+          "name": "tdd-verified",
+          "color": "#10b981",
+          "description": "Cobertura de pruebas guiada por TDD"
+        },
+        {
+          "issue_id": "INT-016",
+          "id": "lbl-qa",
+          "name": "qa-evidence",
+          "color": "#06b6d4",
+          "description": "Evidencia de verificacion multinivel y E2E"
+        }
+      ],
+      "assignees": [
+        {
+          "issue_id": "INT-016",
+          "assignee_id": "user-implementer",
+          "assignee_role": "implementer",
+          "display_name": "Implementador Agnostico & TDD",
+          "is_bot": 1,
+          "bot_type": "sdd-code-agent"
+        }
+      ],
+      "relations": [
+        {
+          "id": "rel-INT-016-blocked-by-INT-012",
+          "issue_id": "INT-016",
+          "related_issue_id": "INT-012",
+          "relation_type": "blocked_by",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "rel-INT-016-blocked-by-INT-014",
+          "issue_id": "INT-016",
+          "related_issue_id": "INT-014",
+          "relation_type": "blocked_by",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "rel-INT-016-blocked-by-INT-015",
+          "issue_id": "INT-016",
+          "related_issue_id": "INT-015",
+          "relation_type": "blocked_by",
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "activities": [
+        {
+          "id": "act-INT-016-created",
+          "issue_id": "INT-016",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-spec-author",
+          "actor_role": "spec-author",
+          "verb": "created",
+          "field_name": "state_id",
+          "old_value": "none",
+          "new_value": "state-todo",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Especificacion SDD generada en project-docs/specs/016_plane_data_model_ai_tracking",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-INT-016-done",
+          "issue_id": "INT-016",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "updated",
+          "field_name": "state_id",
+          "old_value": "state-in-review",
+          "new_value": "state-done",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Verificacion multinivel superada y evidencia registrada para INT-016",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "act-1794080183829-mr4c",
+          "issue_id": "INT-016",
+          "project_id": "proj-harness",
+          "workspace_id": "ws-harness",
+          "actor_id": "user-reviewer",
+          "actor_role": "reviewer",
+          "verb": "executed_skill",
+          "field_name": "skill",
+          "old_value": "",
+          "new_value": "verify-spec",
+          "old_identifier": null,
+          "new_identifier": null,
+          "comment_text": "Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD",
+          "epoch": 0,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "comments": [],
+      "evidences": [
+        {
+          "id": "ev-INT-016-report",
+          "issue_id": "INT-016",
+          "subtask_id": "INT-016-QA-1",
+          "type": "verification-report",
+          "title": "Reporte de Verificacion (INT-016)",
+          "file_path": "project-docs/specs/016_plane_data_model_ai_tracking/verification-report.md",
+          "asset_url": "",
+          "file_size": 0,
+          "report_markdown": "# Reporte de Verificación - INT-016: Modelo de Datos Completo de Plane & Trazabilidad IA\n\n## Resumen\n- **Fecha**: 2026-11-07\n- **Spec**: `016_plane_data_model_ai_tracking` (ID: `INT-016`)\n- **Rama**: `feature/INT-016/plane_data_model_ai_tracking` (44 caracteres <= 80)\n- **Resultado**: **APROBADO**\n\n## 1. Acceptance Criteria\n| Criterio | Estado | Evidencia |\n| :--- | :--- | :--- |\n| R1: 26 tablas relacionales de Plane e IA en SQLite (`harness.db`) | [PASS] | `project-docs/src/core/db.js`, `tests/unit/sqlite-db.test.js` |\n| R2: Persistencia dual de skills IA, evidencias, reportes y páginas en SQLite + `.md` | [PASS] | `project-docs/src/core/sqlite-sync.js`, `project-docs/cli.js`, `knowledge/ai-runs-log.md` |\n| R3: Visualización en `IssueDetailModal` y `HarnessPage` (`AiEngineMonitor`) | [PASS] | `IssueDetailModal.js`, `AiEngineMonitor.js`, `HarnessPage.js` |\n| R4: 21 skills homologadas en `.opencode`, `.github` y `.agents` enviando datos al proyecto | [PASS] | `.opencode/skills/*`, `.github/skills/*`, `.agents/skills/*` |\n\n## 2. Tasks\n- Total: 9 (5 DEV + 4 QA) | Completadas: 9 | Pendientes: 0\n- Tarea de tests unitarios presente: Sí (`tests/unit/sqlite-db.test.js` y `tests/unit/cli.test.js`)\n\n## 3. Niveles de Verificación (`project-docs/verify.sh`)\n- Nivel 1 (Build esbuild): PASS\n- Nivel 2 (Unit Tests): PASS\n- Nivel 3 (ATDD Smoke E2E): PASS\n- Nivel 4 (White-Box Testing): PASS\n- Nivel 5 (Black-Box Testing): PASS\n- Nivel 6 (System & Integration): PASS\n- Nivel 7 (Load & Concurrency): PASS\n- Nivel 8 (Playwright E2E Browser): PASS (14/14)\n- Nivel 9 (Data Sync & Fallback): PASS\n\n## Hallazgos\nCero hallazgos abiertos.\n",
+          "metrics_json": "{\"status\":\"passed\",\"verified\":true}",
+          "created_by_skill": "verify-spec",
+          "is_uploaded": 1,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "ev-INT-016-shot-1",
+          "issue_id": "INT-016",
+          "subtask_id": "INT-016-QA-1",
+          "type": "screenshot",
+          "title": "Captura de Evidencia QA #1 (01-plane-kanban-board.png)",
+          "file_path": "project-docs/specs/016_plane_data_model_ai_tracking/evidence/01-plane-kanban-board.png",
+          "asset_url": "",
+          "file_size": 0,
+          "report_markdown": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+          "metrics_json": "{\"format\":\"png\"}",
+          "created_by_skill": "acceptance-testing",
+          "is_uploaded": 1,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "ev-INT-016-shot-2",
+          "issue_id": "INT-016",
+          "subtask_id": "INT-016-QA-1",
+          "type": "screenshot",
+          "title": "Captura de Evidencia QA #2 (02-plane-issue-detail-modal.png)",
+          "file_path": "project-docs/specs/016_plane_data_model_ai_tracking/evidence/02-plane-issue-detail-modal.png",
+          "asset_url": "",
+          "file_size": 0,
+          "report_markdown": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+          "metrics_json": "{\"format\":\"png\"}",
+          "created_by_skill": "acceptance-testing",
+          "is_uploaded": 1,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "ev-INT-016-shot-3",
+          "issue_id": "INT-016",
+          "subtask_id": "INT-016-QA-1",
+          "type": "screenshot",
+          "title": "Captura de Evidencia QA #3 (03-plane-cycles-burndown.png)",
+          "file_path": "project-docs/specs/016_plane_data_model_ai_tracking/evidence/03-plane-cycles-burndown.png",
+          "asset_url": "",
+          "file_size": 0,
+          "report_markdown": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+          "metrics_json": "{\"format\":\"png\"}",
+          "created_by_skill": "acceptance-testing",
+          "is_uploaded": 1,
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "ev-INT-016-shot-4",
+          "issue_id": "INT-016",
+          "subtask_id": "INT-016-QA-1",
+          "type": "screenshot",
+          "title": "Captura de Evidencia QA #4 (04-plane-pages-docs.png)",
+          "file_path": "project-docs/specs/016_plane_data_model_ai_tracking/evidence/04-plane-pages-docs.png",
+          "asset_url": "",
+          "file_size": 0,
+          "report_markdown": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+          "metrics_json": "{\"format\":\"png\"}",
+          "created_by_skill": "acceptance-testing",
+          "is_uploaded": 1,
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "ai_runs": [
+        {
+          "id": "airun-INT-016-verify",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-016",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Auditoria de cierre SDD y verificacion de 9 niveles para INT-016",
+          "response_markdown": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
+          "artifacts_json": "[\"project-docs/specs/016_plane_data_model_ai_tracking/verification-report.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 2420,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-INT-016-spec",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-016",
+          "page_id": null,
+          "actor_id": "user-spec-author",
+          "agent_role": "spec-author",
+          "skill_name": "generate-spec",
+          "task_type": "SPEC_GENERATION",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+          "response_markdown": "Especificacion creada en `project-docs/specs/016_plane_data_model_ai_tracking` con historia de usuario Scrum y subtareas DEV/QA.",
+          "artifacts_json": "[\"project-docs/specs/016_plane_data_model_ai_tracking/requirements.md\",\"project-docs/specs/016_plane_data_model_ai_tracking/design.md\",\"project-docs/specs/016_plane_data_model_ai_tracking/tasks.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1850,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        },
+        {
+          "id": "airun-1794080183826-5kpr",
+          "workspace_id": "ws-harness",
+          "project_id": "proj-harness",
+          "issue_id": "INT-016",
+          "page_id": null,
+          "actor_id": "user-reviewer",
+          "agent_role": "reviewer",
+          "skill_name": "verify-spec",
+          "task_type": "QA_VERIFICATION_CLOSURE",
+          "provider": "antigravity-gemini",
+          "model": "gemini-2.5-pro",
+          "prompt_summary": "Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD",
+          "response_markdown": "",
+          "artifacts_json": "[\"project-docs/src/core/db.js\",\"project-docs/src/core/sqlite-sync.js\",\"project-docs/cli.js\",\"project-docs/knowledge/ai-runs-log.md\"]",
+          "tokens_used": 0,
+          "duration_ms": 1200,
+          "status": "completed",
+          "created_at": "2026-11-07 19:36:23"
+        }
+      ],
+      "acceptance": [
+        "26 tablas relacionales del modelo Plane e IA operativas en project-docs/data/harness.db con integridad referencial y migracion automatica.",
+        "Sincronizacion bidireccional de ejecuciones IA (ai_runs) hacia project-docs/knowledge/ai-runs-log.md y de evidencias/relaciones hacia feature_list.json.",
+        "CLI soberana (project-docs/cli.js) y API REST (project-docs/serve.js) soportando registro de ai log, issue evidence, issue comment, issue relate, page upsert y user list.",
+        "Visualizacion de etiquetas Plane, puntos Fibonacci, relaciones, evidencias QA, ai_configs, api_tokens bot y bitacora ai_runs en IssueDetailModal y HarnessPage.",
+        "21 skills SDD homologadas en .opencode/skills/, .github/skills/ y .agents/skills/ configuradas para enviar toda documentacion, evidencia y reporte al proyecto."
       ]
     }
   ],
@@ -4495,9 +8218,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)",
       "summary": "",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 599,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_03-capabilities-and-features_md",
@@ -4505,9 +8229,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional",
       "summary": "```mermaid",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 1989,
       "reading_time_min": 10,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_adr-catalog_md",
@@ -4515,9 +8240,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Catálogo de Decisiones de Arquitectura (ADR Catalog)",
       "summary": "",
       "shelf": "adrs",
+      "owned_by_role": "spec-author",
       "word_count": 592,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_user-stories-catalog_md",
@@ -4525,9 +8251,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Catálogo de Historias de Usuario (INVEST, Scrum & XP)",
       "summary": "",
       "shelf": "requirements",
+      "owned_by_role": "spec-author",
       "word_count": 627,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_external-services_md",
@@ -4535,9 +8262,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Catálogo de Integraciones y Servicios Externos",
       "summary": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 215,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "page-specs_016_plane_data_model_ai_tracking_tasks_md",
+      "file_path": "specs/016_plane_data_model_ai_tracking/tasks.md",
+      "title": "Checklist de Subtareas Scrum (Jira Style): 016 — Plane Data Model & AI Tracking",
+      "summary": "",
+      "shelf": "specs",
+      "owned_by_role": "spec-author",
+      "word_count": 301,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_tasks_md",
@@ -4545,9 +8284,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Checklist de Subtareas Scrum (Jira Style): INT-009",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 336,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_001_refactor_harness_architecture_tasks_md",
@@ -4555,9 +8295,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Checklist de Tareas de Implementación: INT-001",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 144,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_008_playwright_acceptance_testing_tasks_md",
@@ -4565,9 +8306,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Checklist de Tareas de Implementación: INT-008",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 179,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_design_md",
@@ -4575,9 +8317,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Design: Encapsulamiento Completo de Specs, verify.sh y project-spec.yaml en project-docs/",
       "summary": "```",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 385,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_design_md",
@@ -4585,9 +8328,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Design: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
       "summary": "```mermaid",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 826,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_02-architecture-and-patterns_md",
@@ -4595,9 +8339,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones",
       "summary": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 789,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_uml-diagrams_md",
@@ -4605,19 +8350,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Diagramas UML — AI Agentic SDD Engineering Harness",
       "summary": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 515,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_data-dictionary_md",
       "file_path": "knowledge/data-dictionary.md",
-      "title": "Diccionario de Datos & Persistencia Docs-as-Code",
+      "title": "Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)",
       "summary": "```mermaid",
-      "shelf": "standards",
-      "word_count": 345,
-      "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "shelf": "architecture",
+      "owned_by_role": "spec-author",
+      "word_count": 788,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_013_screaming_architecture_plane_refactor_design_md",
@@ -4625,9 +8372,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseno Tecnico y Decisiones Arquitectonicas (ADRs) — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane",
       "summary": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 1205,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_014_screaming_modules_core_shared_design_md",
@@ -4635,9 +8383,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseno Tecnico y Decisiones Arquitectonicas (ADRs) — INT-014: Screaming Architecture Modular en Modules, Core y Shared",
       "summary": "El principio rector es **Screaming Architecture**: la organizacion del codigo grita el proposito del negocio y sus dominios funcionales principales.",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 764,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_015_screaming_modules_plane_unification_design_md",
@@ -4645,9 +8394,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseno Tecnico y Decisiones Arquitectonicas (ADRs) — INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules",
       "summary": "```text",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 409,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "page-specs_016_plane_data_model_ai_tracking_design_md",
+      "file_path": "specs/016_plane_data_model_ai_tracking/design.md",
+      "title": "Diseño Técnico & ADRs: 016 — Modelo de Datos Completo de Plane & Trazabilidad IA",
+      "summary": "Esta especificación extiende el núcleo de datos del arnés (`project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js`), la CLI (`project-docs/cli.js...",
+      "shelf": "specs",
+      "owned_by_role": "spec-author",
+      "word_count": 461,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_001_refactor_harness_architecture_design_md",
@@ -4655,9 +8416,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseño Técnico & Decisiones de Arquitectura (ADRs): INT-001",
       "summary": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 248,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_008_playwright_acceptance_testing_design_md",
@@ -4665,9 +8427,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseño Técnico & Decisiones de Arquitectura (ADRs): INT-008",
       "summary": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 392,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_design_md",
@@ -4675,9 +8438,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseño Técnico y Arquitectura: INT-009",
       "summary": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 645,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_MASTER-PROJECT-KNOWLEDGE_md",
@@ -4685,9 +8449,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Dossier Maestro Consolidado de Ingeniería Soberana (MASTER-PROJECT-KNOWLEDGE)",
       "summary": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 1778,
       "reading_time_min": 9,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_design_md",
@@ -4695,9 +8460,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificacion de Diseño y Arquitectura — INT-012: Ingenieria Inversa Plane (Makeplane)",
       "summary": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 1257,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_requirements_md",
@@ -4705,9 +8471,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificacion de Requerimientos — INT-012: Ingenieria Inversa Plane (Makeplane) para Gestion de Tareas, Base de Conocimiento y SQLite con Copia Markdown",
       "summary": "El arnés actual cuenta con un tablero de seguimiento visual (`project-docs/index.html`) con una tabla de features, visor 3D Three.js, grafo de dependencias y ba...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 1269,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_013_screaming_architecture_plane_refactor_requirements_md",
@@ -4715,9 +8482,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificacion de Requerimientos — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
       "summary": "Tras la implementación inicial de las vistas de Plane y el motor SQLite en INT-012, el arnés dispone de dos layouts simultáneos (el clásico y el modo Plane).",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 1231,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_014_screaming_modules_core_shared_requirements_md",
@@ -4725,9 +8493,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificacion de Requerimientos — INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
       "summary": "Tras la unificacion inicial del tablero con estetica Plane en INT-013, se requiere formalizar y desacoplar la arquitectura frontend siguiendo una estricta **Scr...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 858,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_015_screaming_modules_plane_unification_requirements_md",
@@ -4735,9 +8504,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificacion de Requerimientos — INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
       "summary": "Tras la creacion inicial de los primeros 5 modulos en `src/modules/` en INT-014, coexistia aun la carpeta `src/features/` conteniendo 5 dominios residuales (`ar...",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 504,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "page-specs_016_plane_data_model_ai_tracking_requirements_md",
+      "file_path": "specs/016_plane_data_model_ai_tracking/requirements.md",
+      "title": "Especificación de Requerimientos Scrum & SDD: 016",
+      "summary": "",
+      "shelf": "specs",
+      "owned_by_role": "spec-author",
+      "word_count": 492,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_requirements_md",
@@ -4745,9 +8526,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificación de Requerimientos Scrum & SDD: INT-009",
       "summary": "Antes de iniciar la implementación, se validó que:",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 582,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_functional-requirements_md",
@@ -4755,9 +8537,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificación de Requerimientos del Sistema (SRS IEEE 830 / ISO 29148)",
       "summary": "",
       "shelf": "requirements",
+      "owned_by_role": "spec-author",
       "word_count": 657,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_001_refactor_harness_architecture_requirements_md",
@@ -4765,9 +8548,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificación de Requerimientos: INT-001 refactor_harness_architecture",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 252,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_008_playwright_acceptance_testing_requirements_md",
@@ -4775,9 +8559,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificación de Requerimientos: INT-008 playwright_acceptance_testing",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 383,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_coding-standards_md",
@@ -4785,9 +8570,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Estándares de Codificación & Guardrails Anti-Sesgo",
       "summary": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 265,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "page-specs_016_plane_data_model_ai_tracking_evidence_md",
+      "file_path": "specs/016_plane_data_model_ai_tracking/evidence.md",
+      "title": "Evidencia de Implementación y Verificación QA: INT-016",
+      "summary": "1. **Esquema Relacional Completo de Plane + IA (`project-docs/src/core/db.js`)**:",
+      "shelf": "specs",
+      "owned_by_role": "spec-author",
+      "word_count": 258,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_evidence_md",
@@ -4795,9 +8592,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencias de Aceptacion E2E — INT-012: Ingenieria Inversa Plane (Makeplane)",
       "summary": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 420,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_014_screaming_modules_core_shared_evidence_md",
@@ -4805,9 +8603,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencias de Aceptacion E2E — INT-014: Screaming Architecture Modular en Modules, Core y Shared",
       "summary": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 437,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_015_screaming_modules_plane_unification_evidence_md",
@@ -4815,9 +8614,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencias de Aceptacion E2E — INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules",
       "summary": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 345,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_013_screaming_architecture_plane_refactor_evidence_md",
@@ -4825,9 +8625,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencias de Aceptación E2E — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
       "summary": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 456,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_evidence_md",
@@ -4835,9 +8636,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencias de Pruebas y Validación: INT-010 Encapsulamiento de Archivos y Limpieza de Raíz",
       "summary": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 355,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_evidence_md",
@@ -4845,9 +8647,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencias de Pruebas y Validación: INT-011 Encapsulamiento de Specs, verify.sh y project-spec.yaml",
       "summary": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 335,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_sequence_md",
@@ -4855,9 +8658,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Flujo de Elicitación y Extracción: knowledge-engine",
       "summary": "```mermaid",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 95,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_sequence_md",
@@ -4865,9 +8669,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Flujo de Orquestación Multi-Agente: agent-orchestrator",
       "summary": "```mermaid",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 100,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_sequence_md",
@@ -4875,9 +8680,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Flujo de Renderizado y Navegación: dashboard-visualizer",
       "summary": "```mermaid",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 115,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_sequence_md",
@@ -4885,9 +8691,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Flujo de Sincronización Triple: triple-sync-engine",
       "summary": "```mermaid",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 71,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_sequence_md",
@@ -4895,9 +8702,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Flujo de Verificación Continua: testing-qa-suite",
       "summary": "```mermaid",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 66,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_system-capabilities_md",
@@ -4905,9 +8713,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Inventario de Capacidades del Sistema (System Capabilities)",
       "summary": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 362,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_traceability-matrix_md",
@@ -4915,9 +8724,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Matriz de Trazabilidad Cruzada (RTM)",
       "summary": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
       "shelf": "requirements",
+      "owned_by_role": "spec-author",
       "word_count": 250,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_c4-model_md",
@@ -4925,9 +8735,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Modelo C4 — AI Agentic SDD Engineering Harness",
       "summary": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 402,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_04-domain-ddd-and-crc_md",
@@ -4935,9 +8746,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC",
       "summary": "1. **Core Domain (Dominio Central)**:",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 637,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_data-and-transactions_md",
@@ -4945,9 +8757,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: agent-orchestrator — Datos & Transacciones",
       "summary": "El orquestador interactúa con dos fuentes de persistencia:",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 169,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md",
@@ -4955,9 +8768,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: agent-orchestrator — Deuda Técnica & Refactorización",
       "summary": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 139,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_module-spec_md",
@@ -4965,9 +8779,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: agent-orchestrator — Especificación & Tarjetas CRC",
       "summary": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 437,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_requirements-and-rules_md",
@@ -4975,9 +8790,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: agent-orchestrator — Requerimientos & Reglas de Negocio",
       "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 556,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_diagrams_md",
@@ -4985,9 +8801,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: agent-orchestrator — Suite de 6 Diagramas",
       "summary": "```mermaid",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 440,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_data-and-transactions_md",
@@ -4995,9 +8812,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: dashboard-visualizer — Datos & Transacciones",
       "summary": "",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 172,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md",
@@ -5005,9 +8823,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: dashboard-visualizer — Deuda Técnica & Refactorización",
       "summary": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 161,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_module-spec_md",
@@ -5015,9 +8834,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: dashboard-visualizer — Especificación & Tarjetas CRC",
       "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 354,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md",
@@ -5025,9 +8845,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: dashboard-visualizer — Requerimientos & Reglas de Negocio",
       "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 255,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_diagrams_md",
@@ -5035,9 +8856,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: dashboard-visualizer — Suite de 6 Diagramas",
       "summary": "```mermaid",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 377,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_data-and-transactions_md",
@@ -5045,9 +8867,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: knowledge-engine — Datos & Transacciones",
       "summary": "El archivo `knowledge-index.json` persiste:",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 98,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md",
@@ -5055,9 +8878,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: knowledge-engine — Deuda Técnica & Refactorización",
       "summary": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 121,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_module-spec_md",
@@ -5065,9 +8889,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: knowledge-engine — Especificación & Tarjetas CRC",
       "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 208,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_requirements-and-rules_md",
@@ -5075,9 +8900,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: knowledge-engine — Requerimientos & Reglas de Negocio",
       "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 211,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_diagrams_md",
@@ -5085,9 +8911,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: knowledge-engine — Suite de 6 Diagramas",
       "summary": "```mermaid",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 381,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_data-and-transactions_md",
@@ -5095,9 +8922,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: testing-qa-suite — Datos & Transacciones",
       "summary": "",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 68,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md",
@@ -5105,9 +8933,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: testing-qa-suite — Deuda Técnica & Refactorización",
       "summary": "",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 94,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_module-spec_md",
@@ -5115,9 +8944,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: testing-qa-suite — Especificación & Tarjetas CRC",
       "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 214,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_requirements-and-rules_md",
@@ -5125,9 +8955,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: testing-qa-suite — Requerimientos & Reglas de Negocio",
       "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 170,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_diagrams_md",
@@ -5135,9 +8966,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: testing-qa-suite — Suite de 6 Diagramas",
       "summary": "```mermaid",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 364,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_data-and-transactions_md",
@@ -5145,9 +8977,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: triple-sync-engine — Datos & Transacciones",
       "summary": "",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 72,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md",
@@ -5155,9 +8988,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: triple-sync-engine — Deuda Técnica & Refactorización",
       "summary": "",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 78,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_module-spec_md",
@@ -5165,9 +8999,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: triple-sync-engine — Especificación & Tarjetas CRC",
       "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 196,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_requirements-and-rules_md",
@@ -5175,9 +9010,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: triple-sync-engine — Requerimientos & Reglas de Negocio",
       "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 148,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_diagrams_md",
@@ -5185,9 +9021,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Módulo: triple-sync-engine — Suite de 6 Diagramas",
       "summary": "```mermaid",
       "shelf": "architecture",
+      "owned_by_role": "spec-author",
       "word_count": 352,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_tasks_md",
@@ -5195,9 +9032,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Plan de Tareas — INT-012: Ingenieria Inversa Plane (Makeplane)",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 425,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_013_screaming_architecture_plane_refactor_tasks_md",
@@ -5205,9 +9043,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Plan de Tareas — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 449,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_014_screaming_modules_core_shared_tasks_md",
@@ -5215,9 +9054,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Plan de Tareas — INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 480,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_015_screaming_modules_plane_unification_tasks_md",
@@ -5225,9 +9065,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Plan de Tareas — INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 333,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "page-knowledge_ai-runs-log_md",
+      "file_path": "knowledge/ai-runs-log.md",
+      "title": "Registro Soberano de Ejecuciones IA y Skills SDD (Plane AI Audit Log)",
+      "summary": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
+      "shelf": "standards",
+      "owned_by_role": "leader",
+      "word_count": 2699,
+      "reading_time_min": 14,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_rules_md",
@@ -5235,9 +9087,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reglas de Negocio Invariantes: agent-orchestrator",
       "summary": "",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 141,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_rules_md",
@@ -5245,9 +9098,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reglas de Negocio Invariantes: dashboard-visualizer",
       "summary": "",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 91,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_rules_md",
@@ -5255,9 +9109,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reglas de Negocio Invariantes: knowledge-engine",
       "summary": "",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 102,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_rules_md",
@@ -5265,9 +9120,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reglas de Negocio Invariantes: testing-qa-suite",
       "summary": "",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 99,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_rules_md",
@@ -5275,9 +9131,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reglas de Negocio Invariantes: triple-sync-engine",
       "summary": "",
       "shelf": "business_rules",
+      "owned_by_role": "spec-author",
       "word_count": 96,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_evidence_md",
@@ -5285,9 +9142,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte Formal de Evidencias de Cierre: INT-009",
       "summary": "Se extendió y estandarizó la arquitectura del arnés para alinearla con el estándar de la industria en **Scrum / Agile** y **Jira**:",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 658,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_014_screaming_modules_core_shared_verification-report_md",
@@ -5295,9 +9153,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificacion Tecnica — INT-014: Screaming Architecture Modular en Modules, Core y Shared",
       "summary": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 528,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_015_screaming_modules_plane_unification_verification-report_md",
@@ -5305,9 +9164,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificacion Tecnica — INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules",
       "summary": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 406,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_verification-report_md",
@@ -5315,9 +9175,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificación - Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
       "summary": "| Criterio | Estado | Evidencia |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 513,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_verification-report_md",
@@ -5325,9 +9186,21 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificación - Encapsulamiento de Specs, verify.sh y project-spec.yaml en project-docs/",
       "summary": "| Criterio | Estado | Evidencia |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 306,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
+    },
+    {
+      "id": "page-specs_016_plane_data_model_ai_tracking_verification-report_md",
+      "file_path": "specs/016_plane_data_model_ai_tracking/verification-report.md",
+      "title": "Reporte de Verificación - INT-016: Modelo de Datos Completo de Plane & Trazabilidad IA",
+      "summary": "| Criterio | Estado | Evidencia |",
+      "shelf": "specs",
+      "owned_by_role": "spec-author",
+      "word_count": 228,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_verification-report_md",
@@ -5335,9 +9208,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificación Técnica — INT-012: Plane Style Project Management",
       "summary": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 462,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_013_screaming_architecture_plane_refactor_verification-report_md",
@@ -5345,9 +9219,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificación Técnica — INT-013: Screaming Architecture & Plane Refactor",
       "summary": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 497,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_requirements_md",
@@ -5355,9 +9230,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Requirements: Encapsulamiento Completo de Specs, verify.sh y project-spec.yaml en project-docs/",
       "summary": "| Campo | Valor |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 406,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_requirements_md",
@@ -5365,9 +9241,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Requirements: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
       "summary": "| Campo | Valor |",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 854,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_tasks_md",
@@ -5375,9 +9252,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Tasks: Encapsulamiento Completo de Specs, verify.sh y project-spec.yaml en project-docs/",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 167,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_tasks_md",
@@ -5385,9 +9263,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Tasks: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
       "summary": "",
       "shelf": "specs",
+      "owned_by_role": "spec-author",
       "word_count": 566,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     },
     {
       "id": "page-knowledge_01-project-overview-and-business_md",
@@ -5395,9 +9274,10 @@ window.__FALLBACK_DATA__ = {
       "title": "Visión del Producto, Contexto de Negocio y Stakeholders (IEEE Std. 830-1998)",
       "summary": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
       "shelf": "standards",
+      "owned_by_role": "spec-author",
       "word_count": 1211,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 18:59:13"
+      "updated_at": "2026-11-07 19:39:03"
     }
   ]
 }

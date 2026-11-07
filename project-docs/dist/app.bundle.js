@@ -2348,6 +2348,12 @@
     const completed = rawSubtasks.filter((s) => s.status === "done" || s.status === "passed" || s.completed).length;
     const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : 0;
     const acceptanceCriteria = Array.isArray(issue.acceptance_criteria) ? issue.acceptance_criteria : Array.isArray(issue.acceptance) ? issue.acceptance : [];
+    const labels = Array.isArray(issue.labels) ? issue.labels : [];
+    const relations = Array.isArray(issue.relations) ? issue.relations : [];
+    const evidences = Array.isArray(issue.evidences) ? issue.evidences : [];
+    const aiRuns = Array.isArray(issue.ai_runs) ? issue.ai_runs : [];
+    const activities = Array.isArray(issue.activities) ? issue.activities : [];
+    const comments = Array.isArray(issue.comments) ? issue.comments : [];
     const renderAcceptanceCriterion = (crit) => `
     <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs text-zinc-300">
       <span class="p-0.5 rounded text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3.5 h-3.5")}</span>
@@ -2380,6 +2386,42 @@
       </div>
     `;
     };
+    const renderEvidenceItem = (ev) => `
+    <div class="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/80 flex items-start justify-between gap-3 text-xs">
+      <div class="flex items-start gap-2.5 min-w-0">
+        <span class="p-1 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0 mt-0.5">
+          ${Icons.shield("w-3.5 h-3.5")}
+        </span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-semibold text-zinc-200">${ev.title}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/40 uppercase">${ev.type}</span>
+            <span class="text-[10px] font-mono text-indigo-400">/${ev.created_by_skill || "verify-spec"}</span>
+          </div>
+          ${ev.file_path ? `<p class="font-mono text-[11px] text-zinc-400 mt-1 break-all">${ev.file_path}</p>` : ""}
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono shrink-0">VERIFIED</span>
+    </div>
+  `;
+    const renderAiRunItem = (run) => `
+    <div class="p-3 rounded-xl bg-zinc-900/40 border border-indigo-500/20 flex items-start justify-between gap-3 text-xs">
+      <div class="flex items-start gap-2.5 min-w-0">
+        <span class="p-1 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shrink-0 mt-0.5">
+          ${Icons.bot("w-3.5 h-3.5")}
+        </span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-mono font-bold text-indigo-400">/${run.skill_name}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">${run.agent_role}</span>
+            <span class="text-[10px] font-mono text-zinc-500">${run.model || "gemini-2.5-pro"}</span>
+          </div>
+          <p class="text-zinc-300 mt-1 leading-relaxed">${run.prompt_summary}</p>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono shrink-0 uppercase">${run.status || "completed"}</span>
+    </div>
+  `;
     const dodItems = [
       "Especificaci\xF3n t\xE9cnica y trazabilidad R-to-Tests 100% aprobada",
       "Tests unitarios y pruebas de aceptaci\xF3n pasando en verde",
@@ -2398,13 +2440,16 @@
       <div id="plane-issue-modal-card" role="dialog" aria-modal="true" aria-labelledby="plane-modal-issue-title" class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/50">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
             <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md bg-zinc-800 text-indigo-400 border border-zinc-700/60">
               ${issue.id}
             </span>
             <span class="text-zinc-600">/</span>
             <span class="text-xs text-zinc-400 font-medium truncate max-w-sm">
               ${issue.module_name || "Harness"}
+            </span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
+              ${issue.type_name || "Feature"} \xB7 ${issue.point || 3} pts
             </span>
           </div>
 
@@ -2482,6 +2527,55 @@
               </div>
             </div>
 
+            <!-- Evidences & QA Verification Reports -->
+            ${evidences.length > 0 ? `
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    Evidencias QA & Reportes de Verificaci\xF3n (${evidences.length})
+                  </h4>
+                  <span class="text-[11px] font-mono text-cyan-400">Plane FileAssets & QA</span>
+                </div>
+                <div class="space-y-2">
+                  ${renderList(evidences, renderEvidenceItem)}
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- AI Skill Runs & Activity Log -->
+            ${aiRuns.length > 0 ? `
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    Trazabilidad de Skills IA Ejecutadas (${aiRuns.length})
+                  </h4>
+                  <span class="text-[11px] font-mono text-indigo-400">SQLite ai_runs + .md</span>
+                </div>
+                <div class="space-y-2">
+                  ${renderList(aiRuns, renderAiRunItem)}
+                </div>
+              </div>
+            ` : ""}
+
+            ${comments.length > 0 ? `
+              <div class="space-y-3">
+                <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Comentarios de Agentes & Skills (${comments.length})
+                </h4>
+                <div class="space-y-2">
+                  ${renderList(comments, (c) => `
+                    <div class="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-xs space-y-1">
+                      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                        <span class="text-indigo-400 font-semibold">${c.actor_role} (/${c.source_skill || "cli"})</span>
+                        <span>${(c.created_at || "").slice(0, 19)}</span>
+                      </div>
+                      <p class="text-zinc-200 leading-relaxed">${c.body_markdown}</p>
+                    </div>
+                  `)}
+                </div>
+              </div>
+            ` : ""}
+
             <!-- Definition of Done (DoD) Checklist -->
             <div class="space-y-3 p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
               <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
@@ -2498,7 +2592,7 @@
           <div class="w-full lg:w-80 p-6 bg-zinc-900/30 space-y-6 text-xs">
             <!-- Properties Section -->
             <div class="space-y-4">
-              <h4 class="font-semibold text-zinc-400 uppercase tracking-wider text-[11px]">Propiedades</h4>
+              <h4 class="font-semibold text-zinc-400 uppercase tracking-wider text-[11px]">Propiedades Plane</h4>
 
               <!-- State Field -->
               <div class="space-y-1.5">
@@ -2518,9 +2612,18 @@
                 </div>
               </div>
 
+              <!-- Estimate Points Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Estimaci\xF3n (Fibonacci Points)</label>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-zinc-200">
+                  <span>${issue.point || 3} puntos</span>
+                  <span class="text-[10px] text-zinc-400">${issue.type_name || "Feature"}</span>
+                </div>
+              </div>
+
               <!-- Assignee Field -->
               <div class="space-y-1.5">
-                <label class="text-[11px] text-zinc-400 font-medium">Agente Asignado</label>
+                <label class="text-[11px] text-zinc-400 font-medium">Agente Bot Asignado</label>
                 <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800">
                   ${Icons.bot("w-4 h-4 text-indigo-400")}
                   <span class="font-mono text-zinc-200">${issue.assignee_role || "implementer"}</span>
@@ -2536,6 +2639,36 @@
                 </div>
               </div>
 
+              <!-- Labels -->
+              ${labels.length > 0 ? `
+                <div class="space-y-1.5">
+                  <label class="text-[11px] text-zinc-400 font-medium">Etiquetas Plane (${labels.length})</label>
+                  <div class="flex flex-wrap gap-1.5 p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                    ${renderList(labels, (l) => `
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-200 border border-zinc-700">
+                        <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${l.color || "#6366f1"}"></span>
+                        ${l.name}
+                      </span>
+                    `)}
+                  </div>
+                </div>
+              ` : ""}
+
+              <!-- Relations / Dependencies -->
+              ${relations.length > 0 ? `
+                <div class="space-y-1.5">
+                  <label class="text-[11px] text-zinc-400 font-medium">Relaciones & Dependencias (${relations.length})</label>
+                  <div class="space-y-1 p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px]">
+                    ${renderList(relations, (r) => `
+                      <div class="flex items-center justify-between text-zinc-300">
+                        <span class="text-amber-400">${r.relation_type}</span>
+                        <span class="text-indigo-400 font-bold">${r.related_issue_id}</span>
+                      </div>
+                    `)}
+                  </div>
+                </div>
+              ` : ""}
+
               <!-- Git Branch -->
               <div class="space-y-1.5">
                 <label class="text-[11px] text-zinc-400 font-medium">Rama Git de Trabajo</label>
@@ -2547,6 +2680,20 @@
                   <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-emerald-400 shrink-0 font-mono">&le;80c</span>
                 </div>
               </div>
+
+              <!-- Audit Activity Count -->
+              ${activities.length > 0 ? `
+                <div class="space-y-1.5">
+                  <label class="text-[11px] text-zinc-400 font-medium">Eventos de Auditor\xEDa (${activities.length})</label>
+                  <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400 space-y-1 max-h-32 overflow-y-auto">
+                    ${renderList(activities.slice(0, 5), (act) => `
+                      <div class="truncate">
+                        <span class="font-mono text-indigo-400">${act.actor_role}</span>: ${act.verb} (${act.new_value || ""})
+                      </div>
+                    `)}
+                  </div>
+                </div>
+              ` : ""}
             </div>
           </div>
         </div>
@@ -5325,11 +5472,130 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
   `;
   }
 
+  // project-docs/src/modules/Harness/components/AiEngineMonitor.js
+  function AiEngineMonitor({
+    aiConfigs = [],
+    aiRuns = [],
+    apiTokens = []
+  } = {}) {
+    return `
+    <div class="space-y-6">
+      <!-- AI Instance Configs & Bot API Tokens -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Plane InstanceConfig / LLMProvider -->
+        <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-zinc-800 bg-zinc-900/40 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              ${Icons.bot("w-4 h-4 text-indigo-400")}
+              <h4 class="text-xs font-bold text-zinc-100 uppercase tracking-wider">Configuraci\xF3n IA (Plane InstanceConfig)</h4>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">ai_configs</span>
+          </div>
+          <div class="divide-y divide-zinc-800/60 text-xs">
+            ${renderList(aiConfigs, (cfg) => `
+              <div class="px-5 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <span class="font-mono font-bold text-zinc-200">${cfg.key}</span>
+                  <p class="text-[11px] text-zinc-400 mt-0.5">${cfg.value}</p>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 font-mono text-[10px] text-emerald-400 shrink-0">
+                  ${cfg.provider}
+                </span>
+              </div>
+            `, () => `
+              <div class="p-4 text-xs text-zinc-500 text-center">Configuraci\xF3n por defecto: Antigravity Gemini 2.5 Pro + SQLite WAL</div>
+            `)}
+          </div>
+        </div>
+
+        <!-- Plane Bot API Tokens -->
+        <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-zinc-800 bg-zinc-900/40 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              ${Icons.shield("w-4 h-4 text-emerald-400")}
+              <h4 class="text-xs font-bold text-zinc-100 uppercase tracking-wider">Tokens de Agentes Bot (Plane APIToken)</h4>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">user_type = 1 (Bot)</span>
+          </div>
+          <div class="divide-y divide-zinc-800/60 text-xs">
+            ${renderList(apiTokens, (tok) => `
+              <div class="px-5 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <span class="font-semibold text-zinc-200">${tok.label}</span>
+                  <p class="font-mono text-[11px] text-zinc-400 mt-0.5">Usuario Bot: ${tok.user_id}</p>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 font-mono text-[10px] text-emerald-400 shrink-0">
+                  ACTIVO
+                </span>
+              </div>
+            `, () => `
+              <div class="p-4 text-xs text-zinc-500 text-center">4 Tokens de Subagentes Bot registrados en SQLite</div>
+            `)}
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Skill Execution Audit Log (ai_runs <-> knowledge/ai-runs-log.md) -->
+      <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden">
+        <div class="px-6 py-4 border-b border-zinc-800 bg-zinc-900/40 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h4 class="text-sm font-bold text-zinc-100 tracking-tight">Bit\xE1cora Soberana de Ejecuciones de Skills e IA (${aiRuns.length})</h4>
+            <p class="text-xs text-zinc-400 mt-0.5">Sincronizada en tiempo real entre la tabla relacional <code class="text-indigo-400">ai_runs</code> y el documento <code class="text-emerald-400">knowledge/ai-runs-log.md</code>.</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 font-mono text-xs font-semibold">
+            PERSISTENCIA DUAL ACTIVA
+          </span>
+        </div>
+
+        <div class="overflow-x-auto max-h-96 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-zinc-900/60 text-zinc-400 uppercase font-semibold text-[10px] tracking-wider border-b border-zinc-800 sticky top-0">
+              <tr>
+                <th class="px-5 py-3">ID Ejecuci\xF3n</th>
+                <th class="px-4 py-3">Skill SDD</th>
+                <th class="px-4 py-3">Agente Bot</th>
+                <th class="px-4 py-3">Tarea / Destino</th>
+                <th class="px-5 py-3">Resumen & Artefactos Enviados</th>
+                <th class="px-4 py-3 text-center">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800/60">
+              ${renderList(aiRuns.slice(0, 20), (run) => `
+                <tr class="hover:bg-zinc-900/30 transition-colors">
+                  <td class="px-5 py-3 font-mono text-[11px] text-zinc-400">${run.id}</td>
+                  <td class="px-4 py-3 font-mono font-bold text-indigo-400">/${run.skill_name}</td>
+                  <td class="px-4 py-3 font-mono text-zinc-300">${run.agent_role}</td>
+                  <td class="px-4 py-3 font-mono text-cyan-400 font-semibold">${run.issue_id || run.page_id || "GLOBAL"}</td>
+                  <td class="px-5 py-3 text-zinc-300">${run.prompt_summary}</td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono text-[10px] uppercase">
+                      ${run.status || "completed"}
+                    </span>
+                  </td>
+                </tr>
+              `, () => `
+                <tr>
+                  <td colspan="6" class="px-6 py-8 text-center text-zinc-500">
+                    Ejecute cualquier skill SDD o <code class="text-indigo-400">node project-docs/cli.js ai log</code> para registrar trazabilidad IA.
+                  </td>
+                </tr>
+              `)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
   // project-docs/src/modules/Harness/pages/HarnessPage.js
   function HarnessPage({
     agents = [],
     skills = [],
-    selectedAgentId = "leader"
+    selectedAgentId = "leader",
+    aiConfigs = [],
+    aiRuns = [],
+    apiTokens = []
   } = {}) {
     const activeAgents = agents && agents.length > 0 ? agents : harnessService.getAgents();
     const activeSkills = skills && skills.length > 0 ? skills : harnessService.getSkills();
@@ -5344,12 +5610,15 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               ${Icons.bot("w-5 h-5 text-indigo-400")}
               <span>Orquestaci\xF3n de Agentes & Gobernanza SDD</span>
             </h2>
-            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, habilidades homologadas y verificaci\xF3n de reglas.</p>
+            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, modelo de datos IA Plane (SQLite + Markdown) y verificaci\xF3n de reglas.</p>
           </div>
         </div>
 
         <!-- Governance Overview Banner -->
         ${HarnessOverview({ governance })}
+
+        <!-- Plane AI Engine Monitor (InstanceConfig, APITokens, AI Runs) -->
+        ${AiEngineMonitor({ aiConfigs, aiRuns, apiTokens })}
 
         <!-- Agents Grid -->
         <div class="space-y-4">
@@ -5357,7 +5626,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">
               Equipo de Agentes Especializados (${activeAgents.length})
             </h3>
-            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD</span>
+            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD (is_bot = 1)</span>
           </div>
 
           ${AgentList({ agents: activeAgents, selectedAgentId })}
@@ -7845,7 +8114,11 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       } else if (currentView === "harness" || currentView === "agents") {
         mainContentHtml = `
         <div class="flex-1 overflow-y-auto">
-          ${renderHarnessView()}
+          ${renderHarnessView({
+          aiConfigs: planeData.aiConfigs || [],
+          aiRuns: planeData.aiRuns || [],
+          apiTokens: planeData.apiTokens || []
+        })}
         </div>
       `;
       }

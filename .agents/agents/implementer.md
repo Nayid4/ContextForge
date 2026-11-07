@@ -85,12 +85,18 @@ Cuando se solicite implementar o ejecutar pruebas específicas para un component
    - Vulnerabilidades: 0 reportadas
    ```
 
-5. **Verificación final antes de terminar tu ejecución**:
+5. **Verificación final y Envío al Modelo Plane SQLite + Markdown antes de terminar tu ejecución**:
    - Build limpio (0 errores, 0 warnings críticos).
    - 100% de tests pasando en verde.
    - Formato de código y linting conformes a los estándares documentados en `coding-standards.md`.
    - Cero emojis en código fuente, comentarios o logs.
-   - Actualizar y sincronizar tablero: si modificaste specs o progreso, ejecuta `node project-docs/sync-data.js`.
+   - Enviar evidencia de trazabilidad, actualización de tarea y registro de ejecución IA hacia `project-docs/data/harness.db` y `knowledge/ai-runs-log.md`:
+     ```bash
+     node project-docs/cli.js issue update INT-{NNN} --state in_review --role implementer
+     node project-docs/cli.js issue evidence INT-{NNN} --type report --title "Trazabilidad R-to-Tests (impl_{name}.md)" --file "project-docs/progres/impl_{name}.md" --skill implement-tdd
+     node project-docs/cli.js ai log --skill implement-tdd --role implementer --issue INT-{NNN} --type CODE_IMPLEMENTATION --summary "Implementacion de tasks.md y suite de tests en verde" --artifacts "project-docs/progres/impl_{name}.md"
+     node project-docs/sync-data.js
+     ```
 
 ---
 

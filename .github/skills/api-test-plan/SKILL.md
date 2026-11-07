@@ -194,11 +194,17 @@ mkdir -p tests-plan/{projects,documents,rules,evidences}
 4. Generar [recurso].http
 5. Crear environment.http
 
-### Paso 4: Verificar
+### Paso 4: Verificar y Enviar al Modelo Plane SQLite + Markdown
 - Todos los textos en español
 - Datos de prueba realistas
 - Validaciones de respuesta
 - Formato consistente
+- Registrar el plan de pruebas generado en `issue_evidences` y `ai_runs` de `project-docs/data/harness.db`:
+  ```bash
+  node project-docs/cli.js issue evidence INT-<NNN> --type api-plan --title "Plan de Pruebas API REST ([recurso])" --file "tests-plan/[recurso]/test-plan.md" --skill api-test-plan
+  node project-docs/cli.js ai log --skill api-test-plan --role reviewer --issue INT-<NNN> --type API_TEST_PLAN --summary "Generacion de plan de pruebas API REST y archivos .http" --artifacts "tests-plan/[recurso]/test-plan.md,tests-plan/[recurso]/checklist.md"
+  node project-docs/sync-data.js
+  ```
 
 ## Notas
 - **Idioma:** Español para documentación
