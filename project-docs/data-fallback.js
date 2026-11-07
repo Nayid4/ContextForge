@@ -906,6 +906,124 @@ window.__FALLBACK_DATA__ = {
           "project-docs/specs/011_encapsulate_specs_and_scripts/evidence/03-knowledge-base-deepwiki.png"
         ]
       }
+    },
+    {
+      "id": 12,
+      "type": "feature",
+      "name": "plane_style_sqlite_project_management",
+      "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+      "description": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-012/plane_style_sqlite_project_management",
+      "spec_folder": "project-docs/specs/012_plane_style_sqlite_project_management",
+      "status": "done",
+      "acceptance": [
+        "Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.",
+        "Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.",
+        "Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).",
+        "Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).",
+        "Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.",
+        "Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.",
+        "Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.",
+        "Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.",
+        "Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).",
+        "Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones."
+      ],
+      "user_story": {
+        "as_a": "Ingeniero de Software y Agente de IA",
+        "i_want": "una plataforma de gestion de proyectos inspirada en Plane con vistas multiples y persistencia relacional SQLite sincronizada con Markdown",
+        "so_that": "la gestion visual del flujo de trabajo sea de primer nivel y los agentes autonomos puedan consultar y actualizar tareas y conocimiento en su formato nativo"
+      },
+      "subtasks": [
+        {
+          "id": "INT-012-DEV",
+          "type": "development",
+          "title": "Motor SQLite relacional, API REST en serve.js y vistas completas estilo Plane",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Crear modulo de base de datos SQLite project-docs/src/core/db.js con node:sqlite nativo",
+            "Implementar motor de sincronizacion bidireccional project-docs/src/core/sqlite-sync.js",
+            "Agregar endpoints REST en serve.js para consultas y mutaciones de Plane con auto-sync a disco",
+            "Desarrollar componentes PlaneLayout, IssueListView, IssueBoardView, IssueCalendarView, IssueSpreadsheetView",
+            "Desarrollar vistas CyclesView, ModulesView, PlanePagesView e IssueDetailModal"
+          ]
+        },
+        {
+          "id": "INT-012-QA",
+          "type": "qa",
+          "title": "Pruebas unitarias de SQLite, sincronizacion de archivos y pruebas de aceptacion Playwright",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Verificar esquema SQLite, consultas de agrupacion y persistencia relacional",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Verificar sincronizacion bidireccional SQLite <-> Markdown (.md) y JSON",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Verificar navegacion e interaccion fluida entre vistas de Plane con Playwright",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Verificar Zero-Emoji Gate y pureza extrema de la raiz",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T11:22:00-05:00",
+        "dev_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
+        "files_modified": [
+          "project-docs/src/core/db.js",
+          "project-docs/src/core/sqlite-sync.js",
+          "project-docs/serve.js",
+          "project-docs/sync-data.js",
+          "project-docs/src/shared/Icons.js",
+          "project-docs/src/features/plane-layout/PlaneSidebar.js",
+          "project-docs/src/features/plane-layout/PlaneTopBar.js",
+          "project-docs/src/features/plane-layout/PlaneControlsBar.js",
+          "project-docs/src/features/plane-layout/PlaneLayout.js",
+          "project-docs/src/features/plane-issues/IssueListView.js",
+          "project-docs/src/features/plane-issues/IssueBoardView.js",
+          "project-docs/src/features/plane-issues/IssueCalendarView.js",
+          "project-docs/src/features/plane-issues/IssueSpreadsheetView.js",
+          "project-docs/src/features/plane-issues/IssueDetailModal.js",
+          "project-docs/src/features/plane-cycles/CyclesView.js",
+          "project-docs/src/features/plane-modules/ModulesView.js",
+          "project-docs/src/features/plane-pages/PlanePagesView.js",
+          "project-docs/src/features/plane-analytics/AnalyticsView.js",
+          "project-docs/src/core/api.js",
+          "project-docs/src/core/store.js",
+          "project-docs/src/main.js"
+        ],
+        "tests_executed": [
+          "npm test (21 unit tests)",
+          "npm run test:e2e (5 smoke tests)",
+          "npm run test:whitebox (13 branch tests)",
+          "npm run test:blackbox (8 resilience tests)",
+          "npm run test:system (7 integration tests)",
+          "npm run test:load (100 reqs concurrency test)",
+          "npm run test:acceptance (14 Playwright E2E tests)",
+          "bash project-docs/verify.sh (9 verification levels)"
+        ],
+        "screenshots": [
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 },
@@ -1032,6 +1150,17 @@ window.__FALLBACK_DATA__ = {
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Reubicación de specs/, verify.sh y project-spec.yaml en project-docs/. Actualización de agentes (.agents/agents/) y skills (.opencode/skills/ -> .github/skills/, .agents/skills/). Raíz con solo 4 carpetas y 4 archivos."
+    },
+    {
+      "id": 12,
+      "type": "feature",
+      "name": "plane_style_sqlite_project_management",
+      "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+      "branch": "feature/INT-012/plane_style_sqlite_project_management",
+      "completed_at": "2026-11-07 11:25 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Replicacion de UX y arquitectura de Makeplane (Plane): vistas Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; Plane Pages; base de datos relacional SQLite (node:sqlite) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para consumo optimo por agentes IA."
     }
   ]
 },
@@ -3063,5 +3192,1550 @@ window.__FALLBACK_DATA__ = {
       }
     }
   }
+},
+  planeData: {
+  "workspace": {
+    "id": "ws-harness",
+    "name": "Harness Engineering Workspace",
+    "slug": "harness-engineering",
+    "created_at": "2026-11-07 15:48:41"
+  },
+  "project": {
+    "id": "proj-harness",
+    "workspace_id": "ws-harness",
+    "name": "Arnés de Ingeniería SDD Multi-Agente",
+    "slug": "harness-sdd",
+    "description": "Plataforma integral de ingeniería dirigida por specs con soporte multi-agente y gestión ágil",
+    "created_at": "2026-11-07 15:48:41"
+  },
+  "states": [
+    {
+      "id": "state-backlog",
+      "project_id": "proj-harness",
+      "name": "Backlog",
+      "color": "#71717a",
+      "sequence": 10,
+      "group_name": "backlog"
+    },
+    {
+      "id": "state-todo",
+      "project_id": "proj-harness",
+      "name": "Todo",
+      "color": "#3b82f6",
+      "sequence": 20,
+      "group_name": "unstarted"
+    },
+    {
+      "id": "state-in-progress",
+      "project_id": "proj-harness",
+      "name": "In Progress",
+      "color": "#eab308",
+      "sequence": 30,
+      "group_name": "started"
+    },
+    {
+      "id": "state-in-review",
+      "project_id": "proj-harness",
+      "name": "In Review",
+      "color": "#a855f7",
+      "sequence": 40,
+      "group_name": "review"
+    },
+    {
+      "id": "state-done",
+      "project_id": "proj-harness",
+      "name": "Done",
+      "color": "#22c55e",
+      "sequence": 50,
+      "group_name": "completed"
+    },
+    {
+      "id": "state-cancelled",
+      "project_id": "proj-harness",
+      "name": "Cancelled",
+      "color": "#ef4444",
+      "sequence": 60,
+      "group_name": "cancelled"
+    }
+  ],
+  "cycles": [
+    {
+      "id": "cycle-1",
+      "project_id": "proj-harness",
+      "name": "Ciclo 1: Fundacional (Harness Core)",
+      "description": "Arquitectura base, sincronización de skills y tablero visual",
+      "start_date": "2026-10-15",
+      "end_date": "2026-10-31",
+      "status": "completed",
+      "created_at": "2026-11-07 15:48:41"
+    },
+    {
+      "id": "cycle-2",
+      "project_id": "proj-harness",
+      "name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
+      "description": "Testing multinivel, Playwright E2E y pureza de raíz",
+      "start_date": "2026-11-01",
+      "end_date": "2026-11-06",
+      "status": "completed",
+      "created_at": "2026-11-07 15:48:41"
+    },
+    {
+      "id": "cycle-3",
+      "project_id": "proj-harness",
+      "name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
+      "description": "Replicación UX Plane, persistencia SQLite y soporte espejo Markdown",
+      "start_date": "2026-11-07",
+      "end_date": "2026-11-20",
+      "status": "active",
+      "created_at": "2026-11-07 15:48:41"
+    }
+  ],
+  "modules": [
+    {
+      "id": "mod-orchestrator",
+      "project_id": "proj-harness",
+      "name": "Agent Orchestrator",
+      "description": "Orquestación de agentes autónomos, roles y reglas de branching",
+      "lead_role": "leader",
+      "status": "completed",
+      "created_at": "2026-11-07 15:48:41"
+    },
+    {
+      "id": "mod-visualizer",
+      "project_id": "proj-harness",
+      "name": "Dashboard Visualizer",
+      "description": "Tablero visual, vistas Plane, grafos de dependencias y 3D",
+      "lead_role": "implementer",
+      "status": "in_progress",
+      "created_at": "2026-11-07 15:48:41"
+    },
+    {
+      "id": "mod-core",
+      "project_id": "proj-harness",
+      "name": "Harness Core",
+      "description": "Scripts verify.sh, configuraciones y reglas del arnés",
+      "lead_role": "leader",
+      "status": "completed",
+      "created_at": "2026-11-07 15:48:41"
+    },
+    {
+      "id": "mod-knowledge",
+      "project_id": "proj-harness",
+      "name": "Knowledge Engine",
+      "description": "Base de conocimiento Docs-as-Code soberana y DeepWiki",
+      "lead_role": "spec-author",
+      "status": "completed",
+      "created_at": "2026-11-07 15:48:41"
+    },
+    {
+      "id": "mod-qa",
+      "project_id": "proj-harness",
+      "name": "Testing QA Suite",
+      "description": "Verificación multinivel en 9 fases, Playwright E2E y suites de prueba",
+      "lead_role": "reviewer",
+      "status": "completed",
+      "created_at": "2026-11-07 15:48:41"
+    }
+  ],
+  "issues": [
+    {
+      "id": "INT-001",
+      "project_id": "proj-harness",
+      "sequence_id": 1,
+      "title": "Refactorización Integral y Desacoplamiento Agnóstico del Arnés",
+      "description": "Auditoría real del repositorio, saneamiento de mocks e-commerce residuales, desacoplamiento universal de subagentes y configuración de tests automatizados.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-1",
+      "module_id": "mod-orchestrator",
+      "spec_folder": "project-docs/specs/001_refactor_harness_architecture",
+      "branch": "feature/INT-001/refactor_harness_architecture",
+      "user_story_as_a": "Arquitecto de Software",
+      "user_story_i_want": "desacoplar el arnés de cualquier stack específico y purgar mocks residuales",
+      "user_story_so_that": "el sistema funcione universalmente con Node, .NET, Python, Go o cualquier tecnología",
+      "acceptance_criteria": "[\"project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce\",\"Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests\",\"package.json y suite de tests unitarios están configurados y pasando en verde\",\"El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
+      "module_name": "Agent Orchestrator",
+      "subtasks": [
+        {
+          "id": "INT-001-DEV",
+          "issue_id": "INT-001",
+          "type": "development",
+          "title": "Desacoplamiento de subagentes y saneamiento de mocks",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-001-QA",
+          "issue_id": "INT-001",
+          "type": "qa",
+          "title": "Validación de contratos agnósticos y ejecución de tests unitarios",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce",
+        "Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests",
+        "package.json y suite de tests unitarios están configurados y pasando en verde",
+        "El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP"
+      ]
+    },
+    {
+      "id": "INT-002",
+      "project_id": "proj-harness",
+      "sequence_id": 2,
+      "title": "Motor de Sincronización Triple de Skills",
+      "description": "Mecanismo de replicación y paridad entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-1",
+      "module_id": "mod-core",
+      "spec_folder": "project-docs/specs/002_triple_mirror_skills_sync",
+      "branch": "feature/INT-002/triple_mirror_skills_sync",
+      "user_story_as_a": "Líder Técnico",
+      "user_story_i_want": "sincronizar automáticamente las skills en opencode, GitHub Copilot y Antigravity",
+      "user_story_so_that": "cualquier agente de IA opere con las mismas capacidades sin divergencias",
+      "acceptance_criteria": "[\"18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/\",\"Frontmatter name y description idénticos en los 3 espejos\",\"Skill sync-skills disponible para auditoría de discrepancias\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
+      "module_name": "Harness Core",
+      "subtasks": [
+        {
+          "id": "INT-002-DEV",
+          "issue_id": "INT-002",
+          "type": "development",
+          "title": "Implementación del motor triple de sincronización y skill sync-skills",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-002-QA",
+          "issue_id": "INT-002",
+          "type": "qa",
+          "title": "Auditoría de paridad en frontmatter y contenido en los 3 espejos",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/",
+        "Frontmatter name y description idénticos en los 3 espejos",
+        "Skill sync-skills disponible para auditoría de discrepancias"
+      ]
+    },
+    {
+      "id": "INT-003",
+      "project_id": "proj-harness",
+      "sequence_id": 3,
+      "title": "Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento",
+      "description": "Protocolo de elicitación profunda en 2 fases con C4, UML, ERD, diccionario de datos, reglas BR-* y ADRs.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-1",
+      "module_id": "mod-knowledge",
+      "spec_folder": "project-docs/specs/003_knowledge_base_dynamic_engine",
+      "branch": "feature/INT-003/knowledge_base_dynamic_engine",
+      "user_story_as_a": "Ingeniero de Contexto",
+      "user_story_i_want": "extraer una base de conocimiento soberana con C4, UML, ERD y reglas BR-*",
+      "user_story_so_that": "los agentes no sufran de ceguera de contexto ni alucinen librerías",
+      "acceptance_criteria": "[\"Escaneo de topología en Fase 1 sin saturación de tokens\",\"Documentación profunda por módulo en Fase 2\",\"Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
+      "module_name": "Knowledge Engine",
+      "subtasks": [
+        {
+          "id": "INT-003-DEV",
+          "issue_id": "INT-003",
+          "type": "development",
+          "title": "Motor de elicitación profunda en 2 fases y catálogo BR-*",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-003-QA",
+          "issue_id": "INT-003",
+          "type": "qa",
+          "title": "Validación de consistencia en diagramas Mermaid y zero-bias",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Escaneo de topología en Fase 1 sin saturación de tokens",
+        "Documentación profunda por módulo en Fase 2",
+        "Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas"
+      ]
+    },
+    {
+      "id": "INT-004",
+      "project_id": "proj-harness",
+      "sequence_id": 4,
+      "title": "Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis",
+      "description": "Interfaz visual con Tailwind CSS v4, iconografia SVG accesible (0 emojis), tabla tecnica de stack, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-1",
+      "module_id": "mod-visualizer",
+      "spec_folder": "project-docs/specs/004_dashboard_editorial_dual_editor",
+      "branch": "feature/INT-004/refactor_frontend_zero_emojis_atdd",
+      "user_story_as_a": "Usuario y Desarrollador",
+      "user_story_i_want": "un tablero visual moderno sin emojis, con lector editorial y editor dual ContextForge",
+      "user_story_so_that": "la lectura y edición técnica sea fluida y profesional",
+      "acceptance_criteria": "[\"Biblioteca organizada por estantes temáticos con tarjeta Hero destacada\",\"Lector de artículos con ancho centrado a 780px e interlineado 1.75em\",\"Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional\",\"Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde\",\"Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
+      "module_name": "Dashboard Visualizer",
+      "subtasks": [
+        {
+          "id": "INT-004-DEV",
+          "issue_id": "INT-004",
+          "type": "development",
+          "title": "Componentes Vanilla JS con Tailwind v4, lector centrado y editor dual",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-004-QA",
+          "issue_id": "INT-004",
+          "type": "qa",
+          "title": "Suites ATDD y pruebas de accesibilidad con 0 emojis",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Biblioteca organizada por estantes temáticos con tarjeta Hero destacada",
+        "Lector de artículos con ancho centrado a 780px e interlineado 1.75em",
+        "Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional",
+        "Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde",
+        "Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica"
+      ]
+    },
+    {
+      "id": "INT-005",
+      "project_id": "proj-harness",
+      "sequence_id": 5,
+      "title": "Constelación 3D en Jerarquía Piramidal Three.js",
+      "description": "Visualización 3D espacial estructurada en 4 niveles arquitectónicos con anillos translúcidos y flujo de energía Bezier.",
+      "state_id": "state-done",
+      "priority": "high",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-1",
+      "module_id": "mod-visualizer",
+      "spec_folder": "project-docs/specs/005_pyramidal_3d_constellation",
+      "branch": "feature/INT-005/pyramidal_3d_constellation",
+      "user_story_as_a": "Líder de Proyecto",
+      "user_story_i_want": "visualizar la arquitectura en una constelación 3D piramidal con Three.js",
+      "user_story_so_that": "la comprensión espacial del sistema sea intuitiva e interactiva",
+      "acceptance_criteria": "[\"4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)\",\"Distribución radial armónica para evitar colisión de etiquetas\",\"Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
+      "module_name": "Dashboard Visualizer",
+      "subtasks": [
+        {
+          "id": "INT-005-DEV",
+          "issue_id": "INT-005",
+          "type": "development",
+          "title": "Renderizado 3D de 4 niveles con curvas Bezier",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-005-QA",
+          "issue_id": "INT-005",
+          "type": "qa",
+          "title": "Pruebas de ciclo de vida mount/unmount y ausencia de memory leaks",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)",
+        "Distribución radial armónica para evitar colisión de etiquetas",
+        "Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks"
+      ]
+    },
+    {
+      "id": "INT-006",
+      "project_id": "proj-harness",
+      "sequence_id": 6,
+      "title": "Búsqueda Global Omnibox con Atajo de Teclado",
+      "description": "Buscador omnibox modal (Ctrl+K / Cmd+K) con filtrado reactivo de tareas, documentos, reglas y módulos.",
+      "state_id": "state-done",
+      "priority": "high",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-1",
+      "module_id": "mod-visualizer",
+      "spec_folder": "project-docs/specs/006_omnibox_global_search",
+      "branch": "feature/INT-006/omnibox_global_search",
+      "user_story_as_a": "Desarrollador",
+      "user_story_i_want": "un buscador omnibox global con atajo Ctrl+K",
+      "user_story_so_that": "pueda navegar instantáneamente a cualquier tarea, regla o documento",
+      "acceptance_criteria": "[\"Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección\",\"Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts\",\"Navegación fluida por teclado (Up, Down, Enter, Escape)\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 1: Fundacional (Harness Core)",
+      "module_name": "Dashboard Visualizer",
+      "subtasks": [
+        {
+          "id": "INT-006-DEV",
+          "issue_id": "INT-006",
+          "type": "development",
+          "title": "Modal Omnibox con indexación en memoria y atajos de teclado",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-006-QA",
+          "issue_id": "INT-006",
+          "type": "qa",
+          "title": "Pruebas E2E de apertura, filtrado y navegación con teclado",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección",
+        "Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts",
+        "Navegación fluida por teclado (Up, Down, Enter, Escape)"
+      ]
+    },
+    {
+      "id": "INT-007",
+      "project_id": "proj-harness",
+      "sequence_id": 7,
+      "title": "Suite de Pruebas Unitarias para Motores del Arnés",
+      "description": "Pruebas automatizadas con Node.js Test Runner para sync-data.js, serializadores de markdown, TOC y reglas de branching.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-2",
+      "module_id": "mod-qa",
+      "spec_folder": "project-docs/specs/007_automated_unit_testing_suite",
+      "branch": "feature/INT-007/automated_unit_testing_suite",
+      "user_story_as_a": "Especialista en QA",
+      "user_story_i_want": "una suite completa de pruebas unitarias nativas",
+      "user_story_so_that": "cada función pura y serializador esté blindado contra regresiones",
+      "acceptance_criteria": "[\"Suite de tests unitarios nativos ejecutables con npm test\",\"Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown\",\"Validación de cálculo de tiempos de lectura y clasificación en estantes\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
+      "module_name": "Testing QA Suite",
+      "subtasks": [
+        {
+          "id": "INT-007-DEV",
+          "issue_id": "INT-007",
+          "type": "development",
+          "title": "Desarrollo de tests unitarios para markdown, TOC y reglas",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-007-QA",
+          "issue_id": "INT-007",
+          "type": "qa",
+          "title": "Ejecución con npm test y validación de cobertura",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Suite de tests unitarios nativos ejecutables con npm test",
+        "Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown",
+        "Validación de cálculo de tiempos de lectura y clasificación en estantes"
+      ]
+    },
+    {
+      "id": "INT-008",
+      "project_id": "proj-harness",
+      "sequence_id": 8,
+      "title": "Pruebas de Aceptación End-to-End con Playwright",
+      "description": "Automatización integral de pruebas E2E, caja blanca y caja negra para validar el tablero, constelación 3D y editor dual.",
+      "state_id": "state-done",
+      "priority": "high",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-2",
+      "module_id": "mod-qa",
+      "spec_folder": "project-docs/specs/008_playwright_acceptance_testing",
+      "branch": "feature/INT-008/playwright_acceptance_testing",
+      "user_story_as_a": "Lead QA Automation Specialist",
+      "user_story_i_want": "pruebas de aceptación E2E con Playwright y multinivel en verify.sh",
+      "user_story_so_that": "todo cambio sea verificado de punta a punta antes de cualquier entrega",
+      "acceptance_criteria": "[\"Script de prueba automatizada verificando carga de index.html\",\"Verificación de renderizado de la constelación 3D y conmutación de pestañas\",\"Prueba de edición y persistencia en el editor dual\"]",
+      "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
+      "module_name": "Testing QA Suite",
+      "subtasks": [
+        {
+          "id": "INT-008-DEV",
+          "issue_id": "INT-008",
+          "type": "development",
+          "title": "Configuración de Playwright, suites de caja blanca, negra y carga",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-008-QA",
+          "issue_id": "INT-008",
+          "type": "qa",
+          "title": "Verificación de los 8 niveles de verify.sh en verde",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Script de prueba automatizada verificando carga de index.html",
+        "Verificación de renderizado de la constelación 3D y conmutación de pestañas",
+        "Prueba de edición y persistencia en el editor dual"
+      ]
+    },
+    {
+      "id": "INT-009",
+      "project_id": "proj-harness",
+      "sequence_id": 9,
+      "title": "Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON",
+      "description": "Estandarización de especificaciones con User Stories Scrum (Como/Quiero/Para), desglose formal de subtareas de Desarrollo (DEV) y de QA estilo Jira, y protocolo de cierre con evidencias técnicas y capturas de pantalla integradas en JSON.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-2",
+      "module_id": "mod-orchestrator",
+      "spec_folder": "project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence",
+      "branch": "feature/INT-009/scrum_spec_subtasks_qa_evidence",
+      "user_story_as_a": "Líder Técnico y Especialista de QA",
+      "user_story_i_want": "documentar los specs de tareas bajo el estándar Scrum con subtareas independientes de Desarrollo y QA y capturas de pantalla de evidencia",
+      "user_story_so_that": "el equipo tenga claridad absoluta del qué, cómo y de las pruebas ejecutadas, con trazabilidad determinista y persistencia en JSON sin bases de datos SQL",
+      "acceptance_criteria": "[\"Los specs incorporan estructura Scrum con User Story (Como/Quiero/Para), DoR y DoD\",\"Cada tarea principal desglosa una Subtarea de Desarrollo (DEV) y una Subtarea de QA estilo Jira\",\"Al cerrar la tarea se documenta en el spec y en JSON qué se hizo, qué pruebas se realizaron y capturas de pantalla\",\"Toda la persistencia se realiza 100% en JSON sin bases de datos SQL\",\"El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla\"]",
+      "evidence_summary": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
+      "module_name": "Agent Orchestrator",
+      "subtasks": [
+        {
+          "id": "INT-009-DEV",
+          "issue_id": "INT-009",
+          "type": "development",
+          "title": "Subtarea DEV: Extensión de Esquema JSON, UI Scrum (Modal/Table) y Motor de Evidencias",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-009-QA",
+          "issue_id": "INT-009",
+          "type": "qa",
+          "title": "Subtarea QA: Casos de Prueba, Aceptación E2E, Capturas de Pantalla y Auditoría de Evidencias",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Los specs incorporan estructura Scrum con User Story (Como/Quiero/Para), DoR y DoD",
+        "Cada tarea principal desglosa una Subtarea de Desarrollo (DEV) y una Subtarea de QA estilo Jira",
+        "Al cerrar la tarea se documenta en el spec y en JSON qué se hizo, qué pruebas se realizaron y capturas de pantalla",
+        "Toda la persistencia se realiza 100% en JSON sin bases de datos SQL",
+        "El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla"
+      ]
+    },
+    {
+      "id": "INT-010",
+      "project_id": "proj-harness",
+      "sequence_id": 10,
+      "title": "Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés",
+      "description": "Reorganizar la arquitectura de archivos del arnés para que la raíz contenga exclusivamente los archivos y carpetas indispensables de adopción (.agents/, .github/, .opencode/, project-docs/, AGENTS.md, opencode.json, project-spec.yaml, verify.sh), encapsulando el tooling npm, scripts, suites de prueba y specs dentro de project-docs/ para prevenir cualquier colisión al copiar y pegar el arnés en proyectos externos (.NET, Python, Java, Go, etc.).",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-2",
+      "module_id": "mod-orchestrator",
+      "spec_folder": "project-docs/specs/010_harness_root_cleanliness_encapsulation",
+      "branch": "feature/INT-010/harness_root_cleanliness_encapsulation",
+      "user_story_as_a": "Ingeniero / Arquitecto de Software",
+      "user_story_i_want": "tener una raíz de proyecto limpia donde todos los archivos internos del arnés estén encapsulados en project-docs/",
+      "user_story_so_that": "pueda copiar y pegar el arnés en cualquier proyecto cliente (.NET, Python, Java, Go, Node) sin colisiones de package.json, tests o archivos sueltos en la raíz",
+      "acceptance_criteria": "[\"La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)\",\"Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión\",\"Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente\",\"Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js\",\"El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json\",\"ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md\",\"verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)\",\"El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas\",\"El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga\"]",
+      "evidence_summary": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
+      "module_name": "Agent Orchestrator",
+      "subtasks": [
+        {
+          "id": "INT-010-DEV",
+          "issue_id": "INT-010",
+          "type": "development",
+          "title": "Encapsulamiento de tooling npm, scripts, tests y configuración dentro de project-docs/",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-010-QA",
+          "issue_id": "INT-010",
+          "type": "qa",
+          "title": "Verificación multinivel, auditoría de raíz limpia y pruebas E2E",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)",
+        "Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión",
+        "Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente",
+        "Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js",
+        "El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json",
+        "ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md",
+        "verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)",
+        "El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas",
+        "El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga"
+      ]
+    },
+    {
+      "id": "INT-011",
+      "project_id": "proj-harness",
+      "sequence_id": 11,
+      "title": "Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/",
+      "description": "Reubicar specs/, verify.sh y project-spec.yaml dentro de project-docs/ para dejar la raíz con exclusivamente 4 carpetas (.agents/, .github/, .opencode/, project-docs/) y 4 archivos indispensables (AGENTS.md, opencode.json, README.md, .gitignore). Actualizar exhaustivamente todos los agentes y skills de Antigravity, Copilot y OpenCode para crear y consumir archivos en las nuevas rutas.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-2",
+      "module_id": "mod-orchestrator",
+      "spec_folder": "project-docs/specs/011_encapsulate_specs_and_scripts",
+      "branch": "feature/INT-011/encapsulate_specs_and_scripts",
+      "user_story_as_a": "Ingeniero / Arquitecto de Software",
+      "user_story_i_want": "tener las especificaciones, verify.sh y project-spec.yaml encapsulados en project-docs/",
+      "user_story_so_that": "la raíz del proyecto quede extremadamente limpia (solo 4 carpetas y 4 archivos) facilitando identificar y mover los archivos del arnés",
+      "acceptance_criteria": "[\"La carpeta specs/ reside exclusivamente dentro de project-docs/specs/\",\"El archivo project-spec.yaml reside en project-docs/project-spec.yaml\",\"El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación\",\"La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)\",\"Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/\",\"Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/\",\"El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde\",\"El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0\"]",
+      "evidence_summary": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 2: Calidad, DeepWiki & Encapsulamiento",
+      "module_name": "Agent Orchestrator",
+      "subtasks": [
+        {
+          "id": "INT-011-DEV",
+          "issue_id": "INT-011",
+          "type": "development",
+          "title": "Reubicación de artefactos y actualización de agentes y skills",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-011-QA",
+          "issue_id": "INT-011",
+          "type": "qa",
+          "title": "Validación multinivel de rutas y pureza extrema de raíz",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "La carpeta specs/ reside exclusivamente dentro de project-docs/specs/",
+        "El archivo project-spec.yaml reside en project-docs/project-spec.yaml",
+        "El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación",
+        "La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)",
+        "Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/",
+        "Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/",
+        "El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde",
+        "El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0"
+      ]
+    },
+    {
+      "id": "INT-012",
+      "project_id": "proj-harness",
+      "sequence_id": 12,
+      "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+      "description": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-3",
+      "module_id": "mod-visualizer",
+      "spec_folder": "project-docs/specs/012_plane_style_sqlite_project_management",
+      "branch": "feature/INT-012/plane_style_sqlite_project_management",
+      "user_story_as_a": "Ingeniero de Software y Agente de IA",
+      "user_story_i_want": "una plataforma de gestion de proyectos inspirada en Plane con vistas multiples y persistencia relacional SQLite sincronizada con Markdown",
+      "user_story_so_that": "la gestion visual del flujo de trabajo sea de primer nivel y los agentes autonomos puedan consultar y actualizar tareas y conocimiento en su formato nativo",
+      "acceptance_criteria": "[\"Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.\",\"Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.\",\"Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).\",\"Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).\",\"Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.\",\"Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.\",\"Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.\",\"Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.\",\"Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).\",\"Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
+      "evidence_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
+      "created_at": "2026-11-07 15:48:41",
+      "updated_at": "2026-11-07 16:24:49",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
+      "module_name": "Dashboard Visualizer",
+      "subtasks": [
+        {
+          "id": "INT-012-DEV",
+          "issue_id": "INT-012",
+          "type": "development",
+          "title": "Motor SQLite relacional, API REST en serve.js y vistas completas estilo Plane",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-012-QA",
+          "issue_id": "INT-012",
+          "type": "qa",
+          "title": "Pruebas unitarias de SQLite, sincronizacion de archivos y pruebas de aceptacion Playwright",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.",
+        "Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.",
+        "Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).",
+        "Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).",
+        "Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.",
+        "Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.",
+        "Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.",
+        "Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.",
+        "Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).",
+        "Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones."
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": "page-knowledge_business-rules_md",
+      "file_path": "knowledge/business-rules.md",
+      "title": "Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)",
+      "summary": "",
+      "shelf": "business_rules",
+      "word_count": 599,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_03-capabilities-and-features_md",
+      "file_path": "knowledge/03-capabilities-and-features.md",
+      "title": "Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 1989,
+      "reading_time_min": 10,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_adr-catalog_md",
+      "file_path": "knowledge/adr-catalog.md",
+      "title": "Catálogo de Decisiones de Arquitectura (ADR Catalog)",
+      "summary": "",
+      "shelf": "adrs",
+      "word_count": 592,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_user-stories-catalog_md",
+      "file_path": "knowledge/user-stories-catalog.md",
+      "title": "Catálogo de Historias de Usuario (INVEST, Scrum & XP)",
+      "summary": "",
+      "shelf": "requirements",
+      "word_count": 627,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_external-services_md",
+      "file_path": "knowledge/external-services.md",
+      "title": "Catálogo de Integraciones y Servicios Externos",
+      "summary": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
+      "shelf": "standards",
+      "word_count": 215,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_tasks_md",
+      "file_path": "specs/009_scrum_spec_subtasks_and_qa_evidence/tasks.md",
+      "title": "Checklist de Subtareas Scrum (Jira Style): INT-009",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 336,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_001_refactor_harness_architecture_tasks_md",
+      "file_path": "specs/001_refactor_harness_architecture/tasks.md",
+      "title": "Checklist de Tareas de Implementación: INT-001",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 144,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_008_playwright_acceptance_testing_tasks_md",
+      "file_path": "specs/008_playwright_acceptance_testing/tasks.md",
+      "title": "Checklist de Tareas de Implementación: INT-008",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 179,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_011_encapsulate_specs_and_scripts_design_md",
+      "file_path": "specs/011_encapsulate_specs_and_scripts/design.md",
+      "title": "Design: Encapsulamiento Completo de Specs, verify.sh y project-spec.yaml en project-docs/",
+      "summary": "```",
+      "shelf": "specs",
+      "word_count": 385,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_010_harness_root_cleanliness_encapsulation_design_md",
+      "file_path": "specs/010_harness_root_cleanliness_encapsulation/design.md",
+      "title": "Design: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
+      "summary": "```mermaid",
+      "shelf": "specs",
+      "word_count": 826,
+      "reading_time_min": 5,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_02-architecture-and-patterns_md",
+      "file_path": "knowledge/02-architecture-and-patterns.md",
+      "title": "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones",
+      "summary": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
+      "shelf": "architecture",
+      "word_count": 729,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_uml-diagrams_md",
+      "file_path": "knowledge/uml-diagrams.md",
+      "title": "Diagramas UML — AI Agentic SDD Engineering Harness",
+      "summary": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
+      "shelf": "architecture",
+      "word_count": 515,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_data-dictionary_md",
+      "file_path": "knowledge/data-dictionary.md",
+      "title": "Diccionario de Datos & Persistencia Docs-as-Code",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 345,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_001_refactor_harness_architecture_design_md",
+      "file_path": "specs/001_refactor_harness_architecture/design.md",
+      "title": "Diseño Técnico & Decisiones de Arquitectura (ADRs): INT-001",
+      "summary": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
+      "shelf": "specs",
+      "word_count": 248,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_008_playwright_acceptance_testing_design_md",
+      "file_path": "specs/008_playwright_acceptance_testing/design.md",
+      "title": "Diseño Técnico & Decisiones de Arquitectura (ADRs): INT-008",
+      "summary": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
+      "shelf": "specs",
+      "word_count": 392,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_design_md",
+      "file_path": "specs/009_scrum_spec_subtasks_and_qa_evidence/design.md",
+      "title": "Diseño Técnico y Arquitectura: INT-009",
+      "summary": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
+      "shelf": "specs",
+      "word_count": 645,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_MASTER-PROJECT-KNOWLEDGE_md",
+      "file_path": "knowledge/MASTER-PROJECT-KNOWLEDGE.md",
+      "title": "Dossier Maestro Consolidado de Ingeniería Soberana (MASTER-PROJECT-KNOWLEDGE)",
+      "summary": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
+      "shelf": "standards",
+      "word_count": 1709,
+      "reading_time_min": 9,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_012_plane_style_sqlite_project_management_design_md",
+      "file_path": "specs/012_plane_style_sqlite_project_management/design.md",
+      "title": "Especificacion de Diseño y Arquitectura — INT-012: Ingenieria Inversa Plane (Makeplane)",
+      "summary": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
+      "shelf": "specs",
+      "word_count": 1257,
+      "reading_time_min": 7,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_012_plane_style_sqlite_project_management_requirements_md",
+      "file_path": "specs/012_plane_style_sqlite_project_management/requirements.md",
+      "title": "Especificacion de Requerimientos — INT-012: Ingenieria Inversa Plane (Makeplane) para Gestion de Tareas, Base de Conocimiento y SQLite con Copia Markdown",
+      "summary": "El arnés actual cuenta con un tablero de seguimiento visual (`project-docs/index.html`) con una tabla de features, visor 3D Three.js, grafo de dependencias y ba...",
+      "shelf": "specs",
+      "word_count": 1269,
+      "reading_time_min": 7,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_requirements_md",
+      "file_path": "specs/009_scrum_spec_subtasks_and_qa_evidence/requirements.md",
+      "title": "Especificación de Requerimientos Scrum & SDD: INT-009",
+      "summary": "Antes de iniciar la implementación, se validó que:",
+      "shelf": "specs",
+      "word_count": 582,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_functional-requirements_md",
+      "file_path": "knowledge/functional-requirements.md",
+      "title": "Especificación de Requerimientos del Sistema (SRS IEEE 830 / ISO 29148)",
+      "summary": "",
+      "shelf": "requirements",
+      "word_count": 657,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_001_refactor_harness_architecture_requirements_md",
+      "file_path": "specs/001_refactor_harness_architecture/requirements.md",
+      "title": "Especificación de Requerimientos: INT-001 refactor_harness_architecture",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 252,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_008_playwright_acceptance_testing_requirements_md",
+      "file_path": "specs/008_playwright_acceptance_testing/requirements.md",
+      "title": "Especificación de Requerimientos: INT-008 playwright_acceptance_testing",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 383,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_coding-standards_md",
+      "file_path": "knowledge/coding-standards.md",
+      "title": "Estándares de Codificación & Guardrails Anti-Sesgo",
+      "summary": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
+      "shelf": "standards",
+      "word_count": 265,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_012_plane_style_sqlite_project_management_evidence_md",
+      "file_path": "specs/012_plane_style_sqlite_project_management/evidence.md",
+      "title": "Evidencias de Aceptacion E2E — INT-012: Ingenieria Inversa Plane (Makeplane)",
+      "summary": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
+      "shelf": "specs",
+      "word_count": 420,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_010_harness_root_cleanliness_encapsulation_evidence_md",
+      "file_path": "specs/010_harness_root_cleanliness_encapsulation/evidence.md",
+      "title": "Evidencias de Pruebas y Validación: INT-010 Encapsulamiento de Archivos y Limpieza de Raíz",
+      "summary": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
+      "shelf": "specs",
+      "word_count": 355,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_011_encapsulate_specs_and_scripts_evidence_md",
+      "file_path": "specs/011_encapsulate_specs_and_scripts/evidence.md",
+      "title": "Evidencias de Pruebas y Validación: INT-011 Encapsulamiento de Specs, verify.sh y project-spec.yaml",
+      "summary": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
+      "shelf": "specs",
+      "word_count": 335,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_sequence_md",
+      "file_path": "knowledge/modules/knowledge-engine/sequence.md",
+      "title": "Flujo de Elicitación y Extracción: knowledge-engine",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 95,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_sequence_md",
+      "file_path": "knowledge/modules/agent-orchestrator/sequence.md",
+      "title": "Flujo de Orquestación Multi-Agente: agent-orchestrator",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 100,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_sequence_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/sequence.md",
+      "title": "Flujo de Renderizado y Navegación: dashboard-visualizer",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 115,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_sequence_md",
+      "file_path": "knowledge/modules/triple-sync-engine/sequence.md",
+      "title": "Flujo de Sincronización Triple: triple-sync-engine",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 71,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_sequence_md",
+      "file_path": "knowledge/modules/testing-qa-suite/sequence.md",
+      "title": "Flujo de Verificación Continua: testing-qa-suite",
+      "summary": "```mermaid",
+      "shelf": "standards",
+      "word_count": 66,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_system-capabilities_md",
+      "file_path": "knowledge/system-capabilities.md",
+      "title": "Inventario de Capacidades del Sistema (System Capabilities)",
+      "summary": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
+      "shelf": "standards",
+      "word_count": 362,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_traceability-matrix_md",
+      "file_path": "knowledge/traceability-matrix.md",
+      "title": "Matriz de Trazabilidad Cruzada (RTM)",
+      "summary": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
+      "shelf": "requirements",
+      "word_count": 250,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_c4-model_md",
+      "file_path": "knowledge/c4-model.md",
+      "title": "Modelo C4 — AI Agentic SDD Engineering Harness",
+      "summary": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
+      "shelf": "architecture",
+      "word_count": 303,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_04-domain-ddd-and-crc_md",
+      "file_path": "knowledge/04-domain-ddd-and-crc.md",
+      "title": "Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC",
+      "summary": "1. **Core Domain (Dominio Central)**:",
+      "shelf": "standards",
+      "word_count": 637,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_data-and-transactions_md",
+      "file_path": "knowledge/modules/agent-orchestrator/data-and-transactions.md",
+      "title": "Módulo: agent-orchestrator — Datos & Transacciones",
+      "summary": "El orquestador interactúa con dos fuentes de persistencia:",
+      "shelf": "standards",
+      "word_count": 169,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md",
+      "file_path": "knowledge/modules/agent-orchestrator/technical-debt-refactoring.md",
+      "title": "Módulo: agent-orchestrator — Deuda Técnica & Refactorización",
+      "summary": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
+      "shelf": "standards",
+      "word_count": 139,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_module-spec_md",
+      "file_path": "knowledge/modules/agent-orchestrator/module-spec.md",
+      "title": "Módulo: agent-orchestrator — Especificación & Tarjetas CRC",
+      "summary": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
+      "shelf": "standards",
+      "word_count": 437,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_requirements-and-rules_md",
+      "file_path": "knowledge/modules/agent-orchestrator/requirements-and-rules.md",
+      "title": "Módulo: agent-orchestrator — Requerimientos & Reglas de Negocio",
+      "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "shelf": "business_rules",
+      "word_count": 556,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_diagrams_md",
+      "file_path": "knowledge/modules/agent-orchestrator/diagrams.md",
+      "title": "Módulo: agent-orchestrator — Suite de 6 Diagramas",
+      "summary": "```mermaid",
+      "shelf": "architecture",
+      "word_count": 440,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_data-and-transactions_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/data-and-transactions.md",
+      "title": "Módulo: dashboard-visualizer — Datos & Transacciones",
+      "summary": "",
+      "shelf": "standards",
+      "word_count": 172,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/technical-debt-refactoring.md",
+      "title": "Módulo: dashboard-visualizer — Deuda Técnica & Refactorización",
+      "summary": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
+      "shelf": "standards",
+      "word_count": 161,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_module-spec_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/module-spec.md",
+      "title": "Módulo: dashboard-visualizer — Especificación & Tarjetas CRC",
+      "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "shelf": "standards",
+      "word_count": 354,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/requirements-and-rules.md",
+      "title": "Módulo: dashboard-visualizer — Requerimientos & Reglas de Negocio",
+      "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "shelf": "business_rules",
+      "word_count": 255,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_diagrams_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/diagrams.md",
+      "title": "Módulo: dashboard-visualizer — Suite de 6 Diagramas",
+      "summary": "```mermaid",
+      "shelf": "architecture",
+      "word_count": 377,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_data-and-transactions_md",
+      "file_path": "knowledge/modules/knowledge-engine/data-and-transactions.md",
+      "title": "Módulo: knowledge-engine — Datos & Transacciones",
+      "summary": "El archivo `knowledge-index.json` persiste:",
+      "shelf": "standards",
+      "word_count": 98,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md",
+      "file_path": "knowledge/modules/knowledge-engine/technical-debt-refactoring.md",
+      "title": "Módulo: knowledge-engine — Deuda Técnica & Refactorización",
+      "summary": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
+      "shelf": "standards",
+      "word_count": 121,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_module-spec_md",
+      "file_path": "knowledge/modules/knowledge-engine/module-spec.md",
+      "title": "Módulo: knowledge-engine — Especificación & Tarjetas CRC",
+      "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "shelf": "standards",
+      "word_count": 208,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_requirements-and-rules_md",
+      "file_path": "knowledge/modules/knowledge-engine/requirements-and-rules.md",
+      "title": "Módulo: knowledge-engine — Requerimientos & Reglas de Negocio",
+      "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "shelf": "business_rules",
+      "word_count": 211,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_diagrams_md",
+      "file_path": "knowledge/modules/knowledge-engine/diagrams.md",
+      "title": "Módulo: knowledge-engine — Suite de 6 Diagramas",
+      "summary": "```mermaid",
+      "shelf": "architecture",
+      "word_count": 381,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_data-and-transactions_md",
+      "file_path": "knowledge/modules/testing-qa-suite/data-and-transactions.md",
+      "title": "Módulo: testing-qa-suite — Datos & Transacciones",
+      "summary": "",
+      "shelf": "standards",
+      "word_count": 68,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md",
+      "file_path": "knowledge/modules/testing-qa-suite/technical-debt-refactoring.md",
+      "title": "Módulo: testing-qa-suite — Deuda Técnica & Refactorización",
+      "summary": "",
+      "shelf": "standards",
+      "word_count": 94,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_module-spec_md",
+      "file_path": "knowledge/modules/testing-qa-suite/module-spec.md",
+      "title": "Módulo: testing-qa-suite — Especificación & Tarjetas CRC",
+      "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "shelf": "standards",
+      "word_count": 214,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_requirements-and-rules_md",
+      "file_path": "knowledge/modules/testing-qa-suite/requirements-and-rules.md",
+      "title": "Módulo: testing-qa-suite — Requerimientos & Reglas de Negocio",
+      "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "shelf": "business_rules",
+      "word_count": 170,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_diagrams_md",
+      "file_path": "knowledge/modules/testing-qa-suite/diagrams.md",
+      "title": "Módulo: testing-qa-suite — Suite de 6 Diagramas",
+      "summary": "```mermaid",
+      "shelf": "architecture",
+      "word_count": 364,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_data-and-transactions_md",
+      "file_path": "knowledge/modules/triple-sync-engine/data-and-transactions.md",
+      "title": "Módulo: triple-sync-engine — Datos & Transacciones",
+      "summary": "",
+      "shelf": "standards",
+      "word_count": 72,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md",
+      "file_path": "knowledge/modules/triple-sync-engine/technical-debt-refactoring.md",
+      "title": "Módulo: triple-sync-engine — Deuda Técnica & Refactorización",
+      "summary": "",
+      "shelf": "standards",
+      "word_count": 78,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_module-spec_md",
+      "file_path": "knowledge/modules/triple-sync-engine/module-spec.md",
+      "title": "Módulo: triple-sync-engine — Especificación & Tarjetas CRC",
+      "summary": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "shelf": "standards",
+      "word_count": 196,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_requirements-and-rules_md",
+      "file_path": "knowledge/modules/triple-sync-engine/requirements-and-rules.md",
+      "title": "Módulo: triple-sync-engine — Requerimientos & Reglas de Negocio",
+      "summary": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "shelf": "business_rules",
+      "word_count": 148,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_diagrams_md",
+      "file_path": "knowledge/modules/triple-sync-engine/diagrams.md",
+      "title": "Módulo: triple-sync-engine — Suite de 6 Diagramas",
+      "summary": "```mermaid",
+      "shelf": "architecture",
+      "word_count": 352,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_012_plane_style_sqlite_project_management_tasks_md",
+      "file_path": "specs/012_plane_style_sqlite_project_management/tasks.md",
+      "title": "Plan de Tareas — INT-012: Ingenieria Inversa Plane (Makeplane)",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 425,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_agent-orchestrator_rules_md",
+      "file_path": "knowledge/modules/agent-orchestrator/rules.md",
+      "title": "Reglas de Negocio Invariantes: agent-orchestrator",
+      "summary": "",
+      "shelf": "business_rules",
+      "word_count": 141,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_dashboard-visualizer_rules_md",
+      "file_path": "knowledge/modules/dashboard-visualizer/rules.md",
+      "title": "Reglas de Negocio Invariantes: dashboard-visualizer",
+      "summary": "",
+      "shelf": "business_rules",
+      "word_count": 91,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_knowledge-engine_rules_md",
+      "file_path": "knowledge/modules/knowledge-engine/rules.md",
+      "title": "Reglas de Negocio Invariantes: knowledge-engine",
+      "summary": "",
+      "shelf": "business_rules",
+      "word_count": 102,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_testing-qa-suite_rules_md",
+      "file_path": "knowledge/modules/testing-qa-suite/rules.md",
+      "title": "Reglas de Negocio Invariantes: testing-qa-suite",
+      "summary": "",
+      "shelf": "business_rules",
+      "word_count": 99,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_modules_triple-sync-engine_rules_md",
+      "file_path": "knowledge/modules/triple-sync-engine/rules.md",
+      "title": "Reglas de Negocio Invariantes: triple-sync-engine",
+      "summary": "",
+      "shelf": "business_rules",
+      "word_count": 96,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_evidence_md",
+      "file_path": "specs/009_scrum_spec_subtasks_and_qa_evidence/evidence.md",
+      "title": "Reporte Formal de Evidencias de Cierre: INT-009",
+      "summary": "Se extendió y estandarizó la arquitectura del arnés para alinearla con el estándar de la industria en **Scrum / Agile** y **Jira**:",
+      "shelf": "specs",
+      "word_count": 658,
+      "reading_time_min": 4,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_010_harness_root_cleanliness_encapsulation_verification-report_md",
+      "file_path": "specs/010_harness_root_cleanliness_encapsulation/verification-report.md",
+      "title": "Reporte de Verificación - Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
+      "summary": "| Criterio | Estado | Evidencia |",
+      "shelf": "specs",
+      "word_count": 513,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_011_encapsulate_specs_and_scripts_verification-report_md",
+      "file_path": "specs/011_encapsulate_specs_and_scripts/verification-report.md",
+      "title": "Reporte de Verificación - Encapsulamiento de Specs, verify.sh y project-spec.yaml en project-docs/",
+      "summary": "| Criterio | Estado | Evidencia |",
+      "shelf": "specs",
+      "word_count": 306,
+      "reading_time_min": 2,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_012_plane_style_sqlite_project_management_verification-report_md",
+      "file_path": "specs/012_plane_style_sqlite_project_management/verification-report.md",
+      "title": "Reporte de Verificación Técnica — INT-012: Plane Style Project Management",
+      "summary": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
+      "shelf": "specs",
+      "word_count": 462,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_011_encapsulate_specs_and_scripts_requirements_md",
+      "file_path": "specs/011_encapsulate_specs_and_scripts/requirements.md",
+      "title": "Requirements: Encapsulamiento Completo de Specs, verify.sh y project-spec.yaml en project-docs/",
+      "summary": "| Campo | Valor |",
+      "shelf": "specs",
+      "word_count": 406,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_010_harness_root_cleanliness_encapsulation_requirements_md",
+      "file_path": "specs/010_harness_root_cleanliness_encapsulation/requirements.md",
+      "title": "Requirements: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
+      "summary": "| Campo | Valor |",
+      "shelf": "specs",
+      "word_count": 854,
+      "reading_time_min": 5,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_011_encapsulate_specs_and_scripts_tasks_md",
+      "file_path": "specs/011_encapsulate_specs_and_scripts/tasks.md",
+      "title": "Tasks: Encapsulamiento Completo de Specs, verify.sh y project-spec.yaml en project-docs/",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 167,
+      "reading_time_min": 1,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-specs_010_harness_root_cleanliness_encapsulation_tasks_md",
+      "file_path": "specs/010_harness_root_cleanliness_encapsulation/tasks.md",
+      "title": "Tasks: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción del Arnés",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 566,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 16:24:49"
+    },
+    {
+      "id": "page-knowledge_01-project-overview-and-business_md",
+      "file_path": "knowledge/01-project-overview-and-business.md",
+      "title": "Visión del Producto, Contexto de Negocio y Stakeholders (IEEE Std. 830-1998)",
+      "summary": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
+      "shelf": "standards",
+      "word_count": 1211,
+      "reading_time_min": 7,
+      "updated_at": "2026-11-07 16:24:49"
+    }
+  ]
 }
 };
+window.__PLANE_DATA__ = window.__FALLBACK_DATA__.planeData;

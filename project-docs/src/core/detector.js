@@ -87,7 +87,8 @@ export async function detectEnvironment(projectData = {}) {
     color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
   };
 
-  const currentExecutor = projectData?.currentSpec?.responsable || projectData?.currentSpec?.executor || '';
+  const rawExecutor = projectData?.currentSpec?.responsable || projectData?.currentSpec?.executor || '';
+  const currentExecutor = typeof rawExecutor === 'string' ? rawExecutor : (rawExecutor?.name || rawExecutor?.role || '');
   if (currentExecutor.toLowerCase().includes('claude')) {
     activeAgent = agents.find(a => a.id === 'claude') || activeAgent;
   } else if (currentExecutor.toLowerCase().includes('copilot')) {

@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { initDatabase } from './src/core/db.js';
+import { syncFilesToSQLite, getPlaneData } from './src/core/sqlite-sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -296,6 +298,17 @@ const historyData = readJsonIfExists([
   path.join(ROOT_DIR, 'progres', 'history.json')
 ]) || { records: [] };
 
+// 6. Base de datos SQLite y datos relacionales de Plane
+let planeData = { workspace: null, project: null, states: [], cycles: [], modules: [], issues: [], pages: [] };
+try {
+  const db = initDatabase();
+  syncFilesToSQLite(db);
+  planeData = getPlaneData(db);
+  console.log('[OK] project-docs/data/harness.db sincronizado con éxito con datos relacionales de Plane.');
+} catch (e) {
+  console.warn('[WARN] Error sincronizando SQLite en sync-data.js:', e.message);
+}
+
 // Construir contenido para data-fallback.js
 const fallbackPath = path.join(PROJECT_DOCS_DIR, 'data-fallback.js');
 const fallbackContent = `/**
@@ -309,8 +322,10 @@ window.__FALLBACK_DATA__ = {
   currentSpec: ${JSON.stringify(currentSpec, null, 2)},
   historyData: ${JSON.stringify(historyData, null, 2)},
   projectSpec: ${JSON.stringify(projectSpec, null, 2)},
-  knowledgeIndex: ${JSON.stringify(knowledgeIndex, null, 2)}
+  knowledgeIndex: ${JSON.stringify(knowledgeIndex, null, 2)},
+  planeData: ${JSON.stringify(planeData, null, 2)}
 };
+window.__PLANE_DATA__ = window.__FALLBACK_DATA__.planeData;
 `;
 
 fs.writeFileSync(fallbackPath, fallbackContent, 'utf8');

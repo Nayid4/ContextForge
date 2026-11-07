@@ -140,7 +140,7 @@ export async function fetchProjectData(options = {}) {
     historyData,
     projectSpec,
     knowledgeIndex,
-    protocol: typeof window !== 'undefined' ? window.location.protocol : 'http:'
+    protocol: typeof window !== 'undefined' ? (window.location?.protocol || 'http:') : 'http:'
   };
 }
 
@@ -209,7 +209,71 @@ export function startAutoSync({ onUpdate, intervalMs = 2500 } = {}) {
   };
 }
 
+export async function fetchPlaneData(options = {}) {
+  // Protocolo file:///: resolver inmediatamente con window.__PLANE_DATA__ o window.__FALLBACK_DATA__
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    const fallback = window.__PLANE_DATA__ || (window.__FALLBACK_DATA__ && window.__FALLBACK_DATA__.planeData) || {};
+    return fallback;
+  }
+
+  try {
+    const res = await fetch('/api/plane/data');
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (_) {}
+
+  return window.__PLANE_DATA__ || (window.__FALLBACK_DATA__ && window.__FALLBACK_DATA__.planeData) || {};
+}
+
+export async function updatePlaneIssue(issueId, updates = {}) {
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.issues)) {
+      const issue = window.__PLANE_DATA__.issues.find(i => i.id === issueId);
+      if (issue) Object.assign(issue, updates);
+    }
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch(`/api/plane/issues/${encodeURIComponent(issueId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('[API] Error actualizando issue:', e);
+  }
+  return { ok: false };
+}
+
+export async function updatePlanePage(pageId, markdownContent) {
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.pages)) {
+      const page = window.__PLANE_DATA__.pages.find(p => p.id === pageId);
+      if (page) page.content_markdown = markdownContent;
+    }
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch(`/api/plane/pages/${encodeURIComponent(pageId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content_markdown: markdownContent })
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('[API] Error actualizando página:', e);
+  }
+  return { ok: false };
+}
+
 export const api = {
   fetchAll: fetchProjectData,
+  fetchPlaneData,
+  updatePlaneIssue,
+  updatePlanePage,
   startAutoSync
 };
