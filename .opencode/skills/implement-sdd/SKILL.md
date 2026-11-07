@@ -69,11 +69,18 @@ Implementar **en el orden de `tasks.md`**, fase por fase:
 2. Ejecutar la suite completa con cobertura → registrar números reales.
 3. Para cada AC, señalar la evidencia (código + test) que lo respalda.
 
-### Fase 5: Cierre (tests only) y handoff
+### Fase 5: Cierre (tests only), Registro en Modelo Plane SQLite + Markdown y Handoff
 
 1. Marcar en `tasks.md` las tareas de implementación y de tests como `[x]`.
-2. Reportar: fases ejecutadas, archivos modificados, cobertura, y cualquier decisión que haya resultado contradictoria con la práctica.
-3. **Entregar a `verify-spec`** — este skill **NO** cierra el spec. El cierre de metadata lo hace `verify-spec`, que debe:
+2. Enviar el avance de implementación por fases, comentarios técnicos y bitácora IA al modelo relacional SQLite (`harness.db`) y al espejo Markdown (`ai-runs-log.md`):
+   ```bash
+   node project-docs/cli.js issue update INT-<NNN> --state in_review --role implementer
+   node project-docs/cli.js issue comment INT-<NNN> --role implementer --skill implement-sdd --message "Implementacion SDD por fases completada y verificada con tests"
+   node project-docs/cli.js ai log --skill implement-sdd --role implementer --issue INT-<NNN> --type SDD_IMPLEMENTATION --summary "Implementacion dirigida por spec completada en todas sus fases"
+   node project-docs/sync-data.js
+   ```
+3. Reportar: fases ejecutadas, archivos modificados, cobertura, y cualquier decisión que haya resultado contradictoria con la práctica.
+4. **Entregar a `verify-spec`** — este skill **NO** cierra el spec. El cierre de metadata lo hace `verify-spec`, que debe:
    - Marcar los checkboxes de `spec.md` y `tasks.md`
    - Actualizar `Status` de `spec.md` a `Done`
    - `feature_list.json`: status → `done`, `closedAt` → fecha

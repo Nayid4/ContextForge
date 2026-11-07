@@ -142,6 +142,39 @@
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture pura de 9 dominios; helper declarativo renderList; unificacion en diseno Plane eliminando el layout legacy; CLI soberana node project-docs/cli.js para IA y terminal; y persistencia relacional SQLite con espejo continuo en Markdown."
+    },
+    {
+      "id": 14,
+      "type": "feature",
+      "name": "screaming_modules_core_shared",
+      "title": "Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence",
+      "branch": "feature/INT-014/screaming_modules_core_shared",
+      "completed_at": "2026-11-07T18:35:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Implementacion modular integral bajo Screaming Architecture en src/modules/, src/core/ y src/shared/ con Store Pub/Sub y persistencia dual."
+    },
+    {
+      "id": 15,
+      "type": "feature",
+      "name": "screaming_modules_plane_unification",
+      "title": "Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
+      "branch": "feature/INT-015/screaming_modules_plane_unification",
+      "completed_at": "2026-11-07T18:58:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Eliminacion definitiva de src/features/ y consolidacion de los 10 dominios canonicos en src/modules/ con diseno Plane."
+    },
+    {
+      "id": 16,
+      "type": "feature",
+      "name": "plane_data_model_ai_tracking",
+      "title": "Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD",
+      "branch": "feature/INT-016/plane_data_model_ai_tracking",
+      "completed_at": "2026-11-07T19:35:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Implementacion de las 26 tablas relacionales de Plane e IA en SQLite (harness.db), sincronizacion bidireccional con knowledge/ai-runs-log.md, ampliacion de CLI/API/UI y conexion de las 21 skills SDD para enviar evidencias y reportes al proyecto."
     }
   ]
 }

@@ -285,7 +285,11 @@ class App {
     } else if (currentView === 'harness' || currentView === 'agents') {
       mainContentHtml = `
         <div class="flex-1 overflow-y-auto">
-          ${renderHarnessView()}
+          ${renderHarnessView({
+            aiConfigs: planeData.aiConfigs || [],
+            aiRuns: planeData.aiRuns || [],
+            apiTokens: planeData.apiTokens || []
+          })}
         </div>
       `;
     }

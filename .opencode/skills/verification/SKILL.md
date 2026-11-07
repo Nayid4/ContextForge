@@ -47,3 +47,10 @@ El script debe usar colores para facilitar la lectura:
 - 🟢 Verde: OK
 - 🔴 Rojo: Error
 - 🟡 Amarillo: Advertencia
+
+## Sincronización con el Modelo Plane SQLite + Markdown
+Tras ejecutar `verify.sh`, registra el resultado en la bitácora soberana de IA y sincroniza el tablero:
+```bash
+node project-docs/cli.js ai log --skill verification --role reviewer --type SYSTEM_VERIFICATION --summary "Ejecucion completa de project-docs/verify.sh en verde" --artifacts "project-docs/verify.sh"
+node project-docs/sync-data.js
+```

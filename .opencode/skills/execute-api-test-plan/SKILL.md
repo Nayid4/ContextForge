@@ -81,12 +81,18 @@ Si hay pruebas fallidas, crear/actualizar `hallazgos.md` en el mismo directorio:
 ---
 ```
 
-### Paso 5: Reporte Final
+### Paso 5: Reporte Final y Envío al Modelo Plane SQLite + Markdown
 Al terminar todas las pruebas, generar resumen:
 - Total de pruebas ejecutadas
 - Aprobadas vs Fallidas
 - Lista de hallazgos encontrados
 - Estado final del checklist
+- Enviar los resultados del checklist y hallazgos hacia `issue_evidences` y `ai_runs` en SQLite (`harness.db`):
+  ```bash
+  node project-docs/cli.js issue evidence INT-<NNN> --type api-report --title "Ejecucion de Plan API REST ([recurso])" --file "tests-plan/[recurso]/checklist.md" --skill execute-api-test-plan
+  node project-docs/cli.js ai log --skill execute-api-test-plan --role reviewer --issue INT-<NNN> --type API_TEST_EXECUTION --summary "Ejecucion de pruebas API REST con curl y registro de checklist" --artifacts "tests-plan/[recurso]/checklist.md"
+  node project-docs/sync-data.js
+  ```
 
 ## Formato de Ejecución curl
 

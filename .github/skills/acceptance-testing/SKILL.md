@@ -163,4 +163,9 @@ Toda ejecución de esta skill debe producir un informe consolidado en:
 3. **Matriz de Cobertura de Caja Blanca**: Porcentaje de statement, branch y functions.
 4. **Hallazgos de Caja Negra y Casos Límite**: Comportamiento ante valores extremos y payloads maliciosos.
 5. **Métricas de Rendimiento y Carga**: p95, p99 y degradación bajo estrés.
-6. **Sincronización**: Ejecutar `node project-docs/sync-data.js` para reflejar el estado de las pruebas en el tablero visual.
+6. **Envío de Evidencias, Capturas y Reporte al Modelo Plane SQLite + Markdown**:
+   ```bash
+   node project-docs/cli.js issue evidence INT-<NNN> --type screenshot --title "Capturas de Evidencia Playwright E2E" --file "project-docs/specs/<NNN>_<name>/evidence/" --summary "Pruebas E2E, Caja Blanca, Caja Negra, Sistema y Carga aprobadas" --skill acceptance-testing
+   node project-docs/cli.js ai log --skill acceptance-testing --role reviewer --issue INT-<NNN> --type E2E_ACCEPTANCE_QA --summary "Ejecucion de suite multinivel Playwright E2E, BVA, sistema y carga"
+   node project-docs/sync-data.js
+   ```

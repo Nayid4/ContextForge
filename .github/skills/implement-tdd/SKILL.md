@@ -92,11 +92,18 @@ Aplicar la tabla de "Restricción de Alcance del Refactor". Refactorizar solo lo
 2. Ejecutar la suite completa con cobertura → registrar números reales.
 3. Confirmar que cada AC tiene al menos un test que lo cubra.
 
-### Fase 6: Cierre (tests only) y handoff
+### Fase 6: Cierre (tests only), Registro en Modelo Plane SQLite + Markdown y Handoff
 
 1. Marcar en `tasks.md` las tareas de implementación y de tests como `[x]`.
-2. Reportar al usuario: comando, tests agregados, rojo observado, cobertura, y el contenido de `refactor-findings.md` si hubo hallazgos.
-3. **Entregar a `verify-spec`** — este skill **NO** cierra el spec. El cierre de metadata lo hace `verify-spec`, que debe:
+2. Enviar los resultados de la implementación TDD, evidencia de tests y ejecución de la skill al modelo relacional SQLite (`harness.db`) y al espejo Markdown (`ai-runs-log.md`):
+   ```bash
+   node project-docs/cli.js issue update INT-<NNN> --state in_review --role implementer
+   node project-docs/cli.js issue evidence INT-<NNN> --type unit --title "Bitacora TDD Red-Green-Refactor" --file "<spec-dir>/tdd-log.md" --summary "Ciclo TDD completado con suite en verde" --skill implement-tdd
+   node project-docs/cli.js ai log --skill implement-tdd --role implementer --issue INT-<NNN> --type TDD_IMPLEMENTATION --summary "Implementacion guiada por pruebas (Red-Green-Refactor) en verde" --artifacts "<spec-dir>/tdd-log.md"
+   node project-docs/sync-data.js
+   ```
+3. Reportar al usuario: comando, tests agregados, rojo observado, cobertura, y el contenido de `refactor-findings.md` si hubo hallazgos.
+4. **Entregar a `verify-spec`** — este skill **NO** cierra el spec. El cierre de metadata lo hace `verify-spec`, que debe:
    - Marcar los checkboxes de `spec.md` y `tasks.md`
    - Actualizar `Status` de `spec.md` a `Done`
    - `feature_list.json`: status → `done`, `closedAt` → fecha

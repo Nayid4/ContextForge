@@ -205,3 +205,9 @@ Si la verificación falla, corregir los errores y volver a ejecutar hasta obtene
 ```
 Estado: LISTO ✓
 ```
+
+Finalmente, registrar la generación del script de verificación en el modelo Plane SQLite + Markdown:
+```bash
+node project-docs/cli.js ai log --skill generate-verify --role leader --type VERIFY_SCRIPT_GEN --summary "Generacion y validacion de script autonomo project-docs/verify.sh" --artifacts "project-docs/verify.sh"
+node project-docs/sync-data.js
+```

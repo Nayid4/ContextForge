@@ -1,21 +1,31 @@
 #!/usr/bin/env node
 /**
- * CLI Soberana de Gestión de Proyectos y Base de Conocimiento (Plane Edition)
- * Permite a agentes de IA, skills y desarrolladores consultar y manipular
- * tareas, ciclos, módulos y documentación viva directamente desde terminal o scripts.
+ * CLI Soberana de Gestion de Proyectos, Evidencias e IA (Plane Edition)
+ * Permite a agentes de IA, skills SDD y desarrolladores consultar y registrar
+ * tareas, evidencias, reportes, comentarios, relaciones, ejecuciones IA y paginas Markdown
+ * directamente hacia SQLite (harness.db) y el espejo documental (.md / feature_list.json).
  *
  * 100% Vectorial, sin emojis.
  *
  * Uso:
- *   node project-docs/cli.js status
- *   node project-docs/cli.js issue list [--state <state>] [--priority <p>] [--json]
+ *   node project-docs/cli.js status [--json]
+ *   node project-docs/cli.js issue list [--state <s>] [--priority <p>] [--json]
  *   node project-docs/cli.js issue get <id> [--json]
- *   node project-docs/cli.js issue update <id> --state <state> [--priority <p>]
+ *   node project-docs/cli.js issue create --title <t> [--type <feature|bugfix>] [--priority <p>] [--module <m>] [--description <d>] [--json]
+ *   node project-docs/cli.js issue update <id> [--state <s>] [--priority <p>] [--role <r>]
+ *   node project-docs/cli.js issue evidence <id> --title <t> [--type <report|screenshot|api-plan|qa|unit>] [--file <path>] [--summary <s>] [--skill <sk>] [--json]
+ *   node project-docs/cli.js issue comment <id> --message <msg> [--role <role>] [--skill <sk>] [--json]
+ *   node project-docs/cli.js issue relate <id> --target <target_id> [--type <blocked_by|blocks|relates_to>] [--json]
+ *   node project-docs/cli.js issue activity <id> [--json]
+ *   node project-docs/cli.js ai log --skill <sk> --summary <txt> [--role <r>] [--issue <id>] [--page <id>] [--type <t>] [--response <md>] [--artifacts <csv>] [--json]
+ *   node project-docs/cli.js ai list [--issue <id>] [--skill <sk>] [--json]
+ *   node project-docs/cli.js page list [--shelf <shelf>] [--json]
+ *   node project-docs/cli.js page get <slug>
+ *   node project-docs/cli.js page upsert --path <rel_path> --title <t> [--shelf <s>] [--file <md_file>] [--content <md>] [--role <r>] [--json]
  *   node project-docs/cli.js cycle list
  *   node project-docs/cli.js cycle current
  *   node project-docs/cli.js module list
- *   node project-docs/cli.js page list [--shelf <shelf>]
- *   node project-docs/cli.js page get <slug>
+ *   node project-docs/cli.js user list [--json]
  *   node project-docs/cli.js sync
  */
 
@@ -23,8 +33,14 @@ import { initDatabase } from './src/core/db.js';
 import {
   syncFilesToSQLite,
   syncIssueToFiles,
-  syncPageToFile,
-  getPlaneData
+  getPlaneData,
+  recordSkillExecution,
+  recordIssueEvidence,
+  recordIssueComment,
+  recordIssueRelation,
+  createIssueInSQLite,
+  upsertPageInSQLite,
+  mapRoleToUserId
 } from './src/core/sqlite-sync.js';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -35,28 +51,54 @@ const __dirname = path.dirname(__filename);
 const PROJECT_DOCS_DIR = __dirname;
 const DB_PATH = path.join(PROJECT_DOCS_DIR, 'data', 'harness.db');
 
-// Inicializar base de datos
+// Inicializar base de datos y asegurar semilla inicial
 const db = initDatabase(DB_PATH);
+const wsCheck = db.prepare('SELECT COUNT(*) as cnt FROM workspaces').get();
+if (!wsCheck || Number(wsCheck.cnt) === 0) {
+  syncFilesToSQLite(db);
+}
 
-// Parsear argumentos de línea de comandos
 const args = process.argv.slice(2);
 const command = args[0] || 'help';
 
+function getArg(flag, defaultVal = null) {
+  const idx = args.indexOf(flag);
+  if (idx !== -1 && idx + 1 < args.length) {
+    return args[idx + 1];
+  }
+  return defaultVal;
+}
+
+function normalizeIssueId(rawId) {
+  if (!rawId) return null;
+  const str = String(rawId).trim();
+  return str.startsWith('INT-') ? str : `INT-${String(str).padStart(3, '0')}`;
+}
+
 function printHelp() {
   console.log(`
-CLI Soberana del Arnés de Ingeniería (Plane Edition)
+CLI Soberana del Arnes de Ingenieria (Plane Edition + AI Tracking)
 
 Comandos Disponibles:
-  status                                 Resumen general del arnés, ciclo activo y métricas
+  status [--json]                        Resumen general del arnes, ciclo activo, IA y metricas
   issue list [--state <s>] [--json]      Listar tareas registradas
-  issue get <id> [--json]                Obtener detalle completo de una tarea (Scrum, EARS, Subtareas)
-  issue update <id> --state <s>          Actualizar estado de una tarea y sincronizar con archivos
+  issue get <id> [--json]                Obtener detalle completo (Scrum, EARS, Subtareas, Evidencias, IA)
+  issue create --title <t> [opciones]    Crear nueva tarea en SQLite y feature_list.json
+  issue update <id> --state <s>          Actualizar estado/prioridad de una tarea y sincronizar
+  issue evidence <id> --title <t> [...]  Registrar evidencia QA, captura o reporte de verificacion
+  issue comment <id> --message <m> [...] Registrar comentario de agente o skill en una tarea
+  issue relate <id> --target <id2> [...] Registrar dependencia o relacion entre tareas
+  issue activity <id> [--json]           Consultar historial de auditoria (IssueActivity)
+  ai log --skill <sk> --summary <txt>    Registrar ejecucion de skill / IA en SQLite y ai-runs-log.md
+  ai list [--issue <id>] [--json]        Listar ejecuciones de skills y agentes IA
   cycle list                             Listar ciclos (sprints) y porcentaje de avance
-  cycle current                          Detalle del ciclo activo y métricas de burn-down
-  module list                            Listar módulos de arquitectura y avance
-  page list [--shelf <s>] [--json]       Listar páginas de la base de conocimiento
-  page get <slug>                        Imprimir contenido Markdown de una página
-  sync                                   Ejecutar sincronización bidireccional SQLite <-> Disco
+  cycle current                          Detalle del ciclo activo y metricas de burn-down
+  module list                            Listar modulos de arquitectura y avance
+  page list [--shelf <s>] [--json]       Listar paginas de la base de conocimiento
+  page get <slug>                        Imprimir contenido Markdown de una pagina
+  page upsert --path <p> --title <t>     Crear o actualizar documento Markdown en SQLite y disco
+  user list [--json]                     Listar agentes IA (is_bot=1) y usuarios del workspace
+  sync                                   Ejecutar sincronizacion bidireccional SQLite <-> Disco
   help                                   Mostrar esta ayuda
 `);
 }
@@ -69,6 +111,28 @@ function handleStatus() {
   const inProgress = issues.filter(i => i.state_id === 'state-in-progress' || i.state_id === 'state-in-review').length;
   const backlog = total - done - inProgress;
   const activeCycle = data.cycles.find(c => c.status === 'active') || data.cycles[data.cycles.length - 1] || {};
+  const totalEvidences = issues.reduce((acc, i) => acc + (i.evidences ? i.evidences.length : 0), 0);
+  const botCount = (data.users || []).filter(u => u.is_bot === 1).length;
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify({
+      workspace: data.workspace,
+      project: data.project,
+      activeCycle,
+      metrics: {
+        totalIssues: total,
+        doneIssues: done,
+        inProgressIssues: inProgress,
+        backlogIssues: backlog,
+        modulesCount: data.modules.length,
+        pagesCount: data.pages.length,
+        aiRunsCount: (data.aiRuns || []).length,
+        evidencesCount: totalEvidences,
+        botAgentsCount: botCount
+      }
+    }, null, 2));
+    return;
+  }
 
   console.log(`
 ========================================================================
@@ -76,36 +140,35 @@ function handleStatus() {
 ========================================================================
 Ciclo Activo     : ${activeCycle.name || 'Sin ciclo'} (${activeCycle.start_date || 'N/A'} al ${activeCycle.end_date || 'N/A'})
 Total Tareas     : ${total} (Completadas: ${done}, En Progreso: ${inProgress}, Pendientes: ${backlog})
-Módulos Activos  : ${data.modules.length}
-Páginas de Docs  : ${data.pages.length}
+Modulos Activos  : ${data.modules.length}
+Paginas de Docs  : ${data.pages.length}
+Agentes IA Bot   : ${botCount} activos (Tokens API verificados)
+Ejecuciones IA   : ${(data.aiRuns || []).length} registradas (ai-runs-log.md)
+Evidencias QA    : ${totalEvidences} artefactos vinculados
 Base de Datos    : SQLite (WAL activo en project-docs/data/harness.db)
-Sincronización   : Espejo bidireccional Markdown activo (100% OK)
+Sincronizacion   : Espejo bidireccional Markdown activo (100% OK)
 ========================================================================
 `);
 }
 
 function handleIssueList() {
   const isJson = args.includes('--json');
-  const stateIdx = args.indexOf('--state');
-  const filterState = stateIdx !== -1 ? args[stateIdx + 1] : null;
+  const filterState = getArg('--state');
+  const filterPriority = getArg('--priority');
 
-  const priorityIdx = args.indexOf('--priority');
-  const filterPriority = priorityIdx !== -1 ? args[priorityIdx + 1] : null;
-
-  let query = 'SELECT * FROM issues WHERE 1=1';
-  const params = [];
+  const data = getPlaneData(db);
+  let issues = data.issues || [];
 
   if (filterState) {
-    query += ' AND (state_id = ? OR state_name LIKE ?)';
-    params.push(filterState, `%${filterState}%`);
+    const norm = filterState.toLowerCase();
+    issues = issues.filter(i =>
+      (i.state_id && i.state_id.toLowerCase().includes(norm)) ||
+      (i.state_name && i.state_name.toLowerCase().includes(norm))
+    );
   }
   if (filterPriority) {
-    query += ' AND priority = ?';
-    params.push(filterPriority.toLowerCase());
+    issues = issues.filter(i => (i.priority || '').toLowerCase() === filterPriority.toLowerCase());
   }
-  query += ' ORDER BY sequence_id ASC';
-
-  const issues = db.prepare(query).all(...params);
 
   if (isJson) {
     console.log(JSON.stringify(issues, null, 2));
@@ -113,40 +176,39 @@ function handleIssueList() {
   }
 
   console.log(`\nListado de Tareas (${issues.length}):\n`);
-  console.log('ID'.padEnd(12) + 'ESTADO'.padEnd(16) + 'PRIORIDAD'.padEnd(12) + 'AGENTE'.padEnd(14) + 'TITULO');
-  console.log('-'.repeat(80));
+  console.log('ID'.padEnd(12) + 'ESTADO'.padEnd(16) + 'PRIORIDAD'.padEnd(12) + 'PTS'.padEnd(6) + 'AGENTE'.padEnd(14) + 'TITULO');
+  console.log('-'.repeat(90));
 
   for (const i of issues) {
     const id = (i.id || '').padEnd(12);
     const st = (i.state_name || i.state_id || '').padEnd(16);
     const pr = (i.priority || 'none').padEnd(12);
+    const pts = String(i.point || 3).padEnd(6);
     const ag = (i.assignee_role || 'leader').padEnd(14);
-    const title = (i.title || '').slice(0, 40);
-    console.log(`${id}${st}${pr}${ag}${title}`);
+    const title = (i.title || '').slice(0, 38);
+    console.log(`${id}${st}${pr}${pts}${ag}${title}`);
   }
   console.log('');
 }
 
 function handleIssueGet() {
-  const issueId = args[2];
-  if (!issueId) {
+  const rawId = args[2];
+  if (!rawId) {
     console.error('Error: Debe proporcionar el ID de la tarea (ej: INT-012 o 12)');
     process.exit(1);
   }
 
-  const normalizedId = issueId.startsWith('INT-') ? issueId : `INT-${String(issueId).padStart(3, '0')}`;
-  const issue = db.prepare('SELECT * FROM issues WHERE id = ?').get(normalizedId);
+  const normalizedId = normalizeIssueId(rawId);
+  const data = getPlaneData(db);
+  const issue = (data.issues || []).find(i => i.id === normalizedId);
 
   if (!issue) {
-    console.error(`Error: Tarea con ID ${issueId} no encontrada en SQLite.`);
+    console.error(`Error: Tarea con ID ${rawId} no encontrada en SQLite.`);
     process.exit(1);
   }
 
-  const subtasks = db.prepare('SELECT * FROM subtasks WHERE issue_id = ? ORDER BY id ASC').all(normalizedId);
-  const isJson = args.includes('--json');
-
-  if (isJson) {
-    console.log(JSON.stringify({ ...issue, subtasks }, null, 2));
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(issue, null, 2));
     return;
   }
 
@@ -154,10 +216,17 @@ function handleIssueGet() {
   console.log(` TAREA: ${issue.id} — ${issue.title}`);
   console.log(`========================================================================`);
   console.log(`Estado       : ${issue.state_name || issue.state_id}`);
+  console.log(`Tipo / Pts   : ${issue.type_name || 'Feature'} (${issue.point || 3} pts Fibonacci)`);
   console.log(`Prioridad    : ${issue.priority}`);
-  console.log(`Módulo       : ${issue.module_name || 'Harness'}`);
+  console.log(`Modulo       : ${issue.module_name || 'Harness'}`);
   console.log(`Ciclo        : ${issue.cycle_name || 'Activo'}`);
   console.log(`Agente       : ${issue.assignee_role || 'leader'}`);
+  if (issue.labels && issue.labels.length > 0) {
+    console.log(`Etiquetas    : ${issue.labels.map(l => l.name).join(', ')}`);
+  }
+  if (issue.relations && issue.relations.length > 0) {
+    console.log(`Relaciones   : ${issue.relations.map(r => `${r.relation_type} -> ${r.related_issue_id}`).join(', ')}`);
+  }
   if (issue.branch) console.log(`Rama Git     : ${issue.branch}`);
   if (issue.spec_folder) console.log(`Carpeta Spec : ${issue.spec_folder}`);
 
@@ -168,33 +237,66 @@ function handleIssueGet() {
     console.log(`  Para  : ${issue.user_story_so_that}`);
   }
 
-  console.log(`\nDescripción:`);
-  console.log(`  ${issue.description || 'Sin descripción'}`);
+  console.log(`\nDescripcion:`);
+  console.log(`  ${issue.description || 'Sin descripcion'}`);
 
-  if (subtasks.length > 0) {
-    console.log(`\nSubtareas Jira (${subtasks.length}):`);
-    for (const sub of subtasks) {
+  if (issue.subtasks && issue.subtasks.length > 0) {
+    console.log(`\nSubtareas Jira (${issue.subtasks.length}):`);
+    for (const sub of issue.subtasks) {
       const mark = sub.status === 'done' || sub.status === 'passed' ? '[x]' : '[ ]';
       console.log(`  ${mark} [${sub.type.toUpperCase()}] ${sub.id}: ${sub.title}`);
+    }
+  }
+
+  if (issue.evidences && issue.evidences.length > 0) {
+    console.log(`\nEvidencias & Reportes (${issue.evidences.length}):`);
+    for (const ev of issue.evidences) {
+      console.log(`  - [${ev.type}] ${ev.title} (${ev.file_path || 'inline'}) via /${ev.created_by_skill}`);
+    }
+  }
+
+  if (issue.ai_runs && issue.ai_runs.length > 0) {
+    console.log(`\nEjecuciones de Skills IA (${issue.ai_runs.length}):`);
+    for (const run of issue.ai_runs) {
+      console.log(`  - [${run.id}] /${run.skill_name} (${run.agent_role}): ${run.prompt_summary}`);
     }
   }
   console.log(`========================================================================\n`);
 }
 
+function handleIssueCreate() {
+  const title = getArg('--title');
+  if (!title) {
+    console.error('Uso: node project-docs/cli.js issue create --title <titulo> [--type feature|bugfix] [--priority high] [--module <m>] [--description <d>]');
+    process.exit(1);
+  }
+  const type = getArg('--type', 'feature');
+  const priority = getArg('--priority', 'high');
+  const module = getArg('--module', 'Harness Core');
+  const description = getArg('--description', '');
+  const role = getArg('--role', 'implementer');
+
+  const created = createIssueInSQLite(db, { title, description, type, priority, module, assignee_role: role });
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(created, null, 2));
+    return;
+  }
+  console.log(`[OK] Tarea ${created.id} (${created.title}) creada en SQLite y sincronizada en feature_list.json.`);
+}
+
 function handleIssueUpdate() {
-  const issueId = args[2];
-  const stateIdx = args.indexOf('--state');
-  const targetState = stateIdx !== -1 ? args[stateIdx + 1] : null;
+  const rawId = args[2];
+  const targetState = getArg('--state');
+  const targetPriority = getArg('--priority');
+  const targetRole = getArg('--role');
+  const targetTitle = getArg('--title');
 
-  const priorityIdx = args.indexOf('--priority');
-  const targetPriority = priorityIdx !== -1 ? args[priorityIdx + 1] : null;
-
-  if (!issueId || (!targetState && !targetPriority)) {
-    console.error('Uso: node cli.js issue update <id> --state <state_id> [--priority <p>]');
+  if (!rawId || (!targetState && !targetPriority && !targetRole && !targetTitle)) {
+    console.error('Uso: node project-docs/cli.js issue update <id> --state <state_id> [--priority <p>] [--role <r>] [--title <t>]');
     process.exit(1);
   }
 
-  const normalizedId = issueId.startsWith('INT-') ? issueId : `INT-${String(issueId).padStart(3, '0')}`;
+  const normalizedId = normalizeIssueId(rawId);
   const issue = db.prepare('SELECT * FROM issues WHERE id = ?').get(normalizedId);
 
   if (!issue) {
@@ -202,10 +304,11 @@ function handleIssueUpdate() {
     process.exit(1);
   }
 
-  // Resolver nombre de estado si se pasó un slug
   const stateMapping = {
     'backlog': 'state-backlog',
+    'pending': 'state-backlog',
     'todo': 'state-todo',
+    'spec_ready': 'state-todo',
     'in_progress': 'state-in-progress',
     'in-progress': 'state-in-progress',
     'in_review': 'state-in-review',
@@ -214,21 +317,211 @@ function handleIssueUpdate() {
     'cancelled': 'state-cancelled'
   };
 
-  const finalStateId = stateMapping[targetState] || targetState || issue.state_id;
-  const stateRow = db.prepare('SELECT name FROM states WHERE id = ?').get(finalStateId);
-  const stateName = stateRow ? stateRow.name : finalStateId;
+  const finalStateId = targetState ? (stateMapping[targetState.toLowerCase()] || targetState) : issue.state_id;
+  const finalPriority = targetPriority ? targetPriority.toLowerCase() : issue.priority;
+  const finalRole = targetRole || issue.assignee_role;
+  const finalTitle = targetTitle || issue.title;
+  const completedAt = finalStateId === 'state-done' ? new Date().toISOString() : issue.completed_at;
 
-  // Actualizar en SQLite
   db.prepare(`
     UPDATE issues
-    SET state_id = ?, state_name = ?, priority = COALESCE(?, priority), updated_at = datetime('now')
+    SET state_id = ?, priority = ?, assignee_role = ?, title = ?, completed_at = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(finalStateId, stateName, targetPriority ? targetPriority.toLowerCase() : null, normalizedId);
+  `).run(finalStateId, finalPriority, finalRole, finalTitle, completedAt, normalizedId);
 
-  // Sincronizar inmediatamente a archivos Markdown y JSON
-  syncIssueToFiles(db, PROJECT_DOCS_DIR, normalizedId);
+  db.prepare(`
+    INSERT INTO issue_activities (
+      id, issue_id, project_id, workspace_id, actor_id, actor_role,
+      verb, field_name, old_value, new_value, comment_text
+    ) VALUES (?, ?, 'proj-harness', 'ws-harness', ?, ?, 'updated', 'state_id', ?, ?, ?)
+  `).run(
+    `act-upd-${Date.now()}`,
+    normalizedId,
+    mapRoleToUserId(finalRole),
+    finalRole,
+    issue.state_id,
+    finalStateId,
+    `Tarea ${normalizedId} actualizada via CLI`
+  );
 
-  console.log(`[OK] Tarea ${normalizedId} actualizada con éxito en SQLite y sincronizada con feature_list.json y specs.`);
+  syncIssueToFiles(db, normalizedId);
+  console.log(`[OK] Tarea ${normalizedId} actualizada con exito en SQLite y sincronizada con feature_list.json.`);
+}
+
+function handleIssueEvidence() {
+  const rawId = args[2];
+  const title = getArg('--title', 'Evidencia de Verificacion');
+  const type = getArg('--type', 'report');
+  const filePath = getArg('--file', '');
+  const summary = getArg('--summary', '');
+  const skill = getArg('--skill', 'verify-spec');
+  const subtask = getArg('--subtask', null);
+
+  if (!rawId) {
+    console.error('Uso: node project-docs/cli.js issue evidence <id> --title <t> [--type <report|screenshot|api-plan|qa|unit>] [--file <path>] [--summary <s>] [--skill <sk>]');
+    process.exit(1);
+  }
+
+  let reportMarkdown = summary;
+  if (filePath && !reportMarkdown && filePath.endsWith('.md')) {
+    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(PROJECT_DOCS_DIR, '..', filePath);
+    if (fs.existsSync(absPath)) {
+      try {
+        reportMarkdown = fs.readFileSync(absPath, 'utf8');
+      } catch (_) {}
+    }
+  }
+
+  const ev = recordIssueEvidence(db, {
+    issue_id: rawId,
+    subtask_id: subtask,
+    type,
+    title,
+    file_path: filePath,
+    report_markdown: reportMarkdown,
+    created_by_skill: skill
+  });
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(ev, null, 2));
+    return;
+  }
+  console.log(`[OK] Evidencia '${ev.title}' (${ev.type}) vinculada a ${ev.issue_id} por /${skill}.`);
+}
+
+function handleIssueComment() {
+  const rawId = args[2];
+  const message = getArg('--message');
+  const role = getArg('--role', 'leader');
+  const skill = getArg('--skill', 'cli');
+
+  if (!rawId || !message) {
+    console.error('Uso: node project-docs/cli.js issue comment <id> --message <texto> [--role <role>] [--skill <skill>]');
+    process.exit(1);
+  }
+
+  const cmt = recordIssueComment(db, {
+    issue_id: rawId,
+    actor_role: role,
+    body_markdown: message,
+    source_skill: skill
+  });
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(cmt, null, 2));
+    return;
+  }
+  console.log(`[OK] Comentario registrado en ${cmt.issue_id} por ${role} (/${skill}).`);
+}
+
+function handleIssueRelate() {
+  const rawId = args[2];
+  const targetId = getArg('--target');
+  const relType = getArg('--type', 'blocked_by');
+
+  if (!rawId || !targetId) {
+    console.error('Uso: node project-docs/cli.js issue relate <id> --target <target_id> [--type blocked_by|blocks|relates_to]');
+    process.exit(1);
+  }
+
+  const rel = recordIssueRelation(db, {
+    issue_id: rawId,
+    related_issue_id: targetId,
+    relation_type: relType
+  });
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(rel, null, 2));
+    return;
+  }
+  console.log(`[OK] Relacion registrada: ${rel.issue_id} [${rel.relation_type}] ${rel.related_issue_id}.`);
+}
+
+function handleIssueActivity() {
+  const rawId = args[2];
+  if (!rawId) {
+    console.error('Uso: node project-docs/cli.js issue activity <id> [--json]');
+    process.exit(1);
+  }
+  const normalizedId = normalizeIssueId(rawId);
+  const acts = db.prepare('SELECT * FROM issue_activities WHERE issue_id = ? ORDER BY created_at DESC').all(normalizedId);
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(acts, null, 2));
+    return;
+  }
+
+  console.log(`\nHistorial de Actividad para ${normalizedId} (${acts.length}):\n`);
+  for (const a of acts) {
+    console.log(`  [${a.created_at}] ${a.actor_role} (${a.verb}): ${a.field_name || ''} ${a.old_value || ''} -> ${a.new_value || ''} | ${a.comment_text || ''}`);
+  }
+  console.log('');
+}
+
+function handleAiLog() {
+  const skill = getArg('--skill', 'sdd-workflow');
+  const role = getArg('--role', 'leader');
+  const issueId = getArg('--issue', null);
+  const pageId = getArg('--page', null);
+  const taskType = getArg('--type', 'SDD_SKILL_EXECUTION');
+  const summary = getArg('--summary', `Ejecucion de skill /${skill}`);
+  const responseMd = getArg('--response', '');
+  const artifactsCsv = getArg('--artifacts', '');
+  const artifacts = artifactsCsv ? artifactsCsv.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  const run = recordSkillExecution(db, {
+    skill_name: skill,
+    agent_role: role,
+    issue_id: issueId,
+    page_id: pageId,
+    task_type: taskType,
+    prompt_summary: summary,
+    response_markdown: responseMd,
+    artifacts
+  });
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(run, null, 2));
+    return;
+  }
+  console.log(`[OK] Ejecucion IA [${run.id}] de /${skill} (${role}) registrada en SQLite y sincronizada en knowledge/ai-runs-log.md.`);
+}
+
+function handleAiList() {
+  const issueFilter = getArg('--issue');
+  const skillFilter = getArg('--skill');
+  let query = 'SELECT * FROM ai_runs WHERE 1=1';
+  const params = [];
+
+  if (issueFilter) {
+    query += ' AND issue_id = ?';
+    params.push(normalizeIssueId(issueFilter));
+  }
+  if (skillFilter) {
+    query += ' AND skill_name = ?';
+    params.push(skillFilter);
+  }
+  query += ' ORDER BY created_at DESC, id DESC LIMIT 50';
+
+  const runs = db.prepare(query).all(...params);
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(runs, null, 2));
+    return;
+  }
+
+  console.log(`\nRegistro de Ejecuciones de Skills e IA (${runs.length}):\n`);
+  console.log('ID'.padEnd(24) + 'SKILL'.padEnd(22) + 'AGENTE'.padEnd(14) + 'TAREA'.padEnd(10) + 'RESUMEN');
+  console.log('-'.repeat(95));
+  for (const r of runs) {
+    console.log(
+      `${(r.id || '').slice(0, 22).padEnd(24)}` +
+      `/${(r.skill_name || '').slice(0, 19).padEnd(21)}` +
+      `${(r.agent_role || '').padEnd(14)}` +
+      `${(r.issue_id || 'GLOBAL').padEnd(10)}` +
+      `${(r.prompt_summary || '').slice(0, 35)}`
+    );
+  }
+  console.log('');
 }
 
 function handleCycleList() {
@@ -251,7 +544,12 @@ function handleCycleCurrent() {
     return;
   }
 
-  const issues = db.prepare('SELECT * FROM issues WHERE cycle_id = ?').all(cycle.id);
+  const issues = db.prepare(`
+    SELECT i.*, s.name as state_name
+    FROM issues i
+    JOIN states s ON i.state_id = s.id
+    WHERE i.cycle_id = ?
+  `).all(cycle.id);
   const total = issues.length;
   const done = issues.filter(i => i.state_id === 'state-done').length;
   const percent = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -261,7 +559,7 @@ function handleCycleCurrent() {
   console.log(`========================================================================`);
   console.log(`Periodo      : ${cycle.start_date} al ${cycle.end_date}`);
   console.log(`Progreso     : ${percent}% (${done} de ${total} tareas completadas)`);
-  console.log(`Descripción  : ${cycle.description}`);
+  console.log(`Descripcion  : ${cycle.description}`);
   console.log(`\nTareas en este ciclo:`);
   for (const i of issues) {
     const mark = i.state_id === 'state-done' ? '[x]' : '[ ]';
@@ -272,7 +570,7 @@ function handleCycleCurrent() {
 
 function handleModuleList() {
   const modules = db.prepare('SELECT * FROM modules ORDER BY name ASC').all();
-  console.log(`\nMódulos de Arquitectura (Epics / Bounded Contexts):\n`);
+  console.log(`\nModulos de Arquitectura (Epics / Bounded Contexts):\n`);
   console.log('ID'.padEnd(24) + 'NOMBRE'.padEnd(36) + 'DESCRIPCION');
   console.log('-'.repeat(85));
   for (const m of modules) {
@@ -282,10 +580,8 @@ function handleModuleList() {
 }
 
 function handlePageList() {
-  const shelfIdx = args.indexOf('--shelf');
-  const shelfFilter = shelfIdx !== -1 ? args[shelfIdx + 1] : null;
-
-  let query = 'SELECT id, title, shelf, word_count, reading_time_min, file_path FROM pages WHERE 1=1';
+  const shelfFilter = getArg('--shelf');
+  let query = 'SELECT id, title, shelf, owned_by_role, word_count, reading_time_min, file_path FROM pages WHERE 1=1';
   const params = [];
   if (shelfFilter) {
     query += ' AND shelf = ?';
@@ -300,7 +596,7 @@ function handlePageList() {
     return;
   }
 
-  console.log(`\nPáginas de la Base de Conocimiento (Plane Pages):\n`);
+  console.log(`\nPaginas de la Base de Conocimiento (Plane Pages):\n`);
   console.log('ESTANTE'.padEnd(18) + 'ID / SLUG'.padEnd(36) + 'PALABRAS'.padEnd(10) + 'TITULO');
   console.log('-'.repeat(85));
   for (const p of pages) {
@@ -312,26 +608,76 @@ function handlePageList() {
 function handlePageGet() {
   const slug = args[2];
   if (!slug) {
-    console.error('Error: Debe proporcionar el slug o id de la página (ej: c4-model o business-rules)');
+    console.error('Error: Debe proporcionar el slug o id de la pagina (ej: c4-model o business-rules)');
     process.exit(1);
   }
 
   const page = db.prepare('SELECT * FROM pages WHERE id = ? OR file_path LIKE ?').get(slug, `%${slug}%`);
   if (!page) {
-    console.error(`Error: Página '${slug}' no encontrada en la base de datos.`);
+    console.error(`Error: Pagina '${slug}' no encontrada en la base de datos.`);
     process.exit(1);
   }
 
   console.log(page.content_markdown);
 }
 
-function handleSync() {
-  console.log('[SYNC] Sincronizando SQLite relacional con archivos Markdown y JSON...');
-  syncFilesToSQLite(db, PROJECT_DOCS_DIR);
-  console.log('[SUCCESS] Sincronización completada exitosamente.');
+function handlePageUpsert() {
+  const relPath = getArg('--path');
+  const title = getArg('--title');
+  const shelf = getArg('--shelf', 'standards');
+  const sourceFile = getArg('--file', null);
+  let content = getArg('--content', '');
+  const role = getArg('--role', 'spec-author');
+
+  if (!relPath || !title) {
+    console.error('Uso: node project-docs/cli.js page upsert --path <rel_path> --title <titulo> [--shelf <shelf>] [--file <md_file>] [--content <md>]');
+    process.exit(1);
+  }
+
+  if (sourceFile && !content) {
+    const absFile = path.isAbsolute(sourceFile) ? sourceFile : path.resolve(PROJECT_DOCS_DIR, '..', sourceFile);
+    if (fs.existsSync(absFile)) {
+      content = fs.readFileSync(absFile, 'utf8');
+    }
+  }
+
+  const page = upsertPageInSQLite(db, {
+    file_path: relPath,
+    title,
+    shelf,
+    content_markdown: content || `# ${title}\n`,
+    owned_by_role: role
+  });
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(page, null, 2));
+    return;
+  }
+  console.log(`[OK] Pagina '${page.title}' (${page.file_path}) registrada en SQLite (con historial PageVersion) y sincronizada en disco.`);
 }
 
-// Router de comandos CLI
+function handleUserList() {
+  const users = db.prepare('SELECT * FROM users ORDER BY is_bot DESC, username ASC').all();
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(users, null, 2));
+    return;
+  }
+
+  console.log(`\nUsuarios & Agentes Bot del Workspace (${users.length}):\n`);
+  console.log('ID'.padEnd(20) + 'ROL'.padEnd(16) + 'BOT'.padEnd(8) + 'TIPO BOT'.padEnd(20) + 'NOMBRE');
+  console.log('-'.repeat(85));
+  for (const u of users) {
+    console.log(`${u.id.padEnd(20)}${u.role.padEnd(16)}${(u.is_bot ? 'SI' : 'NO').padEnd(8)}${(u.bot_type || '').padEnd(20)}${u.display_name}`);
+  }
+  console.log('');
+}
+
+function handleSync() {
+  console.log('[SYNC] Sincronizando SQLite relacional con archivos Markdown, Evidencias, IA y JSON...');
+  syncFilesToSQLite(db);
+  console.log('[SUCCESS] Sincronizacion completada exitosamente.');
+}
+
 switch (command) {
   case 'status':
     handleStatus();
@@ -339,7 +685,17 @@ switch (command) {
   case 'issue':
     if (args[1] === 'list') handleIssueList();
     else if (args[1] === 'get') handleIssueGet();
+    else if (args[1] === 'create') handleIssueCreate();
     else if (args[1] === 'update') handleIssueUpdate();
+    else if (args[1] === 'evidence') handleIssueEvidence();
+    else if (args[1] === 'comment') handleIssueComment();
+    else if (args[1] === 'relate') handleIssueRelate();
+    else if (args[1] === 'activity') handleIssueActivity();
+    else printHelp();
+    break;
+  case 'ai':
+    if (args[1] === 'log') handleAiLog();
+    else if (args[1] === 'list') handleAiList();
     else printHelp();
     break;
   case 'cycle':
@@ -351,7 +707,11 @@ switch (command) {
     break;
   case 'page':
     if (args[1] === 'get') handlePageGet();
+    else if (args[1] === 'upsert') handlePageUpsert();
     else handlePageList();
+    break;
+  case 'user':
+    handleUserList();
     break;
   case 'sync':
     handleSync();

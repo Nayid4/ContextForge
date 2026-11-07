@@ -8,7 +8,13 @@ import {
   syncFilesToSQLite,
   getPlaneData,
   syncIssueToFiles,
-  syncPageToFile
+  syncPageToFile,
+  recordSkillExecution,
+  recordIssueEvidence,
+  recordIssueComment,
+  recordIssueRelation,
+  createIssueInSQLite,
+  upsertPageInSQLite
 } from './src/core/sqlite-sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -75,7 +81,7 @@ async function handlePlaneApi(req, res, database) {
   }
 
   try {
-    // 1. GET /api/plane/data - Payload consolidado
+    // 1. GET /api/plane/data - Payload consolidado (incluye IA, usuarios, labels, views, evidencias)
     if (pathname === '/api/plane/data' && method === 'GET') {
       const data = getPlaneData(database);
       res.writeHead(200);
@@ -83,11 +89,19 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 2. GET /api/plane/issues
+    // 2. GET / POST /api/plane/issues
     if (pathname === '/api/plane/issues' && method === 'GET') {
       const data = getPlaneData(database);
       res.writeHead(200);
       res.end(JSON.stringify(data.issues));
+      return;
+    }
+
+    if (pathname === '/api/plane/issues' && method === 'POST') {
+      const body = await parseJsonBody(req);
+      const created = createIssueInSQLite(database, body);
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, issue: created }));
       return;
     }
 
@@ -107,7 +121,7 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 5. GET /api/plane/pages
+    // 5. GET / POST /api/plane/pages
     if (pathname === '/api/plane/pages' && method === 'GET') {
       const data = getPlaneData(database);
       res.writeHead(200);
@@ -115,7 +129,86 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 6. GET /api/plane/pages/:id (con contenido completo markdown)
+    if (pathname === '/api/plane/pages' && method === 'POST') {
+      const body = await parseJsonBody(req);
+      const page = upsertPageInSQLite(database, body);
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, page }));
+      return;
+    }
+
+    // 6. GET / POST /api/plane/ai-runs
+    if (pathname === '/api/plane/ai-runs' && method === 'GET') {
+      const data = getPlaneData(database);
+      res.writeHead(200);
+      res.end(JSON.stringify(data.aiRuns || []));
+      return;
+    }
+
+    if (pathname === '/api/plane/ai-runs' && method === 'POST') {
+      const body = await parseJsonBody(req);
+      const run = recordSkillExecution(database, body);
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, aiRun: run }));
+      return;
+    }
+
+    // 7. GET /api/plane/users, /api/plane/labels, /api/plane/views
+    if (pathname === '/api/plane/users' && method === 'GET') {
+      const data = getPlaneData(database);
+      res.writeHead(200);
+      res.end(JSON.stringify(data.users || []));
+      return;
+    }
+
+    if (pathname === '/api/plane/labels' && method === 'GET') {
+      const data = getPlaneData(database);
+      res.writeHead(200);
+      res.end(JSON.stringify(data.labels || []));
+      return;
+    }
+
+    if (pathname === '/api/plane/views' && method === 'GET') {
+      const data = getPlaneData(database);
+      res.writeHead(200);
+      res.end(JSON.stringify(data.views || []));
+      return;
+    }
+
+    // 8. POST /api/plane/issues/:id/evidences
+    const evMatch = pathname.match(/^\/api\/plane\/issues\/([^/]+)\/evidences$/);
+    if (evMatch && method === 'POST') {
+      const issueId = decodeURIComponent(evMatch[1]);
+      const body = await parseJsonBody(req);
+      const evidence = recordIssueEvidence(database, { ...body, issue_id: issueId });
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, evidence }));
+      return;
+    }
+
+    // 9. POST /api/plane/issues/:id/comments
+    const cmtMatch = pathname.match(/^\/api\/plane\/issues\/([^/]+)\/comments$/);
+    if (cmtMatch && method === 'POST') {
+      const issueId = decodeURIComponent(cmtMatch[1]);
+      const body = await parseJsonBody(req);
+      const comment = recordIssueComment(database, { ...body, issue_id: issueId });
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, comment }));
+      return;
+    }
+
+    // 10. POST /api/plane/issues/:id/relations
+    const relMatch = pathname.match(/^\/api\/plane\/issues\/([^/]+)\/relations$/);
+    if (relMatch && method === 'POST') {
+      const issueId = decodeURIComponent(relMatch[1]);
+      const body = await parseJsonBody(req);
+      const relation = recordIssueRelation(database, { ...body, issue_id: issueId });
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, relation }));
+      return;
+    }
+
+    // 11. GET /api/plane/pages/:id (con contenido completo markdown y versiones)
     const pageMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)$/);
     if (pageMatch && method === 'GET') {
       const pageId = decodeURIComponent(pageMatch[1]);
@@ -125,12 +218,13 @@ async function handlePlaneApi(req, res, database) {
         res.end(JSON.stringify({ error: 'Pagina no encontrada' }));
         return;
       }
+      const versions = database.prepare('SELECT id, version_number, owned_by_role, word_count, last_saved_at FROM page_versions WHERE page_id = ? ORDER BY version_number DESC').all(pageId);
       res.writeHead(200);
-      res.end(JSON.stringify(page));
+      res.end(JSON.stringify({ ...page, versions }));
       return;
     }
 
-    // 7. PATCH /api/plane/issues/:id - Modificar estado/prioridad/ciclo/modulo
+    // 12. PATCH /api/plane/issues/:id - Modificar estado/prioridad/ciclo/modulo
     const issueMatch = pathname.match(/^\/api\/plane\/issues\/([^/]+)$/);
     if (issueMatch && (method === 'PATCH' || method === 'PUT')) {
       const issueId = decodeURIComponent(issueMatch[1]);
@@ -164,7 +258,6 @@ async function handlePlaneApi(req, res, database) {
         WHERE id = ?;
       `).run(stateId, priority, assigneeRole, cycleId, moduleId, title, description, issueId);
 
-      // Sincronizar automaticamente hacia feature_list.json
       syncIssueToFiles(database, issueId);
 
       const updated = database.prepare('SELECT * FROM issues WHERE id = ?').get(issueId);
@@ -173,7 +266,7 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 8. PUT /api/plane/pages/:id - Actualizar markdown
+    // 13. PUT /api/plane/pages/:id - Actualizar markdown y crear snapshot PageVersion
     if (pageMatch && method === 'PUT') {
       const pageId = decodeURIComponent(pageMatch[1]);
       const body = await parseJsonBody(req);
@@ -190,7 +283,13 @@ async function handlePlaneApi(req, res, database) {
           WHERE id = ?;
         `).run(body.content_markdown, words, readingTime, pageId);
 
-        // Sincronizar automaticamente hacia el archivo .md en disco
+        const countVer = database.prepare('SELECT COUNT(*) as cnt FROM page_versions WHERE page_id = ?').get(pageId);
+        const nextVer = (countVer ? Number(countVer.cnt) : 0) + 1;
+        database.prepare(`
+          INSERT INTO page_versions (id, page_id, version_number, content_markdown, owned_by_role, word_count)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(`pv-${pageId}-v${nextVer}-${Date.now()}`, pageId, nextVer, body.content_markdown, body.role || 'spec-author', words);
+
         syncPageToFile(database, pageId);
       }
       const updatedPage = database.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
@@ -199,7 +298,7 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 9. POST /api/plane/sync - Forzar re-sincronizacion
+    // 14. POST /api/plane/sync - Forzar re-sincronizacion
     if (pathname === '/api/plane/sync' && method === 'POST') {
       syncFilesToSQLite(database);
       res.writeHead(200);
@@ -271,7 +370,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, HOST, () => {
   const url = `http://localhost:${PORT}/project-docs/`;
   console.log(`========================================================`);
-  console.log(`  Tablero de Seguimiento SDD Activo en Vivo (Plane + SQLite)`);
+  console.log(`  Tablero de Seguimiento SDD Activo en Vivo (Plane + SQLite + AI)`);
   console.log(`  URL: ${url}`);
   console.log(`  API SQLite: http://localhost:${PORT}/api/plane/data`);
   console.log(`  Auto-Sync Bidireccional: Activado (Markdown <-> SQLite)`);

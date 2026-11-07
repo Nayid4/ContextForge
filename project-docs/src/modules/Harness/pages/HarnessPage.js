@@ -6,12 +6,16 @@ import { Icons } from '../../../shared/ui/Icons.js';
 import { AgentList } from '../components/AgentList.js';
 import { SkillSyncStatus } from '../components/SkillSyncStatus.js';
 import { HarnessOverview } from '../components/HarnessOverview.js';
+import { AiEngineMonitor } from '../components/AiEngineMonitor.js';
 import { harnessService } from '../services/harness.service.js';
 
 export function HarnessPage({
   agents = [],
   skills = [],
-  selectedAgentId = 'leader'
+  selectedAgentId = 'leader',
+  aiConfigs = [],
+  aiRuns = [],
+  apiTokens = []
 } = {}) {
   const activeAgents = agents && agents.length > 0 ? agents : harnessService.getAgents();
   const activeSkills = skills && skills.length > 0 ? skills : harnessService.getSkills();
@@ -27,12 +31,15 @@ export function HarnessPage({
               ${Icons.bot('w-5 h-5 text-indigo-400')}
               <span>Orquestación de Agentes & Gobernanza SDD</span>
             </h2>
-            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, habilidades homologadas y verificación de reglas.</p>
+            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, modelo de datos IA Plane (SQLite + Markdown) y verificación de reglas.</p>
           </div>
         </div>
 
         <!-- Governance Overview Banner -->
         ${HarnessOverview({ governance })}
+
+        <!-- Plane AI Engine Monitor (InstanceConfig, APITokens, AI Runs) -->
+        ${AiEngineMonitor({ aiConfigs, aiRuns, apiTokens })}
 
         <!-- Agents Grid -->
         <div class="space-y-4">
@@ -40,7 +47,7 @@ export function HarnessPage({
             <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">
               Equipo de Agentes Especializados (${activeAgents.length})
             </h3>
-            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD</span>
+            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD (is_bot = 1)</span>
           </div>
 
           ${AgentList({ agents: activeAgents, selectedAgentId })}

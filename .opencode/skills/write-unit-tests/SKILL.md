@@ -97,10 +97,16 @@ Para cada función/método público del componente, generar:
    - Cobertura del/los archivo(s) del spec (idealmente > 80%, reportar el número real sin forzar un umbral arbitrario del proyecto)
 3. Si algún test falla, corregir el test o el código (según corresponda) y re-ejecutar
 
-### Paso 5: Actualizar Tracking del Spec
+### Paso 5: Actualizar Tracking del Spec y Enviar al Modelo Plane SQLite + Markdown
 
 1. En `tasks.md` del spec: marcar `[x]` la tarea de tests unitarios (agregarla si no existía, ver sección "Retrocompatibilidad")
-2. Reportar al usuario: comando ejecutado, resultado, cobertura obtenida, archivos de test creados
+2. Enviar la evidencia de pruebas unitarias y cobertura al modelo relacional SQLite (`issue_evidences`, `issue_activities`, `ai_runs`) y sincronizar el espejo Markdown:
+   ```bash
+   node project-docs/cli.js issue evidence INT-<NNN> --type unit --title "Suite de Tests Unitarios y Cobertura" --file "project-docs/tests/unit/" --summary "Tests unitarios ejecutados con exito cubriendo rutas felices y de error" --skill write-unit-tests
+   node project-docs/cli.js ai log --skill write-unit-tests --role implementer --issue INT-<NNN> --type UNIT_TESTING --summary "Generacion y ejecucion de tests unitarios con cobertura verificada"
+   node project-docs/sync-data.js
+   ```
+3. Reportar al usuario: comando ejecutado, resultado, cobertura obtenida, archivos de test creados
 
 ## Retrocompatibilidad (specs sin tarea de tests unitarios)
 

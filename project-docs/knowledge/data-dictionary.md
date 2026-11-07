@@ -1,91 +1,154 @@
-# Diccionario de Datos & Persistencia Docs-as-Code
+# Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)
 
 > [!NOTE]
-> Especificación formal de los esquemas de persistencia JSON y YAML del arnés de ingeniería SDD.
+> Especificación formal del modelo relacional completo de Plane (26 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.
 
 ---
 
-## 1. Diagrama Entidad-Relación (ERD) del Arnés
+## 1. Diagrama Entidad-Relación (ERD) del Arnés & Plane AI
 
 ```mermaid
 erDiagram
-  PROJECT ||--o{ FEATURE : "contiene"
-  PROJECT ||--|| PROJECT_SPEC : "especificado por"
-  FEATURE ||--|{ ACCEPTANCE_CRITERIA : "valida con"
-  FEATURE ||--o{ TASK : "descompone en"
-  FEATURE ||--o{ BUSINESS_RULE : "satisface"
-  KNOWLEDGE_INDEX ||--o{ DOCUMENT : "cataloga"
-  DOCUMENT ||--o{ SHELF : "pertenece a"
-  DOCUMENT ||--o{ BUSINESS_RULE : "documenta"
+  WORKSPACE ||--o{ WORKSPACE_MEMBER : "agrupa"
+  USER ||--o{ WORKSPACE_MEMBER : "pertenece"
+  USER ||--o{ API_TOKEN : "autentica (is_bot=1)"
+  WORKSPACE ||--o{ PROJECT : "contiene"
+  WORKSPACE ||--o{ AI_CONFIG : "configura LLM"
+  PROJECT ||--o{ STATE : "define flujo"
+  PROJECT ||--o{ LABEL : "clasifica"
+  PROJECT ||--o{ ESTIMATE : "mide"
+  ESTIMATE ||--o{ ESTIMATE_POINT : "escala Fibonacci"
+  PROJECT ||--o{ ISSUE_TYPE : "tipifica"
+  PROJECT ||--o{ CYCLE : "planifica sprints"
+  PROJECT ||--o{ MODULE : "delimita dominios"
+  PROJECT ||--o{ ISSUE_VIEW : "guarda filtros"
+  PROJECT ||--o{ ISSUE : "gestiona"
+  PROJECT ||--o{ PAGE : "documenta"
+  ISSUE ||--o{ SUBTASK : "desglosa DEV/QA"
+  ISSUE ||--o{ ISSUE_ASSIGNEE : "asigna bot/humano"
+  ISSUE ||--o{ ISSUE_LABEL : "etiqueta"
+  ISSUE ||--o{ ISSUE_RELATION : "relaciona / bloquea"
+  ISSUE ||--o{ ISSUE_ACTIVITY : "audita mutaciones"
+  ISSUE ||--o{ ISSUE_COMMENT : "comenta skills"
+  ISSUE ||--o{ ISSUE_EVIDENCE : "vincula QA y capturas"
+  ISSUE ||--o{ AI_RUN : "registra ejecucion IA"
+  CYCLE ||--o{ CYCLE_ISSUE : "compromete"
+  MODULE ||--o{ MODULE_ISSUE : "encapsula"
+  PAGE ||--o{ PAGE_VERSION : "versiona snapshots"
 
-  PROJECT {
-    string name PK
-    string description
-    string version
-    string tech_stack
-    string runtime
+  WORKSPACE {
+    string id PK
+    string name
+    string slug
+    string owner_id
+    string organization_size
+    string timezone
   }
 
-  FEATURE {
-    int id PK
-    string type
-    string name
+  USER {
+    string id PK
+    string username
+    string display_name
+    string role
+    int is_bot
+    string bot_type
+  }
+
+  ISSUE {
+    string id PK
+    string project_id FK
+    int sequence_id
     string title
-    string module
+    string state_id FK
     string priority
+    string type_id FK
+    int point
+    string assignee_role
+    string cycle_id FK
+    string module_id FK
     string branch
+  }
+
+  AI_RUN {
+    string id PK
+    string issue_id FK
+    string page_id FK
+    string agent_role
+    string skill_name
+    string task_type
+    string provider
+    string model
+    string prompt_summary
     string status
   }
 
-  TASK {
+  ISSUE_EVIDENCE {
     string id PK
+    string issue_id FK
+    string subtask_id
+    string type
     string title
-    bool done
+    string file_path
+    string created_by_skill
   }
 
-  BUSINESS_RULE {
+  PAGE {
     string id PK
-    string module
-    string severity
-    string title
-    string description
-  }
-
-  DOCUMENT {
-    string key PK
-    string filename
+    string project_id FK
+    string file_path
     string title
     string shelf
-    int readingTime
-    int wordCount
-    int ruleCount
+    int word_count
+    int reading_time_min
   }
 ```
 
 ---
 
-## 2. Catálogo de Esquemas JSON / YAML
+## 2. Catálogo de las 26 Tablas Relacionales SQLite (`project-docs/data/harness.db`)
 
-### 2.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)
+### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)
+1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).
+2. `users`: Usuarios humanos e identidades de subagentes IA (`is_bot = 1`, `bot_type` para `leader`, `spec-author`, `implementer`, `reviewer`).
+3. `workspace_members`: Membresía y permisos RBAC por espacio de trabajo.
+4. `api_tokens`: Tokens de servicio (`user_type = 1` para bots) empleados por skills y agentes.
+5. `ai_configs`: Configuración del motor IA (`LLM_PROVIDER`, `LLM_MODEL`, `DUAL_PERSISTENCE_ENGINE`).
+6. `ai_runs`: Registro inmutable de cada invocación de skill o subagente IA, sincronizado automáticamente con `project-docs/knowledge/ai-runs-log.md`.
+
+### 2.2 Gestión de Proyectos, Tareas y Trazabilidad (`projects`, `issues`, `evidences`)
+7. `projects`: Configuración del proyecto (`proj-harness`, identificador `INT`, flags de vistas).
+8. `states`: Máquina de estados Kanban (`Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Cancelled`).
+9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).
+10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.
+12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).
+13. `cycles`: Sprints de iteración con fechas de inicio/fin y progreso.
+14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).
+15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.
+16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).
+17. `issue_assignees`: Asignación relacional entre tareas y agentes bot/humanos.
+18. `issue_labels`: Tabla puente muchos-a-muchos entre `issues` y `labels`.
+19. `issue_relations`: Grafo de dependencias entre tareas (`blocked_by`, `blocks`, `relates_to`).
+20. `issue_activities`: Bitácora de auditoría (`IssueActivity`) de cada cambio de estado, evidencia o ejecución de skill.
+21. `issue_comments`: Comentarios técnicos en Markdown emitidos por agentes o skills.
+22. `issue_evidences`: Artefactos de evidencia QA, reportes de verificación, planes API y capturas Playwright E2E vinculados a cada tarea.
+23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.
+25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.
+
+### 2.3 Gestión Documental Viva (`pages`, `page_versions`)
+26. `pages` y `page_versions`: Todos los documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` indexados con conteo de palabras, tiempo de lectura y snapshots históricos de versión (`PageVersion`).
+
+---
+
+## 3. Catálogo de Esquemas JSON / YAML & Sincronización Dual
+
+### 3.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)
 - `project.name`: Nombre canónico del sistema.
 - `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).
 - `runtime.language`: Lenguaje de programación principal.
-- `modules[]`: Colección de módulos con `id`, `name`, `tech`, `features`.
-- `checks.build`: Comando de compilación (`npm run build`, `dotnet build`, etc.).
-- `checks.test`: Comando de pruebas (`npm test`, `pytest`, `dotnet test`).
-- `checks.verify`: Comando de verificación integral (`node project-docs/sync-data.js`).
+- `checks.build`, `checks.test`, `checks.verify`: Comandos de verificación ejecutables.
 
-### 2.2 `feature_list.json` (Backlog Canónico de Tareas)
-- `features[].id`: Número secuencial único (`INT-001`).
-- `features[].type`: `feature` o `bugfix`.
-- `features[].name`: Identificador en `snake_case` descriptivo.
-- `features[].branch`: Rama Git `{type}/INT-{id}/{name}` ($\le 80$ caracteres).
-- `features[].status`: `pending` | `spec_ready` | `in_progress` | `done` | `blocked`.
-- `features[].acceptance`: Lista de criterios de aceptación verificables.
+### 3.2 `project-docs/feature_list.json` (Espejo JSON de Tareas)
+- Sincronizado bidireccionalmente con las tablas `issues`, `subtasks`, `issue_relations` e `issue_evidences` mediante `project-docs/src/core/sqlite-sync.js`.
 
-### 2.3 `knowledge-index.json` (Índice de la Base de Conocimiento)
-- `docs{}`: Mapa de clave de archivo a contenido Markdown completo.
-- `docMetadata{}`: Metadatos calculados (`readingTime`, `wordCount`, `ruleCount`, `reqCount`, `adrCount`, `shelf`).
-- `shelves{}`: Clasificación en 6 estantes temáticos (`architecture`, `business_rules`, `requirements`, `adrs`, `standards`, `modules`).
-- `business_rules[]`: Catálogo estructurado de invariantes con `id`, `module`, `severity`, `title`, `description`.
-- `coding_standards`: Guardrails anti-sesgo y directrices de nombrado.
+### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)
+- Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.
