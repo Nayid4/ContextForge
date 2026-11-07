@@ -1024,6 +1024,119 @@ window.__FALLBACK_DATA__ = {
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 13,
+      "type": "feature",
+      "name": "screaming_architecture_plane_refactor",
+      "title": "Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "description": "Refactorizacion arquitectonica integral del frontend bajo Screaming Architecture: cada dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) encapsula sus propios componentes, vistas y helpers con bucles funcionales de renderizado (estilo React en Vanilla JS). Unificacion total del tablero en una experiencia unica inspirada en Plane sin depender del tablero clasico, diseno UI/UX y graficos mejorados (burn-down, C4, constelacion 3D), y CLI soberana ('node project-docs/cli.js') para manipulacion y consulta directa de tareas y base de conocimiento por agentes de IA, skills y terminal.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-013/screaming_architecture_plane_refactor",
+      "spec_folder": "project-docs/specs/013_screaming_architecture_plane_refactor",
+      "status": "done",
+      "acceptance": [
+        "Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).",
+        "Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.",
+        "Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.",
+        "Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.",
+        "Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.",
+        "Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.",
+        "Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.",
+        "Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones."
+      ],
+      "user_story": {
+        "as_a": "Desarrollador y Agente de IA",
+        "i_want": "un frontend modular bajo Screaming Architecture con interfaz unificada estilo Plane y una CLI de consulta soberana",
+        "so_that": "el arnes opere con maxima coherencia UI/UX y tanto humanos como agentes gestionen tareas y conocimiento en consola y visualmente con rapidez"
+      },
+      "subtasks": [
+        {
+          "id": "INT-013-DEV",
+          "type": "development",
+          "title": "Refactorizacion Screaming Architecture, componentes funcionales, interfaz Plane unificada y CLI",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Reorganizar src/features/ bajo Screaming Architecture (issues, cycles, modules, pages, architecture, graph, constellation, analytics)",
+            "Crear componentes funcionales modulares con bucles de renderizado limpios para tarjetas, filas, listas y paneles",
+            "Unificar la experiencia visual integrando arquitectura C4, grafos de dependencias y constelacion 3D dentro del layout de Plane",
+            "Implementar project-docs/cli.js para consulta y manipulacion de tareas, ciclos y paginas por agentes de IA y CLI",
+            "Actualizar core/router.js, core/store.js y src/main.js para gobernar la experiencia unificada"
+          ]
+        },
+        {
+          "id": "INT-013-QA",
+          "type": "qa",
+          "title": "Pruebas de arquitectura, CLI, navegacion integrada Playwright y verificacion integral",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar Screaming Architecture y ausencia de dependencias ciclicas en componentes",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar funcionalidad completa de project-docs/cli.js para agentes y skills",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Validar navegacion unificada estilo Plane con Playwright y captura de evidencias",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Validar Zero Emojis y pureza extrema de la raiz",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T17:11:41.080Z",
+        "dev_summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
+        "files_modified": [
+          "project-docs/src/shared/utils/renderList.js",
+          "project-docs/src/shared/Icons.js",
+          "project-docs/src/features/layout/",
+          "project-docs/src/features/issues/",
+          "project-docs/src/features/cycles/",
+          "project-docs/src/features/modules/",
+          "project-docs/src/features/pages/",
+          "project-docs/src/features/architecture/",
+          "project-docs/src/features/graph/",
+          "project-docs/src/features/constellation/",
+          "project-docs/src/features/analytics/",
+          "project-docs/src/core/router.js",
+          "project-docs/src/core/store.js",
+          "project-docs/src/main.js",
+          "project-docs/cli.js",
+          "project-docs/package.json",
+          "project-docs/tests/unit/screaming-architecture.test.js",
+          "project-docs/tests/unit/cli.test.js"
+        ],
+        "tests_executed": [
+          "npm test (27 unit tests)",
+          "npm run test:e2e (5 smoke tests)",
+          "npm run test:whitebox (12 branch tests)",
+          "npm run test:blackbox (8 resilience tests)",
+          "npm run test:system (7 integration tests)",
+          "npm run test:load (100 reqs concurrency test)",
+          "npm run test:acceptance (14 Playwright E2E tests)",
+          "bash project-docs/verify.sh (9 verification levels)"
+        ],
+        "screenshots": [
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 },
@@ -1161,6 +1274,17 @@ window.__FALLBACK_DATA__ = {
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Replicacion de UX y arquitectura de Makeplane (Plane): vistas Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; Plane Pages; base de datos relacional SQLite (node:sqlite) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para consumo optimo por agentes IA."
+    },
+    {
+      "id": 13,
+      "type": "feature",
+      "name": "screaming_architecture_plane_refactor",
+      "title": "Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "branch": "feature/INT-013/screaming_architecture_plane_refactor",
+      "completed_at": "2026-11-07T17:12:01.172Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture pura de 9 dominios; helper declarativo renderList; unificacion en diseno Plane eliminando el layout legacy; CLI soberana node project-docs/cli.js para IA y terminal; y persistencia relacional SQLite con espejo continuo en Markdown."
     }
   ]
 },
@@ -3357,7 +3481,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce\",\"Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests\",\"package.json y suite de tests unitarios están configurados y pasando en verde\",\"El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3409,7 +3533,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/\",\"Frontmatter name y description idénticos en los 3 espejos\",\"Skill sync-skills disponible para auditoría de discrepancias\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3460,7 +3584,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Escaneo de topología en Fase 1 sin saturación de tokens\",\"Documentación profunda por módulo en Fase 2\",\"Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3511,7 +3635,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Biblioteca organizada por estantes temáticos con tarjeta Hero destacada\",\"Lector de artículos con ancho centrado a 780px e interlineado 1.75em\",\"Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional\",\"Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde\",\"Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3564,7 +3688,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)\",\"Distribución radial armónica para evitar colisión de etiquetas\",\"Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3615,7 +3739,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección\",\"Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts\",\"Navegación fluida por teclado (Up, Down, Enter, Escape)\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3666,7 +3790,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Suite de tests unitarios nativos ejecutables con npm test\",\"Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown\",\"Validación de cálculo de tiempos de lectura y clasificación en estantes\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3717,7 +3841,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Script de prueba automatizada verificando carga de index.html\",\"Verificación de renderizado de la constelación 3D y conmutación de pestañas\",\"Prueba de edición y persistencia en el editor dual\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3768,7 +3892,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Los specs incorporan estructura Scrum con User Story (Como/Quiero/Para), DoR y DoD\",\"Cada tarea principal desglosa una Subtarea de Desarrollo (DEV) y una Subtarea de QA estilo Jira\",\"Al cerrar la tarea se documenta en el spec y en JSON qué se hizo, qué pruebas se realizaron y capturas de pantalla\",\"Toda la persistencia se realiza 100% en JSON sin bases de datos SQL\",\"El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla\"]",
       "evidence_summary": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3821,7 +3945,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)\",\"Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión\",\"Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente\",\"Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js\",\"El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json\",\"ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md\",\"verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)\",\"El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas\",\"El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga\"]",
       "evidence_summary": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3878,7 +4002,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La carpeta specs/ reside exclusivamente dentro de project-docs/specs/\",\"El archivo project-spec.yaml reside en project-docs/project-spec.yaml\",\"El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación\",\"La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)\",\"Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/\",\"Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/\",\"El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde\",\"El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0\"]",
       "evidence_summary": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3934,7 +4058,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.\",\"Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.\",\"Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).\",\"Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).\",\"Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.\",\"Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.\",\"Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.\",\"Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.\",\"Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).\",\"Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 16:24:49",
+      "updated_at": "2026-11-07 17:12:06",
       "state_name": "Done",
       "state_color": "#22c55e",
       "state_group": "completed",
@@ -3972,6 +4096,62 @@ window.__FALLBACK_DATA__ = {
         "Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).",
         "Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones."
       ]
+    },
+    {
+      "id": "INT-013",
+      "project_id": "proj-harness",
+      "sequence_id": 13,
+      "title": "Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "description": "Refactorizacion arquitectonica integral del frontend bajo Screaming Architecture: cada dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) encapsula sus propios componentes, vistas y helpers con bucles funcionales de renderizado (estilo React en Vanilla JS). Unificacion total del tablero en una experiencia unica inspirada en Plane sin depender del tablero clasico, diseno UI/UX y graficos mejorados (burn-down, C4, constelacion 3D), y CLI soberana ('node project-docs/cli.js') para manipulacion y consulta directa de tareas y base de conocimiento por agentes de IA, skills y terminal.",
+      "state_id": "state-done",
+      "priority": "urgent",
+      "assignee_role": "implementer",
+      "cycle_id": "cycle-3",
+      "module_id": "mod-visualizer",
+      "spec_folder": "project-docs/specs/013_screaming_architecture_plane_refactor",
+      "branch": "feature/INT-013/screaming_architecture_plane_refactor",
+      "user_story_as_a": "Desarrollador y Agente de IA",
+      "user_story_i_want": "un frontend modular bajo Screaming Architecture con interfaz unificada estilo Plane y una CLI de consulta soberana",
+      "user_story_so_that": "el arnes opere con maxima coherencia UI/UX y tanto humanos como agentes gestionen tareas y conocimiento en consola y visualmente con rapidez",
+      "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).\",\"Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.\",\"Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.\",\"Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.\",\"Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.\",\"Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.\",\"Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.\",\"Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
+      "evidence_summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
+      "created_at": "2026-11-07 16:47:57",
+      "updated_at": "2026-11-07 17:12:06",
+      "state_name": "Done",
+      "state_color": "#22c55e",
+      "state_group": "completed",
+      "cycle_name": "Ciclo 3: Plane Multi-Vista & SQLite para IA",
+      "module_name": "Dashboard Visualizer",
+      "subtasks": [
+        {
+          "id": "INT-013-DEV",
+          "issue_id": "INT-013",
+          "type": "development",
+          "title": "Refactorizacion Screaming Architecture, componentes funcionales, interfaz Plane unificada y CLI",
+          "assignee_role": "implementer",
+          "status": "done",
+          "sequence": 1
+        },
+        {
+          "id": "INT-013-QA",
+          "issue_id": "INT-013",
+          "type": "qa",
+          "title": "Pruebas de arquitectura, CLI, navegacion integrada Playwright y verificacion integral",
+          "assignee_role": "reviewer",
+          "status": "done",
+          "sequence": 2
+        }
+      ],
+      "acceptance": [
+        "Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).",
+        "Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.",
+        "Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.",
+        "Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.",
+        "Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.",
+        "Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.",
+        "Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.",
+        "Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones."
+      ]
     }
   ],
   "pages": [
@@ -3983,7 +4163,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 599,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_03-capabilities-and-features_md",
@@ -3993,7 +4173,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 1989,
       "reading_time_min": 10,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_adr-catalog_md",
@@ -4003,7 +4183,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "adrs",
       "word_count": 592,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_user-stories-catalog_md",
@@ -4013,7 +4193,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "requirements",
       "word_count": 627,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_external-services_md",
@@ -4023,7 +4203,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 215,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_tasks_md",
@@ -4033,7 +4213,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 336,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_001_refactor_harness_architecture_tasks_md",
@@ -4043,7 +4223,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 144,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_008_playwright_acceptance_testing_tasks_md",
@@ -4053,7 +4233,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 179,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_design_md",
@@ -4063,7 +4243,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 385,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_design_md",
@@ -4073,7 +4253,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 826,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_02-architecture-and-patterns_md",
@@ -4083,7 +4263,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 729,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_uml-diagrams_md",
@@ -4093,7 +4273,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 515,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_data-dictionary_md",
@@ -4103,7 +4283,17 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 345,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
+    },
+    {
+      "id": "page-specs_013_screaming_architecture_plane_refactor_design_md",
+      "file_path": "specs/013_screaming_architecture_plane_refactor/design.md",
+      "title": "Diseno Tecnico y Decisiones Arquitectonicas (ADRs) — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane",
+      "summary": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
+      "shelf": "specs",
+      "word_count": 1205,
+      "reading_time_min": 7,
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_001_refactor_harness_architecture_design_md",
@@ -4113,7 +4303,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 248,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_008_playwright_acceptance_testing_design_md",
@@ -4123,7 +4313,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 392,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_design_md",
@@ -4133,7 +4323,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 645,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_MASTER-PROJECT-KNOWLEDGE_md",
@@ -4143,7 +4333,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 1709,
       "reading_time_min": 9,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_design_md",
@@ -4153,7 +4343,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 1257,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_requirements_md",
@@ -4163,7 +4353,17 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 1269,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
+    },
+    {
+      "id": "page-specs_013_screaming_architecture_plane_refactor_requirements_md",
+      "file_path": "specs/013_screaming_architecture_plane_refactor/requirements.md",
+      "title": "Especificacion de Requerimientos — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "summary": "Tras la implementación inicial de las vistas de Plane y el motor SQLite en INT-012, el arnés dispone de dos layouts simultáneos (el clásico y el modo Plane).",
+      "shelf": "specs",
+      "word_count": 1231,
+      "reading_time_min": 7,
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_requirements_md",
@@ -4173,7 +4373,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 582,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_functional-requirements_md",
@@ -4183,7 +4383,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "requirements",
       "word_count": 657,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_001_refactor_harness_architecture_requirements_md",
@@ -4193,7 +4393,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 252,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_008_playwright_acceptance_testing_requirements_md",
@@ -4203,7 +4403,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 383,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_coding-standards_md",
@@ -4213,7 +4413,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 265,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_evidence_md",
@@ -4223,7 +4423,17 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 420,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
+    },
+    {
+      "id": "page-specs_013_screaming_architecture_plane_refactor_evidence_md",
+      "file_path": "specs/013_screaming_architecture_plane_refactor/evidence.md",
+      "title": "Evidencias de Aceptación E2E — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "summary": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
+      "shelf": "specs",
+      "word_count": 456,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_evidence_md",
@@ -4233,7 +4443,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 355,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_evidence_md",
@@ -4243,7 +4453,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 335,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_sequence_md",
@@ -4253,7 +4463,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 95,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_sequence_md",
@@ -4263,7 +4473,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 100,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_sequence_md",
@@ -4273,7 +4483,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 115,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_sequence_md",
@@ -4283,7 +4493,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 71,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_sequence_md",
@@ -4293,7 +4503,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 66,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_system-capabilities_md",
@@ -4303,7 +4513,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 362,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_traceability-matrix_md",
@@ -4313,7 +4523,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "requirements",
       "word_count": 250,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_c4-model_md",
@@ -4323,7 +4533,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 303,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_04-domain-ddd-and-crc_md",
@@ -4333,7 +4543,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 637,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_data-and-transactions_md",
@@ -4343,7 +4553,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 169,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md",
@@ -4353,7 +4563,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 139,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_module-spec_md",
@@ -4363,7 +4573,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 437,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_requirements-and-rules_md",
@@ -4373,7 +4583,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 556,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_diagrams_md",
@@ -4383,7 +4593,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 440,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_data-and-transactions_md",
@@ -4393,7 +4603,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 172,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md",
@@ -4403,7 +4613,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 161,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_module-spec_md",
@@ -4413,7 +4623,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 354,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md",
@@ -4423,7 +4633,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 255,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_diagrams_md",
@@ -4433,7 +4643,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 377,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_data-and-transactions_md",
@@ -4443,7 +4653,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 98,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md",
@@ -4453,7 +4663,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 121,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_module-spec_md",
@@ -4463,7 +4673,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 208,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_requirements-and-rules_md",
@@ -4473,7 +4683,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 211,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_diagrams_md",
@@ -4483,7 +4693,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 381,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_data-and-transactions_md",
@@ -4493,7 +4703,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 68,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md",
@@ -4503,7 +4713,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 94,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_module-spec_md",
@@ -4513,7 +4723,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 214,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_requirements-and-rules_md",
@@ -4523,7 +4733,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 170,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_diagrams_md",
@@ -4533,7 +4743,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 364,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_data-and-transactions_md",
@@ -4543,7 +4753,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 72,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md",
@@ -4553,7 +4763,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 78,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_module-spec_md",
@@ -4563,7 +4773,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 196,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_requirements-and-rules_md",
@@ -4573,7 +4783,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 148,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_diagrams_md",
@@ -4583,7 +4793,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "architecture",
       "word_count": 352,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_tasks_md",
@@ -4593,7 +4803,17 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 425,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
+    },
+    {
+      "id": "page-specs_013_screaming_architecture_plane_refactor_tasks_md",
+      "file_path": "specs/013_screaming_architecture_plane_refactor/tasks.md",
+      "title": "Plan de Tareas — INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "summary": "",
+      "shelf": "specs",
+      "word_count": 449,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-knowledge_modules_agent-orchestrator_rules_md",
@@ -4603,7 +4823,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 141,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_dashboard-visualizer_rules_md",
@@ -4613,7 +4833,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 91,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_knowledge-engine_rules_md",
@@ -4623,7 +4843,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 102,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_testing-qa-suite_rules_md",
@@ -4633,7 +4853,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 99,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-knowledge_modules_triple-sync-engine_rules_md",
@@ -4643,7 +4863,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "business_rules",
       "word_count": 96,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_009_scrum_spec_subtasks_and_qa_evidence_evidence_md",
@@ -4653,7 +4873,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 658,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_verification-report_md",
@@ -4663,7 +4883,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 513,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_verification-report_md",
@@ -4673,7 +4893,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 306,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_012_plane_style_sqlite_project_management_verification-report_md",
@@ -4683,7 +4903,17 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 462,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
+    },
+    {
+      "id": "page-specs_013_screaming_architecture_plane_refactor_verification-report_md",
+      "file_path": "specs/013_screaming_architecture_plane_refactor/verification-report.md",
+      "title": "Reporte de Verificación Técnica — INT-013: Screaming Architecture & Plane Refactor",
+      "summary": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
+      "shelf": "specs",
+      "word_count": 497,
+      "reading_time_min": 3,
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_requirements_md",
@@ -4693,7 +4923,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 406,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_requirements_md",
@@ -4703,7 +4933,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 854,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     },
     {
       "id": "page-specs_011_encapsulate_specs_and_scripts_tasks_md",
@@ -4713,7 +4943,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 167,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-specs_010_harness_root_cleanliness_encapsulation_tasks_md",
@@ -4723,7 +4953,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "specs",
       "word_count": 566,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:07"
     },
     {
       "id": "page-knowledge_01-project-overview-and-business_md",
@@ -4733,7 +4963,7 @@ window.__FALLBACK_DATA__ = {
       "shelf": "standards",
       "word_count": 1211,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 16:24:49"
+      "updated_at": "2026-11-07 17:12:06"
     }
   ]
 }

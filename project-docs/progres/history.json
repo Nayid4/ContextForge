@@ -131,6 +131,17 @@
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Replicacion de UX y arquitectura de Makeplane (Plane): vistas Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; Plane Pages; base de datos relacional SQLite (node:sqlite) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para consumo optimo por agentes IA."
+    },
+    {
+      "id": 13,
+      "type": "feature",
+      "name": "screaming_architecture_plane_refactor",
+      "title": "Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "branch": "feature/INT-013/screaming_architecture_plane_refactor",
+      "completed_at": "2026-11-07T17:12:01.172Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture pura de 9 dominios; helper declarativo renderList; unificacion en diseno Plane eliminando el layout legacy; CLI soberana node project-docs/cli.js para IA y terminal; y persistencia relacional SQLite con espejo continuo en Markdown."
     }
   ]
 }

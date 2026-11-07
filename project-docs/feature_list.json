@@ -1017,6 +1017,119 @@
           "project-docs/specs/012_plane_style_sqlite_project_management/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 13,
+      "type": "feature",
+      "name": "screaming_architecture_plane_refactor",
+      "title": "Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana",
+      "description": "Refactorizacion arquitectonica integral del frontend bajo Screaming Architecture: cada dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) encapsula sus propios componentes, vistas y helpers con bucles funcionales de renderizado (estilo React en Vanilla JS). Unificacion total del tablero en una experiencia unica inspirada en Plane sin depender del tablero clasico, diseno UI/UX y graficos mejorados (burn-down, C4, constelacion 3D), y CLI soberana ('node project-docs/cli.js') para manipulacion y consulta directa de tareas y base de conocimiento por agentes de IA, skills y terminal.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-013/screaming_architecture_plane_refactor",
+      "spec_folder": "project-docs/specs/013_screaming_architecture_plane_refactor",
+      "status": "done",
+      "acceptance": [
+        "Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).",
+        "Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.",
+        "Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.",
+        "Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.",
+        "Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.",
+        "Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.",
+        "Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.",
+        "Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones."
+      ],
+      "user_story": {
+        "as_a": "Desarrollador y Agente de IA",
+        "i_want": "un frontend modular bajo Screaming Architecture con interfaz unificada estilo Plane y una CLI de consulta soberana",
+        "so_that": "el arnes opere con maxima coherencia UI/UX y tanto humanos como agentes gestionen tareas y conocimiento en consola y visualmente con rapidez"
+      },
+      "subtasks": [
+        {
+          "id": "INT-013-DEV",
+          "type": "development",
+          "title": "Refactorizacion Screaming Architecture, componentes funcionales, interfaz Plane unificada y CLI",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Reorganizar src/features/ bajo Screaming Architecture (issues, cycles, modules, pages, architecture, graph, constellation, analytics)",
+            "Crear componentes funcionales modulares con bucles de renderizado limpios para tarjetas, filas, listas y paneles",
+            "Unificar la experiencia visual integrando arquitectura C4, grafos de dependencias y constelacion 3D dentro del layout de Plane",
+            "Implementar project-docs/cli.js para consulta y manipulacion de tareas, ciclos y paginas por agentes de IA y CLI",
+            "Actualizar core/router.js, core/store.js y src/main.js para gobernar la experiencia unificada"
+          ]
+        },
+        {
+          "id": "INT-013-QA",
+          "type": "qa",
+          "title": "Pruebas de arquitectura, CLI, navegacion integrada Playwright y verificacion integral",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar Screaming Architecture y ausencia de dependencias ciclicas en componentes",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar funcionalidad completa de project-docs/cli.js para agentes y skills",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Validar navegacion unificada estilo Plane con Playwright y captura de evidencias",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Validar Zero Emojis y pureza extrema de la raiz",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T17:11:41.080Z",
+        "dev_summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
+        "files_modified": [
+          "project-docs/src/shared/utils/renderList.js",
+          "project-docs/src/shared/Icons.js",
+          "project-docs/src/features/layout/",
+          "project-docs/src/features/issues/",
+          "project-docs/src/features/cycles/",
+          "project-docs/src/features/modules/",
+          "project-docs/src/features/pages/",
+          "project-docs/src/features/architecture/",
+          "project-docs/src/features/graph/",
+          "project-docs/src/features/constellation/",
+          "project-docs/src/features/analytics/",
+          "project-docs/src/core/router.js",
+          "project-docs/src/core/store.js",
+          "project-docs/src/main.js",
+          "project-docs/cli.js",
+          "project-docs/package.json",
+          "project-docs/tests/unit/screaming-architecture.test.js",
+          "project-docs/tests/unit/cli.test.js"
+        ],
+        "tests_executed": [
+          "npm test (27 unit tests)",
+          "npm run test:e2e (5 smoke tests)",
+          "npm run test:whitebox (12 branch tests)",
+          "npm run test:blackbox (8 resilience tests)",
+          "npm run test:system (7 integration tests)",
+          "npm run test:load (100 reqs concurrency test)",
+          "npm run test:acceptance (14 Playwright E2E tests)",
+          "bash project-docs/verify.sh (9 verification levels)"
+        ],
+        "screenshots": [
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/013_screaming_architecture_plane_refactor/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 }

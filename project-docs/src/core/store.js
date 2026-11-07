@@ -41,10 +41,10 @@ const initialState = {
   theme3D: 'dark',
   error: null,
   loading: true,
-  // Plane Architecture & Multi-View State
-  layoutMode: (typeof window !== 'undefined' && window.location?.hash?.includes('plane')) ? 'plane' : 'legacy',
+  // Plane Unified Architecture & Multi-View State
+  layoutMode: 'plane',
   planeData: { workspace: null, project: null, states: [], cycles: [], modules: [], issues: [], pages: [] },
-  planeView: 'issues', // 'issues' | 'cycles' | 'modules' | 'pages' | 'analytics' | 'space3d' | 'depgraph'
+  planeView: 'issues', // 'issues' | 'cycles' | 'modules' | 'pages' | 'architecture' | 'graph' | 'constellation' | 'analytics'
   planeViewMode: 'list', // 'list' | 'board' | 'calendar' | 'spreadsheet'
   planeFilterState: 'all',
   planeFilterPriority: 'all',
@@ -57,7 +57,10 @@ const initialState = {
   planeActivePageContent: '',
   planePageEditorMode: 'reader', // 'reader' | 'editor'
   planeSelectedIssueId: null,
-  isSidebarCollapsed: false
+  isSidebarCollapsed: false,
+  isOmniboxOpen: false,
+  omniboxQuery: '',
+  graphMode: 'graph' // 'graph' | 'tree'
 };
 
 class Store {
