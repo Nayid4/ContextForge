@@ -64,12 +64,12 @@ structure:
     - filename: "AGENTS.md"
       required: true
       description: "Reglas de branching, commits semánticos y arquitectura de agentes"
-    - filename: "project-spec.yaml"
+    - filename: "project-docs/project-spec.yaml"
       required: true
-      description: "Especificación técnica canónica y auditoría del arnés"
-    - filename: "verify.sh"
+      description: "Especificación técnica canónica y auditoría del arnés encapsulada en project-docs/"
+    - filename: "project-docs/verify.sh"
       required: true
-      description: "Script de verificación integral de 9 pasos con suite completa de pruebas"
+      description: "Script de verificación integral de 9 pasos autónomo en project-docs/"
     - filename: ".agents/ANTIGRAVITY.md"
       required: true
       description: "Guía de orquestación nativa para Google Antigravity 2.0"

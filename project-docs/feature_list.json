@@ -33,7 +33,7 @@
       "priority": "P0",
       "weight": 100,
       "branch": "feature/INT-001/refactor_harness_architecture",
-      "spec_folder": "specs/001_refactor_harness_architecture",
+      "spec_folder": "project-docs/specs/001_refactor_harness_architecture",
       "status": "done",
       "acceptance": [
         "project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce",
@@ -106,7 +106,7 @@
       "priority": "P0",
       "weight": 90,
       "branch": "feature/INT-002/triple_mirror_skills_sync",
-      "spec_folder": "specs/002_triple_mirror_skills_sync",
+      "spec_folder": "project-docs/specs/002_triple_mirror_skills_sync",
       "status": "done",
       "acceptance": [
         "18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/",
@@ -173,7 +173,7 @@
       "priority": "P0",
       "weight": 90,
       "branch": "feature/INT-003/knowledge_base_dynamic_engine",
-      "spec_folder": "specs/003_knowledge_base_dynamic_engine",
+      "spec_folder": "project-docs/specs/003_knowledge_base_dynamic_engine",
       "status": "done",
       "acceptance": [
         "Escaneo de topología en Fase 1 sin saturación de tokens",
@@ -240,7 +240,7 @@
       "priority": "P0",
       "weight": 95,
       "branch": "feature/INT-004/refactor_frontend_zero_emojis_atdd",
-      "spec_folder": "specs/004_dashboard_editorial_dual_editor",
+      "spec_folder": "project-docs/specs/004_dashboard_editorial_dual_editor",
       "status": "done",
       "acceptance": [
         "Biblioteca organizada por estantes temáticos con tarjeta Hero destacada",
@@ -319,7 +319,7 @@
       "priority": "P1",
       "weight": 80,
       "branch": "feature/INT-005/pyramidal_3d_constellation",
-      "spec_folder": "specs/005_pyramidal_3d_constellation",
+      "spec_folder": "project-docs/specs/005_pyramidal_3d_constellation",
       "status": "done",
       "acceptance": [
         "4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)",
@@ -386,7 +386,7 @@
       "priority": "P1",
       "weight": 85,
       "branch": "feature/INT-006/omnibox_global_search",
-      "spec_folder": "specs/006_omnibox_global_search",
+      "spec_folder": "project-docs/specs/006_omnibox_global_search",
       "status": "done",
       "acceptance": [
         "Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección",
@@ -453,7 +453,7 @@
       "priority": "P0",
       "weight": 90,
       "branch": "feature/INT-007/automated_unit_testing_suite",
-      "spec_folder": "specs/007_automated_unit_testing_suite",
+      "spec_folder": "project-docs/specs/007_automated_unit_testing_suite",
       "status": "done",
       "acceptance": [
         "Suite de tests unitarios nativos ejecutables con npm test",
@@ -520,7 +520,7 @@
       "priority": "P1",
       "weight": 85,
       "branch": "feature/INT-008/playwright_acceptance_testing",
-      "spec_folder": "specs/008_playwright_acceptance_testing",
+      "spec_folder": "project-docs/specs/008_playwright_acceptance_testing",
       "status": "done",
       "acceptance": [
         "Script de prueba automatizada verificando carga de index.html",
@@ -587,7 +587,7 @@
       "priority": "P0",
       "weight": 95,
       "branch": "feature/INT-009/scrum_spec_subtasks_qa_evidence",
-      "spec_folder": "specs/009_scrum_spec_subtasks_and_qa_evidence",
+      "spec_folder": "project-docs/specs/009_scrum_spec_subtasks_and_qa_evidence",
       "status": "done",
       "user_story": {
         "as_a": "Líder Técnico y Especialista de QA",
@@ -725,7 +725,7 @@
       "priority": "P0",
       "weight": 100,
       "branch": "feature/INT-010/harness_root_cleanliness_encapsulation",
-      "spec_folder": "specs/010_harness_root_cleanliness_encapsulation",
+      "spec_folder": "project-docs/specs/010_harness_root_cleanliness_encapsulation",
       "status": "done",
       "closedAt": "2026-11-07T10:05:00Z",
       "acceptance": [
@@ -808,9 +808,95 @@
           "10 Playwright E2E Acceptance tests (Chrome headless)"
         ],
         "screenshots": [
-          "specs/010_harness_root_cleanliness_encapsulation/evidence/01-dashboard-scrum-table.png",
-          "specs/010_harness_root_cleanliness_encapsulation/evidence/02-modal-scrum-subtasks.png",
-          "specs/010_harness_root_cleanliness_encapsulation/evidence/03-knowledge-base-deepwiki.png"
+          "project-docs/specs/010_harness_root_cleanliness_encapsulation/evidence/01-dashboard-scrum-table.png",
+          "project-docs/specs/010_harness_root_cleanliness_encapsulation/evidence/02-modal-scrum-subtasks.png",
+          "project-docs/specs/010_harness_root_cleanliness_encapsulation/evidence/03-knowledge-base-deepwiki.png"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "type": "feature",
+      "name": "harness_deep_encapsulation_specs_and_scripts",
+      "title": "Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/",
+      "description": "Reubicar specs/, verify.sh y project-spec.yaml dentro de project-docs/ para dejar la raíz con exclusivamente 4 carpetas (.agents/, .github/, .opencode/, project-docs/) y 4 archivos indispensables (AGENTS.md, opencode.json, README.md, .gitignore). Actualizar exhaustivamente todos los agentes y skills de Antigravity, Copilot y OpenCode para crear y consumir archivos en las nuevas rutas.",
+      "module": "agent-orchestrator",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-011/encapsulate_specs_and_scripts",
+      "spec_folder": "project-docs/specs/011_encapsulate_specs_and_scripts",
+      "status": "done",
+      "acceptance": [
+        "La carpeta specs/ reside exclusivamente dentro de project-docs/specs/",
+        "El archivo project-spec.yaml reside en project-docs/project-spec.yaml",
+        "El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación",
+        "La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)",
+        "Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/",
+        "Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/",
+        "El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde",
+        "El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0"
+      ],
+      "user_story": {
+        "as_a": "Ingeniero / Arquitecto de Software",
+        "i_want": "tener las especificaciones, verify.sh y project-spec.yaml encapsulados en project-docs/",
+        "so_that": "la raíz del proyecto quede extremadamente limpia (solo 4 carpetas y 4 archivos) facilitando identificar y mover los archivos del arnés"
+      },
+      "subtasks": [
+        {
+          "id": "INT-011-DEV",
+          "type": "development",
+          "title": "Reubicación de artefactos y actualización de agentes y skills",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Mover specs/ a project-docs/specs/",
+            "Mover project-spec.yaml a project-docs/project-spec.yaml",
+            "Mover verify.sh a project-docs/verify.sh y asegurar auto-resolución de SCRIPT_DIR",
+            "Actualizar agentes en .agents/agents/ (leader, spec-author, implementer, reviewer)",
+            "Actualizar skills en .opencode/skills/ y sincronizar con .github/skills/ y .agents/skills/"
+          ]
+        },
+        {
+          "id": "INT-011-QA",
+          "type": "qa",
+          "title": "Validación multinivel de rutas y pureza extrema de raíz",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Verificar pureza extrema en raíz: 4 carpetas y 4 archivos",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Verificar ejecución de project-docs/verify.sh en verde al 100%",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Verificar paridad triple de skills sincronizadas",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "closedAt": "2026-11-07T10:30:00Z",
+      "evidence": {
+        "completed_at": "2026-11-07T10:30:00Z",
+        "dev_summary": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
+        "tests_executed": [
+          "16 Unit tests (node:test)",
+          "12 White-Box tests (node:test)",
+          "8 Black-Box tests (node:test)",
+          "7 System tests (node:test)",
+          "1 Load test (node:test)",
+          "5 Smoke ATDD tests (node:test)",
+          "10 Playwright E2E Acceptance tests (Chrome headless)"
+        ],
+        "screenshots": [
+          "project-docs/specs/011_encapsulate_specs_and_scripts/evidence/01-dashboard-scrum-table.png",
+          "project-docs/specs/011_encapsulate_specs_and_scripts/evidence/03-knowledge-base-deepwiki.png"
         ]
       }
     }

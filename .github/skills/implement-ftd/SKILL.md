@@ -19,7 +19,7 @@ Implementa cambios pequeños y de bajo riesgo que **no introducen lógica nueva*
 
 ## Entrada Opcional
 
-- `project-spec.yaml` del módulo
+- `project-docs/project-spec.yaml` (o `project-spec.yaml`) del módulo
 - `<spec-dir>/spec.md`, `tasks.md`
 
 ## Tabla de Exclusión — Cuándo NO usar FTD
@@ -83,7 +83,7 @@ Ejemplos que **no** son FTD:
 ### Fase 3: Verificación
 
 1. Ejecutar la suite de tests completa → comparar contra el baseline de la Fase 1. Cualquier test nuevo en rojo es regresión de este cambio.
-2. Ejecutar `verify.sh` del módulo → exit 0.
+2. Ejecutar `project-docs/verify.sh` (o `verify.sh`) del módulo → exit 0.
 3. Verificar cada AC **por inspección del diff**, no por test nuevo. Para cada AC, señalar la línea del diff que lo satisface.
 4. Si el cambio es visual, describir cómo comprobarlo a mano (ruta de la pantalla, qué mirar), porque la suite no lo cubre.
 

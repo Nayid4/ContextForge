@@ -9,11 +9,13 @@ import path from 'path';
 
 async function runEvidenceCapture() {
   const targetTask = process.argv[2] || '009';
-  const ROOT_DIR = fs.existsSync(path.resolve(process.cwd(), 'specs'))
+  const ROOT_DIR = fs.existsSync(path.resolve(process.cwd(), 'project-docs'))
     ? process.cwd()
     : path.resolve(process.cwd(), '..');
   
-  const specsDir = path.resolve(ROOT_DIR, 'specs');
+  const specsDir = fs.existsSync(path.resolve(ROOT_DIR, 'project-docs', 'specs'))
+    ? path.resolve(ROOT_DIR, 'project-docs', 'specs')
+    : path.resolve(ROOT_DIR, 'specs');
   let targetSpecFolder = fs.existsSync(specsDir) 
     ? fs.readdirSync(specsDir).find(f => f.startsWith(`${targetTask}_`))
     : null;

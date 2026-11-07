@@ -7,20 +7,20 @@ description: Use when verifying that a spec/feature is fully implemented and rea
 
 ## Descripción
 
-Verifica de forma exhaustiva que un spec (feature) generado por `generate-spec` esté completamente implementado, probado y listo para cerrarse. Es **agnóstico al lenguaje/stack**: se apoya en `verify.sh` y en `project-spec.yaml` (generados por `technical-audit` y `generate-verify`) para detectar comandos de test/build sin importar si el proyecto es Node, Python, Java, Go, etc.
+Verifica de forma exhaustiva que un spec (feature) generado por `generate-spec` esté completamente implementado, probado y listo para cerrarse. Es **agnóstico al lenguaje/stack**: se apoya en `project-docs/verify.sh` (o `verify.sh`) y en `project-docs/project-spec.yaml` (o `project-spec.yaml`) para detectar comandos de test/build sin importar si el proyecto es Node, Python, Java, Go, etc.
 
 > **Sugerencia:** Ejecutar después de `generate-spec` (implementación) y, si aplica, `execute-api-test-plan` (pruebas de API). Es el último paso antes de cerrar un spec (equivalente al "Paso 7: Cerrar el Spec" de `generate-spec`, pero solo si todo aprueba).
 
 ## Entrada Requerida
 
-- **Directorio del spec** (obligatorio) - Ruta a `project-docs/<module>/specs/<NNN>-<feature-name>/`
-- **Spec en `current.json`** (obligatorio) - Debe existir un spec activo (status `in_progress`) correspondiente
+- **Directorio del spec** (obligatorio) - Ruta a `project-docs/specs/<NNN>_<feature-name>/` (o `project-docs/<module>/specs/`)
+- **Spec en `current.json`** (obligatorio) - Debe existir un spec activo (status `in_progress`) en `project-docs/progres/current.json`
 
 > **Nota:** Si `current.json` esta en `{}` pero el spec existe y esta implementado, es un spec cuya activacion quedo a medias. Reportarlo como hallazgo critico (H): el spec quedo sin registrar en `current.json` y probablemente tampoco en `feature_list.json`. No se puede verificar ni cerrar en ese estado; hay que re-activarlo primero.
 
 ## Entrada Opcional
 
-- **project-spec.yaml** - Para conocer comando de test/build/lint configurado (si no está, se intenta autodetectar)
+- **project-spec.yaml** - Especificación técnica en `project-docs/project-spec.yaml` o raíz.
 - **Directorio de tests-plan** (`project-docs/<module>/tests-plan/<recurso>/`) - Si el spec incluye endpoints probados con `api-test-plan`/`execute-api-test-plan`
 
 ## Restricciones
@@ -77,8 +77,8 @@ Ejecutar el comando y verificar:
 
 ### 5. Dependencias Técnicas (verify.sh)
 
-- Ubicar `verify.sh` en la raíz del módulo (ej. `backend/verify.sh`)
-- Ejecutar: `./verify.sh`
+- Ubicar `verify.sh` en `project-docs/verify.sh` o en la raíz del módulo
+- Ejecutar: `bash project-docs/verify.sh` (o `./verify.sh`)
 - Revisar código de salida:
   - `0` → dependencias técnicas OK (entorno, servicios, build, docker)
   - `1` → reportar como hallazgo CRÍTICO cada línea con `✗` (fallo)
@@ -100,8 +100,8 @@ Ejecutar el comando y verificar:
 
 1. Leer `current.json` → confirmar que el spec a verificar coincide con el spec activo
 2. Leer `spec.md`, `tasks.md`, `decisions.md` del directorio del spec
-3. Leer `project-spec.yaml` del módulo (si existe)
-4. Ubicar `verify.sh` del módulo
+3. Leer `project-docs/project-spec.yaml` (o `project-spec.yaml`)
+4. Ubicar `project-docs/verify.sh` (o `verify.sh`)
 
 ### Paso 2: Ejecutar las 6 verificaciones
 

@@ -29,7 +29,7 @@ tags: ["orchestrator", "subagents", "crc-cards", "branching", "human-gate", "scr
 - **Reviewer**: Agente auditor independiente e imparcial (prohibido editar código).
 - **Human Gate**: Puerta obligatoria de aprobación humana con `ask_question`.
 - **Subtareas Scrum DEV/QA**: Desglose operativo de cada historia de usuario en tareas de desarrollo e ingeniería de calidad.
-- **Evidencias Visuales**: Capturas de pantalla headless de los flujos del sistema generadas por Playwright en `specs/{NNN}_{name}/evidence/`.
+- **Evidencias Visuales**: Capturas de pantalla headless de los flujos del sistema generadas por Playwright en `project-docs/specs/{NNN}_{name}/evidence/`.
 
 ---
 

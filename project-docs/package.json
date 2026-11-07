@@ -17,6 +17,7 @@
     "test:system": "node --test tests/system/**/*.test.js",
     "test:load": "node --test tests/load/**/*.test.js",
     "evidence": "node scripts/capture-evidence.js",
+    "verify": "bash verify.sh",
     "test:all": "node --test tests/unit/**/*.test.js tests/e2e/**/*.test.js tests/whitebox/**/*.test.js tests/blackbox/**/*.test.js tests/system/**/*.test.js tests/load/**/*.test.js && npx playwright test"
   },
   "keywords": [

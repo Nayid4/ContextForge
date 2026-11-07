@@ -17,7 +17,7 @@ tags: ["c3", "class", "sequence", "state", "activity", "erd"]
 ```mermaid
 flowchart LR
   subgraph ModuleQA["testing-qa-suite"]
-    compRunner["VerifyRunner (verify.sh)"]
+    compRunner["VerifyRunner (project-docs/verify.sh)"]
     compUnit["NodeTestRunner (Unit, White, Black, System)"]
     compPlaywright["PlaywrightRunner (Acceptance E2E)"]
     compLoad["LoadSimulator (Concurrencia)"]
@@ -59,12 +59,12 @@ classDiagram
 sequenceDiagram
   autonumber
   actor Dev as "Desarrollador / Agente"
-  participant Runner as "verify.sh"
+  participant Runner as "project-docs/verify.sh"
   participant Unit as "node --test"
   participant Playwright as "npx playwright"
   participant Sync as "sync-data.js"
 
-  Dev->>Runner: "bash verify.sh"
+  Dev->>Runner: "bash project-docs/verify.sh"
   Runner->>Unit: "Ejecutar unit, whitebox, blackbox, system, load"
   Unit-->>Runner: "Todos los tests en verde"
   Runner->>Playwright: "Ejecutar 7 escenarios E2E"
@@ -99,7 +99,7 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-  actStart(["Inicio verify.sh"])
+  actStart(["Inicio project-docs/verify.sh"])
   actBuild["esbuild bundle"]
   actTests["node --test suites"]
   checkPass{"Pasa 100%?"}

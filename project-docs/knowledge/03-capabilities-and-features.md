@@ -50,7 +50,7 @@ mindmap
       Constelación 3D Three.js
       Interoperabilidad Offline file:///
     Aseguramiento de Calidad QA
-      Pipeline verify.sh 9 Niveles
+      Pipeline project-docs/verify.sh 9 Niveles
       Pruebas Unitarias Nativas
       Pruebas Caja Blanca Branch Coverage
       Pruebas Caja Negra BVA
@@ -84,9 +84,9 @@ mindmap
 - **Precondiciones**: Consulta obligatoria previa de `project-docs/knowledge/` para respetar la arquitectura soberana.
 - **Ciclo de Ejecución**:
   1. Lee el item correspondiente en `project-docs/feature_list.json`.
-  2. Genera `specs/{NNN}_{name}/requirements.md` siguiendo sintaxis EARS.
-  3. Genera `specs/{NNN}_{name}/design.md` con decisiones ADRs y diagramas Mermaid.
-  4. Genera `specs/{NNN}_{name}/tasks.md` con tareas secuenciales y técnica recomendada (TDD / SDD / FTD).
+  2. Genera `project-docs/specs/{NNN}_{name}/requirements.md` siguiendo sintaxis EARS.
+  3. Genera `project-docs/specs/{NNN}_{name}/design.md` con decisiones ADRs y diagramas Mermaid.
+  4. Genera `project-docs/specs/{NNN}_{name}/tasks.md` con tareas secuenciales y técnica recomendada (TDD / SDD / FTD).
   5. Marca el estado como `spec_ready` en `progress/current.json`.
 - **Salida / Artefacto**: Carpeta de especificación formal completa.
 - **Código Fuente**: [`.agents/agents/spec-author.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/spec-author.md), [`.agents/skills/generate-spec/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/generate-spec/SKILL.md).
@@ -108,7 +108,7 @@ mindmap
 - **Ciclo de Ejecución**:
   1. Si la técnica es TDD: escribe pruebas que fallen (rojo) $\to$ implementa código mínimo (verde) $\to$ refactoriza.
   2. Si la técnica es SDD: implementa fases de diseño $\to$ cubre con tests unitarios y de aceptación.
-  3. Ejecuta `verify.sh` de forma iterativa hasta verde total.
+  3. Ejecuta `project-docs/verify.sh` de forma iterativa hasta verde total.
   4. Documenta la matriz de trazabilidad Requerimiento $\leftrightarrow$ Tests en `progress/impl_{name}.md`.
 - **Salida / Artefacto**: Código productivo, suite de tests y bitácora de trazabilidad.
 - **Código Fuente**: [`.agents/agents/implementer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/implementer.md), [`.agents/skills/implement/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/implement/SKILL.md).
@@ -119,15 +119,15 @@ mindmap
 - **Ciclo de Ejecución**:
   1. Audita el código generado contra los criterios de aceptación de `requirements.md`.
   2. Verifica que ninguna regla `BR-*` haya sido alterada o vulnerada.
-  3. Comprueba el paso del 100% de las pruebas en `verify.sh`.
+  3. Comprueba el paso del 100% de las pruebas en `project-docs/verify.sh`.
   4. Emite veredicto: APROBADO o RECHAZADO con lista de hallazgos.
 - **Código Fuente**: [`.agents/agents/reviewer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/reviewer.md), [`.agents/skills/review/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/review/SKILL.md).
 
 #### Feature 1.6: Gestión de Subtareas Scrum Jira DEV/QA y Captura de Evidencias Visuales
 - **Propósito**: Descomponer la User Story en subtareas formales de Jira (desarrollo `DEV` y aseguramiento de calidad `QA`), con trazabilidad a criterios de aceptación, DoD y captura automática de evidencias gráficas (screenshots headless) para auditoría.
 - **Entrada / Disparador**: Generación de spec (`generate-spec`) y ejecución de pruebas de aceptación (`npm run test:acceptance` o `node scripts/capture-evidence.js`).
-- **Precondiciones**: Existencia de `specs/{NNN}_{name}/tasks.md` estructurado con subtareas `INT-{id}-DEV` e `INT-{id}-QA`.
-- **Invariante**: Ninguna feature puede cerrarse sin que ambas subtareas (`DEV` y `QA`) estén completadas y existan capturas de pantalla de evidencia en `specs/{NNN}_{name}/evidence/`.
+- **Precondiciones**: Existencia de `project-docs/specs/{NNN}_{name}/tasks.md` estructurado con subtareas `INT-{id}-DEV` e `INT-{id}-QA`.
+- **Invariante**: Ninguna feature puede cerrarse sin que ambas subtareas (`DEV` y `QA`) estén completadas y existan capturas de pantalla de evidencia en `project-docs/specs/{NNN}_{name}/evidence/`.
 - **Salida / Artefacto**: Modal interactivo en el tablero con badges DEV/QA, trazabilidad DoD y capturas PNG en `evidence/`.
 - **Código Fuente**: [`scripts/capture-evidence.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/scripts/capture-evidence.js), [`project-docs/src/shared/Modal.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/shared/Modal.js), [`project-docs/src/features/feature-list/FeatureTable.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/features/feature-list/FeatureTable.js).
 - **Pruebas Automatizadas**: [`tests/acceptance/scrum-evidence-capture.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/scrum-evidence-capture.spec.js).
@@ -194,7 +194,7 @@ mindmap
 
 ### Capacidad 5: Suite Integral de Aseguramiento de Calidad (`testing-qa-suite`)
 
-#### Feature 5.1: Pipeline de Verificación Determinista en 9 Niveles (`verify.sh`)
+#### Feature 5.1: Pipeline de Verificación Determinista en 9 Niveles (`project-docs/verify.sh`)
 - **Propósito**: Ejecutar un barrido exhaustivo de calidad en una sola instrucción.
 - **Niveles Validados**:
   1. Compilación y bundling (`esbuild`).
@@ -206,7 +206,7 @@ mindmap
   7. Pruebas de carga y concurrencia.
   8. Pruebas de aceptación E2E en navegador real con Playwright.
   9. Sincronización y consistencia de datos offline.
-- **Código Fuente**: [`verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/verify.sh).
+- **Código Fuente**: [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh).
 
 ---
 
@@ -222,8 +222,8 @@ sequenceDiagram
   participant Dash as "Tablero Visual"
 
   Dev->>AG: "Adopta este proyecto y prepáralo con el arnés"
-  AG->>Core: "/technical-audit -> genera project-spec.yaml"
-  AG->>Core: "/generate-verify -> genera verify.sh"
+  AG->>Core: "/technical-audit -> genera project-docs/project-spec.yaml"
+  AG->>Core: "/generate-verify -> genera project-docs/verify.sh"
   AG->>Core: "/project-knowledge -> extrae C4, UML, ERD, BR-* y MASTER-*.md"
   AG->>Core: "/requirements-analysis -> genera feature_list.json"
   AG->>Core: "node project-docs/sync-data.js"
@@ -248,7 +248,7 @@ sequenceDiagram
   Leader->>Dev: "⏸ ask_question: ¿Aprobar spec al 100%?"
   Dev-->>Leader: "Aprobado (in_progress)"
   Leader->>Impl: "Implementa código y tests (TDD/SDD)"
-  Impl->>Impl: "Ejecuta ./verify.sh hasta 100% verde"
+  Impl->>Impl: "Ejecuta ./project-docs/verify.sh hasta 100% verde"
   Impl-->>Leader: "Trazabilidad R<->Tests completada"
   Leader->>Rev: "Audita sin editar código"
   Rev-->>Leader: "Aprobado (0 hallazgos)"
@@ -268,10 +268,10 @@ sequenceDiagram
   participant Code as "Código del Arnés"
 
   Dev->>Leader: "Refactoriza el visor y agrega desglose DeepWiki"
-  Leader->>QA: "Ejecuta línea base (verify.sh + Playwright)"
+  Leader->>QA: "Ejecuta línea base (project-docs/verify.sh + Playwright)"
   QA-->>Leader: "Línea base en verde"
   Leader->>Code: "Aplica refactorización (cero emojis, 3 tiers, SVG icons)"
-  Leader->>QA: "Re-ejecuta verify.sh multinivel"
+  Leader->>QA: "Re-ejecuta project-docs/verify.sh multinivel"
   QA-->>Leader: "Todos los niveles en verde"
   Leader->>Code: "Commit semántico feat(knowledge): ..."
   Leader-->>Dev: "Auto-mejora completada con 100% de tests passing"
@@ -292,5 +292,5 @@ sequenceDiagram
 | `CAP-KNOW-002` | Dossier Consolidado MASTER-*.md | [`project-docs/knowledge/MASTER-*.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md) | [`tests/unit/sync-data.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/sync-data.test.js) |
 | `CAP-DASH-001` | Lector y Editor Dual ContextForge | [`project-docs/src/main.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/main.js) | [`tests/acceptance/dual-editor.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/dual-editor.spec.js) |
 | `CAP-DASH-002` | Interoperabilidad Offline `file:///` | [`project-docs/data-fallback.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/data-fallback.js) | [`tests/system/offline-fallback.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/system/offline-fallback.test.js) |
-| `CAP-TEST-001` | Pipeline de Verificación `verify.sh` | [`verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/verify.sh) | Ejecución integral de las 9 fases |
+| `CAP-TEST-001` | Pipeline de Verificación `project-docs/verify.sh` | [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh) | Ejecución integral de las 9 fases |
 | `CAP-TEST-002` | Aceptación E2E en Navegador Real | [`tests/acceptance/*.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/) | `npx playwright test` (10 escenarios) |

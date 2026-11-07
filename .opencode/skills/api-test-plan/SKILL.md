@@ -15,7 +15,7 @@ Genera planes de pruebas completos para APIs REST, incluyendo documentación mar
 - **Ruta de salida** (obligatorio) - Directorio donde guardar los planes
 
 ## Entrada Opcional
-- **project-spec.yaml** - Especificación técnica del proyecto
+- **project-spec.yaml** - Especificación técnica del proyecto (`project-docs/project-spec.yaml` o raíz)
 - **api-endpoints.md** - Documentación de endpoints
 
 ## Salida - Estructura de Directorios

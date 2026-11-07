@@ -35,8 +35,8 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
 
 ### Fase 1 — Preparación y validación
 
-1. Ejecuta la verificación base (`verify.sh` o `checks.verify` de `project-spec.yaml`) con `run_command`. Si falla, **detente** inmediatamente y ayuda al humano a resolver el entorno antes de continuar.
-2. Lee `project-spec.yaml` (o `project-spec.json`) para obtener los metadatos del proyecto (`project.name`, `project.runtime`, `project.framework`, `commands`) y `project-docs/feature_list.json` para metadatos del equipo y tareas.
+1. Ejecuta la verificación base (`project-docs/verify.sh` o `checks.verify` de `project-docs/project-spec.yaml`) con `run_command`. Si falla, **detente** inmediatamente y ayuda al humano a resolver el entorno antes de continuar.
+2. Lee `project-docs/project-spec.yaml` (o `project-docs/project-spec.json`) para obtener los metadatos del proyecto (`project.name`, `project.runtime`, `project.framework`, `commands`) y `project-docs/feature_list.json` para metadatos del equipo y tareas.
 3. Si la solicitud del usuario es una **prueba puntual de QA (QA On-Demand)** sobre un componente, endpoint o flujo específico:
    - Deriva inmediatamente al protocolo de **QA On-Demand** (ver sección abajo) invocando `implementer` o `reviewer` con la skill `targeted-qa`.
 4. Si es una feature o bugfix estándar, lee `feature_list.json` e identifica la tarea a trabajar:
@@ -44,11 +44,11 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
    - De lo contrario, selecciona la primera tarea con `status: "pending"` (respetando prioridad).
 5. Identifica la rama actual con `git branch --show-current`:
    - `main`, `master` o `dev` -> rama base válida para crear la rama de trabajo.
-   - `{feature|bugfix}/INT-*` -> estás en modo trabajo para esa tarea; lee `progress/current.json` (o `current.md`) para retomar el estado.
+   - `{feature|bugfix}/INT-*` -> estás en modo trabajo para esa tarea; lee `project-docs/progres/current.json` (o `current.md`) para retomar el estado.
    - Otra rama -> **detente** y usa `ask_question` para preguntar al humano desde qué rama base crear la rama.
 6. Si vas a iniciar una tarea nueva desde la rama base, verifica que el estado esté limpio:
-   - `progress/current.json` debe estar vacío o en plantilla limpia.
-   - `progress/history.json` debe tener su última entrada cerrada correctamente.
+   - `project-docs/progres/current.json` debe estar vacío o en plantilla limpia.
+   - `project-docs/progres/history.json` debe tener su última entrada cerrada correctamente.
    - Si algo no está en orden, **detente** y notifica al humano.
 7. Construye y crea o cambia a la rama de trabajo:
    - **Tipos soportados:** `feature` y `bugfix`.
@@ -59,7 +59,7 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
    git checkout -b {feature|bugfix}/INT-{numero}/{nombre_rama}
    ```
    (Si la rama ya existe: `git checkout {feature|bugfix}/INT-{numero}/{nombre_rama}`).
-8. Registra inmediatamente al ejecutor en `progress/current.json` usando los datos de `project-spec.yaml` / `feature_list.json`.
+8. Registra inmediatamente al ejecutor en `project-docs/progres/current.json` usando los datos de `project-docs/project-spec.yaml` / `feature_list.json`.
 
 ### Fase 2 — Spec (Spec Driven Development)
 
@@ -69,14 +69,14 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
      - `Role`: `"Spec Author — {NNN}_{name}"`
      - `Workspace`: `"inherit"`
      - `Model`: `"inherit"`
-     - `Prompt`: Indica el `id`, `type`, `name`, `title`, `description` y `acceptance` de la tarea en `feature_list.json`, la ruta `project-docs/{module}/specs/{NNN}_{name}/`, la rama activa y los estándares de `project-docs/knowledge/`.
+     - `Prompt`: Indica el `id`, `type`, `name`, `title`, `description` y `acceptance` de la tarea en `feature_list.json`, la ruta `project-docs/specs/{NNN}_{name}/`, la rama activa y los estándares de `project-docs/knowledge/`.
    - Si la tarea tiene `"sdd": false`, pasa directamente a la Fase 4 (`implementer`).
 
 ### Fase 3 — Puerta de aprobación humana
 
 10. Cuando `spec-author` termine:
-    - Verifica que existan `requirements.md`, `design.md` y `tasks.md`, y que `feature_list.json` tenga `status: "spec_ready"`.
-    - Actualiza `progress/current.json` reflejando el estado `spec_ready`.
+    - Verifica que existan `requirements.md`, `design.md` y `tasks.md` en `project-docs/specs/{NNN}_{name}/`, y que `feature_list.json` tenga `status: "spec_ready"`.
+    - Actualiza `project-docs/progres/current.json` reflejando el estado `spec_ready`.
     - **Pausa obligatoria:** Presenta al humano enlaces clicables a los archivos del spec y utiliza la herramienta `ask_question` para solicitar su decisión:
       - `(Recommended) Aprobar spec al 100% e iniciar implementación (pasar a in_progress)`
       - `Solicitar correcciones o ajustes en el spec (mantener en edición)`
@@ -89,8 +89,8 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
     - `Role`: `"Implementer — {NNN}_{name}"`
     - `Workspace`: `"inherit"`
     - `Model`: `"inherit"`
-    - `Prompt`: Indica la carpeta de spec, la rama activa `{type}/INT-{numero}/{nombre_rama}`, los comandos de compilación/tests de `project-spec.yaml` y la obligación de ejecutar cada task de `tasks.md` una a una, correr `checks.build` y `checks.test`, y documentar la trazabilidad `R<n> <-> Tests` en `progress/impl_{name}.md`.
-12. Si `implementer` reporta una ambigüedad en el spec, cambia el estado a `spec_ready`, actualiza `progress/current.json` y consulta al humano con `ask_question`.
+    - `Prompt`: Indica la carpeta de spec `project-docs/specs/{NNN}_{name}/`, la rama activa `{type}/INT-{numero}/{nombre_rama}`, los comandos de compilación/tests de `project-docs/project-spec.yaml` y la obligación de ejecutar cada task de `tasks.md` una a una, correr `checks.build` y `checks.test`, y documentar la trazabilidad `R<n> <-> Tests` en `project-docs/progres/impl_{name}.md`.
+12. Si `implementer` reporta una ambigüedad en el spec, cambia el estado a `spec_ready`, actualiza `project-docs/progres/current.json` y consulta al humano con `ask_question`.
 
 ### Fase 5 — Revisión
 
@@ -99,17 +99,17 @@ No escribes código de negocio ni redactas specs por tu cuenta: delegas cada fas
     - `Role`: `"Reviewer — {NNN}_{name}"`
     - `Workspace`: `"inherit"`
     - `Model`: `"inherit"`
-    - `Prompt`: Indica la carpeta de spec, el archivo `progress/impl_{name}.md` y solicita auditar trazabilidad, arquitectura, convenciones, build, format, tests y vulnerabilidades, escribiendo el resultado en `progress/review_{name}.md`.
+    - `Prompt`: Indica la carpeta de spec `project-docs/specs/{NNN}_{name}/`, el archivo `project-docs/progres/impl_{name}.md` y solicita auditar trazabilidad, arquitectura, convenciones, build, format, tests y vulnerabilidades, escribiendo el resultado en `project-docs/progres/review_{name}.md`.
 14. Si `reviewer` **rechaza** la implementación:
-    - Mantén `status: "in_progress"` y relanza `implementer` pasándole las razones concretas de `progress/review_{name}.md`, seguido nuevamente por `reviewer`.
+    - Mantén `status: "in_progress"` y relanza `implementer` pasándole las razones concretas de `project-docs/progres/review_{name}.md`, seguido nuevamente por `reviewer`.
 
 ### Fase 6 — Cierre
 
 15. Cuando `reviewer` **apruebe** la implementación, ejecuta el cierre dentro de la rama de trabajo:
-    - Ejecuta `verify.sh` para confirmar que todo el entorno y la solución siguen en verde.
+    - Ejecuta `bash project-docs/verify.sh` para confirmar que todo el entorno y la solución siguen en verde.
     - Sincroniza datos del tablero con `node project-docs/sync-data.js`.
     - Actualiza `feature_list.json`: marca la tarea con `status: "done"`, registra `executor` y `completed_at`, y actualiza los contadores de `metadata`.
-    - Mueve el resumen de la sesión desde `progress/current.json` al historial `progress/history.json`.
+    - Mueve el resumen de la sesión desde `project-docs/progres/current.json` al historial `project-docs/progres/history.json`.
     - Genera el commit semántico en la rama: `feat({scope}): {descripción}` o `fix({scope}): {descripción}`.
 16. **Pregunta al humano sobre integración** usando `ask_question`:
     ```

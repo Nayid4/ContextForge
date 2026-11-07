@@ -66,7 +66,7 @@ erDiagram
 
 ## 2. Catálogo de Esquemas JSON / YAML
 
-### 2.1 `project-spec.yaml` (Especificación Técnica del Proyecto)
+### 2.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)
 - `project.name`: Nombre canónico del sistema.
 - `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).
 - `runtime.language`: Lenguaje de programación principal.

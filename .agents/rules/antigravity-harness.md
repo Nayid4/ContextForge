@@ -81,9 +81,9 @@ El tablero interactivo vive en `project-docs/index.html`:
 
 El proyecto expone 18 skills en `.agents/skills/` invocables con `/` o por detección semántica:
 
-- `/technical-audit` — Auditoría técnica del proyecto (`project-spec.yaml`).
+- `/technical-audit` — Auditoría técnica del proyecto (`project-docs/project-spec.yaml`).
 - `/project-knowledge` — Extracción de base de conocimiento (C4, UML, reglas de negocio, estándares).
-- `/generate-verify` — Generación de `verify.sh`.
+- `/generate-verify` — Generación de `project-docs/verify.sh`.
 - `/requirements-analysis` — Generación o actualización de `project-docs/feature_list.json`.
 - `/generate-spec` — Generación de especificación técnica, decisiones y tareas.
 - `/implement-tdd` — Implementación guiada por pruebas (TDD).

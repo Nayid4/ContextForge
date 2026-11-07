@@ -57,8 +57,8 @@
     "configFiles": [
       { "filename": "opencode.json", "required": true, "description": "Configuración principal para OpenCode" },
       { "filename": "AGENTS.md", "required": true, "description": "Reglas de branching, commits semánticos y arquitectura de agentes" },
-      { "filename": "project-spec.yaml", "required": true, "description": "Especificación técnica canónica y auditoría del arnés" },
-      { "filename": "verify.sh", "required": true, "description": "Script de verificación integral de 9 pasos con suite completa de pruebas" },
+      { "filename": "project-docs/project-spec.yaml", "required": true, "description": "Especificación técnica canónica y auditoría del arnés encapsulada en project-docs/" },
+      { "filename": "project-docs/verify.sh", "required": true, "description": "Script de verificación integral de 9 pasos autónomo en project-docs/" },
       { "filename": ".agents/ANTIGRAVITY.md", "required": true, "description": "Guía de orquestación nativa para Google Antigravity 2.0" },
       { "filename": "project-docs/package.json", "required": true, "description": "Manifiesto de dependencias, scripts de prueba y build encapsulados en project-docs/" },
       { "filename": "project-docs/playwright.config.js", "required": true, "description": "Configuración de Playwright encapsulada para pruebas E2E de aceptación" },

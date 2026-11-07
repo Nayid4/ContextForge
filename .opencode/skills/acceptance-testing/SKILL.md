@@ -156,7 +156,7 @@ export default function () {
 ## 6. Salida y Reporte de Pruebas
 
 Toda ejecución de esta skill debe producir un informe consolidado en:
-`project-docs/testing/report-{fecha}.md` (o en la carpeta de la feature `specs/{task_id}/test-report.md`) con la siguiente estructura:
+`project-docs/testing/report-{fecha}.md` (o en la carpeta de la feature `project-docs/specs/{task_id}/test-report.md`) con la siguiente estructura:
 
 1. **Resumen Ejecutivo**: Aprobado / Rechazado.
 2. **Resultados de Aceptación Playwright**: Total pruebas, tiempo, capturas de pantalla de fallos.

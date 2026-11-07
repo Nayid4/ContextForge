@@ -57,7 +57,7 @@ Genera el archivo de pruebas correspondiente siguiendo las convenciones del proy
 ### Paso 4: Ejecucion Real en el Entorno
 Ejecuta la suite con `run_command`:
 - Para Playwright: `npx playwright test tests/acceptance/{archivo}.spec.js`
-- Para unitarias/limites: `npm test` o el comando correspondiente en `project-spec.yaml`.
+- Para unitarias/limites: `npm test` o el comando correspondiente en `project-docs/project-spec.yaml`.
 - Para API: ejecucion con `curl` o runner de API.
 - Para carga: `k6 run tests/load/{archivo}.js`
 

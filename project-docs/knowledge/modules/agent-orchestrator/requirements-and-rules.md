@@ -25,7 +25,7 @@ tags: ["requirements", "rules", "stories", "tasks", "scrum-subtasks", "qa-eviden
 - **Enunciado Formal**: Antes de pasar una tarea a estado `in_progress` o iniciar la fase de implementación, el sistema **debe** invocar la herramienta `ask_question` para obtener la aprobación explícita y documentada del usuario humano al 100%.
 
 ### `RF-ORCH-003`: Partición en Subtareas Scrum Jira DEV/QA y Captura de Evidencias
-- **Enunciado Formal**: Durante la redacción del spec y la verificación final, el sistema **debe** particionar la tarea en subtareas Jira de Desarrollo (`DEV`) y Aseguramiento de Calidad (`QA`), y **debe** generar capturas de pantalla visuales de los flujos principales en `specs/{NNN}_{name}/evidence/`.
+- **Enunciado Formal**: Durante la redacción del spec y la verificación final, el sistema **debe** particionar la tarea en subtareas Jira de Desarrollo (`DEV`) y Aseguramiento de Calidad (`QA`), y **debe** generar capturas de pantalla visuales de los flujos principales en `project-docs/specs/{NNN}_{name}/evidence/`.
 - **Criterio Gherkin**:
   - *Given* una tarea aprobada y probada
   - *When* se ejecuta la verificación de aceptación

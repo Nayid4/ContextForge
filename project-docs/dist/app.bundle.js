@@ -579,7 +579,13 @@
     }
     if (!isFileProtocol) {
       try {
-        const yamlRes = await fetch("project-spec.yaml");
+        let yamlRes = await fetch("project-docs/project-spec.yaml");
+        if (!yamlRes.ok) {
+          yamlRes = await fetch("/project-docs/project-spec.yaml");
+        }
+        if (!yamlRes.ok) {
+          yamlRes = await fetch("project-spec.yaml");
+        }
         if (yamlRes.ok) {
           const text = await yamlRes.text();
           const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);

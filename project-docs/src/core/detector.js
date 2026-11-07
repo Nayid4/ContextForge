@@ -116,7 +116,13 @@ export async function detectEnvironment(projectData = {}) {
   // Intentar leer project-spec.yaml si fue generado por la skill technical-audit (solo en modo HTTP)
   if (!isFileProtocol) {
     try {
-      const yamlRes = await fetch('project-spec.yaml');
+      let yamlRes = await fetch('project-docs/project-spec.yaml');
+      if (!yamlRes.ok) {
+        yamlRes = await fetch('/project-docs/project-spec.yaml');
+      }
+      if (!yamlRes.ok) {
+        yamlRes = await fetch('project-spec.yaml');
+      }
       if (yamlRes.ok) {
         const text = await yamlRes.text();
         const runtimeMatch = text.match(/runtime:\s*([^\r\n]+)/);

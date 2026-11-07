@@ -50,7 +50,7 @@ El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de
 4. **Triple Sincronización de 18 Skills**: Mantiene paridad absoluta e instantánea entre la fuente de verdad (`.opencode/skills/`) y los espejos (`.github/skills/` y `.agents/skills/`).
 5. **Base de Conocimiento Soberana (Docs-as-Code)**: Elicita y estructura modelos C4, diagramas UML, diccionario de datos/ERD, catálogo de reglas de negocio (`BR-*`), ADRs y radiografía granular de módulos.
 6. **Tablero Visual Offline-First (`project-docs/`)**: Aplicación web en Vanilla JS y Tailwind v4 con arquitectura screaming, lector editorial, editor dual Markdown/Bloques ContextForge, grafos de dependencias y constelación 3D en Three.js con soporte nativo para protocolo `file:///`.
-7. **Pipeline de Calidad en 8 Niveles (`verify.sh`)**: Ejecuta pruebas unitarias, ATDD smoke, caja blanca, caja negra (BVA/resiliencia), integración/sistema, carga concurrente y aceptación E2E con Playwright.
+7. **Pipeline de Calidad en 8 Niveles (`project-docs/verify.sh`)**: Ejecuta pruebas unitarias, ATDD smoke, caja blanca, caja negra (BVA/resiliencia), integración/sistema, carga concurrente y aceptación E2E con Playwright.
 
 ### 3.2 Qué NO HACE el Sistema (Exclusiones Explícitas)
 - **No Toma Decisiones de Arquitectura Autónomas**: Las decisiones de diseño, aprobación de especificaciones e integración a la rama base requieren siempre autorización del humano.
@@ -80,7 +80,7 @@ El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de
 | **Aprobación de Spec (Puerta)** | A / R | A / R | C | I | I | I |
 | **Implementación de Código** | I | C | C | R | I | I |
 | **Auditoría de Calidad / Review** | I | I | C | I | R | C |
-| **Ejecución de verify.sh** | I | C | I | R | R | A / R |
+| **Ejecución de project-docs/verify.sh** | I | C | I | R | R | A / R |
 | **Integración a Rama Base** | A | R | C | I | I | I |
 
 *Convención: R = Responsable de ejecutar, A = Aprobador final, C = Consultado, I = Informado.*
