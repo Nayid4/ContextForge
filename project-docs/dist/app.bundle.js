@@ -10,7 +10,7 @@
     }
     return "dark";
   };
-  var initialState = {
+  var defaultInitialState = {
     project: "Proyecto",
     features: [],
     currentSpec: {},
@@ -67,27 +67,99 @@
     // 'graph' | 'tree'
   };
   var Store = class {
-    constructor(state = initialState) {
+    constructor(state = defaultInitialState) {
+      this.initialState = { ...state };
       this.state = { ...state };
       this.listeners = /* @__PURE__ */ new Set();
+      this.keyListeners = /* @__PURE__ */ new Map();
       this.syncThemeDom();
     }
+    /**
+     * Retorna una copia congelada o referencial del estado actual.
+     * @returns {typeof defaultInitialState}
+     */
     getState() {
       return this.state;
     }
+    /**
+     * Actualiza el estado mediante un objeto parcial o una función actualizadora.
+     * Notifica a todos los suscriptores generales y por clave afectada.
+     * @param {Partial<typeof defaultInitialState> | ((prevState: typeof defaultInitialState) => Partial<typeof defaultInitialState>)} updater 
+     */
     setState(updater) {
-      const nextPartial = typeof updater === "function" ? updater(this.state) : updater;
-      this.state = { ...this.state, ...nextPartial };
+      const prevState = this.state;
+      const nextPartial = typeof updater === "function" ? updater(prevState) : updater;
+      if (!nextPartial || typeof nextPartial !== "object") return;
+      this.state = { ...prevState, ...nextPartial };
+      const changedKeys = Object.keys(nextPartial);
+      for (const key of changedKeys) {
+        if (prevState[key] !== this.state[key] && this.keyListeners.has(key)) {
+          const keySubs = this.keyListeners.get(key);
+          for (const sub of keySubs) {
+            try {
+              sub(this.state[key], prevState[key], this.state);
+            } catch (err) {
+              console.error(`Error en suscriptor de clave "${key}":`, err);
+            }
+          }
+        }
+      }
       this.notify();
     }
+    /**
+     * Suscribe un listener al estado completo.
+     * @param {(state: typeof defaultInitialState) => void} listener 
+     * @returns {() => void} Función de desuscripción
+     */
     subscribe(listener) {
+      if (typeof listener !== "function") {
+        throw new TypeError("El listener debe ser una funci\xF3n");
+      }
       this.listeners.add(listener);
       return () => this.listeners.delete(listener);
     }
+    /**
+     * Suscribe un listener específico a una propiedad particular del estado.
+     * @param {string} key - Nombre de la propiedad a observar
+     * @param {(newValue: any, oldValue: any, fullState: any) => void} listener 
+     * @returns {() => void} Función de desuscripción
+     */
+    subscribeKey(key, listener) {
+      if (typeof listener !== "function") {
+        throw new TypeError("El listener de clave debe ser una funci\xF3n");
+      }
+      if (!this.keyListeners.has(key)) {
+        this.keyListeners.set(key, /* @__PURE__ */ new Set());
+      }
+      this.keyListeners.get(key).add(listener);
+      return () => {
+        const subs = this.keyListeners.get(key);
+        if (subs) {
+          subs.delete(listener);
+          if (subs.size === 0) {
+            this.keyListeners.delete(key);
+          }
+        }
+      };
+    }
+    /**
+     * Notifica a todos los suscriptores registrados.
+     */
     notify() {
       for (const listener of this.listeners) {
-        listener(this.state);
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en suscriptor de Store:", err);
+        }
       }
+    }
+    /**
+     * Restablece el estado completo a sus valores iniciales.
+     */
+    resetState() {
+      this.state = { ...this.initialState };
+      this.notify();
     }
     // --- Theme Management ---
     syncThemeDom() {
@@ -547,43 +619,161 @@
   };
 
   // project-docs/src/core/router.js
-  var router = {
-    init(callback) {
-      const handleHash = () => {
-        const rawHash = (typeof window !== "undefined" && window.location?.hash ? window.location.hash.replace("#", "").trim() : "") || "issues";
-        let domainView = "issues";
-        if (rawHash === "features" || rawHash === "issues" || rawHash === "plane" || rawHash === "plane-issues") {
-          domainView = "issues";
-        } else if (rawHash === "cycles" || rawHash === "plane-cycles") {
-          domainView = "cycles";
-        } else if (rawHash === "modules" || rawHash === "plane-modules") {
-          domainView = "modules";
-        } else if (rawHash === "pages" || rawHash === "knowledge" || rawHash === "plane-pages") {
-          domainView = "pages";
-        } else if (rawHash === "architecture" || rawHash === "c4" || rawHash === "stack") {
-          domainView = "architecture";
-        } else if (rawHash === "graph" || rawHash === "tree" || rawHash === "depgraph" || rawHash === "dependencies") {
-          domainView = "graph";
-        } else if (rawHash === "constellation" || rawHash === "three" || rawHash === "space3d" || rawHash === "3d") {
-          domainView = "constellation";
-        } else if (rawHash === "analytics" || rawHash === "metrics" || rawHash === "stats") {
-          domainView = "analytics";
-        } else {
-          domainView = rawHash;
-        }
-        if (callback) callback(domainView, rawHash);
-      };
-      if (typeof window !== "undefined") {
-        window.addEventListener("hashchange", handleHash);
-        handleHash();
+  var Router = class {
+    constructor() {
+      this.currentRoute = "issues";
+      this.currentParams = {};
+      this.callbacks = /* @__PURE__ */ new Set();
+      this.routeHandlers = /* @__PURE__ */ new Map();
+      this.isListening = false;
+    }
+    /**
+     * Parsea un hash crudo extrayendo la ruta normalizada y sus parámetros de consulta.
+     * @param {string} rawHash 
+     * @returns {{ route: string, params: Record<string, string>, rawHash: string }}
+     */
+    parseHash(rawHash = "") {
+      const cleanHash = (rawHash || "").replace(/^#\/?/, "").trim();
+      if (!cleanHash) {
+        return { route: "issues", params: {}, rawHash: "" };
       }
-    },
-    navigate(domainView) {
-      if (typeof window !== "undefined") {
-        window.location.hash = domainView;
+      const [pathPart, queryPart] = cleanHash.split("?");
+      const rawRoute = (pathPart || "issues").toLowerCase().trim();
+      const params = {};
+      if (queryPart) {
+        const searchParams = new URLSearchParams(queryPart);
+        for (const [key, val] of searchParams.entries()) {
+          params[key] = val;
+        }
+      }
+      let route = "issues";
+      if (["features", "issues", "plane", "plane-issues"].includes(rawRoute)) {
+        route = "issues";
+      } else if (["cycles", "plane-cycles"].includes(rawRoute)) {
+        route = "cycles";
+      } else if (["modules", "plane-modules"].includes(rawRoute)) {
+        route = "modules";
+      } else if (["pages", "knowledge", "plane-pages"].includes(rawRoute)) {
+        route = "pages";
+      } else if (["architecture", "c4", "stack"].includes(rawRoute)) {
+        route = "architecture";
+      } else if (["graph", "tree", "depgraph", "dependencies"].includes(rawRoute)) {
+        route = "graph";
+      } else if (["constellation", "three", "space3d", "3d"].includes(rawRoute)) {
+        route = "constellation";
+      } else if (["analytics", "metrics", "stats"].includes(rawRoute)) {
+        route = "analytics";
+      } else if (["agents", "harness", "orchestrator"].includes(rawRoute)) {
+        route = "harness";
+      } else {
+        route = rawRoute;
+      }
+      return { route, params, rawHash: cleanHash };
+    }
+    _dispatch(route, rawHash, params) {
+      this.currentRoute = route;
+      this.currentParams = params;
+      for (const cb of this.callbacks) {
+        try {
+          cb(route, rawHash, params);
+        } catch (err) {
+          console.error("Error en router callback global:", err);
+        }
+      }
+      if (this.routeHandlers.has(route)) {
+        const handlers = Array.from(this.routeHandlers.get(route));
+        for (const handler of handlers) {
+          try {
+            handler(params, rawHash);
+          } catch (err) {
+            console.error(`Error en handler de ruta "${route}":`, err);
+          }
+        }
       }
     }
+    /**
+     * Inicializa la escucha de cambios de hash en window.
+     * @param {Function} [globalCallback] 
+     */
+    init(globalCallback) {
+      if (globalCallback && typeof globalCallback === "function") {
+        this.callbacks.add(globalCallback);
+      }
+      const handleHashChange = () => {
+        const rawHash = typeof window !== "undefined" && window.location?.hash ? window.location.hash : "";
+        const { route, params } = this.parseHash(rawHash);
+        this._dispatch(route, rawHash, params);
+      };
+      if (typeof window !== "undefined" && !this.isListening) {
+        window.addEventListener("hashchange", handleHashChange);
+        this.isListening = true;
+        handleHashChange();
+      }
+    }
+    /**
+     * Navega a una ruta con parámetros opcionales.
+     * @param {string} route 
+     * @param {Record<string, any>} [params] 
+     */
+    navigate(route, params = {}) {
+      let hash = `#${route}`;
+      const keys = Object.keys(params);
+      if (keys.length > 0) {
+        const searchParams = new URLSearchParams();
+        for (const key of keys) {
+          if (params[key] !== void 0 && params[key] !== null && params[key] !== "") {
+            searchParams.append(key, String(params[key]));
+          }
+        }
+        const qs = searchParams.toString();
+        if (qs) {
+          hash += `?${qs}`;
+        }
+      }
+      if (typeof window !== "undefined" && window.location) {
+        window.location.hash = hash;
+      } else {
+        const parsed = this.parseHash(hash);
+        this._dispatch(parsed.route, hash, parsed.params);
+      }
+    }
+    /**
+     * Registra un listener para una ruta específica.
+     * @param {string} route 
+     * @param {Function} handler 
+     * @returns {Function} Función para desuscribir.
+     */
+    on(route, handler) {
+      if (!this.routeHandlers.has(route)) {
+        this.routeHandlers.set(route, /* @__PURE__ */ new Set());
+      }
+      this.routeHandlers.get(route).add(handler);
+      return () => {
+        const handlers = this.routeHandlers.get(route);
+        if (handlers) {
+          handlers.delete(handler);
+          if (handlers.size === 0) {
+            this.routeHandlers.delete(route);
+          }
+        }
+      };
+    }
+    /**
+     * Obtiene la ruta activa normalizada.
+     * @returns {string}
+     */
+    getRoute() {
+      return this.currentRoute;
+    }
+    /**
+     * Obtiene los parámetros de la URL activa.
+     * @returns {Record<string, string>}
+     */
+    getParams() {
+      return { ...this.currentParams };
+    }
   };
+  var router = new Router();
 
   // project-docs/src/core/detector.js
   async function detectEnvironment(projectData = {}) {
@@ -715,7 +905,7 @@
     };
   }
 
-  // project-docs/src/shared/Icons.js
+  // project-docs/src/shared/ui/Icons.js
   function createIcon(svgInner, defaultCls = "w-4 h-4") {
     const fn = (cls = defaultCls) => `
     <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -744,7 +934,7 @@
     refresh: createIcon('<path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'),
     close: createIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
     search: createIcon('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>'),
-    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
+    eye: createIcon('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
     eyeOff: createIcon('<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'),
     filter: createIcon('<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'),
     share: createIcon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>'),
@@ -831,7 +1021,7 @@
     return items.map((item, index) => renderItemFn(item, index, items)).join("");
   }
 
-  // project-docs/src/features/layout/components/PlaneSidebar.js
+  // project-docs/src/shared/ui/PlaneSidebar.js
   function renderPlaneSidebar({
     currentView = "issues",
     activeWorkspace = "Harness Engineering",
@@ -841,7 +1031,7 @@
     moduleCount = 0,
     pageCount = 0,
     isCollapsed = false
-  }) {
+  } = {}) {
     const navItems = [
       { id: "issues", legacyTab: "features", label: "Tareas (Issues)", icon: "kanban", count: issueCount },
       { id: "cycles", legacyTab: "history", label: "Ciclos (Cycles)", icon: "cycle", count: cycleCount },
@@ -858,11 +1048,11 @@
       const iconFn = Icons[item.icon] || Icons.terminal;
       const tabAttr = item.legacyTab ? `data-tab="${item.legacyTab}"` : "";
       return `
-      <button data-plane-nav="${item.id}" ${tabAttr} class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${isActive ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/25 shadow-sm font-semibold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 border border-transparent"}">
+      <button data-plane-nav="${item.id}" ${tabAttr} class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${isActive ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/25 shadow-xs font-semibold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 border border-transparent"}">
         ${iconFn("w-4 h-4 shrink-0")}
         ${!isCollapsed ? `
           <span class="flex-1 text-left truncate">${item.label}</span>
-          ${item.count !== void 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 font-mono font-medium">${item.count}</span>` : ""}
+          ${item.count !== void 0 && item.count !== null ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 font-mono font-medium">${item.count}</span>` : ""}
         ` : ""}
       </button>
     `;
@@ -937,15 +1127,15 @@
   `;
   }
 
-  // project-docs/src/features/layout/components/PlaneTopBar.js
+  // project-docs/src/shared/ui/PlaneTopBar.js
   function renderPlaneTopBar({
     currentView = "issues",
     viewTitle = "Tareas (Work Items)",
     activeProject = "Arn\xE9s SDD Multi-Agente",
     theme = "dark"
-  }) {
+  } = {}) {
     return `
-    <header class="h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 flex items-center justify-between gap-4 sticky top-0 z-20">
+    <header class="h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 flex items-center justify-between gap-4 sticky top-0 z-20 select-none">
       <!-- Breadcrumbs -->
       <div class="flex items-center gap-2 text-xs">
         <span class="text-zinc-400 font-medium">${activeProject}</span>
@@ -977,13 +1167,13 @@
   `;
   }
 
-  // project-docs/src/features/layout/components/OmniboxModal.js
+  // project-docs/src/shared/ui/OmniboxModal.js
   function renderOmniboxModal({
     isOpen = false,
     query = "",
     issues = [],
     pages = []
-  }) {
+  } = {}) {
     if (!isOpen) return "";
     const q = (query || "").toLowerCase().trim();
     const matchedIssues = issues.filter(
@@ -998,7 +1188,7 @@
         <span class="text-xs font-mono font-bold text-indigo-400 shrink-0">${issue.id}</span>
         <span class="text-xs text-zinc-200 truncate group-hover:text-white font-medium">${issue.title}</span>
       </div>
-      <span class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono shrink-0">${issue.state_name || issue.state_id}</span>
+      <span class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono shrink-0">${issue.state_name || issue.state_id || "issue"}</span>
     </div>
   `;
     const renderPageResult = (page) => `
@@ -1012,7 +1202,7 @@
     </div>
   `;
     return `
-    <div id="omnibox-modal" data-backdrop="plane-omnibox" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start justify-center pt-20 px-4 animate-in fade-in duration-150">
+    <div id="omnibox-modal" data-backdrop="plane-omnibox" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-start justify-center pt-20 px-4 animate-in fade-in duration-150">
       <div class="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         <!-- Input Header -->
         <div class="p-4 border-b border-zinc-800 flex items-center gap-3">
@@ -1061,14 +1251,14 @@
   `;
   }
 
-  // project-docs/src/features/layout/views/MasterLayout.js
+  // project-docs/src/shared/ui/MasterLayout.js
   function renderMasterLayout({
     sidebarProps = {},
     topBarProps = {},
     omniboxProps = {},
     mainContentHtml = "",
     modalHtml = ""
-  }) {
+  } = {}) {
     return `
     <div id="plane-app-root" class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-row font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
       <!-- 1. Left Sidebar -->
@@ -1079,7 +1269,7 @@
         <!-- Top Navigation Bar -->
         ${renderPlaneTopBar(topBarProps)}
 
-        <!-- Feature View Container -->
+        <!-- Domain Feature View Container -->
         <main id="tab-content" class="flex-1 flex flex-col min-h-0 overflow-y-auto">
           ${mainContentHtml}
         </main>

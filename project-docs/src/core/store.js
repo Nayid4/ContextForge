@@ -1,5 +1,6 @@
 /**
  * Central state store using Observer pattern (Vanilla reactive state).
+ * 100% JavaScript Vanilla, 0 dependencias externas, 0 emojis.
  */
 
 const getInitialTheme = () => {
@@ -13,7 +14,7 @@ const getInitialTheme = () => {
   return 'dark'; // Dark mode por defecto para el arnés
 };
 
-const initialState = {
+export const defaultInitialState = {
   project: 'Proyecto',
   features: [],
   currentSpec: {},
@@ -63,32 +64,110 @@ const initialState = {
   graphMode: 'graph' // 'graph' | 'tree'
 };
 
-class Store {
-  constructor(state = initialState) {
+export class Store {
+  constructor(state = defaultInitialState) {
+    this.initialState = { ...state };
     this.state = { ...state };
     this.listeners = new Set();
+    this.keyListeners = new Map();
     this.syncThemeDom();
   }
 
+  /**
+   * Retorna una copia congelada o referencial del estado actual.
+   * @returns {typeof defaultInitialState}
+   */
   getState() {
     return this.state;
   }
 
+  /**
+   * Actualiza el estado mediante un objeto parcial o una función actualizadora.
+   * Notifica a todos los suscriptores generales y por clave afectada.
+   * @param {Partial<typeof defaultInitialState> | ((prevState: typeof defaultInitialState) => Partial<typeof defaultInitialState>)} updater 
+   */
   setState(updater) {
-    const nextPartial = typeof updater === 'function' ? updater(this.state) : updater;
-    this.state = { ...this.state, ...nextPartial };
+    const prevState = this.state;
+    const nextPartial = typeof updater === 'function' ? updater(prevState) : updater;
+    if (!nextPartial || typeof nextPartial !== 'object') return;
+
+    this.state = { ...prevState, ...nextPartial };
+
+    // Notificar suscriptores por clave modificada
+    const changedKeys = Object.keys(nextPartial);
+    for (const key of changedKeys) {
+      if (prevState[key] !== this.state[key] && this.keyListeners.has(key)) {
+        const keySubs = this.keyListeners.get(key);
+        for (const sub of keySubs) {
+          try {
+            sub(this.state[key], prevState[key], this.state);
+          } catch (err) {
+            console.error(`Error en suscriptor de clave "${key}":`, err);
+          }
+        }
+      }
+    }
+
     this.notify();
   }
 
+  /**
+   * Suscribe un listener al estado completo.
+   * @param {(state: typeof defaultInitialState) => void} listener 
+   * @returns {() => void} Función de desuscripción
+   */
   subscribe(listener) {
+    if (typeof listener !== 'function') {
+      throw new TypeError('El listener debe ser una función');
+    }
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
+  /**
+   * Suscribe un listener específico a una propiedad particular del estado.
+   * @param {string} key - Nombre de la propiedad a observar
+   * @param {(newValue: any, oldValue: any, fullState: any) => void} listener 
+   * @returns {() => void} Función de desuscripción
+   */
+  subscribeKey(key, listener) {
+    if (typeof listener !== 'function') {
+      throw new TypeError('El listener de clave debe ser una función');
+    }
+    if (!this.keyListeners.has(key)) {
+      this.keyListeners.set(key, new Set());
+    }
+    this.keyListeners.get(key).add(listener);
+    return () => {
+      const subs = this.keyListeners.get(key);
+      if (subs) {
+        subs.delete(listener);
+        if (subs.size === 0) {
+          this.keyListeners.delete(key);
+        }
+      }
+    };
+  }
+
+  /**
+   * Notifica a todos los suscriptores registrados.
+   */
   notify() {
     for (const listener of this.listeners) {
-      listener(this.state);
+      try {
+        listener(this.state);
+      } catch (err) {
+        console.error('Error en suscriptor de Store:', err);
+      }
     }
+  }
+
+  /**
+   * Restablece el estado completo a sus valores iniciales.
+   */
+  resetState() {
+    this.state = { ...this.initialState };
+    this.notify();
   }
 
   // --- Theme Management ---
