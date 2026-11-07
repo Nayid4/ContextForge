@@ -4,6 +4,9 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 
 | ID Ejecucion | Fecha | Rol Agente | Skill Invocada | Tarea / Pagina | Tipo | Estado | Resumen |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `airun-1794082644735-al8j` | 2026-11-07 20:17:24 | `implementer` | `/project-knowledge` | `INT-017` | `PLANE_PAGES_EVOLUTION` | **COMPLETED** | Extension a 28 tablas SQLite (page_logs, page_labels), PageNavigationPane de 4 pestañas, Smart Entity Chips y skill project-knowledge |
+| `airun-INT-017-verify` | 2026-11-07 20:17:23 | `reviewer` | `/verify-spec` | `INT-017` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-017 |
+| `airun-INT-017-spec` | 2026-11-07 20:17:23 | `spec-author` | `/generate-spec` | `INT-017` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-017: Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA |
 | `airun-INT-016-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-016 |
 | `airun-INT-016-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-016` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD |
 | `airun-INT-015-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-015` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-015 |
@@ -39,6 +42,23 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 | `airun-1794080183826-5kpr` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD |
 
 ## Detalle de Artefactos y Reportes Generados por IA
+
+### [airun-1794082644735-al8j] /project-knowledge (implementer) -> INT-017
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Extension a 28 tablas SQLite (page_logs, page_labels), PageNavigationPane de 4 pestañas, Smart Entity Chips y skill project-knowledge
+- **Artefactos Sincronizados:** `project-docs/src/core/db.js`, `project-docs/src/core/sqlite-sync.js`, `project-docs/src/modules/Pages/components/PageNavigationPane.js`
+
+### [airun-INT-017-verify] /verify-spec (reviewer) -> INT-017
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-017
+- **Resultado / Hallazgos:** Implementada la evolucion de la Base de Conocimiento al patron Plane Pages: 28 tablas en SQLite (page_logs, page_labels y telemetria en pages), PageShelfTree con 4 filtros rapidos, PageHeaderActions con Ask Harness AI, PageNavigationPane de 4 pestañas (Outline, Info, Assets, Historial), Smart Entity Chips en PageReader y actualizacion triple de la skill /project-knowledge.
+- **Artefactos Sincronizados:** `project-docs/specs/017_plane_pages_knowledge_graph_ai/verification-report.md`
+
+### [airun-INT-017-spec] /generate-spec (spec-author) -> INT-017
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-017: Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA
+- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/017_plane_pages_knowledge_graph_ai` con historia de usuario Scrum y subtareas DEV/QA.
+- **Artefactos Sincronizados:** `project-docs/specs/017_plane_pages_knowledge_graph_ai/requirements.md`, `project-docs/specs/017_plane_pages_knowledge_graph_ai/design.md`, `project-docs/specs/017_plane_pages_knowledge_graph_ai/tasks.md`
 
 ### [airun-INT-016-verify] /verify-spec (reviewer) -> INT-016
 - **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
@@ -171,21 +191,3 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 - **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado
 - **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/006_omnibox_global_search` con historia de usuario Scrum y subtareas DEV/QA.
 - **Artefactos Sincronizados:** `project-docs/specs/006_omnibox_global_search/requirements.md`, `project-docs/specs/006_omnibox_global_search/design.md`, `project-docs/specs/006_omnibox_global_search/tasks.md`
-
-### [airun-INT-005-verify] /verify-spec (reviewer) -> INT-005
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-005
-- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.
-- **Artefactos Sincronizados:** `project-docs/specs/005_pyramidal_3d_constellation/verification-report.md`
-
-### [airun-INT-005-spec] /generate-spec (spec-author) -> INT-005
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js
-- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/005_pyramidal_3d_constellation` con historia de usuario Scrum y subtareas DEV/QA.
-- **Artefactos Sincronizados:** `project-docs/specs/005_pyramidal_3d_constellation/requirements.md`, `project-docs/specs/005_pyramidal_3d_constellation/design.md`, `project-docs/specs/005_pyramidal_3d_constellation/tasks.md`
-
-### [airun-INT-004-verify] /verify-spec (reviewer) -> INT-004
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-004
-- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.
-- **Artefactos Sincronizados:** `project-docs/specs/004_dashboard_editorial_dual_editor/verification-report.md`

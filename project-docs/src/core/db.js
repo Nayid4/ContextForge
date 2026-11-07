@@ -475,6 +475,8 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       workspace_id TEXT NOT NULL DEFAULT 'ws-harness',
       owned_by_id TEXT DEFAULT 'user-spec-author',
       owned_by_role TEXT DEFAULT 'spec-author',
+      updated_by_id TEXT DEFAULT 'user-spec-author',
+      module_id TEXT,
       file_path TEXT NOT NULL UNIQUE,
       title TEXT NOT NULL,
       summary TEXT,
@@ -484,8 +486,13 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       description_stripped TEXT DEFAULT '',
       access INTEGER NOT NULL DEFAULT 0,
       is_locked INTEGER NOT NULL DEFAULT 0,
+      is_favorite INTEGER NOT NULL DEFAULT 0,
+      view_props TEXT DEFAULT '{"full_width":false}',
       archived_at DATETIME,
-      word_count INTEGER DEFAULT 0,
+      word_count INTEGER NOT NULL DEFAULT 0,
+      char_count INTEGER NOT NULL DEFAULT 0,
+      paragraph_count INTEGER NOT NULL DEFAULT 0,
+      diagrams_count INTEGER NOT NULL DEFAULT 0,
       reading_time_min INTEGER DEFAULT 1,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES projects(id)
@@ -494,11 +501,19 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
   ensureColumn(db, 'pages', 'workspace_id', "TEXT NOT NULL DEFAULT 'ws-harness'");
   ensureColumn(db, 'pages', 'owned_by_id', "TEXT DEFAULT 'user-spec-author'");
   ensureColumn(db, 'pages', 'owned_by_role', "TEXT DEFAULT 'spec-author'");
+  ensureColumn(db, 'pages', 'updated_by_id', "TEXT DEFAULT 'user-spec-author'");
+  ensureColumn(db, 'pages', 'module_id', 'TEXT');
   ensureColumn(db, 'pages', 'description_html', "TEXT DEFAULT ''");
   ensureColumn(db, 'pages', 'description_stripped', "TEXT DEFAULT ''");
   ensureColumn(db, 'pages', 'access', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'is_locked', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'is_favorite', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'view_props', `TEXT DEFAULT '{"full_width":false}'`);
   ensureColumn(db, 'pages', 'archived_at', 'DATETIME');
+  ensureColumn(db, 'pages', 'word_count', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'char_count', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'paragraph_count', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'diagrams_count', 'INTEGER NOT NULL DEFAULT 0');
 
   // 23. Page Versions (Plane PageVersion Historical Snapshot Model)
   db.exec(`
@@ -517,7 +532,35 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
     );
   `);
 
-  // 24. Issue Views (Plane IssueView Saved Filters & Layouts Model)
+  // 24. Page Logs (Plane PageLog Model: Entity Mentions, Issues INT-XXX, Rules BR-*, Backlinks)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS page_logs (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL DEFAULT 'ws-harness',
+      page_id TEXT NOT NULL,
+      transaction_id TEXT NOT NULL,
+      entity_identifier TEXT NOT NULL,
+      entity_name TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
+    );
+  `);
+
+  // 25. Page Labels (Plane PageLabel Model: Knowledge Base Tagging)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS page_labels (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL DEFAULT 'ws-harness',
+      page_id TEXT NOT NULL,
+      label_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE,
+      FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE
+    );
+  `);
+
+  // 26. Issue Views (Plane IssueView Saved Filters & Layouts Model)
   db.exec(`
     CREATE TABLE IF NOT EXISTS issue_views (
       id TEXT PRIMARY KEY,

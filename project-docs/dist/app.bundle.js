@@ -606,11 +606,16 @@
     }
     return { ok: false };
   }
-  async function updatePlanePage(pageId, markdownContent) {
+  async function updatePlanePage(pageId, payload) {
+    const body = typeof payload === "string" ? { content_markdown: payload } : payload || {};
     if (typeof window !== "undefined" && window.location?.protocol === "file:") {
       if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.pages)) {
         const page = window.__PLANE_DATA__.pages.find((p) => p.id === pageId);
-        if (page) page.content_markdown = markdownContent;
+        if (page) {
+          if (typeof body.content_markdown === "string") page.content_markdown = body.content_markdown;
+          if (body.is_favorite !== void 0) page.is_favorite = body.is_favorite ? 1 : 0;
+          if (body.is_locked !== void 0) page.is_locked = body.is_locked ? 1 : 0;
+        }
       }
       return { ok: true };
     }
@@ -618,7 +623,7 @@
       const res = await fetch(`/api/plane/pages/${encodeURIComponent(pageId)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content_markdown: markdownContent })
+        body: JSON.stringify(body)
       });
       if (res.ok) return await res.json();
     } catch (e) {
@@ -1019,7 +1024,11 @@
     dotsHorizontal: createIcon('<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'),
     user: createIcon('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'),
     play: createIcon('<polygon points="5 3 19 12 5 21 5 3"/>'),
-    maximize: createIcon('<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>')
+    maximize: createIcon('<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>'),
+    lock: createIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'),
+    unlock: createIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>'),
+    history: createIcon('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'),
+    sidebarRight: createIcon('<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="15" y1="3" x2="15" y2="21"/>')
   };
 
   // project-docs/src/shared/utils/renderList.js
@@ -1579,6 +1588,34 @@
         return await this.post("/api/plane/sync", {});
       } catch (err) {
         console.warn("Sincronizaci\xF3n SQLite no disponible:", err.message);
+        return { ok: false, error: err.message };
+      }
+    }
+    /**
+     * Actualiza el contenido Markdown o metadatos de una página en Plane SQLite.
+     * @param {string} pageId
+     * @param {string|Record<string, any>} payload
+     * @returns {Promise<any>}
+     */
+    async updatePlanePage(pageId, payload) {
+      if (this.isOffline()) {
+        return { ok: true, offline: true };
+      }
+      const body = typeof payload === "string" ? { content_markdown: payload } : payload;
+      try {
+        const res = await fetch(`${this.baseUrl}/api/plane/pages/${encodeURIComponent(pageId)}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          return { ok: false, status: res.status };
+        }
+        return await res.json();
+      } catch (err) {
         return { ok: false, error: err.message };
       }
     }
@@ -3218,6 +3255,15 @@
       return this.client.updatePlanePage(pageId, markdownContent);
     }
     /**
+     * Actualiza propiedades de una página estilo Plane (is_favorite, is_locked, full_width, restore_version_id).
+     * @param {string} pageId
+     * @param {Record<string, any>} props
+     * @returns {Promise<any>}
+     */
+    async updatePageProperties(pageId, props = {}) {
+      return this.client.updatePlanePage(pageId, props);
+    }
+    /**
      * Determina el estante canónico a partir de la ruta del archivo.
      * @param {string} filePath
      * @returns {string}
@@ -3254,7 +3300,14 @@
     searchQuery: "",
     editorMode: "reader",
     // 'reader' | 'editor'
-    activeShelf: "all"
+    activeShelf: "all",
+    filterTab: "all",
+    // 'all' | 'favorites' | 'locked' | 'modules'
+    isFullWidth: false,
+    showNavigationPane: true,
+    activeNavTab: "outline",
+    // 'outline' | 'info' | 'assets' | 'version_history'
+    showAiMenu: false
   };
   var PageStore = class {
     constructor(initialState = initialPageState) {
@@ -3294,6 +3347,28 @@
     setSearchQuery(searchQuery) {
       this.setState({ searchQuery });
     }
+    setFilterTab(filterTab) {
+      this.setState({ filterTab });
+    }
+    setFullWidth(isFullWidth) {
+      this.setState({ isFullWidth });
+    }
+    setShowNavigationPane(showNavigationPane) {
+      this.setState({ showNavigationPane });
+    }
+    setActiveNavTab(activeNavTab) {
+      this.setState({ activeNavTab });
+    }
+    setShowAiMenu(showAiMenu) {
+      this.setState({ showAiMenu });
+    }
+    togglePageProperty(pageId, propKey) {
+      const updatedPages = this.state.pages.map((p) => {
+        if (p.id !== pageId) return p;
+        return { ...p, [propKey]: p[propKey] ? 0 : 1 };
+      });
+      this.setState({ pages: updatedPages });
+    }
     getFilteredPages() {
       const { pages, searchQuery, activeShelf } = this.state;
       return pages.filter((p) => {
@@ -3310,13 +3385,121 @@
   };
   var pageStore = new PageStore();
 
-  // project-docs/src/shared/MarkdownViewer.js
-  function renderMarkdown2(content = "") {
-    if (!content || typeof content !== "string") return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
-    return parseMarkdownNative(content);
+  // project-docs/src/modules/Pages/components/PageShelfTree.js
+  function PageShelfTree({
+    shelves = {},
+    activePageId = null,
+    searchQuery = "",
+    filterTab = "all"
+    // 'all' | 'favorites' | 'locked' | 'modules'
+  } = {}) {
+    const shelfKeys = Object.keys(shelves);
+    const filterTabs = [
+      { id: "all", label: "Todas" },
+      { id: "favorites", label: "Favoritas" },
+      { id: "locked", label: "Normativas" },
+      { id: "modules", label: "Por M\xF3dulo" }
+    ];
+    const matchesFilterTab = (page, sKey) => {
+      if (filterTab === "favorites") return Boolean(page.is_favorite);
+      if (filterTab === "locked") return Boolean(page.is_locked);
+      if (filterTab === "modules") return Boolean(page.module_id) || sKey === "modules" || sKey === "specs";
+      return true;
+    };
+    const renderShelf = (sKey) => {
+      const shelf = shelves[sKey];
+      if (!shelf || !Array.isArray(shelf.pages) || shelf.pages.length === 0) return "";
+      const visiblePages = shelf.pages.filter((p) => matchesFilterTab(p, sKey));
+      if (visiblePages.length === 0) return "";
+      return `
+      <div class="space-y-1">
+        <div class="px-2 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+          <span>${shelf.name}</span>
+          <span class="font-mono text-[9px] text-zinc-400">${visiblePages.length}</span>
+        </div>
+
+        <div class="space-y-0.5">
+          ${renderList(visiblePages, (page) => {
+        const isSelected = page.id === activePageId;
+        const isLocked = Boolean(page.is_locked);
+        const isFavorite = Boolean(page.is_favorite);
+        const diagCount = Number(page.diagrams_count || 0);
+        return `
+              <button
+                data-page-id="${page.id}"
+                class="plane-page-item w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left truncate ${isSelected ? "bg-indigo-600/15 text-indigo-300 font-semibold border border-indigo-500/25 shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border border-transparent"}"
+                title="${page.title}"
+              >
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  ${Icons.fileText("w-3.5 h-3.5 shrink-0 text-zinc-400")}
+                  <span class="truncate">${page.title}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  ${isFavorite ? `<span class="text-amber-400" title="P\xE1gina Favorita">${Icons.star("w-3 h-3 fill-amber-400")}</span>` : ""}
+                  ${isLocked ? `<span class="text-amber-400/90" title="P\xE1gina Normativa Bloqueada">${Icons.lock("w-3 h-3")}</span>` : ""}
+                  ${diagCount > 0 ? `<span class="px-1 py-0.2 rounded bg-zinc-800/90 text-[9px] font-mono text-indigo-300 border border-zinc-700/60" title="${diagCount} diagramas Mermaid">${diagCount}d</span>` : ""}
+                </div>
+              </button>
+            `;
+      })}
+        </div>
+      </div>
+    `;
+    };
+    const renderedShelves = renderList(shelfKeys, renderShelf);
+    return `
+    <aside class="w-full md:w-80 border-b md:border-b-0 md:border-r border-zinc-800/80 bg-zinc-950/70 flex flex-col shrink-0">
+      <!-- Search Box & Quick Filter Tabs -->
+      <div class="p-3 border-b border-zinc-800/80 space-y-2.5">
+        <div class="relative">
+          <input
+            id="plane-pages-search"
+            type="text"
+            value="${searchQuery}"
+            placeholder="Filtrar p\xE1ginas..."
+            class="w-full pl-8 pr-3 py-1.5 bg-zinc-900/60 border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
+          />
+          <div class="absolute inset-y-0 left-2.5 flex items-center pointer-events-none text-zinc-500">
+            ${Icons.search("w-3.5 h-3.5")}
+          </div>
+        </div>
+
+        <!-- Plane Filter Tabs (Todas, Favoritas, Normativas, Por M\xF3dulo) -->
+        <div id="plane-pages-filter-tabs" class="grid grid-cols-4 gap-1 p-0.5 rounded-lg bg-zinc-900/80 border border-zinc-800/80">
+          ${renderList(filterTabs, (tab) => {
+      const isActive = filterTab === tab.id;
+      return `
+              <button
+                type="button"
+                data-action="set-page-tree-filter"
+                data-filter="${tab.id}"
+                class="px-1.5 py-1 rounded-md text-[10px] font-semibold transition-all truncate ${isActive ? "bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 shadow-xs" : "text-zinc-400 hover:text-zinc-200 border border-transparent"}"
+              >
+                ${tab.label}
+              </button>
+            `;
+    })}
+        </div>
+      </div>
+
+      <!-- Shelves Navigation List -->
+      <nav class="flex-1 p-3 space-y-4 overflow-y-auto">
+        ${renderedShelves.trim() ? renderedShelves : `
+          <div class="p-6 text-center text-xs text-zinc-500">
+            No hay p\xE1ginas que coincidan con el filtro seleccionado.
+          </div>
+        `}
+      </nav>
+    </aside>
+  `;
+  }
+
+  // project-docs/src/shared/utils/markdown.js
+  function slugify(text = "") {
+    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") || "section";
   }
   function extractTableOfContents(md = "") {
-    const lines = md.split(/\r?\n/);
+    const lines = (md || "").split(/\r?\n/);
     const toc = [];
     let inCode = false;
     for (const line of lines) {
@@ -3346,7 +3529,737 @@
     }
     return toc;
   }
-  function slugify(text = "") {
+  function escapeHtml(str = "") {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function renderInline(text = "") {
+    return text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-zinc-800 text-indigo-300 font-mono text-[11px]">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-zinc-100">$1</strong>').replace(/\*([^*]+)\*/g, '<em class="italic text-zinc-300">$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2">$1</a>');
+  }
+  function renderMarkdown(content = "") {
+    if (!content || typeof content !== "string") {
+      return '<p class="text-zinc-500 italic">Documento vac\xEDo.</p>';
+    }
+    const lines = content.split(/\r?\n/);
+    const out = [];
+    let inCode = false;
+    let codeLang = "";
+    let codeBuffer = [];
+    let inTable = false;
+    let tableRows = [];
+    const flushTable = () => {
+      if (!inTable || tableRows.length === 0) return;
+      const [header, , ...body] = tableRows;
+      if (header) {
+        const headerCols = header.split("|").map((c) => c.trim()).filter(Boolean);
+        const rowsHtml = body.map((r) => {
+          const cols = r.split("|").map((c) => c.trim()).filter(Boolean);
+          return `<tr class="border-b border-zinc-800/80 hover:bg-zinc-900/50 transition-colors">${cols.map((c) => `<td class="px-4 py-2 text-xs text-zinc-300">${renderInline(c)}</td>`).join("")}</tr>`;
+        }).join("");
+        out.push(`
+        <div class="my-4 overflow-x-auto rounded-lg border border-zinc-800">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-zinc-900 sticky top-0 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+              <tr>${headerCols.map((c) => `<th class="px-4 py-2.5">${renderInline(c)}</th>`).join("")}</tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800/50">${rowsHtml}</tbody>
+          </table>
+        </div>
+      `);
+      }
+      tableRows = [];
+      inTable = false;
+    };
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        if (inTable) flushTable();
+        if (!inCode) {
+          inCode = true;
+          codeLang = trimmed.replace(/^```/, "").trim();
+          codeBuffer = [];
+        } else {
+          inCode = false;
+          const codeText = codeBuffer.join("\n");
+          out.push(`
+          <div class="my-4 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 font-mono text-xs">
+            <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-[10px] text-zinc-400">
+              <span>${codeLang || "text"}</span>
+              <button data-action="copy-code" class="text-zinc-400 hover:text-white transition-colors" title="Copiar c\xF3digo">${Icons.copy("w-3.5 h-3.5")}</button>
+            </div>
+            <pre class="p-3.5 overflow-x-auto text-zinc-200"><code>${escapeHtml(codeText)}</code></pre>
+          </div>
+        `);
+        }
+        continue;
+      }
+      if (inCode) {
+        codeBuffer.push(line);
+        continue;
+      }
+      if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+        inTable = true;
+        tableRows.push(trimmed);
+        continue;
+      } else if (inTable) {
+        flushTable();
+      }
+      if (trimmed.startsWith("### ")) {
+        const text = trimmed.replace(/^###\s+/, "");
+        const id = slugify(text);
+        out.push(`<h3 id="${id}" class="text-sm font-semibold text-zinc-200 mt-5 mb-2 flex items-center gap-2 group"><a href="#${id}" class="text-zinc-600 group-hover:text-zinc-400">#</a>${renderInline(text)}</h3>`);
+        continue;
+      }
+      if (trimmed.startsWith("## ")) {
+        const text = trimmed.replace(/^##\s+/, "");
+        const id = slugify(text);
+        out.push(`<h2 id="${id}" class="text-base font-bold text-zinc-100 mt-6 mb-3 border-b border-zinc-800/80 pb-1.5 flex items-center gap-2 group"><a href="#${id}" class="text-zinc-600 group-hover:text-zinc-400">#</a>${renderInline(text)}</h2>`);
+        continue;
+      }
+      if (trimmed.startsWith("# ")) {
+        const text = trimmed.replace(/^#\s+/, "");
+        const id = slugify(text);
+        out.push(`<h1 id="${id}" class="text-lg font-extrabold text-zinc-100 mt-6 mb-4 flex items-center gap-2 group"><a href="#${id}" class="text-zinc-600 group-hover:text-zinc-400">#</a>${renderInline(text)}</h1>`);
+        continue;
+      }
+      if (trimmed.startsWith("> [!NOTE]") || trimmed.startsWith("> [!TIP]") || trimmed.startsWith("> [!IMPORTANT]") || trimmed.startsWith("> [!WARNING]") || trimmed.startsWith("> [!CAUTION]")) {
+        const type = trimmed.replace(/^>\s+\[!/, "").replace(/\]$/, "").toLowerCase();
+        let alertClass = "border-blue-500/30 bg-blue-950/20 text-blue-300";
+        let icon = Icons.info;
+        if (type === "tip") {
+          alertClass = "border-emerald-500/30 bg-emerald-950/20 text-emerald-300";
+          icon = Icons.lightbulb;
+        } else if (type === "warning" || type === "caution") {
+          alertClass = "border-amber-500/30 bg-amber-950/20 text-amber-300";
+          icon = Icons.alertTriangle;
+        } else if (type === "important") {
+          alertClass = "border-purple-500/30 bg-purple-950/20 text-purple-300";
+          icon = Icons.zap;
+        }
+        const alertBody = [];
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim().startsWith(">")) {
+          alertBody.push(lines[j].trim().replace(/^>\s*/, ""));
+          j++;
+        }
+        i = j - 1;
+        out.push(`
+        <div class="my-4 p-3.5 rounded-xl border ${alertClass} flex items-start gap-3 text-xs leading-relaxed">
+          <div class="shrink-0 mt-0.5">${icon("w-4 h-4")}</div>
+          <div class="flex-1 space-y-1">${alertBody.map((b) => `<p>${renderInline(b)}</p>`).join("")}</div>
+        </div>
+      `);
+        continue;
+      }
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+        const itemText = trimmed.replace(/^[-*]\s+/, "");
+        out.push(`<li class="ml-4 list-disc text-xs text-zinc-300 my-1">${renderInline(itemText)}</li>`);
+        continue;
+      }
+      if (trimmed.length > 0) {
+        out.push(`<p class="text-xs text-zinc-300 leading-relaxed my-2">${renderInline(trimmed)}</p>`);
+      }
+    }
+    if (inTable) flushTable();
+    return out.join("\n");
+  }
+
+  // project-docs/src/modules/Pages/components/PageNavigationPane.js
+  function renderFloatingOutlineBars(toc = []) {
+    if (!toc || toc.length === 0) return "";
+    return `
+    <div
+      id="plane-floating-outline-bars"
+      data-action="toggle-page-nav-pane"
+      title="Abrir Outline e Inspector de P\xE1gina (Plane Navigation Pane)"
+      class="fixed right-4 top-1/3 z-20 hidden lg:flex flex-col items-end gap-1.5 p-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800/80 hover:border-indigo-500/50 cursor-pointer shadow-lg backdrop-blur-md transition-all group"
+    >
+      ${renderList(toc.slice(0, 18), (item) => {
+      const widthPx = item.level === 1 ? "20px" : item.level === 2 ? "16px" : "11px";
+      const tone = item.level === 1 ? "bg-indigo-400 group-hover:bg-indigo-300" : item.level === 2 ? "bg-zinc-400 group-hover:bg-zinc-200" : "bg-zinc-600 group-hover:bg-zinc-400";
+      return `<div class="h-0.5 rounded-full transition-colors ${tone}" style="width: ${widthPx};" title="${item.text}"></div>`;
+    })}
+      <span class="text-[9px] font-mono text-zinc-400 group-hover:text-indigo-300 pt-1">Outline</span>
+    </div>
+  `;
+  }
+  function PageNavigationPane({
+    page = {},
+    content: rawContent = "",
+    toc = [],
+    activeTab = "outline",
+    // 'outline' | 'info' | 'assets' | 'version_history'
+    isOpen = true
+  } = {}) {
+    if (!isOpen) {
+      return renderFloatingOutlineBars(toc);
+    }
+    const content = rawContent || page.content_markdown || "";
+    const words = page.word_count || content.trim().split(/\s+/).filter(Boolean).length || 0;
+    const chars = page.char_count || content.length || 0;
+    const paragraphs = page.paragraph_count || Math.max(1, content.split(/\r?\n\s*\r?\n/).filter(Boolean).length);
+    const readingTime = page.reading_time_min || Math.max(1, Math.ceil(words / 200));
+    const logs = Array.isArray(page.logs) ? page.logs : [];
+    const issueLogs = logs.filter((l) => l.entity_type === "issue" || l.entity_name === "issue");
+    const ruleLogs = logs.filter((l) => l.entity_type === "rule" || l.entity_name === "business_rule" || l.entity_type === "requirement" || l.entity_name === "requirement" || l.entity_type === "capability" || l.entity_type === "adr");
+    const pageLinkLogs = logs.filter((l) => l.entity_type === "page" || l.entity_name === "back_link" || l.entity_name === "forward_link");
+    const labels = Array.isArray(page.labels) ? page.labels : [];
+    const versions = Array.isArray(page.versions) && page.versions.length > 0 ? page.versions : [{
+      id: `pv-${page.id || "doc"}-v1`,
+      version_number: 1,
+      owned_by_role: page.owned_by_role || "spec-author",
+      word_count: words,
+      last_saved_at: page.updated_at || "2026-11-07 14:35:00"
+    }];
+    let assets = Array.isArray(page.assets) ? page.assets : [];
+    if (assets.length === 0 && content) {
+      const extracted = [];
+      const mermaidRegex = /```mermaid\s*([\s\S]*?)```/gi;
+      let m;
+      let idx = 0;
+      while ((m = mermaidRegex.exec(content)) !== null) {
+        idx++;
+        const firstLine = ((m[1] || "").trim().split(/\r?\n/)[0] || "flowchart").trim();
+        const diagType = firstLine.split(/\s+/)[0] || "flowchart";
+        extracted.push({
+          id: `asset-mermaid-${idx}`,
+          type: "mermaid",
+          diagram_type: diagType,
+          title: `Diagrama Mermaid #${idx} (${diagType})`,
+          preview: firstLine.slice(0, 70)
+        });
+      }
+      const imgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+      let im;
+      let iIdx = 0;
+      while ((im = imgRegex.exec(content)) !== null) {
+        iIdx++;
+        extracted.push({
+          id: `asset-img-${iIdx}`,
+          type: "image",
+          diagram_type: "image",
+          title: im[1] || `Evidencia Visual #${iIdx}`,
+          src: im[2]
+        });
+      }
+      assets = extracted;
+    }
+    const tabs = [
+      { key: "outline", label: "Outline", count: toc.length },
+      { key: "info", label: "Info", count: logs.length },
+      { key: "assets", label: "Assets", count: assets.length },
+      { key: "version_history", label: "Historial", count: versions.length }
+    ];
+    const renderOutlinePanel = () => {
+      if (!toc || toc.length === 0) {
+        return `
+        <div class="p-6 text-center text-xs text-zinc-500 space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+            ${Icons.fileText("w-4 h-4")}
+          </div>
+          <p>Este documento no contiene encabezados H1-H3 estructurados.</p>
+        </div>
+      `;
+      }
+      return `
+      <div class="p-4 space-y-2">
+        <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800/80">
+          <span>En esta p\xE1gina</span>
+          <span>${toc.length} secciones</span>
+        </div>
+        <nav class="space-y-1">
+          ${renderList(toc, (item, idx) => {
+        const indent = item.level === 1 ? "pl-1 font-semibold text-zinc-200" : item.level === 2 ? "pl-3 text-zinc-300" : "pl-6 text-[11px] text-zinc-400";
+        const barWidth = item.level === 1 ? "w-3 bg-indigo-500" : item.level === 2 ? "w-2 bg-zinc-500" : "w-1.5 bg-zinc-700";
+        return `
+              <a
+                href="#${item.id}"
+                data-action="scroll-to-heading"
+                data-heading-id="${item.id}"
+                class="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-zinc-900 hover:text-indigo-300 transition-colors text-xs truncate ${indent}"
+                title="${item.text}"
+              >
+                <span class="h-0.5 rounded-full shrink-0 ${barWidth}"></span>
+                <span class="truncate">${item.text}</span>
+              </a>
+            `;
+      })}
+        </nav>
+      </div>
+    `;
+    };
+    const renderInfoPanel = () => {
+      const ownerRole = page.owned_by_role || "spec-author";
+      const editorId = page.updated_by_id || `user-${ownerRole}`;
+      return `
+      <div class="p-4 space-y-5 text-xs">
+        <!-- 1. Cuadr\xEDcula 2x2 de Tarjetas KPI de Plane -->
+        <div>
+          <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-2">
+            M\xE9tricas del Documento (Plane Info)
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+              <div class="text-sm font-bold font-mono text-zinc-100">${words}</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5">Palabras</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+              <div class="text-sm font-bold font-mono text-zinc-100">${chars}</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5">Caracteres</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+              <div class="text-sm font-bold font-mono text-zinc-100">${paragraphs}</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5">P\xE1rrafos</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+              <div class="text-sm font-bold font-mono text-indigo-400">${readingTime}m</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5">Tiempo de Lectura</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Ficha de Actores Bot IA (Created By / Edited By) -->
+        <div class="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2.5">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            Autor\xEDa & Gobernanza Ag\xE9ntica
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] text-zinc-400">Creado por:</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-[10px]">
+              ${Icons.bot("w-3 h-3")}
+              <span>${ownerRole}</span>
+              <span class="px-1 rounded bg-indigo-500/20 text-[9px] font-bold">BOT</span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] text-zinc-400">Editado por:</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-200 font-mono text-[10px]">
+              ${Icons.user("w-3 h-3 text-emerald-400")}
+              <span>${editorId.replace(/^user-/, "")}</span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] text-zinc-400">Protecci\xF3n:</span>
+            <span class="font-mono text-[10px] ${page.is_locked ? "text-amber-400 font-bold" : "text-emerald-400"}">
+              ${page.is_locked ? "Normativa Bloqueada (Locked)" : "Abierta a Edici\xF3n"}
+            </span>
+          </div>
+        </div>
+
+        <!-- 3. Etiquetas de P\xE1gina (page_labels) -->
+        <div class="space-y-2">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            Etiquetas (Plane PageLabels)
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${labels.length > 0 ? renderList(labels, (lbl) => `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border border-zinc-700 bg-zinc-900 text-zinc-200">
+                <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${lbl.color || "#6366f1"}"></span>
+                <span>${lbl.name}</span>
+              </span>
+            `) : `
+              <span class="text-[11px] text-zinc-500 font-mono">sdd-spec, docs-as-code</span>
+            `}
+          </div>
+        </div>
+
+        <!-- 4. Grafo Transaccional de Relaciones (PageLog) -->
+        <div class="space-y-3 pt-2 border-t border-zinc-800/80">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+              Grafo PageLog & Trazabilidad
+            </span>
+            <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">${logs.length}</span>
+          </div>
+
+          <!-- Tareas INT-XXX Vinculadas -->
+          <div class="space-y-1.5">
+            <div class="text-[10px] font-mono text-indigo-400">Tareas SDD Mencionadas (${issueLogs.length})</div>
+            ${issueLogs.length > 0 ? `
+              <div class="flex flex-wrap gap-1.5">
+                ${renderList(issueLogs, (l) => `
+                  <button
+                    type="button"
+                    data-action="view-detail"
+                    data-id="${l.entity_identifier}"
+                    class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-950/60 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 font-mono text-[10px] font-bold transition-colors cursor-pointer"
+                    title="Abrir modal de detalle de ${l.entity_identifier}"
+                  >
+                    ${Icons.checkCircle("w-3 h-3")}
+                    <span>${l.entity_identifier}</span>
+                  </button>
+                `)}
+              </div>
+            ` : `<p class="text-[11px] text-zinc-500">Sin menciones directas a INT-XXX.</p>`}
+          </div>
+
+          <!-- Reglas BR-*, Requisitos RF-*, Capacidades CAP-* y ADRs -->
+          <div class="space-y-1.5">
+            <div class="text-[10px] font-mono text-amber-400">Invariantes & Requisitos (${ruleLogs.length})</div>
+            ${ruleLogs.length > 0 ? `
+              <div class="flex flex-wrap gap-1">
+                ${renderList(ruleLogs.slice(0, 24), (l) => {
+        const badgeTone = l.entity_type === "rule" ? "bg-amber-950/60 text-amber-300 border-amber-500/30" : l.entity_type === "requirement" ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/30" : "bg-purple-950/60 text-purple-300 border-purple-500/30";
+        return `
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono border ${badgeTone}">
+                      ${l.entity_identifier}
+                    </span>
+                  `;
+      })}
+              </div>
+            ` : `<p class="text-[11px] text-zinc-500">Sin invariantes catalogadas en este archivo.</p>`}
+          </div>
+
+          <!-- Backlinks & Forward Links entre P\xE1ginas -->
+          <div class="space-y-1.5">
+            <div class="text-[10px] font-mono text-cyan-400">Backlinks & Enlaces Wiki (${pageLinkLogs.length})</div>
+            ${pageLinkLogs.length > 0 ? `
+              <div class="space-y-1">
+                ${renderList(pageLinkLogs, (l) => `
+                  <button
+                    type="button"
+                    data-action="open-article-read"
+                    data-doc-key="${l.entity_identifier.replace(/^knowledge\//, "")}"
+                    class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-zinc-900/70 hover:bg-zinc-800 border border-zinc-800 text-left text-[10px] font-mono text-zinc-300 hover:text-cyan-300 transition-colors cursor-pointer"
+                  >
+                    <span class="truncate">${l.entity_identifier}</span>
+                    <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 text-[9px] shrink-0">${l.entity_name === "back_link" ? "Backlink" : "Link"}</span>
+                  </button>
+                `)}
+              </div>
+            ` : `<p class="text-[11px] text-zinc-500">Sin enlaces cruzados hacia otras p\xE1ginas.</p>`}
+          </div>
+        </div>
+      </div>
+    `;
+    };
+    const renderAssetsPanel = () => {
+      if (assets.length === 0) {
+        return `
+        <div class="p-6 text-center text-xs text-zinc-500 space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+            ${Icons.architecture("w-4 h-4")}
+          </div>
+          <p>No se detectaron diagramas Mermaid ni capturas de evidencia en esta p\xE1gina.</p>
+        </div>
+      `;
+      }
+      return `
+      <div class="p-4 space-y-3">
+        <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800/80">
+          <span>Diagramas Mermaid & Evidencias</span>
+          <span>${assets.length} activos</span>
+        </div>
+        <div class="space-y-2">
+          ${renderList(assets, (asset, idx) => `
+            <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 hover:border-indigo-500/40 transition-all space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-200 truncate">
+                  ${asset.type === "mermaid" ? Icons.architecture("w-3.5 h-3.5 text-indigo-400") : Icons.eye("w-3.5 h-3.5 text-emerald-400")}
+                  <span class="truncate">${asset.title}</span>
+                </span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                  ${asset.diagram_type || asset.type}
+                </span>
+              </div>
+              ${asset.preview ? `
+                <div class="text-[10px] font-mono text-zinc-500 truncate bg-zinc-950 px-2 py-1 rounded border border-zinc-800/60">
+                  ${asset.preview}
+                </div>
+              ` : ""}
+              <div class="flex justify-end pt-1">
+                <button
+                  type="button"
+                  data-action="scroll-to-asset"
+                  data-asset-index="${idx}"
+                  class="inline-flex items-center gap-1 text-[10px] font-mono text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                >
+                  <span>Localizar en documento</span>
+                  ${Icons.arrowRight("w-3 h-3")}
+                </button>
+              </div>
+            </div>
+          `)}
+        </div>
+      </div>
+    `;
+    };
+    const renderVersionHistoryPanel = () => {
+      return `
+      <div class="p-4 space-y-3">
+        <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800/80">
+          <span>Historial de Versiones (SQLite)</span>
+          <span>${versions.length} snapshots</span>
+        </div>
+        <div class="space-y-2">
+          ${renderList(versions, (ver, idx) => `
+            <div class="p-3 rounded-xl border ${idx === 0 ? "bg-indigo-950/20 border-indigo-500/40" : "bg-zinc-900/70 border-zinc-800"} space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-xs font-bold text-zinc-100 flex items-center gap-1.5">
+                  ${Icons.history("w-3.5 h-3.5 text-indigo-400")}
+                  <span>Versi\xF3n v${ver.version_number || versions.length - idx}</span>
+                </span>
+                <div class="flex items-center gap-1.5">
+                  ${idx === 0 ? `
+                    <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      Actual
+                    </span>
+                  ` : ""}
+                  <button
+                    type="button"
+                    data-action="restore-page-version"
+                    data-page-id="${page.id || ""}"
+                    data-version-id="${ver.id}"
+                    class="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-mono font-semibold transition-colors cursor-pointer"
+                  >
+                    Restaurar
+                  </button>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                <span class="inline-flex items-center gap-1">
+                  ${Icons.bot("w-3 h-3 text-purple-400")}
+                  <span>${ver.owned_by_role || "spec-author"}</span>
+                </span>
+                <span>${ver.word_count || words} palabras</span>
+              </div>
+              <div class="text-[10px] font-mono text-zinc-500">
+                Guardado: ${(ver.last_saved_at || "").slice(0, 19) || "Sincronizado"}
+              </div>
+            </div>
+          `)}
+        </div>
+      </div>
+    `;
+    };
+    return `
+    <aside
+      id="plane-page-navigation-pane"
+      class="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-zinc-800/80 bg-zinc-950/90 flex flex-col shrink-0 select-none overflow-hidden"
+    >
+      <!-- Tabs Bar (Outline | Info | Assets | Historial) -->
+      <div class="p-2 border-b border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between gap-1">
+        <div class="flex items-center gap-1 flex-1 overflow-x-auto">
+          ${renderList(tabs, (t) => {
+      const active = activeTab === t.key;
+      return `
+              <button
+                type="button"
+                data-action="switch-page-nav-tab"
+                data-tab="${t.key}"
+                data-nav-tab="${t.key}"
+                class="px-2.5 py-1.5 rounded-lg text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 shrink-0 ${active ? "bg-indigo-600 text-white font-bold shadow-xs" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/70"}"
+              >
+                <span>${t.label}</span>
+                <span class="text-[9px] px-1 rounded ${active ? "bg-white/20 text-white" : "bg-zinc-800 text-zinc-400"}">${t.count}</span>
+              </button>
+            `;
+    })}
+        </div>
+        <button
+          type="button"
+          data-action="toggle-page-nav-pane"
+          title="Ocultar panel de inspecci\xF3n"
+          class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+        >
+          ${Icons.close("w-3.5 h-3.5")}
+        </button>
+      </div>
+
+      <!-- Active Tab Body -->
+      <div class="flex-1 overflow-y-auto">
+        ${activeTab === "info" ? renderInfoPanel() : activeTab === "assets" ? renderAssetsPanel() : activeTab === "version_history" ? renderVersionHistoryPanel() : renderOutlinePanel()}
+      </div>
+    </aside>
+  `;
+  }
+
+  // project-docs/src/modules/Pages/components/PageReader.js
+  function enrichMarkdownWithSmartChips(html = "", issues = []) {
+    if (!html || typeof html !== "string") return "";
+    const issueMap = /* @__PURE__ */ new Map();
+    if (Array.isArray(issues)) {
+      for (const iss of issues) {
+        if (iss && iss.id) issueMap.set(String(iss.id).toUpperCase(), iss);
+      }
+    }
+    const protectedBlocks = [];
+    const placeholderHtml = html.replace(
+      /(<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>|<div[^>]*class="[^"]*mermaid[^"]*"[\s\S]*?<\/div>)/gi,
+      (match) => {
+        const idx = protectedBlocks.length;
+        protectedBlocks.push(match);
+        return `___PROTECTED_BLOCK_${idx}___`;
+      }
+    );
+    const tokens = placeholderHtml.split(/(<[^>]+>)/g);
+    const enrichedTokens = tokens.map((token) => {
+      if (token.startsWith("<")) return token;
+      return token.replace(/\b(INT-\d{3})\b/g, (match, issueId) => {
+        const issue = issueMap.get(issueId);
+        const isDone = issue && (issue.status === "completed" || issue.state_id === "state-done");
+        const isProgress = issue && (issue.status === "in_progress" || issue.state_id === "state-progress");
+        const colorClasses = isDone ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25" : isProgress ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/25" : "bg-zinc-800/90 border-zinc-700 text-zinc-200 hover:border-indigo-500/40";
+        const dotColor = isDone ? "bg-emerald-400" : isProgress ? "bg-indigo-400" : "bg-zinc-400";
+        const titleAttr = issue ? `${issueId}: ${issue.name || ""} (${issue.status || "completed"})` : `Abrir detalle de tarea ${issueId}`;
+        return `<button type="button" data-action="view-detail" data-id="${issueId}" title="${titleAttr.replace(/"/g, "&quot;")}" class="plane-issue-chip inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded-md border font-mono text-[11px] font-semibold transition-all cursor-pointer align-baseline ${colorClasses}"><span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span><span>${issueId}</span></button>`;
+      }).replace(/\b(BR-\d{2,3})\b/g, '<span class="plane-smart-chip inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold" title="Regla de Negocio Invariante $1">$1</span>').replace(/\b(RF-\d{2,3})\b/g, '<span class="plane-smart-chip inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-[11px] font-semibold" title="Requisito Funcional $1">$1</span>').replace(/\b(ADR-\d{2,3})\b/g, '<span class="plane-smart-chip inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded bg-violet-500/10 border border-violet-500/30 text-violet-300 font-mono text-[11px] font-semibold" title="Decisi\xF3n Arquitect\xF3nica $1">$1</span>').replace(/\b(CAP-\d{2,3})\b/g, '<span class="plane-smart-chip inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-[11px] font-semibold" title="Capacidad del Sistema $1">$1</span>');
+    });
+    let result = enrichedTokens.join("");
+    result = result.replace(/___PROTECTED_BLOCK_(\d+)___/g, (_, idx) => protectedBlocks[Number(idx)] || "");
+    return result;
+  }
+  function PageReader({
+    page = {},
+    content = "",
+    toc = [],
+    issues = [],
+    pages = [],
+    isFullWidth = false,
+    showNavigationPane = true,
+    activeNavTab = "outline"
+  } = {}) {
+    const rawMarkdown = content || page.content_markdown || "# Documento Vac\xEDo";
+    const words = page.word_count || rawMarkdown.trim().split(/\s+/).filter(Boolean).length || 0;
+    const readingTime = page.reading_time_min || Math.max(1, Math.ceil(words / 200));
+    const labels = Array.isArray(page.labels) ? page.labels : [];
+    const isLocked = Boolean(page.is_locked);
+    const isFavorite = Boolean(page.is_favorite);
+    let viewPropsFullWidth = isFullWidth;
+    if (!viewPropsFullWidth && page.view_props) {
+      try {
+        const parsed = typeof page.view_props === "string" ? JSON.parse(page.view_props) : page.view_props;
+        if (parsed && parsed.full_width) viewPropsFullWidth = true;
+      } catch (_) {
+      }
+    }
+    const renderedHtml = enrichMarkdownWithSmartChips(renderMarkdown(rawMarkdown), issues);
+    return `
+    <div class="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden relative">
+      <!-- Reading Column (Centered or Full Width per Plane view_props) -->
+      <article class="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto ${viewPropsFullWidth ? "max-w-none w-full" : "max-w-4xl mx-auto w-full"} selection:bg-indigo-500/20 selection:text-indigo-200 transition-all">
+        <!-- Document Meta Badge & Plane Labels -->
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400 font-mono mb-4 pb-4 border-b border-zinc-800/60">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span class="flex items-center gap-1.5 text-indigo-400">
+              ${Icons.fileText("w-3.5 h-3.5")}
+              <span class="truncate">${page.file_path || "Documento Markdown"}</span>
+            </span>
+            <span class="text-zinc-600">\xB7</span>
+            <span>${words} palabras</span>
+            <span class="text-zinc-600">\xB7</span>
+            <span>${readingTime} min de lectura</span>
+            ${isLocked ? `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-semibold">
+                ${Icons.lock("w-3 h-3")}
+                <span>Normativa Bloqueada</span>
+              </span>
+            ` : ""}
+            ${isFavorite ? `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-semibold">
+                ${Icons.star("w-3 h-3 fill-amber-400")}
+                <span>Favorita</span>
+              </span>
+            ` : ""}
+          </div>
+
+          ${labels.length > 0 ? `
+            <div class="flex flex-wrap items-center gap-1.5">
+              ${renderList(labels, (lbl) => `
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">
+                  ${lbl.name}
+                </span>
+              `)}
+            </div>
+          ` : ""}
+        </div>
+
+        <!-- Rendered Content Target with Smart Entity Chips -->
+        <div class="prose prose-invert prose-indigo max-w-none text-zinc-200 leading-relaxed space-y-4">
+          ${renderedHtml}
+        </div>
+      </article>
+
+      <!-- Right Column: Plane 4-Tab PageNavigationPane or Floating Mini-Bars -->
+      ${showNavigationPane ? PageNavigationPane({
+      page,
+      content: rawMarkdown,
+      toc,
+      activeTab: activeNavTab,
+      issues,
+      pages
+    }) : renderFloatingOutlineBars(toc)}
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Pages/components/DualMarkdownEditor.js
+  function DualMarkdownEditor({
+    pageId = "",
+    content = ""
+  } = {}) {
+    return `
+    <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden divide-y md:divide-y-0 md:divide-x divide-zinc-800">
+      <!-- Editor Textarea -->
+      <div class="flex-1 flex flex-col min-h-0 bg-zinc-950/60 p-4">
+        <textarea
+          id="plane-page-editor-input"
+          data-page-id="${pageId}"
+          class="w-full flex-1 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed transition-all shadow-inner"
+          placeholder="Escribe el contenido en Markdown aqu\xED..."
+        >${content}</textarea>
+      </div>
+
+      <!-- Live Preview Pane -->
+      <div class="flex-1 flex flex-col min-h-0 bg-zinc-950 p-6 overflow-y-auto">
+        <div class="px-2 py-1 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase border-b border-zinc-800/80 pb-2 mb-4">
+          Previsualizaci\xF3n en Vivo
+        </div>
+        <div id="plane-page-preview-target" class="prose prose-invert prose-xs max-w-none text-zinc-200">
+          ${renderMarkdown(content)}
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/shared/MarkdownViewer.js
+  function renderMarkdown2(content = "") {
+    if (!content || typeof content !== "string") return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
+    return parseMarkdownNative(content);
+  }
+  function extractTableOfContents2(md = "") {
+    const lines = md.split(/\r?\n/);
+    const toc = [];
+    let inCode = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        inCode = !inCode;
+        continue;
+      }
+      if (inCode) continue;
+      if (trimmed.startsWith("# ") || trimmed.startsWith("## ") || trimmed.startsWith("### ")) {
+        let level = 1;
+        let text = "";
+        if (trimmed.startsWith("### ")) {
+          level = 3;
+          text = trimmed.replace(/^###\s+/, "");
+        } else if (trimmed.startsWith("## ")) {
+          level = 2;
+          text = trimmed.replace(/^##\s+/, "");
+        } else if (trimmed.startsWith("# ")) {
+          level = 1;
+          text = trimmed.replace(/^#\s+/, "");
+        }
+        const cleanText = text.replace(/`([^`]+)`/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").trim();
+        const slug = slugify2(cleanText);
+        toc.push({ id: slug, level, text: cleanText });
+      }
+    }
+    return toc;
+  }
+  function slugify2(text = "") {
     return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") || "section";
   }
   function parseMarkdownNative(md) {
@@ -3404,7 +4317,7 @@
 
               <div class="p-6 overflow-x-auto flex justify-center items-center bg-slate-50/40 dark:bg-slate-950/40 min-h-[160px]" id="${diagId}">
                 <div class="mermaid-render-target w-full flex justify-center items-center" data-mermaid-code="${escapeAttr(codeText)}">
-                  <pre class="mermaid text-xs font-mono text-slate-400">${escapeHtml(codeText)}</pre>
+                  <pre class="mermaid text-xs font-mono text-slate-400">${escapeHtml2(codeText)}</pre>
                 </div>
               </div>
             </div>
@@ -3422,7 +4335,7 @@
                 </button>
               </div>
               <div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed">
-                <pre><code>${codeLines.map((l, idx) => `<span class="inline-block w-6 select-none opacity-30 text-right mr-3">${idx + 1}</span>${escapeHtml(l)}`).join("\n")}</code></pre>
+                <pre><code>${codeLines.map((l, idx) => `<span class="inline-block w-6 select-none opacity-30 text-right mr-3">${idx + 1}</span>${escapeHtml2(l)}`).join("\n")}</code></pre>
               </div>
             </div>
           `);
@@ -3468,7 +4381,7 @@
       }
       if (line.startsWith("# ")) {
         const text = line.slice(2);
-        const slug = slugify(text);
+        const slug = slugify2(text);
         html.push(`<h1 id="${slug}" class="scroll-mt-24 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-10 mb-4 tracking-tight border-b border-slate-200 dark:border-slate-800/80 pb-3 flex items-center justify-between group">
         <span>${formatInline(text)}</span>
         <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-base transition-opacity">#</a>
@@ -3477,7 +4390,7 @@
       }
       if (line.startsWith("## ")) {
         const text = line.slice(3);
-        const slug = slugify(text);
+        const slug = slugify2(text);
         html.push(`<h2 id="${slug}" class="scroll-mt-24 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-100 dark:border-slate-800/40 pb-2 flex items-center justify-between group">
         <span>${formatInline(text)}</span>
         <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-sm transition-opacity">#</a>
@@ -3486,7 +4399,7 @@
       }
       if (line.startsWith("### ")) {
         const text = line.slice(4);
-        const slug = slugify(text);
+        const slug = slugify2(text);
         html.push(`<h3 id="${slug}" class="scroll-mt-24 text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 mt-6 mb-2 flex items-center justify-between group">
         <span>${formatInline(text)}</span>
         <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-xs transition-opacity">#</a>
@@ -3495,7 +4408,7 @@
       }
       if (line.startsWith("#### ")) {
         const text = line.slice(5);
-        const slug = slugify(text);
+        const slug = slugify2(text);
         html.push(`<h4 id="${slug}" class="scroll-mt-24 text-sm font-bold text-slate-800 dark:text-slate-200 mt-5 mb-1.5">${formatInline(text)}</h4>`);
         continue;
       }
@@ -3541,7 +4454,7 @@
     }
     if (inCodeBlock) {
       const codeText = codeBuffer.join("\n");
-      html.push(`<div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md"><div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><pre><code>${escapeHtml(codeText)}</code></pre></div></div>`);
+      html.push(`<div class="my-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden shadow-md"><div class="p-4 text-xs font-mono overflow-x-auto leading-relaxed"><pre><code>${escapeHtml2(codeText)}</code></pre></div></div>`);
     }
     if (inTable) {
       html.push(renderInteractiveTableHtml(tableHeaders, tableRows));
@@ -3602,7 +4515,7 @@
   function formatInline(text = "") {
     return text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-indigo-600 dark:text-indigo-400 text-[11px] border border-slate-200 dark:border-slate-700 font-semibold">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>').replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 underline underline-offset-2 hover:text-indigo-500 font-semibold">$1</a>');
   }
-  function escapeHtml(text) {
+  function escapeHtml2(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -3730,8 +4643,310 @@
     };
   }
 
+  // project-docs/src/modules/Pages/pages/PagesPage.js
+  function renderPageHeaderActions({
+    activePage = {},
+    isFullWidth = false,
+    showNavigationPane = true,
+    showAiMenu = false
+  } = {}) {
+    const isFavorite = Boolean(activePage.is_favorite);
+    const isLocked = Boolean(activePage.is_locked);
+    const pageId = activePage.id || "page-default";
+    const logs = Array.isArray(activePage.logs) ? activePage.logs : [];
+    const issueLinks = logs.filter((l) => l.entity_name === "issue" || l.entity_name === "forward_issue");
+    const ruleLinks = logs.filter((l) => ["business_rule", "requirement", "adr", "capability"].includes(l.entity_name));
+    return `
+    <div class="flex items-center gap-1.5 flex-wrap" id="plane-page-header-actions">
+      <!-- Sync Status Badge -->
+      <span
+        id="plane-page-sync-badge"
+        class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[10px] font-mono font-semibold text-emerald-300"
+        title="Sincronizado bidireccionalmente entre SQLite (harness.db) y archivo f\xEDsico .md"
+      >
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span>SQLite + .md Synced</span>
+      </span>
+
+      <!-- Favorite Toggle (is_favorite) -->
+      <button
+        type="button"
+        data-action="toggle-page-favorite"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${isFavorite ? "bg-amber-500/15 border-amber-500/40 text-amber-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
+        title="${isFavorite ? "Quitar de Favoritas" : "Marcar como P\xE1gina Favorita"}"
+      >
+        ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? "fill-amber-400" : ""}`)}
+      </button>
+
+      <!-- Lock / Unlock Toggle (is_locked) -->
+      <button
+        type="button"
+        data-action="toggle-page-lock"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${isLocked ? "bg-amber-500/15 border-amber-500/40 text-amber-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
+        title="${isLocked ? "P\xE1gina Normativa Bloqueada (Clic para desbloquear edici\xF3n)" : "Bloquear edici\xF3n (P\xE1gina Normativa)"}"
+      >
+        ${isLocked ? Icons.lock("w-3.5 h-3.5") : Icons.unlock("w-3.5 h-3.5")}
+      </button>
+
+      <!-- Full Width Toggle (view_props.full_width) -->
+      <button
+        type="button"
+        data-action="toggle-page-fullwidth"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${isFullWidth ? "bg-indigo-600/20 border-indigo-500/40 text-indigo-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
+        title="${isFullWidth ? "Restaurar ancho centrado editorial" : "Alternar Ancho Completo (Full Width)"}"
+      >
+        ${Icons.maximize("w-3.5 h-3.5")}
+      </button>
+
+      <!-- Copy Markdown Button -->
+      <button
+        type="button"
+        data-action="copy-page-markdown"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        title="Copiar c\xF3digo Markdown al portapapeles"
+      >
+        ${Icons.copy("w-3.5 h-3.5")}
+      </button>
+
+      <!-- Ask Harness AI Assistant Button (Plane AskPiMenu / EditorAIMenu) -->
+      <div class="relative">
+        <button
+          type="button"
+          data-action="toggle-page-ai-menu"
+          data-page-id="${pageId}"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${showAiMenu ? "bg-indigo-600 text-white border-indigo-500 shadow-sm" : "bg-indigo-600/15 border-indigo-500/35 text-indigo-300 hover:bg-indigo-600/25"}"
+          title="Abrir Asistente IA de P\xE1gina (Ask Harness AI)"
+        >
+          ${Icons.sparkles("w-3.5 h-3.5")}
+          <span class="hidden md:inline">Ask Harness AI</span>
+        </button>
+
+        ${showAiMenu ? `
+          <div
+            id="plane-page-ai-popover"
+            class="absolute right-0 top-9 z-50 w-80 sm:w-96 p-4 rounded-xl bg-zinc-900/95 backdrop-blur-md border border-indigo-500/30 shadow-2xl space-y-3 text-left"
+          >
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="p-1 rounded-md bg-indigo-500/20 text-indigo-300">
+                  ${Icons.sparkles("w-3.5 h-3.5")}
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-zinc-100">Ask Harness AI \xB7 Contexto de P\xE1gina</div>
+                  <div class="text-[10px] font-mono text-zinc-400">Agente: /project-knowledge + SQLite Graph</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                data-action="toggle-page-ai-menu"
+                class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 cursor-pointer"
+              >
+                ${Icons.close("w-3.5 h-3.5")}
+              </button>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800/80 space-y-1.5 text-[11px]">
+              <div class="flex items-center justify-between text-zinc-300">
+                <span class="font-semibold">Telemetr\xEDa Sem\xE1ntica:</span>
+                <span class="font-mono text-indigo-300">${activePage.word_count || 0} palabras \xB7 ${activePage.diagrams_count || 0} diagramas</span>
+              </div>
+              <div class="flex items-center justify-between text-zinc-400">
+                <span>Tareas vinculadas (PageLog):</span>
+                <span class="font-mono text-emerald-400">${issueLinks.length} INT-*</span>
+              </div>
+              <div class="flex items-center justify-between text-zinc-400">
+                <span>Invariantes y Reglas (BR/RF/ADR):</span>
+                <span class="font-mono text-amber-300">${ruleLinks.length} nodos</span>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Acciones de Agente IA (Plane AI Menu)</div>
+              <button
+                type="button"
+                data-action="switch-page-nav-tab"
+                data-tab="info"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-950/80 hover:bg-indigo-950/40 border border-zinc-800 hover:border-indigo-500/40 text-xs text-zinc-200 transition-colors cursor-pointer"
+              >
+                <span>Inspeccionar Grafo Relacional (PageLog)</span>
+                <span class="font-mono text-[10px] text-indigo-400">${logs.length} v\xEDnculos</span>
+              </button>
+              <button
+                type="button"
+                data-action="switch-page-nav-tab"
+                data-tab="assets"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-950/80 hover:bg-indigo-950/40 border border-zinc-800 hover:border-indigo-500/40 text-xs text-zinc-200 transition-colors cursor-pointer"
+              >
+                <span>Auditar Diagramas Mermaid & Assets</span>
+                <span class="font-mono text-[10px] text-indigo-400">${activePage.diagrams_count || 0} diagramas</span>
+              </button>
+              <button
+                type="button"
+                data-action="switch-page-nav-tab"
+                data-tab="version_history"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-950/80 hover:bg-indigo-950/40 border border-zinc-800 hover:border-indigo-500/40 text-xs text-zinc-200 transition-colors cursor-pointer"
+              >
+                <span>Consultar Historial de Versiones IA</span>
+                <span class="font-mono text-[10px] text-emerald-400">${(activePage.versions || []).length || 1} snapshots</span>
+              </button>
+            </div>
+
+            <div class="pt-1 border-t border-zinc-800/80">
+              <div class="text-[10px] text-zinc-500 mb-1">Comando CLI para Skill <code class="text-indigo-300">/project-knowledge</code>:</div>
+              <code class="block p-2 rounded bg-zinc-950 border border-zinc-800 text-[10px] font-mono text-emerald-300 break-all select-all">node project-docs/cli.js page upsert --id "${pageId}" --title "${(activePage.title || "Doc").replace(/"/g, "")}" --shelf "${activePage.shelf || "architecture"}" --file "project-docs/${activePage.file_path || "knowledge/c4-model.md"}"</code>
+            </div>
+          </div>
+        ` : ""}
+      </div>
+
+      <!-- Right Inspection Pane Toggle -->
+      <button
+        type="button"
+        data-action="toggle-page-nav-pane"
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${showNavigationPane ? "bg-indigo-600/20 border-indigo-500/40 text-indigo-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
+        title="${showNavigationPane ? "Ocultar Panel de Inspecci\xF3n Derecho" : "Abrir Panel de Inspecci\xF3n Derecho (Outline, Info, Assets, Historial)"}"
+      >
+        ${Icons.sidebarRight("w-3.5 h-3.5")}
+      </button>
+    </div>
+  `;
+  }
+  function PagesPage({
+    pages = [],
+    issues = [],
+    activePageId = null,
+    activePageContent = "",
+    searchQuery = "",
+    filterTab = "all",
+    editorMode = "reader",
+    // 'reader' | 'editor'
+    isFullWidth = false,
+    showNavigationPane = true,
+    activeNavTab = "outline",
+    showAiMenu = false,
+    onSelectPage = () => {
+    },
+    onSaveMarkdown = () => {
+    }
+  } = {}) {
+    const activePage = pages.find((p) => p.id === activePageId) || pages[0] || {};
+    const currentContent = activePageContent || activePage.content_markdown || "";
+    const isLocked = Boolean(activePage.is_locked);
+    const filteredPages = pages.filter((p) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (p.title || "").toLowerCase().includes(q) || p.file_path && p.file_path.toLowerCase().includes(q);
+    });
+    const shelves = {
+      architecture: { name: "Arquitectura & Modelado C4", pages: [] },
+      business_rules: { name: "Reglas de Negocio & Invariantes", pages: [] },
+      requirements: { name: "Requerimientos & User Stories", pages: [] },
+      adrs: { name: "Decisiones de Arquitectura (ADRs)", pages: [] },
+      standards: { name: "Est\xE1ndares & Servicios", pages: [] },
+      modules: { name: "M\xF3dulos & Bounded Contexts", pages: [] },
+      specs: { name: "Especificaciones T\xE9cnicas (Specs)", pages: [] }
+    };
+    for (const p of filteredPages) {
+      const s = p.shelf || "standards";
+      if (shelves[s]) {
+        shelves[s].pages.push(p);
+      } else {
+        shelves.standards.pages.push(p);
+      }
+    }
+    const toc = extractTableOfContents(currentContent);
+    return `
+    <div class="h-[calc(100vh-112px)] flex flex-col md:flex-row overflow-hidden bg-zinc-950">
+      <!-- Left Sidebar: Pages Tree Component with Plane Filter Tabs -->
+      ${PageShelfTree({
+      shelves,
+      activePageId: activePage.id,
+      searchQuery,
+      filterTab
+    })}
+
+      <!-- Main Pane: Page Reader / Editor -->
+      <main class="flex-1 flex flex-col min-h-0 bg-zinc-950 overflow-hidden">
+        <!-- Document Toolbar Header (Plane PageHeaderActions) -->
+        <header class="min-h-12 py-2 border-b border-zinc-800/80 bg-zinc-900/30 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-3 shrink-0 select-none">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="p-1 rounded-md bg-zinc-800 text-indigo-400 shrink-0">
+              ${Icons.page("w-4 h-4")}
+            </span>
+            <h3 class="text-xs font-bold text-zinc-100 truncate">${activePage.title || "Selecciona una p\xE1gina"}</h3>
+            ${activePage.reading_time_min ? `
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono hidden lg:inline-block">
+                ${activePage.reading_time_min} min de lectura
+              </span>
+            ` : ""}
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            ${renderPageHeaderActions({
+      activePage,
+      isFullWidth,
+      showNavigationPane,
+      showAiMenu
+    })}
+
+            <!-- Mode Switcher: Reader vs Editor -->
+            <div class="flex items-center p-0.5 rounded-lg bg-zinc-900 border border-zinc-800">
+              <button
+                data-action="set-page-mode"
+                data-mode="reader"
+                class="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${editorMode === "reader" ? "bg-indigo-600 text-white shadow-xs" : "text-zinc-400 hover:text-zinc-200"}"
+              >
+                Lector Editorial
+              </button>
+              <button
+                data-action="set-page-mode"
+                data-mode="editor"
+                ${isLocked ? 'disabled title="P\xE1gina Normativa Bloqueada \u2014 Desbloqu\xE9ala primero para editar"' : ""}
+                class="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${isLocked ? "text-zinc-600 cursor-not-allowed" : editorMode === "editor" ? "bg-indigo-600 text-white shadow-xs cursor-pointer" : "text-zinc-400 hover:text-zinc-200 cursor-pointer"}"
+              >
+                Editor Dual
+              </button>
+            </div>
+
+            <!-- Save Button (Only in Editor Mode) -->
+            ${editorMode === "editor" && !isLocked ? `
+              <button
+                id="plane-page-save-btn"
+                data-action="save-page-markdown"
+                data-page-id="${activePage.id}"
+                class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+              >
+                ${Icons.save ? Icons.save("w-3.5 h-3.5") : Icons.check("w-3.5 h-3.5")}
+                <span>Guardar</span>
+              </button>
+            ` : ""}
+          </div>
+        </header>
+
+        <!-- Dynamic Content Body -->
+        <div class="flex-1 flex min-h-0 overflow-hidden">
+          ${editorMode === "editor" && !isLocked ? DualMarkdownEditor({ pageId: activePage.id, content: currentContent }) : PageReader({
+      page: activePage,
+      content: currentContent,
+      toc,
+      issues,
+      pages,
+      isFullWidth,
+      showNavigationPane,
+      activeNavTab
+    })}
+        </div>
+      </main>
+    </div>
+  `;
+  }
+
   // project-docs/src/modules/Pages/components/KnowledgeBase.js
-  function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
+  function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [], planePages = [], planePageState = {} }) {
     const kData = knowledgeIndex || getFallbackKnowledge();
     const rules = kData.business_rules || [];
     const services = kData.external_services || [];
@@ -3768,7 +4983,7 @@
       wordCount: 8200,
       readingTime: 35
     };
-    const activeDocToc = extractTableOfContents(activeDocContent);
+    const activeDocToc = extractTableOfContents2(activeDocContent);
     const dynamicAiPrompt = buildAiSystemPrompt({ projectSpec, kData, rules, services, guardrails, naming });
     return `
     <div class="space-y-10" id="kb-container">
@@ -3894,12 +5109,21 @@
                 <span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">MASTER-*.md</span>
               </button>
 
+              <!-- Tier 4: Plane Pages Workspace & Knowledge Graph -->
+              <button type="button" 
+                      data-kb-perspective="plane-workspace"
+                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                ${Icons.bookOpen("w-4 h-4")}
+                <span>4. Plane Pages Workspace & Graph</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">SQLite + IA</span>
+              </button>
+
             </div>
 
             <!-- Ayuda Contextual de Perspectiva -->
             <div class="hidden xl:flex items-center gap-2 text-[11px] font-mono text-slate-400 px-3 py-1">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Navegaci\xF3n en 3 Niveles (Global $\\to$ Modular $\\to$ Dossier)</span>
+              <span>Navegaci\xF3n en 4 Niveles (Global $\\to$ Modular $\\to$ Dossier $\\to$ Plane Graph)</span>
             </div>
           </div>
         </section>
@@ -3932,10 +5156,10 @@
                   </div>
 
                   <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    ${escapeHtml2(heroDocMeta.title || heroDocKey)}
+                    ${escapeHtml3(heroDocMeta.title || heroDocKey)}
                   </h3>
                   <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    ${escapeHtml2(heroDocMeta.summary || "Especificaci\xF3n formal del sistema con diagramas de contexto, contenedores y componentes.")}
+                    ${escapeHtml3(heroDocMeta.summary || "Especificaci\xF3n formal del sistema con diagramas de contexto, contenedores y componentes.")}
                   </p>
                   <div class="font-mono text-[11px] text-slate-400">
                     Ruta can\xF3nica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
@@ -4053,7 +5277,7 @@
                         ${getShelfIconSvg(sh.id, "w-5 h-5")}
                       </span>
                       <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                        ${escapeHtml2(sh.title)}
+                        ${escapeHtml3(sh.title)}
                       </h3>
                     </div>
                     <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -4091,15 +5315,15 @@
 
                             <div>
                               <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                ${escapeHtml2(meta.title)}
+                                ${escapeHtml3(meta.title)}
                               </h4>
                               <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
-                                ${escapeHtml2(key)}
+                                ${escapeHtml3(key)}
                               </div>
                             </div>
 
                             <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              ${escapeHtml2(meta.summary)}
+                              ${escapeHtml3(meta.summary)}
                             </p>
                           </div>
 
@@ -4198,7 +5422,7 @@
                           data-module-tab="${escapeAttr2(modId)}"
                           class="kb-module-tab-btn ${isActive ? "active bg-purple-600 text-white font-bold shadow-xs" : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium"} px-4 py-2 rounded-2xl text-xs font-mono transition-all cursor-pointer shrink-0 inline-flex items-center gap-2">
                     ${Icons.folder("w-3.5 h-3.5")}
-                    <span>${escapeHtml2(mod.title || modId)}</span>
+                    <span>${escapeHtml3(mod.title || modId)}</span>
                     <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/25 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}">${mod.docs?.length || 5}</span>
                   </button>
                 `;
@@ -4269,7 +5493,7 @@
                       </div>
                       <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         <span class="text-purple-600 dark:text-purple-400">${Icons.folder("w-6 h-6")}</span>
-                        <span>${escapeHtml2(mod.title || modId)}</span>
+                        <span>${escapeHtml3(mod.title || modId)}</span>
                       </h3>
                       <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
                         Bounded Context auditado con 5 artefactos formales de ingenier\xEDa para garantizar contexto 100% libre de alucinaciones en agentes de IA y desarrolladores.
@@ -4324,15 +5548,15 @@
 
                             <div>
                               <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                                ${escapeHtml2(spec.title)}
+                                ${escapeHtml3(spec.title)}
                               </h4>
                               <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
-                                ${escapeHtml2(docKey)}
+                                ${escapeHtml3(docKey)}
                               </div>
                             </div>
 
                             <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              ${escapeHtml2(spec.desc)}
+                              ${escapeHtml3(spec.desc)}
                             </p>
                           </div>
 
@@ -4488,10 +5712,10 @@
                       <span class="text-[10px] font-mono text-slate-400">Can\xF3nico</span>
                     </div>
                     <h5 class="font-bold text-xs text-slate-900 dark:text-white leading-snug">
-                      ${escapeHtml2(ch.title)}
+                      ${escapeHtml3(ch.title)}
                     </h5>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      ${escapeHtml2(ch.desc)}
+                      ${escapeHtml3(ch.desc)}
                     </p>
                   </div>
 
@@ -4508,6 +5732,25 @@
             </div>
           </section>
 
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- PANEL TIER 4: PLANE PAGES WORKSPACE & KNOWLEDGE GRAPH          -->
+        <!-- ============================================================== -->
+        <div id="kb-perspective-panel-plane-workspace" class="kb-perspective-panel hidden rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
+          ${PagesPage({
+      pages: planePages,
+      issues: features,
+      activePageId: planePageState.activePageId || planePages[0] && planePages[0].id || null,
+      activePageContent: planePageState.activePageContent || "",
+      searchQuery: planePageState.searchQuery || "",
+      filterTab: planePageState.filterTab || "all",
+      editorMode: planePageState.editorMode || "reader",
+      isFullWidth: Boolean(planePageState.isFullWidth),
+      showNavigationPane: planePageState.showNavigationPane !== false,
+      activeNavTab: planePageState.activeNavTab || "outline",
+      showAiMenu: Boolean(planePageState.showAiMenu)
+    })}
         </div>
 
       </div>
@@ -4538,8 +5781,25 @@
               </span>
             </div>
 
-            <!-- Acciones del Documento -->
-            <div class="flex items-center gap-2">
+            <!-- Acciones del Documento + Plane PageHeaderActions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div id="article-plane-header-actions">
+                ${renderPageHeaderActions({
+      activePage: planePages.find((p) => (p.file_path || "").endsWith(activeDocKey)) || planePages[0] || {
+        id: `page-kb-${activeDocKey.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+        title: activeDocMeta.title || activeDocKey,
+        file_path: `knowledge/${activeDocKey}`,
+        word_count: activeDocMeta.wordCount || 450,
+        reading_time_min: activeDocMeta.readingTime || 3,
+        is_locked: 1,
+        is_favorite: activeDocKey === "c4-model.md" ? 1 : 0
+      },
+      isFullWidth: Boolean(planePageState.isFullWidth),
+      showNavigationPane: planePageState.showNavigationPane !== false,
+      showAiMenu: Boolean(planePageState.showAiMenu)
+    })}
+              </div>
+
               <span id="article-reading-time-badge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
                 ${Icons.clock("w-3.5 h-3.5")} <span>${activeDocMeta.readingTime} min</span>
               </span>
@@ -4581,23 +5841,42 @@
           </div>
         </section>
 
-        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada 780px + TOC flotante) -->
+        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada o Full-Width + Inspector Plane 4 Pesta\xF1as) -->
         <div id="doc-reader-view-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          <!-- Contenido Principal del Art\xEDculo (Columna de Lectura) -->
-          <div class="lg:col-span-9 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px]">
-            <article id="doc-active-body" class="prose dark:prose-invert max-w-3xl mx-auto text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
-              ${renderMarkdown2(activeDocContent)}
+          <!-- Contenido Principal del Art\xEDculo (Columna de Lectura con Smart Entity Chips) -->
+          <div id="doc-reader-main-col" class="${planePageState.showNavigationPane === false ? "lg:col-span-12" : "lg:col-span-8"} rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px] transition-all">
+            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? "max-w-none w-full" : "max-w-3xl mx-auto"} text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
+              ${enrichMarkdownWithSmartChips(renderMarkdown2(activeDocContent), features)}
             </article>
           </div>
 
-          <!-- Barra Lateral Flotante: Tabla de Contenidos (TOC) On-This-Page -->
-          <div class="hidden lg:block lg:col-span-3 sticky top-36 space-y-4">
+          <!-- Barra Lateral Derecha: Inspector Plane de 4 Pesta\xF1as (Outline, Info, Assets, Historial) + TOC Can\xF3nico -->
+          <div id="doc-reader-right-col" class="${planePageState.showNavigationPane === false ? "hidden" : "hidden lg:block lg:col-span-4"} sticky top-36 space-y-4">
+            <div id="article-plane-inspector-container" class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md">
+              ${PageNavigationPane({
+      page: planePages.find((p) => (p.file_path || "").endsWith(activeDocKey)) || planePages[0] || {
+        id: `page-kb-${activeDocKey.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+        title: activeDocMeta.title || activeDocKey,
+        file_path: `knowledge/${activeDocKey}`,
+        word_count: activeDocMeta.wordCount || 450,
+        reading_time_min: activeDocMeta.readingTime || 3,
+        is_locked: 1,
+        is_favorite: activeDocKey === "c4-model.md" ? 1 : 0
+      },
+      content: activeDocContent,
+      toc: activeDocToc,
+      activeTab: planePageState.activeNavTab || "outline",
+      issues: features,
+      pages: planePages
+    })}
+            </div>
+
             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
               <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
                 ${Icons.fileText} <span>En esta p\xE1gina</span>
               </div>
-              <div id="doc-active-toc" class="max-h-[460px] overflow-y-auto pr-1">
+              <div id="doc-active-toc" class="max-h-[260px] overflow-y-auto pr-1">
                 ${renderTableOfContentsHtml(activeDocToc)}
               </div>
             </div>
@@ -4670,7 +5949,7 @@
               </div>
               <textarea id="doc-editor-textarea" 
                         rows="24" 
-                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml2(activeDocContent)}</textarea>
+                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml3(activeDocContent)}</textarea>
             </div>
 
             <div class="space-y-2">
@@ -4773,7 +6052,7 @@
                         [${rule.module || "general"}]
                       </span>
                       <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
-                        ${escapeHtml2(rule.title)}
+                        ${escapeHtml3(rule.title)}
                       </h4>
                     </div>
                     <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
@@ -4781,7 +6060,7 @@
                     </span>
                   </div>
                   <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
-                    ${escapeHtml2(rule.description)}
+                    ${escapeHtml3(rule.description)}
                   </p>
                 </div>
               `;
@@ -4821,24 +6100,24 @@
             ${services.map((svc) => `
               <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml2(svc.name)}</span>
+                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml3(svc.name)}</span>
                   <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
-                    ${escapeHtml2(svc.type)}
+                    ${escapeHtml3(svc.type)}
                   </span>
                 </div>
                 <div class="space-y-1 text-[11px] font-mono">
                   <div class="text-slate-500 dark:text-slate-400">
-                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml2(svc.protocol)}</span>
+                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml3(svc.protocol)}</span>
                   </div>
                   <div class="text-slate-500 dark:text-slate-400">
-                    Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml2(svc.auth)}</span>
+                    Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml3(svc.auth)}</span>
                   </div>
                   <div class="text-slate-500 dark:text-slate-400">
-                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml2(svc.env_var)}</code>
+                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml3(svc.env_var)}</code>
                   </div>
                 </div>
                 <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
-                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml2(svc.failover)}
+                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml3(svc.failover)}
                 </div>
               </div>
             `).join("")}
@@ -4886,7 +6165,7 @@
     ]).map((g) => `
                 <li class="flex items-start gap-2">
                   <span class="text-rose-500 font-bold shrink-0 mt-0.5">&times;</span>
-                  <span>${escapeHtml2(g)}</span>
+                  <span>${escapeHtml3(g)}</span>
                 </li>
               `).join("")}
             </ul>
@@ -4978,7 +6257,7 @@
             Copia estas instrucciones generadas en vivo desde los metadatos reales del arn\xE9s para inicializar cualquier modelo (Claude, Gemini, ChatGPT, Codex) sin sesgo:
           </p>
           <div class="relative">
-            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml2(dynamicAiPrompt)}</textarea>
+            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml3(dynamicAiPrompt)}</textarea>
           </div>
           <div class="flex items-center justify-end gap-3 pt-2">
             <button type="button" 
@@ -5040,7 +6319,7 @@
         <a href="#${item.id}" 
            class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
            title="${escapeAttr2(item.text)}">
-          ${escapeHtml2(item.text)}
+          ${escapeHtml3(item.text)}
         </a>
       `).join("")}
     </nav>
@@ -5074,7 +6353,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
 - Commits: Conventional Commits (feat, fix, docs, refactor)
 `;
   }
-  function escapeHtml2(text) {
+  function escapeHtml3(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5748,8 +7027,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
 
       <!-- 2. Informaci\xF3n del Diagrama -->
       <div class="px-5 pt-4 pb-2">
-        <h4 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">${escapeHtml3(title)}</h4>
-        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">${escapeHtml3(description)}</p>
+        <h4 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">${escapeHtml4(title)}</h4>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">${escapeHtml4(description)}</p>
       </div>
 
       <!-- 3. Contenedores de Vista -->
@@ -5772,13 +7051,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           <span>Sintaxis Mermaid</span>
           <button type="button" data-copy-mermaid="${escapeAttr3(code)}" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] cursor-pointer">Copiar</button>
         </div>
-        <pre class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 select-all"><code>${escapeHtml3(code)}</code></pre>
+        <pre class="text-xs font-mono text-indigo-300 leading-relaxed overflow-x-auto p-2 select-all"><code>${escapeHtml4(code)}</code></pre>
       </div>
 
     </div>
   `;
   }
-  function escapeHtml3(text) {
+  function escapeHtml4(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5821,10 +7100,10 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              ${escapeHtml4(proj.name || "Proyecto de Software")}
+              ${escapeHtml5(proj.name || "Proyecto de Software")}
             </h2>
             <p class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mt-1">
-              ${escapeHtml4(proj.tagline || "Arquitectura Can\xF3nica y Especificaci\xF3n T\xE9cnica")}
+              ${escapeHtml5(proj.tagline || "Arquitectura Can\xF3nica y Especificaci\xF3n T\xE9cnica")}
             </p>
           </div>
 
@@ -5855,7 +7134,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             </h3>
             ${proj.description ? `
               <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                ${escapeHtml4(proj.description)}
+                ${escapeHtml5(proj.description)}
               </p>
             ` : `
               <div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-slate-400 text-xs">
@@ -5873,7 +7152,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                 ${goals.map((g) => `
                   <li class="flex items-start gap-2">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5"></span>
-                    <span>${escapeHtml4(g)}</span>
+                    <span>${escapeHtml5(g)}</span>
                   </li>
                 `).join("")}
               </ul>
@@ -5984,14 +7263,14 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                   <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
                     <div class="flex items-center gap-2">
                       <span class="text-indigo-600 dark:text-indigo-400">${row.iconSvg}</span>
-                      <span>${escapeHtml4(row.technology)}</span>
+                      <span>${escapeHtml5(row.technology)}</span>
                     </div>
                   </td>
                   <td class="py-3 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                    ${escapeHtml4(row.version || "Auto")}
+                    ${escapeHtml5(row.version || "Auto")}
                   </td>
                   <td class="py-3 px-4 text-slate-600 dark:text-slate-400 max-w-xs">
-                    ${escapeHtml4(row.purpose)}
+                    ${escapeHtml5(row.purpose)}
                   </td>
                   <td class="py-3 px-4 whitespace-nowrap">
                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold ${row.statusBadgeClass}">
@@ -6000,7 +7279,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                     </span>
                   </td>
                   <td class="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                    ${escapeHtml4(row.dependencies || "Nativa / MIT")}
+                    ${escapeHtml5(row.dependencies || "Nativa / MIT")}
                   </td>
                 </tr>
               `).join("")}
@@ -6032,13 +7311,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       return `
                 <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2">
                   <div class="flex items-center justify-between">
-                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml4(pName)}</h4>
+                    <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml5(pName)}</h4>
                     <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                      ${escapeHtml4(pType)}
+                      ${escapeHtml5(pType)}
                     </span>
                   </div>
                   <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    ${escapeHtml4(pDesc)}
+                    ${escapeHtml5(pDesc)}
                   </p>
                 </div>
               `;
@@ -6110,7 +7389,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                         ${(mod.responsibilities || []).map((r) => `
                           <li class="flex items-start gap-1.5">
                             <span class="text-indigo-500 font-bold shrink-0 mt-0.5">\u203A</span>
-                            <span>${escapeHtml4(r)}</span>
+                            <span>${escapeHtml5(r)}</span>
                           </li>
                         `).join("")}
                       </ul>
@@ -6119,7 +7398,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                     <div>
                       <span class="font-mono font-bold text-[10px] uppercase text-slate-400">Stack Tecnol\xF3gico & Tareas Asignadas:</span>
                       <div class="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 mb-2">
-                        ${escapeHtml4(mod.tech || "")}
+                        ${escapeHtml5(mod.tech || "")}
                       </div>
                       <div class="flex flex-wrap gap-1.5">
                         ${modFeatures.map((f) => `
@@ -6401,7 +7680,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     </div>
   `;
   }
-  function escapeHtml4(text) {
+  function escapeHtml5(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -6841,7 +8120,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                 ${sub.done ? Icons.check("w-2.5 h-2.5") : "\u25CB"}
               </span>
               <span class="truncate text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200">
-                ${escapeHtml5(sub.name)}
+                ${escapeHtml6(sub.name)}
               </span>
             </div>
           `;
@@ -6880,7 +8159,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                   </span>
 
                   <span class="font-semibold text-xs text-slate-900 dark:text-slate-100">
-                    ${escapeHtml5(f.title || f.name)}
+                    ${escapeHtml6(f.title || f.name)}
                   </span>
                 </div>
 
@@ -7019,7 +8298,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
                 </div>
                 <div>
                   <div class="text-[11px] font-mono uppercase tracking-wider text-indigo-200 font-bold">Nodo Ra\xEDz (Nivel 0)</div>
-                  <h2 class="text-lg font-bold tracking-tight">${escapeHtml5(projectName)}</h2>
+                  <h2 class="text-lg font-bold tracking-tight">${escapeHtml6(projectName)}</h2>
                 </div>
               </div>
 
@@ -7059,7 +8338,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       });
     }
   };
-  function escapeHtml5(text) {
+  function escapeHtml6(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -7903,6 +9182,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       this.autoSyncController = null;
       this.lastSyncTime = /* @__PURE__ */ new Date();
       this.currentActiveDocKey = null;
+      this.isArticleOpen = false;
+      this.activeKbPerspective = "global";
       this.editorMode = "markdown";
       this.currentBlocks = [];
       this.isScrollingFromEditor = false;
@@ -8076,7 +9357,19 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           ${renderKnowledgeBase({
           knowledgeIndex: state.knowledgeIndex || planeData.knowledgeIndex,
           projectSpec: state.projectSpec || planeData.projectSpec,
-          features: state.features || issues
+          features: state.features || issues,
+          planePages: pages,
+          planePageState: {
+            activePageId: state.planeActivePageId,
+            activePageContent: state.planeActivePageContent,
+            searchQuery: state.planePageSearchQuery || "",
+            filterTab: state.planePageFilterTab || "all",
+            editorMode: state.planePageEditorMode || "reader",
+            isFullWidth: Boolean(state.planePageFullWidth),
+            showNavigationPane: state.planePageShowNavPane !== false,
+            activeNavTab: state.planePageNavTab || "outline",
+            showAiMenu: Boolean(state.planePageShowAiMenu)
+          }
         })}
         </div>
       `;
@@ -8181,6 +9474,26 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }
       } else if (currentView === "architecture") {
         this.initMermaidDiagrams();
+      } else if (currentView === "pages") {
+        if (this.activeKbPerspective && this.activeKbPerspective !== "global") {
+          document.querySelectorAll(".kb-perspective-btn").forEach((btn) => {
+            const isMatch = btn.getAttribute("data-kb-perspective") === this.activeKbPerspective;
+            btn.classList.toggle("active", isMatch);
+            btn.classList.toggle("bg-indigo-600", isMatch);
+            btn.classList.toggle("text-white", isMatch);
+            btn.classList.toggle("font-bold", isMatch);
+            btn.classList.toggle("shadow-xs", isMatch);
+          });
+          document.querySelectorAll(".kb-perspective-panel").forEach((panel) => {
+            panel.classList.add("hidden");
+          });
+          document.getElementById(`kb-perspective-panel-${this.activeKbPerspective}`)?.classList.remove("hidden");
+        }
+        if (this.isArticleOpen && this.currentActiveDocKey) {
+          this.openArticleView(this.currentActiveDocKey, false, true);
+        } else {
+          this.initMermaidDiagrams();
+        }
       }
       this.isAppMounted = true;
     }
@@ -8301,6 +9614,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }
         const backToLibBtn = e.target.closest('[data-action="back-to-library"]');
         if (backToLibBtn) {
+          this.isArticleOpen = false;
           document.getElementById("kb-view-article")?.classList.add("hidden");
           document.getElementById("kb-view-library")?.classList.remove("hidden");
           window.scrollTo({ top: 0, behavior: "smooth" });
@@ -8399,7 +9713,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             const bodyEl = document.getElementById("doc-active-body");
             if (bodyEl) bodyEl.innerHTML = renderMarkdown2(newContent);
             const tocEl = document.getElementById("doc-active-toc");
-            if (tocEl) tocEl.innerHTML = renderTocHtml(extractTableOfContents(newContent));
+            if (tocEl) tocEl.innerHTML = renderTocHtml(extractTableOfContents2(newContent));
             document.getElementById("doc-editor-view-container")?.classList.add("hidden");
             document.getElementById("doc-reader-view-container")?.classList.remove("hidden");
             const btnText = document.getElementById("btn-toggle-doc-text");
@@ -8432,6 +9746,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         const perspectiveBtn = e.target.closest("[data-kb-perspective]");
         if (perspectiveBtn) {
           const targetPersp = perspectiveBtn.getAttribute("data-kb-perspective");
+          this.activeKbPerspective = targetPersp || "global";
           document.querySelectorAll(".kb-perspective-btn").forEach((btn) => {
             btn.classList.remove("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
             btn.classList.add("text-slate-600", "dark:text-slate-400", "font-medium");
@@ -8445,10 +9760,103 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           if (targetPanel) {
             targetPanel.classList.remove("hidden");
           }
+          this.initMermaidDiagrams();
+          return;
+        }
+        const pageFilterBtn = e.target.closest('[data-action="set-page-tree-filter"]');
+        if (pageFilterBtn) {
+          const filter = pageFilterBtn.getAttribute("data-filter") || "all";
+          store.setState({ planePageFilterTab: filter });
+          return;
+        }
+        const navTabBtn = e.target.closest('[data-action="switch-page-nav-tab"]');
+        if (navTabBtn) {
+          const tab = navTabBtn.getAttribute("data-tab") || "outline";
+          store.setState({ planePageNavTab: tab, planePageShowNavPane: true, planePageShowAiMenu: false });
+          return;
+        }
+        const toggleNavPaneBtn = e.target.closest('[data-action="toggle-page-nav-pane"]');
+        if (toggleNavPaneBtn) {
+          const curr = store.getState().planePageShowNavPane !== false;
+          store.setState({ planePageShowNavPane: !curr });
+          return;
+        }
+        const favPageBtn = e.target.closest('[data-action="toggle-page-favorite"]');
+        if (favPageBtn) {
+          const pageId = favPageBtn.getAttribute("data-page-id");
+          const pd = store.getState().planeData || {};
+          const pages = pd.pages || [];
+          const target = pages.find((p) => p.id === pageId);
+          const nextFav = target ? target.is_favorite ? 0 : 1 : 1;
+          if (target) target.is_favorite = nextFav;
+          await api.updatePlanePage(pageId, { is_favorite: Boolean(nextFav) });
+          store.setState({ planeData: { ...pd, pages: [...pages] } });
+          return;
+        }
+        const lockPageBtn = e.target.closest('[data-action="toggle-page-lock"]');
+        if (lockPageBtn) {
+          const pageId = lockPageBtn.getAttribute("data-page-id");
+          const pd = store.getState().planeData || {};
+          const pages = pd.pages || [];
+          const target = pages.find((p) => p.id === pageId);
+          const nextLock = target ? target.is_locked ? 0 : 1 : 0;
+          if (target) target.is_locked = nextLock;
+          await api.updatePlanePage(pageId, { is_locked: Boolean(nextLock) });
+          store.setState({ planeData: { ...pd, pages: [...pages] } });
+          return;
+        }
+        const fullWidthBtn = e.target.closest('[data-action="toggle-page-fullwidth"]');
+        if (fullWidthBtn) {
+          const pageId = fullWidthBtn.getAttribute("data-page-id");
+          const nextFw = !store.getState().planePageFullWidth;
+          if (pageId) await api.updatePlanePage(pageId, { full_width: nextFw });
+          store.setState({ planePageFullWidth: nextFw });
+          return;
+        }
+        const aiMenuBtn = e.target.closest('[data-action="toggle-page-ai-menu"]');
+        if (aiMenuBtn) {
+          const curr = Boolean(store.getState().planePageShowAiMenu);
+          store.setState({ planePageShowAiMenu: !curr });
+          return;
+        }
+        const copyPageMdBtn = e.target.closest('[data-action="copy-page-markdown"]');
+        if (copyPageMdBtn) {
+          const pageId = copyPageMdBtn.getAttribute("data-page-id");
+          const page = (store.getState().planeData?.pages || []).find((p) => p.id === pageId);
+          const md = page?.content_markdown || store.getState().planeActivePageContent || "";
+          if (navigator.clipboard && md) {
+            navigator.clipboard.writeText(md).catch(() => {
+            });
+          }
+          return;
+        }
+        const restoreVerBtn = e.target.closest('[data-action="restore-page-version"]');
+        if (restoreVerBtn) {
+          const pageId = restoreVerBtn.getAttribute("data-page-id");
+          const versionId = restoreVerBtn.getAttribute("data-version-id");
+          if (pageId && versionId) {
+            await api.updatePlanePage(pageId, { restore_version_id: versionId });
+            await this.refreshData();
+          }
+          return;
+        }
+        const scrollAssetBtn = e.target.closest('[data-action="scroll-to-asset"]');
+        if (scrollAssetBtn) {
+          const idx = Math.max(0, Number(scrollAssetBtn.getAttribute("data-asset-index") || 1) - 1);
+          const diagrams = document.querySelectorAll(".mermaid, article pre, article img");
+          if (diagrams[idx]) {
+            diagrams[idx].scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+          return;
+        }
+        const setPageModeBtn = e.target.closest('[data-action="set-page-mode"]');
+        if (setPageModeBtn) {
+          const mode = setPageModeBtn.getAttribute("data-mode") || "reader";
+          store.setState({ planePageEditorMode: mode });
           return;
         }
         const pageBtn = e.target.closest("button[data-page-id]");
-        if (pageBtn) {
+        if (pageBtn && !pageBtn.hasAttribute("data-action")) {
           const pageId = pageBtn.getAttribute("data-page-id");
           const page = (store.getState().planeData?.pages || []).find((p) => p.id === pageId);
           store.setState({
@@ -8456,6 +9864,24 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             planeActivePageContent: page?.content_markdown || "",
             planePageEditorMode: "reader"
           });
+          return;
+        }
+        const selectLinkedPageBtn = e.target.closest('[data-action="select-page"]');
+        if (selectLinkedPageBtn) {
+          const pageId = selectLinkedPageBtn.getAttribute("data-page-id");
+          const page = (store.getState().planeData?.pages || []).find((p) => p.id === pageId);
+          if (page) {
+            if (this.isArticleOpen && page.file_path) {
+              const cleanKey = page.file_path.replace(/^knowledge\//, "");
+              this.openArticleView(cleanKey, false);
+            } else {
+              store.setState({
+                planeActivePageId: pageId,
+                planeActivePageContent: page.content_markdown || "",
+                planePageEditorMode: "reader"
+              });
+            }
+          }
           return;
         }
         if (e.target.closest("#plane-page-toggle-mode")) {
@@ -8525,7 +9951,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           }, 150);
           return;
         }
-        if (e.target.id === "plane-page-search") {
+        if (e.target.id === "plane-page-search" || e.target.id === "plane-pages-search") {
           clearTimeout(this.pageSearchDebounceTimer);
           this.pageSearchDebounceTimer = setTimeout(() => {
             store.setState({ planePageSearchQuery: e.target.value });
@@ -8593,9 +10019,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }
       });
     }
-    openArticleView(docKey, openInEditor = false) {
+    openArticleView(docKey, openInEditor = false, skipScroll = false) {
       this.currentActiveDocKey = docKey;
+      this.isArticleOpen = true;
       const state = store.getState();
+      const planeData = state.planeData || {};
+      const planePages = planeData.pages || [];
+      const issues = planeData.issues && planeData.issues.length > 0 ? planeData.issues : state.features || [];
       const docs = state.knowledgeIndex?.docs || {};
       const meta = state.knowledgeIndex?.docMetadata?.[docKey] || {
         title: docKey,
@@ -8603,7 +10033,16 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         readingTime: 3,
         wordCount: 400
       };
-      const content = docs[docKey] || "# Documento no disponible";
+      const matchedPlanePage = planePages.find((p) => (p.file_path || "").endsWith(docKey) || p.file_path === `knowledge/${docKey}`) || {
+        id: `page-kb-${docKey.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+        title: meta.title || docKey,
+        file_path: `knowledge/${docKey}`,
+        word_count: meta.wordCount || 400,
+        reading_time_min: meta.readingTime || 3,
+        is_locked: 1,
+        is_favorite: docKey === "c4-model.md" ? 1 : 0
+      };
+      const content = docs[docKey] || matchedPlanePage.content_markdown || "# Documento no disponible";
       const libView = document.getElementById("kb-view-library");
       const artView = document.getElementById("kb-view-article");
       const pathEl = document.getElementById("doc-active-path");
@@ -8614,6 +10053,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       const wordsEl = document.getElementById("article-meta-words");
       const brEl = document.getElementById("article-meta-br");
       const rfEl = document.getElementById("article-meta-rf");
+      const headerActionsEl = document.getElementById("article-plane-header-actions");
+      const inspectorEl = document.getElementById("article-plane-inspector-container");
       const readerContainer = document.getElementById("doc-reader-view-container");
       const editorContainer = document.getElementById("doc-editor-view-container");
       const btnText = document.getElementById("btn-toggle-doc-text");
@@ -8626,10 +10067,28 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
       if (brEl) brEl.textContent = meta.ruleCount || 0;
       if (rfEl) rfEl.textContent = meta.reqCount || 0;
-      if (bodyEl) bodyEl.innerHTML = renderMarkdown2(content);
+      const toc = extractTableOfContents2(content);
+      if (bodyEl) bodyEl.innerHTML = enrichMarkdownWithSmartChips(renderMarkdown2(content), issues);
       if (tocEl) {
-        const toc = extractTableOfContents(content);
         tocEl.innerHTML = renderTocHtml(toc);
+      }
+      if (headerActionsEl) {
+        headerActionsEl.innerHTML = renderPageHeaderActions({
+          activePage: matchedPlanePage,
+          isFullWidth: Boolean(state.planePageFullWidth),
+          showNavigationPane: state.planePageShowNavPane !== false,
+          showAiMenu: Boolean(state.planePageShowAiMenu)
+        });
+      }
+      if (inspectorEl) {
+        inspectorEl.innerHTML = PageNavigationPane({
+          page: matchedPlanePage,
+          content,
+          toc,
+          activeTab: state.planePageNavTab || "outline",
+          issues,
+          pages: planePages
+        });
       }
       if (textarea) textarea.value = content;
       if (livePreview) livePreview.innerHTML = renderMarkdown2(content);
@@ -8648,7 +10107,9 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       libView?.classList.add("hidden");
       artView?.classList.remove("hidden");
       this.initMermaidDiagrams();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (!skipScroll) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
     setupSynchronizedScroll() {
       const textarea = document.getElementById("doc-editor-textarea");
@@ -8723,7 +10184,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
             ${b.type === "header" ? `
               <input type="text" class="w-full text-base font-bold bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white" value="${escapeAttr4(b.text)}" placeholder="T\xEDtulo..." />
             ` : `
-              <textarea rows="3" class="w-full text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 font-mono text-slate-900 dark:text-white">${escapeHtml6(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || (Array.isArray(b.content) ? b.content.join("\n") : ""))}</textarea>
+              <textarea rows="3" class="w-full text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 font-mono text-slate-900 dark:text-white">${escapeHtml7(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || (Array.isArray(b.content) ? b.content.join("\n") : ""))}</textarea>
             `}
           </div>
         </div>
@@ -8741,13 +10202,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         <a href="#${item.id}" 
            class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
            title="${escapeAttr4(item.text)}">
-          ${escapeHtml6(item.text)}
+          ${escapeHtml7(item.text)}
         </a>
       `).join("")}
     </nav>
   `;
   }
-  function escapeHtml6(text) {
+  function escapeHtml7(text) {
     if (!text) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }

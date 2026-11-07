@@ -248,11 +248,16 @@ export async function updatePlaneIssue(issueId, updates = {}) {
   return { ok: false };
 }
 
-export async function updatePlanePage(pageId, markdownContent) {
+export async function updatePlanePage(pageId, payload) {
+  const body = typeof payload === 'string' ? { content_markdown: payload } : (payload || {});
   if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
     if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.pages)) {
       const page = window.__PLANE_DATA__.pages.find(p => p.id === pageId);
-      if (page) page.content_markdown = markdownContent;
+      if (page) {
+        if (typeof body.content_markdown === 'string') page.content_markdown = body.content_markdown;
+        if (body.is_favorite !== undefined) page.is_favorite = body.is_favorite ? 1 : 0;
+        if (body.is_locked !== undefined) page.is_locked = body.is_locked ? 1 : 0;
+      }
     }
     return { ok: true };
   }
@@ -261,7 +266,7 @@ export async function updatePlanePage(pageId, markdownContent) {
     const res = await fetch(`/api/plane/pages/${encodeURIComponent(pageId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content_markdown: markdownContent })
+      body: JSON.stringify(body)
     });
     if (res.ok) return await res.json();
   } catch (e) {

@@ -8,8 +8,12 @@ import {
   PageStore,
   PageShelfTree,
   PageReader,
+  enrichMarkdownWithSmartChips,
+  PageNavigationPane,
+  renderFloatingOutlineBars,
   DualMarkdownEditor,
   PagesPage,
+  renderPageHeaderActions,
   renderPlanePagesView
 } from '../../src/modules/Pages/index.js';
 
@@ -97,4 +101,84 @@ test('Pages UI Suite: PageShelfTree, PageReader, DualMarkdownEditor y PagesPage'
     pages: [{ id: 'p-1', title: 'Doc', shelf: 'standards', content_markdown: '# Doc' }]
   });
   assert.ok(legacyHtml.includes('Lector Editorial'));
+});
+
+test('Plane Pages Evolution Suite: PageNavigationPane (4 pestañas), Smart Entity Chips y PageHeaderActions', () => {
+  const sampleHtml = '<p>Cumple con INT-016, regla BR-001, requisito RF-010, ADR-002 y CAP-001.</p><pre><code>INT-016 en codigo no se transforma</code></pre>';
+  const enriched = enrichMarkdownWithSmartChips(sampleHtml, [
+    { id: 'INT-016', name: 'Plane Data Model', status: 'completed', state_id: 'state-done' }
+  ]);
+  assert.ok(enriched.includes('data-action="view-detail" data-id="INT-016"'));
+  assert.ok(enriched.includes('BR-001'));
+  assert.ok(enriched.includes('RF-010'));
+  assert.ok(enriched.includes('ADR-002'));
+  assert.ok(enriched.includes('CAP-001'));
+  assert.ok(enriched.includes('<pre><code>INT-016 en codigo no se transforma</code></pre>'));
+
+  const samplePage = {
+    id: 'page-kb-c4-model_md',
+    title: 'Modelo C4',
+    file_path: 'knowledge/c4-model.md',
+    is_locked: 1,
+    is_favorite: 1,
+    word_count: 520,
+    char_count: 3400,
+    paragraph_count: 14,
+    diagrams_count: 2,
+    reading_time_min: 3,
+    owned_by_id: 'user-spec-author',
+    updated_by_id: 'user-reviewer',
+    labels: [{ name: 'c4-model' }, { name: 'ieee-830' }],
+    logs: [
+      { entity_name: 'issue', entity_identifier: 'INT-016' },
+      { entity_name: 'business_rule', entity_identifier: 'BR-001' }
+    ],
+    versions: [
+      { id: 'pver-1', version_number: 1, author_role: 'spec-author', created_at: '2026-11-07T15:00:00Z' }
+    ]
+  };
+
+  const navInfoHtml = PageNavigationPane({
+    page: samplePage,
+    content: '# C4\n```mermaid\nflowchart TD\nA-->B\n```',
+    toc: [{ id: 'c4', text: 'C4', level: 1 }],
+    activeTab: 'info',
+    issues: [{ id: 'INT-016', title: 'Plane Model', state_id: 'state-done' }]
+  });
+  assert.ok(navInfoHtml.includes('Palabras'));
+  assert.ok(navInfoHtml.includes('Caracteres'));
+  assert.ok(navInfoHtml.includes('Párrafos'));
+  assert.ok(navInfoHtml.includes('Lectura'));
+  assert.ok(navInfoHtml.includes('INT-016'));
+  assert.ok(navInfoHtml.includes('BR-001'));
+
+  const navAssetsHtml = PageNavigationPane({
+    page: samplePage,
+    content: '# C4\n```mermaid\nflowchart TD\nA-->B\n```',
+    activeTab: 'assets'
+  });
+  assert.ok(navAssetsHtml.includes('Diagramas Mermaid'));
+  assert.ok(navAssetsHtml.includes('flowchart'));
+
+  const navHistoryHtml = PageNavigationPane({
+    page: samplePage,
+    content: '# C4',
+    activeTab: 'version_history'
+  });
+  assert.ok(navHistoryHtml.includes('Historial de Versiones'));
+  assert.ok(navHistoryHtml.includes('Restaurar'));
+
+  const headerActionsHtml = renderPageHeaderActions({
+    activePage: samplePage,
+    isFullWidth: true,
+    showNavigationPane: true,
+    showAiMenu: true
+  });
+  assert.ok(headerActionsHtml.includes('SQLite + .md Synced'));
+  assert.ok(headerActionsHtml.includes('Ask Harness AI'));
+  assert.ok(headerActionsHtml.includes('toggle-page-favorite'));
+  assert.ok(headerActionsHtml.includes('toggle-page-lock'));
+
+  const floatingHtml = renderFloatingOutlineBars([{ id: 'c4', text: 'C4', level: 1 }]);
+  assert.ok(floatingHtml.includes('toggle-page-nav-pane'));
 });

@@ -14,7 +14,8 @@ import {
   recordIssueComment,
   recordIssueRelation,
   createIssueInSQLite,
-  upsertPageInSQLite
+  upsertPageInSQLite,
+  updatePagePropertiesInSQLite
 } from './src/core/sqlite-sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -208,19 +209,21 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 11. GET /api/plane/pages/:id (con contenido completo markdown y versiones)
+    // 11. GET /api/plane/pages/:id (con contenido completo markdown, versiones, logs y labels)
     const pageMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)$/);
     if (pageMatch && method === 'GET') {
       const pageId = decodeURIComponent(pageMatch[1]);
-      const page = database.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+      const page = database.prepare('SELECT * FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
       if (!page) {
         res.writeHead(404);
         res.end(JSON.stringify({ error: 'Pagina no encontrada' }));
         return;
       }
-      const versions = database.prepare('SELECT id, version_number, owned_by_role, word_count, last_saved_at FROM page_versions WHERE page_id = ? ORDER BY version_number DESC').all(pageId);
+      const versions = database.prepare('SELECT id, version_number, owned_by_role, word_count, last_saved_at, content_markdown FROM page_versions WHERE page_id = ? ORDER BY version_number DESC').all(page.id);
+      const logs = database.prepare('SELECT * FROM page_logs WHERE page_id = ? ORDER BY created_at DESC').all(page.id);
+      const labels = database.prepare('SELECT l.id, l.name, l.color, l.description FROM page_labels pl JOIN labels l ON pl.label_id = l.id WHERE pl.page_id = ?').all(page.id);
       res.writeHead(200);
-      res.end(JSON.stringify({ ...page, versions }));
+      res.end(JSON.stringify({ ...page, versions, logs, labels }));
       return;
     }
 
@@ -266,33 +269,18 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 13. PUT /api/plane/pages/:id - Actualizar markdown y crear snapshot PageVersion
-    if (pageMatch && method === 'PUT') {
+    // 13. PUT / PATCH /api/plane/pages/:id - Actualizar markdown, propiedades (is_favorite, is_locked, full_width) o restaurar version
+    if (pageMatch && (method === 'PUT' || method === 'PATCH')) {
       const pageId = decodeURIComponent(pageMatch[1]);
       const body = await parseJsonBody(req);
-      if (body.content_markdown !== undefined) {
-        const words = body.content_markdown.trim().split(/\s+/).filter(Boolean).length;
-        const readingTime = Math.max(1, Math.ceil(words / 200));
-
-        database.prepare(`
-          UPDATE pages SET
-            content_markdown = ?,
-            word_count = ?,
-            reading_time_min = ?,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = ?;
-        `).run(body.content_markdown, words, readingTime, pageId);
-
-        const countVer = database.prepare('SELECT COUNT(*) as cnt FROM page_versions WHERE page_id = ?').get(pageId);
-        const nextVer = (countVer ? Number(countVer.cnt) : 0) + 1;
-        database.prepare(`
-          INSERT INTO page_versions (id, page_id, version_number, content_markdown, owned_by_role, word_count)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).run(`pv-${pageId}-v${nextVer}-${Date.now()}`, pageId, nextVer, body.content_markdown, body.role || 'spec-author', words);
-
-        syncPageToFile(database, pageId);
-      }
-      const updatedPage = database.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+      const updatedPage = updatePagePropertiesInSQLite(database, pageId, {
+        is_favorite: body.is_favorite,
+        is_locked: body.is_locked,
+        full_width: body.full_width,
+        restore_version_id: body.restore_version_id,
+        content_markdown: body.content_markdown,
+        actor_role: body.role || 'spec-author'
+      });
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true, page: updatedPage }));
       return;

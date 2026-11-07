@@ -211,12 +211,16 @@ Cubre rigurosamente toda la estructura del estándar IEEE 830 Sección 3:
 1. **Generación de `MASTER-PROJECT-KNOWLEDGE.md`**:
    - Ensambla en un único archivo Markdown maestro (con Tabla de Contenidos navegable) la totalidad de los documentos `01` al `12` más el contenido íntegro de todos los módulos en `modules/{modulo}/*`.
    - Prohibido resumir o recortar diagramas o tablas al crear el archivo maestro; debe funcionar como el *gemelo cognitivo* completo del software en un solo archivo.
-2. **Actualización de `knowledge-index.json` e Ingesta en el Modelo Plane SQLite + Markdown**:
+2. **Actualización de `knowledge-index.json` e Ingesta en el Modelo Relacional Plane (`pages`, `page_versions`, `page_logs`, `page_labels`, `ai_runs`)**:
    - Actualiza `project-docs/knowledge/knowledge-index.json` con todos los documentos, conteos reales y el grafo de relaciones.
-   - Envía todos los documentos Markdown generados hacia las tablas `pages` y `page_versions` de `project-docs/data/harness.db` y registra la ejecución de IA en `ai_runs` y `knowledge/ai-runs-log.md`:
+   - Al escribir los documentos Markdown, utiliza menciones explícitas a tareas (`INT-001`..`INT-NNN`), reglas (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`) y capacidades (`CAP-XXX`) para que el motor Plane SQLite construya automáticamente el grafo bidireccional en `page_logs` y los renderice como **Smart Entity Chips** interactivos en `PageReader.js` y en la pestaña **Info / Assets / Historial** de `PageNavigationPane.js`.
+   - Registra las páginas clave con sus metadatos Plane (`--locked` para páginas normativas bloqueadas contra edición accidental, `--favorite` para documentos estrella, `--full-width` para pliegos con diagramas anchos, `--labels` para `page_labels` y `--module` para vincular al módulo DDD) y ejecuta la sincronización completa:
      ```bash
+     node project-docs/cli.js page upsert --id "page-kb-c4-model_md" --title "Modelo de Arquitectura C4 (C1-C4)" --shelf "architecture" --file "project-docs/knowledge/c4-model.md" --locked --favorite --full-width --labels "c4-model,architecture,mermaid"
+     node project-docs/cli.js page upsert --id "page-kb-business-rules_md" --title "Catalogo de Reglas de Negocio (BR-*)" --shelf "business_rules" --file "project-docs/knowledge/business-rules.md" --locked --favorite --labels "business-rules,invariants,ddd"
+     node project-docs/cli.js page upsert --id "page-kb-MASTER-PROJECT-KNOWLEDGE_md" --title "Dossier Maestro Consolidado (Single-File Context)" --shelf "architecture" --file "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md" --locked --favorite --full-width --labels "master-bundle,ieee-830,c4-model,deepwiki"
      node project-docs/cli.js sync
-     node project-docs/cli.js ai log --skill project-knowledge --role spec-author --type KNOWLEDGE_EXTRACTION --summary "Extraccion de base de conocimiento soberana C4, UML, reglas BR-* y DeepWiki" --artifacts "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md,project-docs/knowledge/knowledge-index.json"
+     node project-docs/cli.js ai log --skill project-knowledge --role spec-author --type KNOWLEDGE_EXTRACTION --summary "Extraccion de base de conocimiento soberana C4, UML, reglas BR-*, grafo page_logs y etiquetas page_labels" --artifacts "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md,project-docs/knowledge/knowledge-index.json"
      node project-docs/sync-data.js
      ```
 
@@ -231,3 +235,4 @@ Antes de finalizar, verifica obligatoriamente:
 - [ ] **Doble Salida Completa**: Existen todos los archivos divididos en `project-docs/knowledge/` **Y** existe el megadocumento unificado `project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`.
 - [ ] **Módulos Profundos (5 archivos + 6 diagramas por módulo)**: Cada módulo en `modules/{modulo}/` cuenta con `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md` y `technical-debt-refactoring.md`.
 - [ ] **12 Tipos de Diagramas con Geometría Exacta**: Todos los diagramas Mermaid usan las formas geométricas correctas (cilindros, hexágonos, subrutinas, banderas, rombos) y tienen IDs alfanuméricos limpios con etiquetas entrecomilladas.
+- [ ] **Grafo Relacional Plane (`page_logs`, `page_labels`, `page_versions`)**: `node project-docs/cli.js sync` y `node project-docs/sync-data.js` se ejecutaron poblando telemetría documental (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`), etiquetas semánticas y vínculos cruzados hacia `INT-*`, `BR-*`, `RF-*`, `ADR-*` y `CAP-*`.

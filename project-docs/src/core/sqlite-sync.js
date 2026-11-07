@@ -41,7 +41,12 @@ export const DEFAULT_LABELS = [
   { id: 'lbl-tdd', name: 'tdd-verified', description: 'Cobertura de pruebas guiada por TDD', color: '#10b981', sort_order: 40 },
   { id: 'lbl-qa', name: 'qa-evidence', description: 'Evidencia de verificacion multinivel y E2E', color: '#06b6d4', sort_order: 50 },
   { id: 'lbl-arch', name: 'screaming-arch', description: 'Arquitectura Screaming orientada a dominios', color: '#f59e0b', sort_order: 60 },
-  { id: 'lbl-ai', name: 'ai-agent', description: 'Trazabilidad de ejecucion de skills e IA', color: '#ec4899', sort_order: 70 }
+  { id: 'lbl-ai', name: 'ai-agent', description: 'Trazabilidad de ejecucion de skills e IA', color: '#ec4899', sort_order: 70 },
+  { id: 'lbl-ieee830', name: 'ieee-830', description: 'Estandar IEEE Std. 830-1998 de Ingenieria de Requerimientos', color: '#3b82f6', sort_order: 80 },
+  { id: 'lbl-c4', name: 'c4-model', description: 'Arquitectura y modelado C4 (C1-C4)', color: '#6366f1', sort_order: 90 },
+  { id: 'lbl-uml', name: 'uml-2.5', description: 'Diagramas UML 2.5 (Clases, Secuencia, Estados, Actividades)', color: '#a855f7', sort_order: 100 },
+  { id: 'lbl-ddd', name: 'ddd', description: 'Domain-Driven Design, Bounded Contexts y Tarjetas CRC', color: '#d946ef', sort_order: 110 },
+  { id: 'lbl-deepwiki', name: 'deepwiki', description: 'Desglose funcional jerarquico y Mindmap DeepWiki', color: '#06b6d4', sort_order: 120 }
 ];
 
 export const DEFAULT_ISSUE_TYPES = [
@@ -652,20 +657,26 @@ export function syncFilesToSQLite(db) {
   // 12. Ensure AI Runs Markdown Mirror exists before indexing Pages
   syncAiRunsToMarkdownFile(db);
 
-  // 13. Pages & PageVersions desde Markdown (knowledge/ y specs/)
+  // 13. Pages, PageVersions, PageLogs & PageLabels desde Markdown (knowledge/ y specs/)
   const pageStmt = db.prepare(`
     INSERT INTO pages (
-      id, project_id, workspace_id, owned_by_id, owned_by_role,
+      id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
       file_path, title, summary, shelf, content_markdown, description_stripped,
-      word_count, reading_time_min, updated_at
-    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      is_locked, is_favorite, view_props,
+      word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
+    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       summary = excluded.summary,
       shelf = excluded.shelf,
+      module_id = excluded.module_id,
       content_markdown = excluded.content_markdown,
       description_stripped = excluded.description_stripped,
+      view_props = excluded.view_props,
       word_count = excluded.word_count,
+      char_count = excluded.char_count,
+      paragraph_count = excluded.paragraph_count,
+      diagrams_count = excluded.diagrams_count,
       reading_time_min = excluded.reading_time_min,
       updated_at = CURRENT_TIMESTAMP;
   `);
@@ -681,8 +692,24 @@ export function syncFilesToSQLite(db) {
       last_saved_at = CURRENT_TIMESTAMP;
   `);
 
+  const pageLabelStmt = db.prepare(`
+    INSERT INTO page_labels (id, workspace_id, page_id, label_id)
+    VALUES (?, 'ws-harness', ?, ?)
+    ON CONFLICT(id) DO NOTHING;
+  `);
+
+  const pageLogStmt = db.prepare(`
+    INSERT INTO page_logs (
+      id, workspace_id, page_id, transaction_id, entity_identifier, entity_name, entity_type
+    ) VALUES (?, 'ws-harness', ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      entity_identifier = excluded.entity_identifier,
+      entity_name = excluded.entity_name,
+      entity_type = excluded.entity_type;
+  `);
+
   function classifyShelf(filename) {
-    if (filename.startsWith('modules/')) return 'modules';
+    if (filename.startsWith('modules/') || filename.includes('/modules/')) return 'modules';
     if (filename.includes('architecture') || filename.includes('c4') || filename.includes('diagrams') || filename.includes('data-dictionary')) return 'architecture';
     if (filename.includes('business-rules') || filename.includes('rules')) return 'business_rules';
     if (filename.includes('requirements') || filename.includes('user-stories') || filename.includes('traceability')) return 'requirements';
@@ -690,6 +717,8 @@ export function syncFilesToSQLite(db) {
     if (filename.startsWith('specs/')) return 'specs';
     return 'standards';
   }
+
+  const forwardLinksToResolve = [];
 
   function indexDirectory(dir, prefix = '', shelfOverride = null) {
     if (!fs.existsSync(dir)) return;
@@ -717,24 +746,33 @@ export function syncFilesToSQLite(db) {
           if (!title) {
             title = ent.name.replace(/\.md$/, '').replace(/[-_]/g, ' ');
           }
-          const words = content.trim().split(/\s+/).filter(Boolean).length;
-          const readingTime = Math.max(1, Math.ceil(words / 200));
+
+          const telemetry = extractPageTelemetryAndLogs(content, relPath);
           const pageId = `page-${relPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
           const shelf = shelfOverride || classifyShelf(relPath);
           const ownerRole = shelf === 'specs' ? 'spec-author' : 'leader';
+          const ownerId = mapRoleToUserId(ownerRole);
 
           pageStmt.run(
             pageId,
-            mapRoleToUserId(ownerRole),
+            ownerId,
             ownerRole,
+            ownerId,
+            telemetry.moduleId,
             relPath,
             title,
             summary,
             shelf,
             content,
             summary,
-            words,
-            readingTime
+            telemetry.isLocked,
+            telemetry.isFavorite,
+            telemetry.viewPropsJson,
+            telemetry.words,
+            telemetry.chars,
+            telemetry.paragraphs,
+            telemetry.diagramsCount,
+            telemetry.readingTime
           );
 
           pageVersionStmt.run(
@@ -743,8 +781,21 @@ export function syncFilesToSQLite(db) {
             content,
             summary,
             ownerRole,
-            words
+            telemetry.words
           );
+
+          for (const lblId of telemetry.labelIds) {
+            pageLabelStmt.run(`plbl-${pageId}-${lblId}`, pageId, lblId);
+          }
+
+          for (const lg of telemetry.logs) {
+            const cleanIdent = lg.entity_identifier.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const logId = `plog-${pageId}-${lg.entity_type}-${cleanIdent}`;
+            pageLogStmt.run(logId, pageId, `tx-${cleanIdent}`, lg.entity_identifier, lg.entity_name, lg.entity_type);
+            if (lg.entity_name === 'forward_link') {
+              forwardLinksToResolve.push({ sourcePageId: pageId, sourcePath: relPath, targetPath: lg.entity_identifier });
+            }
+          }
         } catch (err) {
           console.warn(`[SQLITE-SYNC] Error indexando archivo ${full}:`, err.message);
         }
@@ -754,6 +805,163 @@ export function syncFilesToSQLite(db) {
 
   indexDirectory(KNOWLEDGE_DIR, 'knowledge');
   indexDirectory(SPECS_DIR, 'specs', 'specs');
+
+  // Resolve reciprocal back_links between pages
+  const allIndexedPages = db.prepare('SELECT id, file_path FROM pages').all();
+  for (const fl of forwardLinksToResolve) {
+    const targetPage = allIndexedPages.find(p =>
+      p.file_path === fl.targetPath ||
+      p.file_path.endsWith(`/${path.basename(fl.targetPath)}`) ||
+      path.basename(p.file_path) === path.basename(fl.targetPath)
+    );
+    if (targetPage && targetPage.id !== fl.sourcePageId) {
+      const cleanSrc = fl.sourcePath.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const backLogId = `plog-${targetPage.id}-backlink-${cleanSrc}`;
+      pageLogStmt.run(backLogId, targetPage.id, `tx-back-${cleanSrc}`, fl.sourcePath, 'back_link', 'page');
+    }
+  }
+}
+
+export function extractPageTelemetryAndLogs(content = '', relPath = '') {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  const chars = content.length;
+  const paragraphs = Math.max(
+    1,
+    content
+      .split(/\r?\n\s*\r?\n/)
+      .map(p => p.trim())
+      .filter(p => p && !p.startsWith('#') && !p.startsWith('```') && !p.startsWith('|'))
+      .length
+  );
+  const readingTime = Math.max(1, Math.ceil(words / 200));
+
+  const assets = [];
+  const mermaidRegex = /```mermaid\s*([\s\S]*?)```/gi;
+  let mMatch;
+  let diagIdx = 0;
+  while ((mMatch = mermaidRegex.exec(content)) !== null) {
+    diagIdx++;
+    const body = (mMatch[1] || '').trim();
+    const firstLine = (body.split(/\r?\n/)[0] || 'flowchart').trim();
+    const diagType = firstLine.split(/\s+/)[0] || 'flowchart';
+    assets.push({
+      id: `asset-mermaid-${diagIdx}`,
+      type: 'mermaid',
+      diagram_type: diagType,
+      title: `Diagrama Mermaid #${diagIdx} (${diagType})`,
+      preview: firstLine.slice(0, 80)
+    });
+  }
+
+  const imgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  let iMatch;
+  let imgIdx = 0;
+  while ((iMatch = imgRegex.exec(content)) !== null) {
+    imgIdx++;
+    assets.push({
+      id: `asset-img-${imgIdx}`,
+      type: 'image',
+      diagram_type: 'image',
+      title: iMatch[1] || `Imagen #${imgIdx}`,
+      src: iMatch[2]
+    });
+  }
+
+  const diagramsCount = assets.filter(a => a.type === 'mermaid').length;
+
+  const lowPath = relPath.toLowerCase();
+  const isLocked = (
+    lowPath.includes('business-rule') ||
+    lowPath.includes('10-business-rules') ||
+    lowPath.includes('07-functional-requirements') ||
+    lowPath.includes('09-data-dictionary') ||
+    lowPath.includes('data-dictionary') ||
+    lowPath.endsWith('requirements.md')
+  ) ? 1 : 0;
+
+  const isFavorite = (
+    lowPath.includes('master-project-knowledge') ||
+    lowPath.includes('01-project-overview') ||
+    lowPath.includes('03-capabilities') ||
+    lowPath.endsWith('c4-model.md')
+  ) ? 1 : 0;
+
+  const isFullWidth = (
+    lowPath.includes('diagrams') ||
+    lowPath.includes('c4-model') ||
+    lowPath.includes('data-dictionary') ||
+    lowPath.includes('traceability') ||
+    lowPath.includes('05-uml') ||
+    lowPath.includes('06-architecture') ||
+    diagramsCount >= 2
+  );
+
+  let moduleId = 'mod-knowledge';
+  const modDirMatch = relPath.match(/modules\/([^/]+)\//i);
+  if (modDirMatch) {
+    moduleId = mapModuleId(modDirMatch[1]);
+  } else if (lowPath.startsWith('specs/')) {
+    moduleId = 'mod-core';
+  }
+
+  const labelIds = new Set();
+  if (lowPath.startsWith('specs/')) labelIds.add('lbl-sdd');
+  if (lowPath.includes('c4') || lowPath.includes('architecture') || content.includes('C4')) labelIds.add('lbl-c4');
+  if (lowPath.includes('uml') || content.includes('sequenceDiagram') || content.includes('classDiagram')) labelIds.add('lbl-uml');
+  if (lowPath.includes('ddd') || lowPath.includes('modules/') || content.includes('Bounded Context')) labelIds.add('lbl-ddd');
+  if (lowPath.includes('capabilities') || lowPath.includes('master-project-knowledge') || content.includes('DeepWiki')) labelIds.add('lbl-deepwiki');
+  if (lowPath.includes('requirements') || lowPath.includes('overview') || content.includes('IEEE 830')) labelIds.add('lbl-ieee830');
+  if (labelIds.size === 0) labelIds.add('lbl-sdd');
+
+  const logs = [];
+  const seenLogKeys = new Set();
+  const pushLog = (entity_identifier, entity_name, entity_type) => {
+    const k = `${entity_type}:${entity_identifier}`;
+    if (!seenLogKeys.has(k)) {
+      seenLogKeys.add(k);
+      logs.push({ entity_identifier, entity_name, entity_type });
+    }
+  };
+
+  for (const m of content.matchAll(/\b(INT-\d{3})\b/g)) {
+    pushLog(m[1], 'issue', 'issue');
+  }
+  for (const m of content.matchAll(/\b(BR-[A-Z0-9-]+)\b/g)) {
+    pushLog(m[1], 'business_rule', 'rule');
+  }
+  for (const m of content.matchAll(/\b(RF-[A-Z0-9-]+)\b/g)) {
+    pushLog(m[1], 'requirement', 'requirement');
+  }
+  for (const m of content.matchAll(/\b(CAP-[A-Z0-9-]+)\b/g)) {
+    pushLog(m[1], 'capability', 'capability');
+  }
+  for (const m of content.matchAll(/\b(ADR-\d+)\b/g)) {
+    pushLog(m[1], 'ADR', 'adr');
+  }
+  for (const m of content.matchAll(/\b(mod-[a-z0-9-]+)\b/g)) {
+    pushLog(m[1], 'module', 'module');
+  }
+  for (const m of content.matchAll(/\[[^\]]+\]\(([^)]+\.md)\)/gi)) {
+    const targetMd = m[1].replace(/^\.\//, '').replace(/^project-docs\//, '');
+    pushLog(targetMd, 'forward_link', 'page');
+  }
+
+  return {
+    words,
+    chars,
+    paragraphs,
+    readingTime,
+    diagramsCount,
+    assets,
+    isLocked,
+    isFavorite,
+    isFullWidth,
+    viewPropsJson: JSON.stringify({ full_width: isFullWidth, assets }),
+    moduleId,
+    labelIds: Array.from(labelIds),
+    labels: Array.from(labelIds),
+    logs
+  };
 }
 
 export function syncAiRunsToMarkdownFile(db) {
@@ -1148,44 +1356,72 @@ export function upsertPageInSQLite(db, {
   title,
   shelf = 'standards',
   content_markdown = '',
-  owned_by_role = 'spec-author'
+  owned_by_role = 'spec-author',
+  is_locked = null,
+  is_favorite = null,
+  full_width = null,
+  labels = [],
+  module_id = null
 } = {}) {
   const cleanRelPath = file_path.replace(/^project-docs[\\/]/, '').replace(/\\/g, '/');
   const pageId = `page-${cleanRelPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-  const words = content_markdown.trim().split(/\s+/).filter(Boolean).length;
-  const readingTime = Math.max(1, Math.ceil(words / 200));
+  const telemetry = extractPageTelemetryAndLogs(content_markdown, cleanRelPath);
   const summary = content_markdown
     .split(/\r?\n/)
     .map(l => l.trim())
     .find(l => l && !l.startsWith('#') && !l.startsWith('>')) || title;
 
+  const finalLocked = is_locked !== null ? (is_locked ? 1 : 0) : telemetry.isLocked;
+  const finalFav = is_favorite !== null ? (is_favorite ? 1 : 0) : telemetry.isFavorite;
+  const finalFullWidth = full_width !== null ? Boolean(full_width) : telemetry.isFullWidth;
+  const finalModuleId = module_id ? mapModuleId(module_id) : telemetry.moduleId;
+  const viewPropsJson = JSON.stringify({ full_width: finalFullWidth, assets: telemetry.assets });
+  const ownerId = mapRoleToUserId(owned_by_role);
+
   db.prepare(`
     INSERT INTO pages (
-      id, project_id, workspace_id, owned_by_id, owned_by_role,
+      id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
       file_path, title, summary, shelf, content_markdown, description_stripped,
-      word_count, reading_time_min, updated_at
-    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      is_locked, is_favorite, view_props,
+      word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
+    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       summary = excluded.summary,
       shelf = excluded.shelf,
+      updated_by_id = excluded.updated_by_id,
+      module_id = excluded.module_id,
       content_markdown = excluded.content_markdown,
       description_stripped = excluded.description_stripped,
+      is_locked = excluded.is_locked,
+      is_favorite = excluded.is_favorite,
+      view_props = excluded.view_props,
       word_count = excluded.word_count,
+      char_count = excluded.char_count,
+      paragraph_count = excluded.paragraph_count,
+      diagrams_count = excluded.diagrams_count,
       reading_time_min = excluded.reading_time_min,
       updated_at = CURRENT_TIMESTAMP;
   `).run(
     pageId,
-    mapRoleToUserId(owned_by_role),
+    ownerId,
     owned_by_role,
+    ownerId,
+    finalModuleId,
     cleanRelPath,
     title,
     summary.slice(0, 160),
     shelf,
     content_markdown,
     summary.slice(0, 160),
-    words,
-    readingTime
+    finalLocked,
+    finalFav,
+    viewPropsJson,
+    telemetry.words,
+    telemetry.chars,
+    telemetry.paragraphs,
+    telemetry.diagramsCount,
+    telemetry.readingTime
   );
 
   const countVer = db.prepare('SELECT COUNT(*) as cnt FROM page_versions WHERE page_id = ?').get(pageId);
@@ -1201,11 +1437,91 @@ export function upsertPageInSQLite(db, {
     content_markdown,
     summary.slice(0, 160),
     owned_by_role,
-    words
+    telemetry.words
   );
+
+  const pageLabelStmt = db.prepare(`
+    INSERT INTO page_labels (id, workspace_id, page_id, label_id)
+    VALUES (?, 'ws-harness', ?, ?)
+    ON CONFLICT(id) DO NOTHING;
+  `);
+  const allLbls = new Set([...telemetry.labelIds, ...(Array.isArray(labels) ? labels : [])]);
+  for (const lbl of allLbls) {
+    const lblRow = db.prepare('SELECT id FROM labels WHERE id = ? OR name = ?').get(lbl, lbl);
+    if (lblRow) {
+      pageLabelStmt.run(`plbl-${pageId}-${lblRow.id}`, pageId, lblRow.id);
+    }
+  }
+
+  const pageLogStmt = db.prepare(`
+    INSERT INTO page_logs (
+      id, workspace_id, page_id, transaction_id, entity_identifier, entity_name, entity_type
+    ) VALUES (?, 'ws-harness', ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      entity_identifier = excluded.entity_identifier,
+      entity_name = excluded.entity_name,
+      entity_type = excluded.entity_type;
+  `);
+  for (const lg of telemetry.logs) {
+    const cleanIdent = lg.entity_identifier.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const logId = `plog-${pageId}-${lg.entity_type}-${cleanIdent}`;
+    pageLogStmt.run(logId, pageId, `tx-${cleanIdent}`, lg.entity_identifier, lg.entity_name, lg.entity_type);
+  }
 
   syncPageToFile(db, pageId);
   return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+}
+
+export function updatePagePropertiesInSQLite(db, pageId, {
+  is_favorite,
+  is_locked,
+  full_width,
+  restore_version_id,
+  content_markdown,
+  actor_role = 'spec-author'
+} = {}) {
+  const page = db.prepare('SELECT * FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
+  if (!page) return null;
+
+  const targetId = page.id;
+
+  if (restore_version_id) {
+    const ver = db.prepare('SELECT * FROM page_versions WHERE id = ? AND page_id = ?').get(restore_version_id, targetId);
+    if (ver) {
+      content_markdown = ver.content_markdown;
+    }
+  }
+
+  if (typeof content_markdown === 'string') {
+    return upsertPageInSQLite(db, {
+      file_path: page.file_path,
+      title: page.title,
+      shelf: page.shelf,
+      content_markdown,
+      owned_by_role: actor_role,
+      is_locked: is_locked !== undefined ? is_locked : page.is_locked,
+      is_favorite: is_favorite !== undefined ? is_favorite : page.is_favorite,
+      full_width
+    });
+  }
+
+  const newFav = is_favorite !== undefined ? (is_favorite ? 1 : 0) : page.is_favorite;
+  const newLock = is_locked !== undefined ? (is_locked ? 1 : 0) : page.is_locked;
+  let vp = { full_width: false, assets: [] };
+  try {
+    vp = JSON.parse(page.view_props || '{"full_width":false}');
+  } catch (_) {}
+  if (full_width !== undefined) {
+    vp.full_width = Boolean(full_width);
+  }
+
+  db.prepare(`
+    UPDATE pages
+    SET is_favorite = ?, is_locked = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(newFav, newLock, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
+
+  return db.prepare('SELECT * FROM pages WHERE id = ?').get(targetId);
 }
 
 export function getPlaneData(db) {
@@ -1251,25 +1567,58 @@ export function getPlaneData(db) {
   const issueActivities = db.prepare('SELECT * FROM issue_activities ORDER BY created_at DESC').all();
   const issueComments = db.prepare('SELECT * FROM issue_comments ORDER BY created_at ASC').all();
   const issueEvidences = db.prepare('SELECT * FROM issue_evidences ORDER BY created_at ASC').all();
-  const pages = db.prepare('SELECT id, file_path, title, summary, shelf, owned_by_role, word_count, reading_time_min, updated_at FROM pages ORDER BY title ASC').all();
 
-  const groupByIssue = (rows) => {
+  const pages = db.prepare(`
+    SELECT id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
+           file_path, title, summary, shelf, content_markdown, is_locked, is_favorite, view_props,
+           word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
+    FROM pages
+    ORDER BY is_favorite DESC, title ASC
+  `).all();
+
+  const pageVersions = db.prepare('SELECT id, page_id, version_number, description_stripped, owned_by_role, word_count, last_saved_at, created_at FROM page_versions ORDER BY version_number DESC, last_saved_at DESC').all();
+  const pageLogs = db.prepare('SELECT * FROM page_logs ORDER BY created_at DESC').all();
+  const pageLabels = db.prepare(`
+    SELECT pl.page_id, l.id, l.name, l.color, l.description
+    FROM page_labels pl
+    JOIN labels l ON pl.label_id = l.id
+  `).all();
+
+  const groupByKey = (rows, key) => {
     const map = {};
     for (const r of rows) {
-      if (!map[r.issue_id]) map[r.issue_id] = [];
-      map[r.issue_id].push(r);
+      if (!map[r[key]]) map[r[key]] = [];
+      map[r[key]].push(r);
     }
     return map;
   };
 
-  const subtasksByIssue = groupByIssue(subtasks);
-  const labelsByIssue = groupByIssue(issueLabels);
-  const assigneesByIssue = groupByIssue(issueAssignees);
-  const relationsByIssue = groupByIssue(issueRelations);
-  const activitiesByIssue = groupByIssue(issueActivities);
-  const commentsByIssue = groupByIssue(issueComments);
-  const evidencesByIssue = groupByIssue(issueEvidences);
-  const aiRunsByIssue = groupByIssue(aiRuns.filter(r => r.issue_id));
+  const subtasksByIssue = groupByKey(subtasks, 'issue_id');
+  const labelsByIssue = groupByKey(issueLabels, 'issue_id');
+  const assigneesByIssue = groupByKey(issueAssignees, 'issue_id');
+  const relationsByIssue = groupByKey(issueRelations, 'issue_id');
+  const activitiesByIssue = groupByKey(issueActivities, 'issue_id');
+  const commentsByIssue = groupByKey(issueComments, 'issue_id');
+  const evidencesByIssue = groupByKey(issueEvidences, 'issue_id');
+  const aiRunsByIssue = groupByKey(aiRuns.filter(r => r.issue_id), 'issue_id');
+
+  const versionsByPage = groupByKey(pageVersions, 'page_id');
+  const logsByPage = groupByKey(pageLogs, 'page_id');
+  const labelsByPage = groupByKey(pageLabels, 'page_id');
+
+  for (const page of pages) {
+    page.versions = versionsByPage[page.id] || [];
+    page.logs = logsByPage[page.id] || [];
+    page.labels = labelsByPage[page.id] || [];
+    try {
+      const vp = JSON.parse(page.view_props || '{"full_width":false}');
+      page.full_width = Boolean(vp.full_width);
+      page.assets = Array.isArray(vp.assets) ? vp.assets : [];
+    } catch (_) {
+      page.full_width = false;
+      page.assets = [];
+    }
+  }
 
   for (const issue of issues) {
     issue.subtasks = subtasksByIssue[issue.id] || [];
@@ -1304,6 +1653,9 @@ export function getPlaneData(db) {
     aiConfigs,
     aiRuns,
     issues,
-    pages
+    pages,
+    pageLogs,
+    pageLabels,
+    pageVersions
   };
 }

@@ -175,6 +175,17 @@
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Implementacion de las 26 tablas relacionales de Plane e IA en SQLite (harness.db), sincronizacion bidireccional con knowledge/ai-runs-log.md, ampliacion de CLI/API/UI y conexion de las 21 skills SDD para enviar evidencias y reportes al proyecto."
+    },
+    {
+      "id": 17,
+      "type": "feature",
+      "name": "plane_pages_knowledge_graph_ai",
+      "title": "Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA",
+      "branch": "feature/INT-017/plane_pages_knowledge_graph_ai",
+      "completed_at": "2026-11-07T20:15:00.000Z",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Extension a 28 tablas SQLite (page_logs y page_labels), rediseño de PageShelfTree, PageHeaderActions (Ask Harness AI), PageNavigationPane (4 pestañas: Outline, Info, Assets, Historial) y PageReader (Smart Entity Chips), e integracion en /project-knowledge."
     }
   ]
 }

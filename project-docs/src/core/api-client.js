@@ -221,6 +221,35 @@ export class ApiClient {
       return { ok: false, error: err.message };
     }
   }
+
+  /**
+   * Actualiza el contenido Markdown o metadatos de una página en Plane SQLite.
+   * @param {string} pageId
+   * @param {string|Record<string, any>} payload
+   * @returns {Promise<any>}
+   */
+  async updatePlanePage(pageId, payload) {
+    if (this.isOffline()) {
+      return { ok: true, offline: true };
+    }
+    const body = typeof payload === 'string' ? { content_markdown: payload } : payload;
+    try {
+      const res = await fetch(`${this.baseUrl}/api/plane/pages/${encodeURIComponent(pageId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        return { ok: false, status: res.status };
+      }
+      return await res.json();
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

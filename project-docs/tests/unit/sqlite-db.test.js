@@ -10,11 +10,13 @@ import {
   recordSkillExecution,
   recordIssueEvidence,
   recordIssueComment,
-  recordIssueRelation
+  recordIssueRelation,
+  extractPageTelemetryAndLogs,
+  updatePagePropertiesInSQLite
 } from '../../src/core/sqlite-sync.js';
 
-describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA (26 Tablas)', () => {
-  test('initDatabase crea las 26 tablas relacionales requeridas para Plane e IA', () => {
+describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA (28 Tablas)', () => {
+  test('initDatabase crea las 28 tablas relacionales requeridas para Plane, Pages Graph e IA', () => {
     const db = initDatabase(':memory:');
     const tables = db.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;
@@ -40,6 +42,8 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
       'labels',
       'module_issues',
       'modules',
+      'page_labels',
+      'page_logs',
       'page_versions',
       'pages',
       'projects',
@@ -70,7 +74,7 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
     assert.strictEqual(mapPriority(''), 'none');
   });
 
-  test('syncFilesToSQLite puebla datos relacionales de Plane, agentes bot IA, evidencias y relaciones', () => {
+  test('syncFilesToSQLite puebla datos relacionales de Plane, agentes bot IA, evidencias, page_logs y page_labels', () => {
     const db = initDatabase(':memory:');
     syncFilesToSQLite(db);
     const data = getPlaneData(db);
@@ -112,6 +116,41 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
     assert.ok(Array.isArray(issue11.activities) && issue11.activities.length > 0);
     assert.ok(Array.isArray(issue11.ai_runs) && issue11.ai_runs.length > 0);
     assert.ok(Array.isArray(issue11.acceptance));
+
+    // Verificar que cada página tenga telemetría, page_logs, page_labels y versions
+    const c4Page = data.pages.find(p => (p.file_path || '').includes('c4-model.md'));
+    assert.ok(c4Page);
+    assert.ok(c4Page.word_count > 0);
+    assert.ok(c4Page.char_count > 0);
+    assert.ok(c4Page.paragraph_count > 0);
+    assert.ok(Array.isArray(c4Page.logs));
+    assert.ok(Array.isArray(c4Page.labels) && c4Page.labels.length > 0);
+    assert.ok(Array.isArray(c4Page.versions) && c4Page.versions.length > 0);
+  });
+
+  test('extractPageTelemetryAndLogs y updatePagePropertiesInSQLite gestionan vínculos y propiedades de página', () => {
+    const md = '# Arquitectura\nVinculado a INT-016, regla BR-001, requisito RF-002 y [Reglas](business-rules.md).\n```mermaid\nflowchart TD\nA-->B\n```';
+    const telemetry = extractPageTelemetryAndLogs(md, 'knowledge/c4-model.md');
+    assert.strictEqual(telemetry.diagramsCount, 1);
+    assert.ok(telemetry.logs.some(l => l.entity_name === 'issue' && l.entity_identifier === 'INT-016'));
+    assert.ok(telemetry.logs.some(l => l.entity_name === 'business_rule' && l.entity_identifier === 'BR-001'));
+    assert.ok(telemetry.logs.some(l => l.entity_name === 'requirement' && l.entity_identifier === 'RF-002'));
+    assert.ok(telemetry.labelIds.includes('lbl-c4'));
+    assert.ok(Array.isArray(telemetry.assets) && telemetry.assets.length === 1);
+
+    const db = initDatabase(':memory:');
+    syncFilesToSQLite(db);
+    const firstPage = db.prepare('SELECT id FROM pages LIMIT 1').get();
+    assert.ok(firstPage);
+
+    const updated = updatePagePropertiesInSQLite(db, firstPage.id, {
+      is_favorite: true,
+      is_locked: false,
+      full_width: true
+    });
+    assert.strictEqual(updated.is_favorite, 1);
+    assert.strictEqual(updated.is_locked, 0);
+    assert.ok(updated.view_props.includes('"full_width":true'));
   });
 
   test('Funciones de registro de IA, evidencias, comentarios y relaciones funcionan en SQLite', () => {

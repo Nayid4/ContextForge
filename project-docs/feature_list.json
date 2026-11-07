@@ -1414,6 +1414,85 @@
           "project-docs/specs/016_plane_data_model_ai_tracking/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 17,
+      "type": "feature",
+      "name": "plane_pages_knowledge_graph_ai",
+      "title": "Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA",
+      "description": "Extension relacional en SQLite a 28 tablas con page_logs (menciones automaticas a INT-XXX, BR-XXX, RF-XXX, ADR-XXX, CAP-XXX, back_link y forward_link), page_labels y telemetria documental (word_count, char_count, paragraph_count, diagrams_count, is_locked, is_favorite, view_props). Rediseño de PageShelfTree (filtros Todas, Favoritas, Normativas, Por Modulo), PageHeaderActions (Ask Harness AI, Lock, Favorite, Full Width, Sync Badge), PageNavigationPane (4 pestañas: Outline, Info, Assets, Historial) y PageReader (Smart Entity Chips clicables), junto con la evolucion de la skill /project-knowledge.",
+      "module": "Knowledge Engine",
+      "priority": "P0",
+      "weight": 100,
+      "depends_on": [
+        16
+      ],
+      "branch": "feature/INT-017/plane_pages_knowledge_graph_ai",
+      "spec_folder": "project-docs/specs/017_plane_pages_knowledge_graph_ai",
+      "status": "done",
+      "acceptance": [
+        "28 tablas relacionales operativas en project-docs/data/harness.db incluyendo page_logs y page_labels.",
+        "PageShelfTree.js con pestañas de filtro rapido (Todas, Favoritas, Normativas, Por Modulo) e iconos SVG de bloqueo, favorito y conteo de diagramas.",
+        "PageHeaderActions con badge SQLite + .md Synced, botones interactivos de Favorito, Bloqueo Normativo, Ancho Completo, Copiar Markdown, Ask Harness AI y toggle de inspector.",
+        "PageNavigationPane.js con las 4 pestañas de Plane (Outline, Info con 4 KPI cards y PageLog Graph, Assets con diagramas Mermaid, Historial con restauracion de page_versions).",
+        "PageReader.js con Smart Entity Chips que convierten menciones INT-XXX en chips interactivos que abren IssueDetailModal y BR/RF/ADR/CAP en insignias tecnicas.",
+        "Skill /project-knowledge actualizada y sincronizada en triple espejo (.opencode/skills/, .github/skills/, .agents/skills/)."
+      ],
+      "user_story": {
+        "as_a": "Arquitecto de Software, Desarrollador y Agente de IA",
+        "i_want": "gestionar la Base de Conocimiento con el patron completo de Plane Pages, grafo relacional page_logs/page_labels y asistente IA",
+        "so_that": "cada documento vivo exponga su telemetria, sus vinculos bidireccionales con tareas e invariantes, sus diagramas Mermaid y su historial de versiones"
+      },
+      "subtasks": [
+        {
+          "id": "INT-017-DEV",
+          "type": "development",
+          "title": "Extension SQLite (page_logs, page_labels), PageNavigationPane (4 pestañas), Smart Entity Chips y skill project-knowledge",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Añadir tablas page_logs y page_labels y telemetria documental en db.js y sqlite-sync.js (28 tablas)",
+            "Ampliar cli.js y serve.js para gestionar propiedades de pagina (is_locked, is_favorite, full_width, labels, restore_version_id)",
+            "Crear PageNavigationPane.js y evolucionar PageShelfTree.js, PageReader.js, PagesPage.js y KnowledgeBase.js",
+            "Actualizar skill project-knowledge y sincronizar en las 3 plataformas"
+          ]
+        },
+        {
+          "id": "INT-017-QA",
+          "type": "qa",
+          "title": "Pruebas unitarias de 28 tablas SQLite, componentes Plane Pages y verificacion de 9 niveles",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar 28 tablas SQLite, extractPageTelemetryAndLogs y updatePagePropertiesInSQLite en sqlite-db.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar PageNavigationPane (4 pestañas), Smart Entity Chips y PageHeaderActions en pages.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Ejecutar pipeline de 9 niveles en project-docs/verify.sh con 0 regresiones",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T20:15:00.000Z",
+        "dev_summary": "Implementada la evolucion de la Base de Conocimiento al patron Plane Pages: 28 tablas en SQLite (page_logs, page_labels y telemetria en pages), PageShelfTree con 4 filtros rapidos, PageHeaderActions con Ask Harness AI, PageNavigationPane de 4 pestañas (Outline, Info, Assets, Historial), Smart Entity Chips en PageReader y actualizacion triple de la skill /project-knowledge.",
+        "verification_report": "project-docs/specs/017_plane_pages_knowledge_graph_ai/verification-report.md",
+        "qa_screenshots": [
+          "project-docs/specs/017_plane_pages_knowledge_graph_ai/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/017_plane_pages_knowledge_graph_ai/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/017_plane_pages_knowledge_graph_ai/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/017_plane_pages_knowledge_graph_ai/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 }

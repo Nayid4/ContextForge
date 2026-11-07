@@ -1,21 +1,25 @@
 import { Icons } from '../../../shared/Icons.js';
 import { renderBadge } from '../../../shared/Badge.js';
 import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksToMarkdown } from '../../../shared/MarkdownViewer.js';
+import { PagesPage, renderPageHeaderActions } from '../pages/PagesPage.js';
+import { PageNavigationPane } from './PageNavigationPane.js';
+import { enrichMarkdownWithSmartChips } from './PageReader.js';
 
 /**
- * KnowledgeBaseComponent: Base de Conocimiento de Ingeniería Soberana (Docs-as-Code).
- * Diseñada con experiencia editorial de alta gama (Biblioteca por Estantes + Lector de Artículos)
- * e inspirada en la arquitectura visual de ContextForge y el patrón de ingeniería inversa de DeepWiki.
+ * KnowledgeBaseComponent: Base de Conocimiento de Ingeniería Soberana (Docs-as-Code) + Plane Pages Workspace.
+ * Diseñada con experiencia editorial de alta gama (Biblioteca por Estantes + Lector de Artículos + Plane Pages Graph)
+ * e inspirada en la arquitectura visual de ContextForge, Plane Pages y el patrón de ingeniería inversa de DeepWiki.
  * 
- * Estructura de 3 Niveles:
+ * Estructura de 4 Niveles:
  *  - Tier 1: Visión Global & Arquitectura del Sistema (Documentos Canónicos, C4, DeepWiki Mindmap)
  *  - Tier 2: Módulos & Bounded Contexts Granulares (5 Bounded Contexts DDD, 5 Archivos Especializados c/u)
  *  - Tier 3: Megadocumento Maestro Consolidado (MASTER-PROJECT-KNOWLEDGE.md)
+ *  - Tier 4: Plane Pages Workspace & Knowledge Graph (PageShelfTree, PageHeaderActions, Smart Chips, 4-Tab Inspector)
  * 
  * 100% Vectorial, accesible, sin emojis. Exportación exclusivamente en formato Markdown (.md).
  */
 
-export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
+export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [], planePages = [], planePageState = {} }) {
   const kData = knowledgeIndex || getFallbackKnowledge();
   const rules = kData.business_rules || [];
   const services = kData.external_services || [];
@@ -194,12 +198,21 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                 <span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">MASTER-*.md</span>
               </button>
 
+              <!-- Tier 4: Plane Pages Workspace & Knowledge Graph -->
+              <button type="button" 
+                      data-kb-perspective="plane-workspace"
+                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                ${Icons.bookOpen('w-4 h-4')}
+                <span>4. Plane Pages Workspace & Graph</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">SQLite + IA</span>
+              </button>
+
             </div>
 
             <!-- Ayuda Contextual de Perspectiva -->
             <div class="hidden xl:flex items-center gap-2 text-[11px] font-mono text-slate-400 px-3 py-1">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Navegación en 3 Niveles (Global $\\to$ Modular $\\to$ Dossier)</span>
+              <span>Navegación en 4 Niveles (Global $\\to$ Modular $\\to$ Dossier $\\to$ Plane Graph)</span>
             </div>
           </div>
         </section>
@@ -815,6 +828,25 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
 
         </div>
 
+        <!-- ============================================================== -->
+        <!-- PANEL TIER 4: PLANE PAGES WORKSPACE & KNOWLEDGE GRAPH          -->
+        <!-- ============================================================== -->
+        <div id="kb-perspective-panel-plane-workspace" class="kb-perspective-panel hidden rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
+          ${PagesPage({
+            pages: planePages,
+            issues: features,
+            activePageId: planePageState.activePageId || (planePages[0] && planePages[0].id) || null,
+            activePageContent: planePageState.activePageContent || '',
+            searchQuery: planePageState.searchQuery || '',
+            filterTab: planePageState.filterTab || 'all',
+            editorMode: planePageState.editorMode || 'reader',
+            isFullWidth: Boolean(planePageState.isFullWidth),
+            showNavigationPane: planePageState.showNavigationPane !== false,
+            activeNavTab: planePageState.activeNavTab || 'outline',
+            showAiMenu: Boolean(planePageState.showAiMenu)
+          })}
+        </div>
+
       </div>
 
       <!-- ============================================================== -->
@@ -843,8 +875,25 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               </span>
             </div>
 
-            <!-- Acciones del Documento -->
-            <div class="flex items-center gap-2">
+            <!-- Acciones del Documento + Plane PageHeaderActions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div id="article-plane-header-actions">
+                ${renderPageHeaderActions({
+                  activePage: planePages.find(p => (p.file_path || '').endsWith(activeDocKey)) || planePages[0] || {
+                    id: `page-kb-${activeDocKey.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+                    title: activeDocMeta.title || activeDocKey,
+                    file_path: `knowledge/${activeDocKey}`,
+                    word_count: activeDocMeta.wordCount || 450,
+                    reading_time_min: activeDocMeta.readingTime || 3,
+                    is_locked: 1,
+                    is_favorite: activeDocKey === 'c4-model.md' ? 1 : 0
+                  },
+                  isFullWidth: Boolean(planePageState.isFullWidth),
+                  showNavigationPane: planePageState.showNavigationPane !== false,
+                  showAiMenu: Boolean(planePageState.showAiMenu)
+                })}
+              </div>
+
               <span id="article-reading-time-badge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
                 ${Icons.clock('w-3.5 h-3.5')} <span>${activeDocMeta.readingTime} min</span>
               </span>
@@ -886,23 +935,42 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         </section>
 
-        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada 780px + TOC flotante) -->
+        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada o Full-Width + Inspector Plane 4 Pestañas) -->
         <div id="doc-reader-view-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          <!-- Contenido Principal del Artículo (Columna de Lectura) -->
-          <div class="lg:col-span-9 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px]">
-            <article id="doc-active-body" class="prose dark:prose-invert max-w-3xl mx-auto text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
-              ${renderMarkdown(activeDocContent)}
+          <!-- Contenido Principal del Artículo (Columna de Lectura con Smart Entity Chips) -->
+          <div id="doc-reader-main-col" class="${planePageState.showNavigationPane === false ? 'lg:col-span-12' : 'lg:col-span-8'} rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px] transition-all">
+            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? 'max-w-none w-full' : 'max-w-3xl mx-auto'} text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
+              ${enrichMarkdownWithSmartChips(renderMarkdown(activeDocContent), features)}
             </article>
           </div>
 
-          <!-- Barra Lateral Flotante: Tabla de Contenidos (TOC) On-This-Page -->
-          <div class="hidden lg:block lg:col-span-3 sticky top-36 space-y-4">
+          <!-- Barra Lateral Derecha: Inspector Plane de 4 Pestañas (Outline, Info, Assets, Historial) + TOC Canónico -->
+          <div id="doc-reader-right-col" class="${planePageState.showNavigationPane === false ? 'hidden' : 'hidden lg:block lg:col-span-4'} sticky top-36 space-y-4">
+            <div id="article-plane-inspector-container" class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md">
+              ${PageNavigationPane({
+                page: planePages.find(p => (p.file_path || '').endsWith(activeDocKey)) || planePages[0] || {
+                  id: `page-kb-${activeDocKey.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+                  title: activeDocMeta.title || activeDocKey,
+                  file_path: `knowledge/${activeDocKey}`,
+                  word_count: activeDocMeta.wordCount || 450,
+                  reading_time_min: activeDocMeta.readingTime || 3,
+                  is_locked: 1,
+                  is_favorite: activeDocKey === 'c4-model.md' ? 1 : 0
+                },
+                content: activeDocContent,
+                toc: activeDocToc,
+                activeTab: planePageState.activeNavTab || 'outline',
+                issues: features,
+                pages: planePages
+              })}
+            </div>
+
             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
               <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
                 ${Icons.fileText} <span>En esta página</span>
               </div>
-              <div id="doc-active-toc" class="max-h-[460px] overflow-y-auto pr-1">
+              <div id="doc-active-toc" class="max-h-[260px] overflow-y-auto pr-1">
                 ${renderTableOfContentsHtml(activeDocToc)}
               </div>
             </div>

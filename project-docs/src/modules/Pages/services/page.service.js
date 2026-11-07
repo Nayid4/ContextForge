@@ -65,6 +65,16 @@ export class PageService {
   }
 
   /**
+   * Actualiza propiedades de una página estilo Plane (is_favorite, is_locked, full_width, restore_version_id).
+   * @param {string} pageId
+   * @param {Record<string, any>} props
+   * @returns {Promise<any>}
+   */
+  async updatePageProperties(pageId, props = {}) {
+    return this.client.updatePlanePage(pageId, props);
+  }
+
+  /**
    * Determina el estante canónico a partir de la ruta del archivo.
    * @param {string} filePath
    * @returns {string}

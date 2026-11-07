@@ -581,15 +581,19 @@ function handleModuleList() {
 
 function handlePageList() {
   const shelfFilter = getArg('--shelf');
-  let query = 'SELECT id, title, shelf, owned_by_role, word_count, reading_time_min, file_path FROM pages WHERE 1=1';
+  let query = 'SELECT id, title, shelf, owned_by_role, updated_by_id, module_id, is_locked, is_favorite, word_count, char_count, paragraph_count, diagrams_count, reading_time_min, file_path FROM pages WHERE 1=1';
   const params = [];
   if (shelfFilter) {
     query += ' AND shelf = ?';
     params.push(shelfFilter);
   }
-  query += ' ORDER BY shelf ASC, title ASC';
+  query += ' ORDER BY is_favorite DESC, shelf ASC, title ASC';
 
   const pages = db.prepare(query).all(...params);
+  for (const p of pages) {
+    p.logs = db.prepare('SELECT entity_identifier, entity_name, entity_type FROM page_logs WHERE page_id = ?').all(p.id);
+    p.labels = db.prepare('SELECT l.id, l.name, l.color FROM page_labels pl JOIN labels l ON pl.label_id = l.id WHERE pl.page_id = ?').all(p.id);
+  }
 
   if (args.includes('--json')) {
     console.log(JSON.stringify(pages, null, 2));
@@ -597,10 +601,11 @@ function handlePageList() {
   }
 
   console.log(`\nPaginas de la Base de Conocimiento (Plane Pages):\n`);
-  console.log('ESTANTE'.padEnd(18) + 'ID / SLUG'.padEnd(36) + 'PALABRAS'.padEnd(10) + 'TITULO');
+  console.log('ESTANTE'.padEnd(16) + 'FAV/LOCK'.padEnd(10) + 'PALABRAS'.padEnd(10) + 'DIAG'.padEnd(6) + 'TITULO');
   console.log('-'.repeat(85));
   for (const p of pages) {
-    console.log(`${(p.shelf || 'doc').padEnd(18)}${(p.id || '').slice(0, 34).padEnd(36)}${String(p.word_count || 0).padEnd(10)}${p.title}`);
+    const flags = `${p.is_favorite ? '[FAV]' : ''}${p.is_locked ? '[LOCK]' : ''}` || '-';
+    console.log(`${(p.shelf || 'doc').padEnd(16)}${flags.padEnd(10)}${String(p.word_count || 0).padEnd(10)}${String(p.diagrams_count || 0).padEnd(6)}${p.title}`);
   }
   console.log('');
 }
@@ -628,9 +633,15 @@ function handlePageUpsert() {
   const sourceFile = getArg('--file', null);
   let content = getArg('--content', '');
   const role = getArg('--role', 'spec-author');
+  const isLocked = args.includes('--locked') ? 1 : (args.includes('--unlocked') ? 0 : null);
+  const isFavorite = args.includes('--favorite') ? 1 : null;
+  const fullWidth = args.includes('--full-width') ? true : null;
+  const labelsRaw = getArg('--labels', '');
+  const labels = labelsRaw ? labelsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const moduleId = getArg('--module', null);
 
   if (!relPath || !title) {
-    console.error('Uso: node project-docs/cli.js page upsert --path <rel_path> --title <titulo> [--shelf <shelf>] [--file <md_file>] [--content <md>]');
+    console.error('Uso: node project-docs/cli.js page upsert --path <rel_path> --title <titulo> [--shelf <shelf>] [--file <md_file>] [--content <md>] [--locked] [--favorite] [--full-width] [--labels <csv>] [--module <mod>]');
     process.exit(1);
   }
 
@@ -639,6 +650,11 @@ function handlePageUpsert() {
     if (fs.existsSync(absFile)) {
       content = fs.readFileSync(absFile, 'utf8');
     }
+  } else if (!content) {
+    const candidateFile = path.join(PROJECT_DOCS_DIR, relPath.replace(/^project-docs[\\/]/, ''));
+    if (fs.existsSync(candidateFile)) {
+      content = fs.readFileSync(candidateFile, 'utf8');
+    }
   }
 
   const page = upsertPageInSQLite(db, {
@@ -646,7 +662,12 @@ function handlePageUpsert() {
     title,
     shelf,
     content_markdown: content || `# ${title}\n`,
-    owned_by_role: role
+    owned_by_role: role,
+    is_locked: isLocked,
+    is_favorite: isFavorite,
+    full_width: fullWidth,
+    labels,
+    module_id: moduleId
   });
 
   if (args.includes('--json')) {

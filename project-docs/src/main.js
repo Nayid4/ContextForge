@@ -19,6 +19,9 @@ import {
   renderCyclesView,
   renderModulesView,
   renderPlanePagesView,
+  renderPageHeaderActions,
+  PageNavigationPane,
+  enrichMarkdownWithSmartChips,
   renderKnowledgeBase,
   renderArchitectureDocs,
   renderArchitectureView,
@@ -45,6 +48,8 @@ class App {
     this.autoSyncController = null;
     this.lastSyncTime = new Date();
     this.currentActiveDocKey = null;
+    this.isArticleOpen = false;
+    this.activeKbPerspective = 'global';
     this.editorMode = 'markdown';
     this.currentBlocks = [];
     this.isScrollingFromEditor = false;
@@ -247,7 +252,19 @@ class App {
           ${renderKnowledgeBase({
             knowledgeIndex: state.knowledgeIndex || planeData.knowledgeIndex,
             projectSpec: state.projectSpec || planeData.projectSpec,
-            features: state.features || issues
+            features: state.features || issues,
+            planePages: pages,
+            planePageState: {
+              activePageId: state.planeActivePageId,
+              activePageContent: state.planeActivePageContent,
+              searchQuery: state.planePageSearchQuery || '',
+              filterTab: state.planePageFilterTab || 'all',
+              editorMode: state.planePageEditorMode || 'reader',
+              isFullWidth: Boolean(state.planePageFullWidth),
+              showNavigationPane: state.planePageShowNavPane !== false,
+              activeNavTab: state.planePageNavTab || 'outline',
+              showAiMenu: Boolean(state.planePageShowAiMenu)
+            }
           })}
         </div>
       `;
@@ -358,6 +375,26 @@ class App {
       }
     } else if (currentView === 'architecture') {
       this.initMermaidDiagrams();
+    } else if (currentView === 'pages') {
+      if (this.activeKbPerspective && this.activeKbPerspective !== 'global') {
+        document.querySelectorAll('.kb-perspective-btn').forEach(btn => {
+          const isMatch = btn.getAttribute('data-kb-perspective') === this.activeKbPerspective;
+          btn.classList.toggle('active', isMatch);
+          btn.classList.toggle('bg-indigo-600', isMatch);
+          btn.classList.toggle('text-white', isMatch);
+          btn.classList.toggle('font-bold', isMatch);
+          btn.classList.toggle('shadow-xs', isMatch);
+        });
+        document.querySelectorAll('.kb-perspective-panel').forEach(panel => {
+          panel.classList.add('hidden');
+        });
+        document.getElementById(`kb-perspective-panel-${this.activeKbPerspective}`)?.classList.remove('hidden');
+      }
+      if (this.isArticleOpen && this.currentActiveDocKey) {
+        this.openArticleView(this.currentActiveDocKey, false, true);
+      } else {
+        this.initMermaidDiagrams();
+      }
     }
 
     this.isAppMounted = true;
@@ -504,6 +541,7 @@ class App {
       // Volver a la Biblioteca de Conocimiento
       const backToLibBtn = e.target.closest('[data-action="back-to-library"]');
       if (backToLibBtn) {
+        this.isArticleOpen = false;
         document.getElementById('kb-view-article')?.classList.add('hidden');
         document.getElementById('kb-view-library')?.classList.remove('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -657,10 +695,11 @@ class App {
         return;
       }
 
-      // Conmutar entre Niveles de Perspectiva (Global / Módulos / Dossier Maestro)
+      // Conmutar entre Niveles de Perspectiva (Global / Módulos / Dossier Maestro / Plane Workspace)
       const perspectiveBtn = e.target.closest('[data-kb-perspective]');
       if (perspectiveBtn) {
         const targetPersp = perspectiveBtn.getAttribute('data-kb-perspective');
+        this.activeKbPerspective = targetPersp || 'global';
         document.querySelectorAll('.kb-perspective-btn').forEach(btn => {
           btn.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
           btn.classList.add('text-slate-600', 'dark:text-slate-400', 'font-medium');
@@ -675,12 +714,126 @@ class App {
         if (targetPanel) {
           targetPanel.classList.remove('hidden');
         }
+        this.initMermaidDiagrams();
+        return;
+      }
+
+      // Filtro rápido de árbol de páginas Plane (all / favorites / locked / modules)
+      const pageFilterBtn = e.target.closest('[data-action="set-page-tree-filter"]');
+      if (pageFilterBtn) {
+        const filter = pageFilterBtn.getAttribute('data-filter') || 'all';
+        store.setState({ planePageFilterTab: filter });
+        return;
+      }
+
+      // Cambiar pestaña del Panel de Inspección Derecho (outline / info / assets / version_history)
+      const navTabBtn = e.target.closest('[data-action="switch-page-nav-tab"]');
+      if (navTabBtn) {
+        const tab = navTabBtn.getAttribute('data-tab') || 'outline';
+        store.setState({ planePageNavTab: tab, planePageShowNavPane: true, planePageShowAiMenu: false });
+        return;
+      }
+
+      // Mostrar / Ocultar Panel de Inspección Derecho
+      const toggleNavPaneBtn = e.target.closest('[data-action="toggle-page-nav-pane"]');
+      if (toggleNavPaneBtn) {
+        const curr = store.getState().planePageShowNavPane !== false;
+        store.setState({ planePageShowNavPane: !curr });
+        return;
+      }
+
+      // Alternar Favorito en página Plane (is_favorite)
+      const favPageBtn = e.target.closest('[data-action="toggle-page-favorite"]');
+      if (favPageBtn) {
+        const pageId = favPageBtn.getAttribute('data-page-id');
+        const pd = store.getState().planeData || {};
+        const pages = pd.pages || [];
+        const target = pages.find(p => p.id === pageId);
+        const nextFav = target ? (target.is_favorite ? 0 : 1) : 1;
+        if (target) target.is_favorite = nextFav;
+        await api.updatePlanePage(pageId, { is_favorite: Boolean(nextFav) });
+        store.setState({ planeData: { ...pd, pages: [...pages] } });
+        return;
+      }
+
+      // Alternar Bloqueo Normativo en página Plane (is_locked)
+      const lockPageBtn = e.target.closest('[data-action="toggle-page-lock"]');
+      if (lockPageBtn) {
+        const pageId = lockPageBtn.getAttribute('data-page-id');
+        const pd = store.getState().planeData || {};
+        const pages = pd.pages || [];
+        const target = pages.find(p => p.id === pageId);
+        const nextLock = target ? (target.is_locked ? 0 : 1) : 0;
+        if (target) target.is_locked = nextLock;
+        await api.updatePlanePage(pageId, { is_locked: Boolean(nextLock) });
+        store.setState({ planeData: { ...pd, pages: [...pages] } });
+        return;
+      }
+
+      // Alternar Ancho Completo (Full Width)
+      const fullWidthBtn = e.target.closest('[data-action="toggle-page-fullwidth"]');
+      if (fullWidthBtn) {
+        const pageId = fullWidthBtn.getAttribute('data-page-id');
+        const nextFw = !store.getState().planePageFullWidth;
+        if (pageId) await api.updatePlanePage(pageId, { full_width: nextFw });
+        store.setState({ planePageFullWidth: nextFw });
+        return;
+      }
+
+      // Alternar Menú Ask Harness AI
+      const aiMenuBtn = e.target.closest('[data-action="toggle-page-ai-menu"]');
+      if (aiMenuBtn) {
+        const curr = Boolean(store.getState().planePageShowAiMenu);
+        store.setState({ planePageShowAiMenu: !curr });
+        return;
+      }
+
+      // Copiar Markdown de la página activa
+      const copyPageMdBtn = e.target.closest('[data-action="copy-page-markdown"]');
+      if (copyPageMdBtn) {
+        const pageId = copyPageMdBtn.getAttribute('data-page-id');
+        const page = (store.getState().planeData?.pages || []).find(p => p.id === pageId);
+        const md = page?.content_markdown || store.getState().planeActivePageContent || '';
+        if (navigator.clipboard && md) {
+          navigator.clipboard.writeText(md).catch(() => {});
+        }
+        return;
+      }
+
+      // Restaurar versión histórica desde PageVersion
+      const restoreVerBtn = e.target.closest('[data-action="restore-page-version"]');
+      if (restoreVerBtn) {
+        const pageId = restoreVerBtn.getAttribute('data-page-id');
+        const versionId = restoreVerBtn.getAttribute('data-version-id');
+        if (pageId && versionId) {
+          await api.updatePlanePage(pageId, { restore_version_id: versionId });
+          await this.refreshData();
+        }
+        return;
+      }
+
+      // Saltar a diagrama o asset desde la pestaña Assets
+      const scrollAssetBtn = e.target.closest('[data-action="scroll-to-asset"]');
+      if (scrollAssetBtn) {
+        const idx = Math.max(0, Number(scrollAssetBtn.getAttribute('data-asset-index') || 1) - 1);
+        const diagrams = document.querySelectorAll('.mermaid, article pre, article img');
+        if (diagrams[idx]) {
+          diagrams[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      // Conmutar modo Lector / Editor Dual en PagesPage
+      const setPageModeBtn = e.target.closest('[data-action="set-page-mode"]');
+      if (setPageModeBtn) {
+        const mode = setPageModeBtn.getAttribute('data-mode') || 'reader';
+        store.setState({ planePageEditorMode: mode });
         return;
       }
 
       // Selección de página en la base de conocimiento
       const pageBtn = e.target.closest('button[data-page-id]');
-      if (pageBtn) {
+      if (pageBtn && !pageBtn.hasAttribute('data-action')) {
         const pageId = pageBtn.getAttribute('data-page-id');
         const page = (store.getState().planeData?.pages || []).find(p => p.id === pageId);
         store.setState({
@@ -688,6 +841,26 @@ class App {
           planeActivePageContent: page?.content_markdown || '',
           planePageEditorMode: 'reader'
         });
+        return;
+      }
+
+      // Seleccionar página vinculada desde Backlinks / Forward Links en PageNavigationPane
+      const selectLinkedPageBtn = e.target.closest('[data-action="select-page"]');
+      if (selectLinkedPageBtn) {
+        const pageId = selectLinkedPageBtn.getAttribute('data-page-id');
+        const page = (store.getState().planeData?.pages || []).find(p => p.id === pageId);
+        if (page) {
+          if (this.isArticleOpen && page.file_path) {
+            const cleanKey = page.file_path.replace(/^knowledge\//, '');
+            this.openArticleView(cleanKey, false);
+          } else {
+            store.setState({
+              planeActivePageId: pageId,
+              planeActivePageContent: page.content_markdown || '',
+              planePageEditorMode: 'reader'
+            });
+          }
+        }
         return;
       }
 
@@ -775,7 +948,7 @@ class App {
         return;
       }
 
-      if (e.target.id === 'plane-page-search') {
+      if (e.target.id === 'plane-page-search' || e.target.id === 'plane-pages-search') {
         clearTimeout(this.pageSearchDebounceTimer);
         this.pageSearchDebounceTimer = setTimeout(() => {
           store.setState({ planePageSearchQuery: e.target.value });
@@ -855,9 +1028,13 @@ class App {
     });
   }
 
-  openArticleView(docKey, openInEditor = false) {
+  openArticleView(docKey, openInEditor = false, skipScroll = false) {
     this.currentActiveDocKey = docKey;
+    this.isArticleOpen = true;
     const state = store.getState();
+    const planeData = state.planeData || {};
+    const planePages = planeData.pages || [];
+    const issues = (planeData.issues && planeData.issues.length > 0) ? planeData.issues : (state.features || []);
     const docs = state.knowledgeIndex?.docs || {};
     const meta = state.knowledgeIndex?.docMetadata?.[docKey] || {
       title: docKey,
@@ -865,7 +1042,16 @@ class App {
       readingTime: 3,
       wordCount: 400
     };
-    const content = docs[docKey] || '# Documento no disponible';
+    const matchedPlanePage = planePages.find(p => (p.file_path || '').endsWith(docKey) || p.file_path === `knowledge/${docKey}`) || {
+      id: `page-kb-${docKey.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+      title: meta.title || docKey,
+      file_path: `knowledge/${docKey}`,
+      word_count: meta.wordCount || 400,
+      reading_time_min: meta.readingTime || 3,
+      is_locked: 1,
+      is_favorite: docKey === 'c4-model.md' ? 1 : 0
+    };
+    const content = docs[docKey] || matchedPlanePage.content_markdown || '# Documento no disponible';
 
     const libView = document.getElementById('kb-view-library');
     const artView = document.getElementById('kb-view-article');
@@ -877,6 +1063,8 @@ class App {
     const wordsEl = document.getElementById('article-meta-words');
     const brEl = document.getElementById('article-meta-br');
     const rfEl = document.getElementById('article-meta-rf');
+    const headerActionsEl = document.getElementById('article-plane-header-actions');
+    const inspectorEl = document.getElementById('article-plane-inspector-container');
 
     const readerContainer = document.getElementById('doc-reader-view-container');
     const editorContainer = document.getElementById('doc-editor-view-container');
@@ -892,10 +1080,28 @@ class App {
     if (brEl) brEl.textContent = meta.ruleCount || 0;
     if (rfEl) rfEl.textContent = meta.reqCount || 0;
 
-    if (bodyEl) bodyEl.innerHTML = renderMarkdown(content);
+    const toc = extractTableOfContents(content);
+    if (bodyEl) bodyEl.innerHTML = enrichMarkdownWithSmartChips(renderMarkdown(content), issues);
     if (tocEl) {
-      const toc = extractTableOfContents(content);
       tocEl.innerHTML = renderTocHtml(toc);
+    }
+    if (headerActionsEl) {
+      headerActionsEl.innerHTML = renderPageHeaderActions({
+        activePage: matchedPlanePage,
+        isFullWidth: Boolean(state.planePageFullWidth),
+        showNavigationPane: state.planePageShowNavPane !== false,
+        showAiMenu: Boolean(state.planePageShowAiMenu)
+      });
+    }
+    if (inspectorEl) {
+      inspectorEl.innerHTML = PageNavigationPane({
+        page: matchedPlanePage,
+        content,
+        toc,
+        activeTab: state.planePageNavTab || 'outline',
+        issues,
+        pages: planePages
+      });
     }
 
     if (textarea) textarea.value = content;
@@ -918,7 +1124,9 @@ class App {
     artView?.classList.remove('hidden');
 
     this.initMermaidDiagrams();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!skipScroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   setupSynchronizedScroll() {

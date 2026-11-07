@@ -9,7 +9,12 @@ export const initialPageState = {
   activePageContent: '',
   searchQuery: '',
   editorMode: 'reader', // 'reader' | 'editor'
-  activeShelf: 'all'
+  activeShelf: 'all',
+  filterTab: 'all', // 'all' | 'favorites' | 'locked' | 'modules'
+  isFullWidth: false,
+  showNavigationPane: true,
+  activeNavTab: 'outline', // 'outline' | 'info' | 'assets' | 'version_history'
+  showAiMenu: false
 };
 
 export class PageStore {
@@ -57,6 +62,34 @@ export class PageStore {
 
   setSearchQuery(searchQuery) {
     this.setState({ searchQuery });
+  }
+
+  setFilterTab(filterTab) {
+    this.setState({ filterTab });
+  }
+
+  setFullWidth(isFullWidth) {
+    this.setState({ isFullWidth });
+  }
+
+  setShowNavigationPane(showNavigationPane) {
+    this.setState({ showNavigationPane });
+  }
+
+  setActiveNavTab(activeNavTab) {
+    this.setState({ activeNavTab });
+  }
+
+  setShowAiMenu(showAiMenu) {
+    this.setState({ showAiMenu });
+  }
+
+  togglePageProperty(pageId, propKey) {
+    const updatedPages = this.state.pages.map(p => {
+      if (p.id !== pageId) return p;
+      return { ...p, [propKey]: p[propKey] ? 0 : 1 };
+    });
+    this.setState({ pages: updatedPages });
   }
 
   getFilteredPages() {

@@ -1,7 +1,7 @@
 # Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)
 
 > [!NOTE]
-> Especificación formal del modelo relacional completo de Plane (26 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.
+> Especificación formal del modelo relacional completo de Plane (28 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`), su grafo de conocimiento (`page_logs`, `page_labels`, `page_versions`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.
 
 ---
 
@@ -35,6 +35,8 @@ erDiagram
   CYCLE ||--o{ CYCLE_ISSUE : "compromete"
   MODULE ||--o{ MODULE_ISSUE : "encapsula"
   PAGE ||--o{ PAGE_VERSION : "versiona snapshots"
+  PAGE ||--o{ PAGE_LOG : "vincula INT/BR/RF/backlinks"
+  PAGE ||--o{ PAGE_LABEL : "etiqueta semantica"
 
   WORKSPACE {
     string id PK
@@ -105,7 +107,7 @@ erDiagram
 
 ---
 
-## 2. Catálogo de las 26 Tablas Relacionales SQLite (`project-docs/data/harness.db`)
+## 2. Catálogo de las 28 Tablas Relacionales SQLite (`project-docs/data/harness.db`)
 
 ### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)
 1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).
@@ -134,8 +136,10 @@ erDiagram
 23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.
 25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.
 
-### 2.3 Gestión Documental Viva (`pages`, `page_versions`)
-26. `pages` y `page_versions`: Todos los documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` indexados con conteo de palabras, tiempo de lectura y snapshots históricos de versión (`PageVersion`).
+### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`pages`, `page_versions`, `page_logs`, `page_labels`)
+26. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` indexados con telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`), banderas Plane (`is_locked`, `is_favorite`, `view_props`) y autoría de agente bot (`owned_by_id`, `updated_by_id`).
+27. `page_versions`: Snapshots históricos de versión (`PageVersion`) con autor bot/humano y restauración en un clic.
+28. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas por documento (`ieee-830`, `c4-model`, `uml-2.5`, `ddd`, `deepwiki`, `sdd-spec`).
 
 ---
 
