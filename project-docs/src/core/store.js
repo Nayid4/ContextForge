@@ -40,7 +40,24 @@ const initialState = {
   selectedFeature: null,
   theme3D: 'dark',
   error: null,
-  loading: true
+  loading: true,
+  // Plane Architecture & Multi-View State
+  layoutMode: (typeof window !== 'undefined' && window.location?.hash?.includes('plane')) ? 'plane' : 'legacy',
+  planeData: { workspace: null, project: null, states: [], cycles: [], modules: [], issues: [], pages: [] },
+  planeView: 'issues', // 'issues' | 'cycles' | 'modules' | 'pages' | 'analytics' | 'space3d' | 'depgraph'
+  planeViewMode: 'list', // 'list' | 'board' | 'calendar' | 'spreadsheet'
+  planeFilterState: 'all',
+  planeFilterPriority: 'all',
+  planeFilterAssignee: 'all',
+  planeGroupBy: 'state', // 'state' | 'priority' | 'assignee'
+  planeOrderBy: 'sequence',
+  planeSearchQuery: '',
+  planePageSearchQuery: '',
+  planeActivePageId: null,
+  planeActivePageContent: '',
+  planePageEditorMode: 'reader', // 'reader' | 'editor'
+  planeSelectedIssueId: null,
+  isSidebarCollapsed: false
 };
 
 class Store {

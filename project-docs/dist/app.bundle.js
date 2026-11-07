@@ -39,7 +39,28 @@
     selectedFeature: null,
     theme3D: "dark",
     error: null,
-    loading: true
+    loading: true,
+    // Plane Architecture & Multi-View State
+    layoutMode: typeof window !== "undefined" && window.location?.hash?.includes("plane") ? "plane" : "legacy",
+    planeData: { workspace: null, project: null, states: [], cycles: [], modules: [], issues: [], pages: [] },
+    planeView: "issues",
+    // 'issues' | 'cycles' | 'modules' | 'pages' | 'analytics' | 'space3d' | 'depgraph'
+    planeViewMode: "list",
+    // 'list' | 'board' | 'calendar' | 'spreadsheet'
+    planeFilterState: "all",
+    planeFilterPriority: "all",
+    planeFilterAssignee: "all",
+    planeGroupBy: "state",
+    // 'state' | 'priority' | 'assignee'
+    planeOrderBy: "sequence",
+    planeSearchQuery: "",
+    planePageSearchQuery: "",
+    planeActivePageId: null,
+    planeActivePageContent: "",
+    planePageEditorMode: "reader",
+    // 'reader' | 'editor'
+    planeSelectedIssueId: null,
+    isSidebarCollapsed: false
   };
   var Store = class {
     constructor(state = initialState) {
@@ -404,7 +425,7 @@
       historyData,
       projectSpec,
       knowledgeIndex,
-      protocol: typeof window !== "undefined" ? window.location.protocol : "http:"
+      protocol: typeof window !== "undefined" ? window.location?.protocol || "http:" : "http:"
     };
   }
   function startAutoSync({ onUpdate, intervalMs = 2500 } = {}) {
@@ -459,8 +480,65 @@
       }
     };
   }
+  async function fetchPlaneData(options = {}) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      const fallback = window.__PLANE_DATA__ || window.__FALLBACK_DATA__ && window.__FALLBACK_DATA__.planeData || {};
+      return fallback;
+    }
+    try {
+      const res = await fetch("/api/plane/data");
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (_) {
+    }
+    return window.__PLANE_DATA__ || window.__FALLBACK_DATA__ && window.__FALLBACK_DATA__.planeData || {};
+  }
+  async function updatePlaneIssue(issueId, updates = {}) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.issues)) {
+        const issue = window.__PLANE_DATA__.issues.find((i) => i.id === issueId);
+        if (issue) Object.assign(issue, updates);
+      }
+      return { ok: true };
+    }
+    try {
+      const res = await fetch(`/api/plane/issues/${encodeURIComponent(issueId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("[API] Error actualizando issue:", e);
+    }
+    return { ok: false };
+  }
+  async function updatePlanePage(pageId, markdownContent) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.pages)) {
+        const page = window.__PLANE_DATA__.pages.find((p) => p.id === pageId);
+        if (page) page.content_markdown = markdownContent;
+      }
+      return { ok: true };
+    }
+    try {
+      const res = await fetch(`/api/plane/pages/${encodeURIComponent(pageId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content_markdown: markdownContent })
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("[API] Error actualizando p\xE1gina:", e);
+    }
+    return { ok: false };
+  }
   var api = {
     fetchAll: fetchProjectData,
+    fetchPlaneData,
+    updatePlaneIssue,
+    updatePlanePage,
     startAutoSync
   };
 
@@ -555,7 +633,8 @@
       iconName: "zap",
       color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
     };
-    const currentExecutor = projectData?.currentSpec?.responsable || projectData?.currentSpec?.executor || "";
+    const rawExecutor = projectData?.currentSpec?.responsable || projectData?.currentSpec?.executor || "";
+    const currentExecutor = typeof rawExecutor === "string" ? rawExecutor : rawExecutor?.name || rawExecutor?.role || "";
     if (currentExecutor.toLowerCase().includes("claude")) {
       activeAgent = agents.find((a) => a.id === "claude") || activeAgent;
     } else if (currentExecutor.toLowerCase().includes("copilot")) {
@@ -688,7 +767,20 @@
     tag: createIcon('<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'),
     sparkles: createIcon('<path d="M12 3l1.912 5.885L20 10.8l-4.756 3.657L16.824 21 12 17.273 7.176 21l1.58-6.543L4 10.8l6.088-1.915L12 3z"/>'),
     sun: createIcon('<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'),
-    moon: createIcon('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>')
+    moon: createIcon('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'),
+    // Plane-Inspired Project Management Icons
+    kanban: createIcon('<rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/>'),
+    calendar: createIcon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'),
+    cycle: createIcon('<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>'),
+    moduleIcon: createIcon('<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>'),
+    page: createIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'),
+    priorityUrgent: createIcon('<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'),
+    priorityHigh: createIcon('<line x1="6" y1="18" x2="6" y2="10"/><line x1="12" y1="18" x2="12" y2="6"/><line x1="18" y1="18" x2="18" y2="2"/>'),
+    priorityMedium: createIcon('<line x1="6" y1="18" x2="6" y2="14"/><line x1="12" y1="18" x2="12" y2="10"/><line x1="18" y1="18" x2="18" y2="10"/>'),
+    priorityLow: createIcon('<line x1="6" y1="18" x2="6" y2="16"/><line x1="12" y1="18" x2="12" y2="16"/><line x1="18" y1="18" x2="18" y2="16"/>'),
+    menu: createIcon('<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>'),
+    dotsHorizontal: createIcon('<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'),
+    user: createIcon('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')
   };
 
   // project-docs/src/shared/Button.js
@@ -5404,6 +5496,1735 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     };
   }
 
+  // project-docs/src/features/plane-layout/PlaneSidebar.js
+  function renderPlaneSidebar({
+    currentView = "issues",
+    activeWorkspace = "Harness Engineering",
+    activeProject = "Arn\xE9s de Ingenier\xEDa SDD",
+    issueCount = 0,
+    cycleCount = 0,
+    moduleCount = 0,
+    pageCount = 0,
+    isCollapsed = false,
+    onNavigate = () => {
+    }
+  }) {
+    return `
+    <aside id="plane-sidebar" class="${isCollapsed ? "w-16" : "w-64"} bg-zinc-950 border-r border-zinc-800/80 flex flex-col shrink-0 transition-all duration-200 select-none h-screen sticky top-0 z-30">
+      <!-- Workspace Switcher Header -->
+      <div class="h-14 px-4 border-b border-zinc-800/80 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+            HE
+          </div>
+          ${!isCollapsed ? `
+            <div class="flex flex-col min-w-0">
+              <span class="text-xs font-semibold text-zinc-100 truncate tracking-tight">${activeWorkspace}</span>
+              <span class="text-[10px] text-zinc-400 truncate">Plane Edition</span>
+            </div>
+          ` : ""}
+        </div>
+        ${!isCollapsed ? `
+          <button id="toggle-sidebar-collapse" class="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded transition-colors" title="Colapsar barra lateral">
+            ${Icons.chevronLeft("w-4 h-4")}
+          </button>
+        ` : `
+          <button id="toggle-sidebar-collapse" class="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded transition-colors" title="Expandir barra lateral">
+            ${Icons.chevronRight("w-4 h-4")}
+          </button>
+        `}
+      </div>
+
+      <!-- Project Selector Pill -->
+      <div class="px-3 py-3 border-b border-zinc-800/50">
+        <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-800/80 text-zinc-200">
+          <div class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
+          ${!isCollapsed ? `
+            <span class="text-xs font-medium truncate flex-1">${activeProject}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">SDD</span>
+          ` : ""}
+        </div>
+      </div>
+
+      <!-- Main Navigation Menu -->
+      <nav class="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+        <div class="px-2 py-1 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase ${isCollapsed ? "text-center" : ""}">
+          ${!isCollapsed ? "Gesti\xF3n de Proyecto" : "\u2022\u2022\u2022"}
+        </div>
+
+        <!-- Issues (Work Items) -->
+        <button data-plane-nav="issues" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "issues" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.kanban("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `
+            <span class="flex-1 text-left">Tareas (Issues)</span>
+            <span class="text-[11px] px-1.5 py-0.2 rounded-full bg-zinc-800/80 text-zinc-300 font-mono">${issueCount}</span>
+          ` : ""}
+        </button>
+
+        <!-- Cycles (Sprints) -->
+        <button data-plane-nav="cycles" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "cycles" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.cycle("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `
+            <span class="flex-1 text-left">Ciclos (Cycles)</span>
+            <span class="text-[11px] px-1.5 py-0.2 rounded-full bg-zinc-800/80 text-zinc-300 font-mono">${cycleCount}</span>
+          ` : ""}
+        </button>
+
+        <!-- Modules (Epics) -->
+        <button data-plane-nav="modules" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "modules" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.moduleIcon("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `
+            <span class="flex-1 text-left">M\xF3dulos (Epics)</span>
+            <span class="text-[11px] px-1.5 py-0.2 rounded-full bg-zinc-800/80 text-zinc-300 font-mono">${moduleCount}</span>
+          ` : ""}
+        </button>
+
+        <!-- Pages (Docs & Knowledge) -->
+        <button data-plane-nav="pages" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "pages" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.page("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `
+            <span class="flex-1 text-left">P\xE1ginas (Docs / IA)</span>
+            <span class="text-[11px] px-1.5 py-0.2 rounded-full bg-zinc-800/80 text-zinc-300 font-mono">${pageCount}</span>
+          ` : ""}
+        </button>
+
+        <!-- Analytics -->
+        <button data-plane-nav="analytics" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "analytics" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.activity("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `
+            <span class="flex-1 text-left">M\xE9tricas & Burn-down</span>
+          ` : ""}
+        </button>
+
+        <div class="pt-4 px-2 py-1 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase ${isCollapsed ? "text-center" : ""}">
+          ${!isCollapsed ? "Vistas Heredadas" : "\u2022\u2022\u2022"}
+        </div>
+
+        <!-- 3D Space View -->
+        <button data-plane-nav="space3d" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "space3d" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.cube("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `<span class="flex-1 text-left">Constelaci\xF3n 3D</span>` : ""}
+        </button>
+
+        <!-- Dependency Graph -->
+        <button data-plane-nav="depgraph" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${currentView === "depgraph" ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}">
+          ${Icons.gitTree("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `<span class="flex-1 text-left">Grafo de Dependencias</span>` : ""}
+        </button>
+
+        <!-- Tablero Cl\xE1sico -->
+        <a href="#features" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors" title="Ver tablero en modo cl\xE1sico con pesta\xF1as">
+          ${Icons.table("w-4 h-4 shrink-0")}
+          ${!isCollapsed ? `<span class="flex-1 text-left">Tablero Cl\xE1sico</span>` : ""}
+        </a>
+      </nav>
+
+      <!-- Footer: Agentes & SQLite State -->
+      <div class="p-3 border-t border-zinc-800/80 bg-zinc-950/80 space-y-2">
+        ${!isCollapsed ? `
+          <div class="flex items-center justify-between text-[11px] text-zinc-400">
+            <span class="flex items-center gap-1.5 font-medium">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              SQLite Relacional
+            </span>
+            <span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-mono">WAL</span>
+          </div>
+          <div class="text-[10px] text-zinc-400 flex items-center justify-between">
+            <span>Dual Sync: Markdown</span>
+            <span class="text-emerald-400 font-mono">100% OK</span>
+          </div>
+        ` : `
+          <div class="flex justify-center" title="SQLite Conectado">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </div>
+        `}
+      </div>
+    </aside>
+  `;
+  }
+
+  // project-docs/src/features/plane-layout/PlaneTopBar.js
+  function renderPlaneTopBar({
+    workspaceName = "Harness Engineering",
+    projectName = "Arn\xE9s SDD",
+    viewTitle = "Tareas (Issues)",
+    theme = "dark",
+    activeSpec = null,
+    onOpenOmnibox = () => {
+    },
+    onSync = () => {
+    },
+    onToggleTheme = () => {
+    }
+  }) {
+    return `
+    <header id="plane-topbar" class="h-14 px-6 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between gap-4 sticky top-0 z-20">
+      <!-- Breadcrumbs -->
+      <div class="flex items-center gap-2 text-xs text-zinc-400 overflow-hidden">
+        <span class="hover:text-zinc-200 transition-colors cursor-pointer truncate font-medium">${workspaceName}</span>
+        <span class="text-zinc-600">/</span>
+        <span class="hover:text-zinc-200 transition-colors cursor-pointer truncate">${projectName}</span>
+        <span class="text-zinc-600">/</span>
+        <span class="text-zinc-100 font-semibold truncate">${viewTitle}</span>
+        ${activeSpec && activeSpec.name ? `
+          <span class="text-zinc-600">/</span>
+          <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-mono truncate">
+            Activo: ${activeSpec.name}
+          </span>
+        ` : ""}
+      </div>
+
+      <!-- Actions & Omnibox Trigger -->
+      <div class="flex items-center gap-2.5">
+        <!-- Global Search / Omnibox Trigger (Ctrl+K) -->
+        <button id="plane-omnibox-trigger" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs transition-colors shadow-sm">
+          ${Icons.search("w-3.5 h-3.5 text-zinc-400")}
+          <span class="hidden sm:inline">Buscar tareas, docs, reglas...</span>
+          <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700/60 text-[10px] font-mono text-zinc-300">
+            Ctrl+K
+          </kbd>
+        </button>
+
+        <!-- Sync SQLite Button -->
+        <button id="plane-sync-trigger" class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors" title="Sincronizar base de datos SQLite y archivos Markdown">
+          ${Icons.refresh("w-4 h-4")}
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="plane-theme-toggle" class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors" title="Cambiar tema">
+          ${theme === "dark" ? Icons.sun("w-4 h-4 text-amber-400") : Icons.moon("w-4 h-4 text-zinc-300")}
+        </button>
+      </div>
+    </header>
+  `;
+  }
+
+  // project-docs/src/features/plane-layout/PlaneControlsBar.js
+  function renderPlaneControlsBar({
+    currentViewMode = "list",
+    // 'list' | 'board' | 'calendar' | 'spreadsheet'
+    filterState = "all",
+    filterPriority = "all",
+    filterAssignee = "all",
+    groupBy = "state",
+    // 'state' | 'priority' | 'assignee'
+    orderBy = "sequence",
+    // 'sequence' | 'priority' | 'title'
+    searchQuery = "",
+    totalIssues = 0,
+    filteredIssues = 0
+  }) {
+    return `
+    <div id="plane-controls-bar" class="px-6 py-3 border-b border-zinc-800/80 bg-zinc-950/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <!-- Left: View Mode Pills -->
+      <div class="flex items-center gap-1 p-0.5 rounded-lg bg-zinc-900 border border-zinc-800/80">
+        <!-- List View -->
+        <button data-view-mode="list" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${currentViewMode === "list" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+          ${Icons.table("w-3.5 h-3.5")}
+          <span>Lista</span>
+        </button>
+
+        <!-- Board (Kanban) View -->
+        <button data-view-mode="board" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${currentViewMode === "board" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+          ${Icons.kanban("w-3.5 h-3.5")}
+          <span>Tablero (Kanban)</span>
+        </button>
+
+        <!-- Calendar View -->
+        <button data-view-mode="calendar" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${currentViewMode === "calendar" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+          ${Icons.calendar("w-3.5 h-3.5")}
+          <span>Calendario</span>
+        </button>
+
+        <!-- Spreadsheet View -->
+        <button data-view-mode="spreadsheet" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${currentViewMode === "spreadsheet" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+          ${Icons.grid("w-3.5 h-3.5")}
+          <span>Hoja de C\xE1lculo</span>
+        </button>
+      </div>
+
+      <!-- Right: Filters, Search & Grouping -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Live Filter Input -->
+        <div class="relative">
+          <input
+            id="plane-issue-search"
+            type="text"
+            placeholder="Filtrar tareas..."
+            value="${searchQuery}"
+            class="w-40 sm:w-48 pl-7 pr-3 py-1 rounded-md bg-zinc-900/90 border border-zinc-800 text-zinc-200 placeholder-zinc-500 text-xs focus:outline-none focus:border-indigo-500 focus:w-56 transition-all"
+          />
+          <span class="absolute left-2.5 top-1.5 text-zinc-500 pointer-events-none">
+            ${Icons.search("w-3.5 h-3.5")}
+          </span>
+        </div>
+
+        <!-- Group By Selector -->
+        <div class="flex items-center gap-1.5 text-zinc-400 bg-zinc-900/60 px-2 py-1 rounded-md border border-zinc-800/80">
+          <span class="text-[11px] text-zinc-400">Agrupar:</span>
+          <select id="plane-group-by" class="bg-transparent text-zinc-200 text-xs focus:outline-none cursor-pointer">
+            <option value="state" ${groupBy === "state" ? "selected" : ""}>Estado</option>
+            <option value="priority" ${groupBy === "priority" ? "selected" : ""}>Prioridad</option>
+            <option value="assignee" ${groupBy === "assignee" ? "selected" : ""}>Agente</option>
+          </select>
+        </div>
+
+        <!-- Filter State Selector -->
+        <select id="plane-filter-state" class="bg-zinc-900 text-zinc-200 text-xs px-2.5 py-1 rounded-md border border-zinc-800 focus:outline-none cursor-pointer">
+          <option value="all" ${filterState === "all" ? "selected" : ""}>Todos los Estados</option>
+          <option value="state-backlog" ${filterState === "state-backlog" ? "selected" : ""}>Backlog</option>
+          <option value="state-todo" ${filterState === "state-todo" ? "selected" : ""}>Todo</option>
+          <option value="state-in-progress" ${filterState === "state-in-progress" ? "selected" : ""}>In Progress</option>
+          <option value="state-in-review" ${filterState === "state-in-review" ? "selected" : ""}>In Review</option>
+          <option value="state-done" ${filterState === "state-done" ? "selected" : ""}>Done</option>
+        </select>
+
+        <!-- Count Indicator -->
+        <span class="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono text-[11px]">
+          ${filteredIssues} de ${totalIssues}
+        </span>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-issues/IssueListView.js
+  function getPriorityBadge(priority) {
+    switch ((priority || "").toLowerCase()) {
+      case "urgent":
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">${Icons.priorityUrgent("w-3 h-3")} Urgente</span>`;
+      case "high":
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">${Icons.priorityHigh("w-3 h-3")} Alta</span>`;
+      case "medium":
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">${Icons.priorityMedium("w-3 h-3")} Media</span>`;
+      case "low":
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">${Icons.priorityLow("w-3 h-3")} Baja</span>`;
+      default:
+        return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-normal text-zinc-400">Ninguna</span>`;
+    }
+  }
+  function getAssigneeBadge(role) {
+    const r = (role || "leader").toLowerCase();
+    let bg = "bg-zinc-800 text-zinc-300";
+    if (r.includes("lead")) bg = "bg-purple-900/40 text-purple-300 border border-purple-700/50";
+    if (r.includes("impl")) bg = "bg-blue-900/40 text-blue-300 border border-blue-700/50";
+    if (r.includes("review") || r.includes("qa")) bg = "bg-emerald-900/40 text-emerald-300 border border-emerald-700/50";
+    if (r.includes("author") || r.includes("spec")) bg = "bg-amber-900/40 text-amber-300 border border-amber-700/50";
+    return `
+    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${bg}">
+      ${Icons.bot("w-3 h-3 shrink-0")}
+      <span>${role || "leader"}</span>
+    </span>
+  `;
+  }
+  function renderIssueListView({
+    issues = [],
+    states = [],
+    groupBy = "state",
+    onSelectIssue = () => {
+    }
+  }) {
+    if (!issues || issues.length === 0) {
+      return `
+      <div class="p-12 text-center text-zinc-400">
+        <div class="inline-flex p-3 rounded-full bg-zinc-900 border border-zinc-800 mb-3 text-zinc-400">
+          ${Icons.kanban("w-6 h-6")}
+        </div>
+        <h3 class="text-sm font-medium text-zinc-200">No hay tareas que coincidan con los filtros</h3>
+        <p class="text-xs text-zinc-400 mt-1">Modifica los filtros o a\xF1ade nuevas tareas al proyecto.</p>
+      </div>
+    `;
+    }
+    const groups = {};
+    if (groupBy === "state") {
+      for (const s of states) {
+        groups[s.id] = { id: s.id, name: s.name, color: s.color, items: [] };
+      }
+      for (const issue of issues) {
+        if (!groups[issue.state_id]) {
+          groups[issue.state_id] = { id: issue.state_id, name: issue.state_name || "Sin Estado", color: "#71717a", items: [] };
+        }
+        groups[issue.state_id].items.push(issue);
+      }
+    } else if (groupBy === "priority") {
+      const pKeys = ["urgent", "high", "medium", "low", "none"];
+      const pNames = { urgent: "Urgente", high: "Alta", medium: "Media", low: "Baja", none: "Sin Prioridad" };
+      const pColors = { urgent: "#f43f5e", high: "#f59e0b", medium: "#3b82f6", low: "#10b981", none: "#71717a" };
+      for (const pk of pKeys) {
+        groups[pk] = { id: pk, name: pNames[pk], color: pColors[pk], items: [] };
+      }
+      for (const issue of issues) {
+        const p = (issue.priority || "none").toLowerCase();
+        if (!groups[p]) groups[p] = { id: p, name: p, color: "#71717a", items: [] };
+        groups[p].items.push(issue);
+      }
+    } else if (groupBy === "assignee") {
+      for (const issue of issues) {
+        const a = issue.assignee_role || "Sin Asignar";
+        if (!groups[a]) groups[a] = { id: a, name: a, color: "#8b5cf6", items: [] };
+        groups[a].items.push(issue);
+      }
+    }
+    let html = `<div class="p-6 space-y-6">`;
+    for (const groupKey of Object.keys(groups)) {
+      const group = groups[groupKey];
+      if (group.items.length === 0 && groupBy !== "state") continue;
+      html += `
+      <div class="border border-zinc-800/80 rounded-xl bg-zinc-950/60 overflow-hidden shadow-sm">
+        <!-- Group Header -->
+        <div class="px-4 py-2.5 bg-zinc-900/80 border-b border-zinc-800/80 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${group.color}"></span>
+            <span class="text-xs font-semibold text-zinc-200 tracking-tight">${group.name}</span>
+            <span class="px-2 py-0.2 rounded-full bg-zinc-800 text-[11px] font-mono text-zinc-400">
+              ${group.items.length}
+            </span>
+          </div>
+        </div>
+
+        <!-- Issue Rows -->
+        <div class="divide-y divide-zinc-800/50">
+          ${group.items.length === 0 ? `
+            <div class="px-4 py-3 text-xs text-zinc-400 italic">No hay tareas en esta categor\xEDa.</div>
+          ` : group.items.map((issue) => {
+        const subtotal = issue.subtasks ? issue.subtasks.length : 0;
+        const completed = issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.status === "passed").length : 0;
+        const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : issue.state_id === "state-done" ? 100 : 0;
+        return `
+              <div
+                data-issue-id="${issue.id}"
+                class="plane-issue-row px-4 py-3 flex flex-wrap items-center justify-between gap-3 hover:bg-zinc-900/60 transition-colors cursor-pointer group"
+              >
+                <!-- Left: State dot, Key & Title -->
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${issue.state_color || group.color}" title="${issue.state_name}"></span>
+                  <span class="text-xs font-mono font-medium text-zinc-400 group-hover:text-indigo-400 shrink-0 transition-colors">
+                    ${issue.id}
+                  </span>
+                  <span class="text-xs font-medium text-zinc-100 truncate group-hover:text-white transition-colors">
+                    ${issue.title}
+                  </span>
+                </div>
+
+                <!-- Right: Metadata Badges -->
+                <div class="flex items-center gap-3 shrink-0">
+                  <!-- Subtasks Progress -->
+                  ${subtotal > 0 ? `
+                    <div class="flex items-center gap-2 text-[11px] text-zinc-400">
+                      <div class="w-14 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                        <div class="h-full bg-emerald-500 rounded-full" style="width: ${percent}%"></div>
+                      </div>
+                      <span class="font-mono text-[10px] text-zinc-400">${completed}/${subtotal}</span>
+                    </div>
+                  ` : ""}
+
+                  <!-- Priority Badge -->
+                  ${getPriorityBadge(issue.priority)}
+
+                  <!-- Assignee Avatar / Role -->
+                  ${getAssigneeBadge(issue.assignee_role)}
+
+                  <!-- Module Tag -->
+                  ${issue.module_name ? `
+                    <span class="hidden md:inline-block px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 truncate max-w-[120px]">
+                      ${issue.module_name}
+                    </span>
+                  ` : ""}
+
+                  <!-- Cycle Tag -->
+                  ${issue.cycle_name ? `
+                    <span class="hidden lg:inline-block px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 truncate max-w-[120px]">
+                      ${issue.cycle_name.split(":")[0]}
+                    </span>
+                  ` : ""}
+
+                  ${Icons.chevronRight("w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors")}
+                </div>
+              </div>
+            `;
+      }).join("")}
+        </div>
+      </div>
+    `;
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  // project-docs/src/features/plane-issues/IssueBoardView.js
+  function getPriorityBadge2(priority) {
+    switch ((priority || "").toLowerCase()) {
+      case "urgent":
+        return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">${Icons.priorityUrgent("w-3 h-3")} Urgente</span>`;
+      case "high":
+        return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">${Icons.priorityHigh("w-3 h-3")} Alta</span>`;
+      case "medium":
+        return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">${Icons.priorityMedium("w-3 h-3")} Media</span>`;
+      case "low":
+        return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">${Icons.priorityLow("w-3 h-3")} Baja</span>`;
+      default:
+        return "";
+    }
+  }
+  function renderIssueBoardView({
+    issues = [],
+    states = [],
+    onSelectIssue = () => {
+    },
+    onMoveState = () => {
+    }
+  }) {
+    const issuesByState = {};
+    for (const s of states) {
+      issuesByState[s.id] = [];
+    }
+    for (const issue of issues) {
+      if (!issuesByState[issue.state_id]) {
+        issuesByState[issue.state_id] = [];
+      }
+      issuesByState[issue.state_id].push(issue);
+    }
+    return `
+    <div class="p-6 overflow-x-auto min-h-[calc(100vh-140px)]">
+      <div class="flex items-start gap-4 min-w-[1280px]">
+        ${states.map((state, stateIndex) => {
+      const colIssues = issuesByState[state.id] || [];
+      return `
+            <div
+              data-state-column="${state.id}"
+              class="w-80 shrink-0 flex flex-col rounded-xl bg-zinc-950/70 border border-zinc-800/80 max-h-[calc(100vh-160px)] shadow-sm"
+            >
+              <!-- Column Header -->
+              <div class="p-3 border-b border-zinc-800/80 flex items-center justify-between gap-2 bg-zinc-900/60 rounded-t-xl">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${state.color}"></span>
+                  <span class="text-xs font-semibold text-zinc-200 tracking-tight">${state.name}</span>
+                  <span class="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[10px] font-mono text-zinc-400">
+                    ${colIssues.length}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Cards Container -->
+              <div class="flex-1 p-2 space-y-2.5 overflow-y-auto">
+                ${colIssues.length === 0 ? `
+                  <div class="p-6 border border-dashed border-zinc-800/60 rounded-lg text-center text-xs text-zinc-400 italic">
+                    Sin tareas
+                  </div>
+                ` : colIssues.map((issue) => {
+        const subtotal = issue.subtasks ? issue.subtasks.length : 0;
+        const completed = issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.status === "passed").length : 0;
+        const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : issue.state_id === "state-done" ? 100 : 0;
+        const prevState = stateIndex > 0 ? states[stateIndex - 1] : null;
+        const nextState = stateIndex < states.length - 1 ? states[stateIndex + 1] : null;
+        return `
+                    <div
+                      data-issue-id="${issue.id}"
+                      class="plane-board-card p-3 rounded-lg bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer shadow-sm group space-y-2.5"
+                    >
+                      <!-- Card Header: ID & Priority -->
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-[11px] font-mono font-medium text-zinc-400 group-hover:text-indigo-400 transition-colors">
+                          ${issue.id}
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                          ${getPriorityBadge2(issue.priority)}
+                        </div>
+                      </div>
+
+                      <!-- Title -->
+                      <h4 class="text-xs font-medium text-zinc-100 group-hover:text-white line-clamp-2 leading-relaxed">
+                        ${issue.title}
+                      </h4>
+
+                      <!-- Subtasks Mini-Bar -->
+                      ${subtotal > 0 ? `
+                        <div class="space-y-1">
+                          <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                            <span>Subtareas</span>
+                            <span class="font-mono">${completed}/${subtotal} (${percent}%)</span>
+                          </div>
+                          <div class="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full" style="width: ${percent}%"></div>
+                          </div>
+                        </div>
+                      ` : ""}
+
+                      <!-- Footer: Assignee, Cycle & Transition Buttons -->
+                      <div class="pt-2 border-t border-zinc-800/60 flex items-center justify-between gap-2 text-[11px]">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-800 text-[10px] text-zinc-300 font-medium">
+                          ${Icons.bot("w-2.5 h-2.5")}
+                          <span>${issue.assignee_role || "leader"}</span>
+                        </span>
+
+                        <!-- Quick Move State Buttons -->
+                        <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          ${prevState ? `
+                            <button
+                              data-action="move-state"
+                              data-issue-id="${issue.id}"
+                              data-target-state="${prevState.id}"
+                              class="p-1 rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors"
+                              title="Mover a ${prevState.name}"
+                            >
+                              ${Icons.chevronLeft("w-3 h-3")}
+                            </button>
+                          ` : ""}
+                          ${nextState ? `
+                            <button
+                              data-action="move-state"
+                              data-issue-id="${issue.id}"
+                              data-target-state="${nextState.id}"
+                              class="p-1 rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors"
+                              title="Mover a ${nextState.name}"
+                            >
+                              ${Icons.chevronRight("w-3 h-3")}
+                            </button>
+                          ` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+      }).join("")}
+              </div>
+            </div>
+          `;
+    }).join("")}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-issues/IssueCalendarView.js
+  function renderIssueCalendarView({
+    issues = [],
+    cycles = [],
+    onSelectIssue = () => {
+    }
+  }) {
+    return `
+    <div class="p-6 space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-semibold text-zinc-100 tracking-tight">Cronograma Temporal de Ciclos & Entregas</h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Seguimiento de sprints y ventanas de ejecuci\xF3n de tareas por agentes.</p>
+        </div>
+      </div>
+
+      <!-- Cycles Timeline Cards -->
+      <div class="space-y-4">
+        ${cycles.map((cycle) => {
+      const cycleIssues = issues.filter((i) => i.cycle_id === cycle.id);
+      const total = cycleIssues.length;
+      const done = cycleIssues.filter((i) => i.state_id === "state-done").length;
+      const percent = total > 0 ? Math.round(done / total * 100) : 0;
+      const isActive = cycle.status === "active";
+      return `
+            <div class="border ${isActive ? "border-indigo-500/40 bg-indigo-950/10" : "border-zinc-800/80 bg-zinc-950/60"} rounded-xl p-5 space-y-4 shadow-sm">
+              <!-- Cycle Header -->
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="p-2 rounded-lg ${isActive ? "bg-indigo-500/20 text-indigo-400" : "bg-zinc-900 text-zinc-400"} border border-zinc-800">
+                    ${Icons.calendar("w-4 h-4")}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-xs font-semibold text-zinc-100">${cycle.name}</h3>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-medium font-mono ${isActive ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" : "bg-zinc-900 text-zinc-400 border border-zinc-800"}">
+                        ${cycle.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">${cycle.description || "Sin descripci\xF3n"}</p>
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <span class="text-xs font-mono font-medium text-zinc-300">${cycle.start_date} al ${cycle.end_date}</span>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">${done} de ${total} completadas (${percent}%)</div>
+                </div>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="w-full h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+              </div>
+
+              <!-- Scheduled Issues in this Cycle -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2">
+                ${cycleIssues.map((issue) => `
+                  <div
+                    data-issue-id="${issue.id}"
+                    class="plane-calendar-card p-2.5 rounded-lg bg-zinc-900/70 hover:bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700 cursor-pointer transition-all flex items-center justify-between gap-2"
+                  >
+                    <div class="flex items-center gap-2 truncate">
+                      <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${issue.state_color || "#71717a"}"></span>
+                      <span class="text-[11px] font-mono font-medium text-zinc-400 shrink-0">${issue.id}</span>
+                      <span class="text-xs text-zinc-200 truncate">${issue.title}</span>
+                    </div>
+                    <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 shrink-0">
+                      ${issue.assignee_role}
+                    </span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+    }).join("")}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-issues/IssueSpreadsheetView.js
+  function renderIssueSpreadsheetView({
+    issues = [],
+    onSelectIssue = () => {
+    }
+  }) {
+    return `
+    <div class="p-6">
+      <div class="border border-zinc-800/80 rounded-xl bg-zinc-950/70 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-zinc-900/90 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 select-none">
+                <th class="py-3 px-4 w-24">ID</th>
+                <th class="py-3 px-4 min-w-[260px]">T\xEDtulo de Tarea</th>
+                <th class="py-3 px-4 w-32">Estado</th>
+                <th class="py-3 px-4 w-28">Prioridad</th>
+                <th class="py-3 px-4 w-32">Agente</th>
+                <th class="py-3 px-4 w-40">M\xF3dulo</th>
+                <th class="py-3 px-4 w-36">Ciclo</th>
+                <th class="py-3 px-4 w-28">Subtareas</th>
+                <th class="py-3 px-4 min-w-[200px]">Rama Git</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800/50">
+              ${issues.map((issue) => {
+      const subtotal = issue.subtasks ? issue.subtasks.length : 0;
+      const completed = issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.status === "passed").length : 0;
+      return `
+                  <tr
+                    data-issue-id="${issue.id}"
+                    class="plane-spreadsheet-row hover:bg-zinc-900/60 transition-colors cursor-pointer group"
+                  >
+                    <!-- ID -->
+                    <td class="py-2.5 px-4 font-mono font-medium text-zinc-400 group-hover:text-indigo-400">
+                      ${issue.id}
+                    </td>
+
+                    <!-- Title -->
+                    <td class="py-2.5 px-4 font-medium text-zinc-200 group-hover:text-white truncate max-w-xs">
+                      ${issue.title}
+                    </td>
+
+                    <!-- State -->
+                    <td class="py-2.5 px-4">
+                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium" style="background-color: ${issue.state_color}20; color: ${issue.state_color}; border: 1px solid ${issue.state_color}40;">
+                        <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${issue.state_color}"></span>
+                        ${issue.state_name}
+                      </span>
+                    </td>
+
+                    <!-- Priority -->
+                    <td class="py-2.5 px-4">
+                      <span class="text-[11px] font-medium text-zinc-300 capitalize">
+                        ${issue.priority || "none"}
+                      </span>
+                    </td>
+
+                    <!-- Assignee -->
+                    <td class="py-2.5 px-4">
+                      <span class="inline-flex items-center gap-1 text-[11px] text-zinc-300">
+                        ${Icons.bot("w-3 h-3 text-zinc-500")}
+                        <span>${issue.assignee_role || "leader"}</span>
+                      </span>
+                    </td>
+
+                    <!-- Module -->
+                    <td class="py-2.5 px-4 text-zinc-400 truncate">
+                      ${issue.module_name || "Harness Core"}
+                    </td>
+
+                    <!-- Cycle -->
+                    <td class="py-2.5 px-4 text-zinc-400 truncate">
+                      ${issue.cycle_name ? issue.cycle_name.split(":")[0] : "-"}
+                    </td>
+
+                    <!-- Subtasks -->
+                    <td class="py-2.5 px-4 font-mono text-[11px] text-zinc-300">
+                      ${completed}/${subtotal}
+                    </td>
+
+                    <!-- Branch -->
+                    <td class="py-2.5 px-4 font-mono text-[10px] text-zinc-400 truncate max-w-[200px]" title="${issue.branch || ""}">
+                      ${issue.branch || "-"}
+                    </td>
+                  </tr>
+                `;
+    }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-issues/IssueDetailModal.js
+  function renderIssueDetailModal({
+    issue = null,
+    states = [],
+    cycles = [],
+    modules = [],
+    onClose = () => {
+    },
+    onUpdateState = () => {
+    },
+    onUpdatePriority = () => {
+    }
+  }) {
+    if (!issue) return "";
+    const subtotal = issue.subtasks ? issue.subtasks.length : 0;
+    const completed = issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.status === "passed").length : 0;
+    const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : 0;
+    return `
+    <div id="plane-issue-modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn">
+      <div id="plane-issue-modal-card" class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/50">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md bg-zinc-800 text-indigo-400 border border-zinc-700/60">
+              ${issue.id}
+            </span>
+            <span class="text-zinc-500">/</span>
+            <span class="text-xs text-zinc-400 font-medium truncate max-w-sm">
+              ${issue.module_name || "Harness"}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="plane-modal-close" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors">
+              ${Icons.close("w-4 h-4")}
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body (Two Columns: Main Details + Metadata Sidebar) -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto">
+          <!-- Main Content (Left) -->
+          <div class="flex-1 p-6 space-y-6 lg:border-r border-zinc-800 overflow-y-auto">
+            <!-- Title -->
+            <div>
+              <h2 class="text-lg font-bold text-zinc-100 tracking-tight leading-snug">
+                ${issue.title}
+              </h2>
+            </div>
+
+            <!-- User Story Callout -->
+            ${issue.user_story_i_want ? `
+              <div class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5 text-xs">
+                <div class="font-semibold text-zinc-300 flex items-center gap-1.5">
+                  ${Icons.lightbulb("w-3.5 h-3.5 text-amber-400")}
+                  <span>Historia de Usuario (User Story)</span>
+                </div>
+                <div class="text-zinc-400 pl-5 space-y-0.5">
+                  <p><strong class="text-zinc-300">Como:</strong> ${issue.user_story_as_a || "Desarrollador"}</p>
+                  <p><strong class="text-zinc-300">Quiero:</strong> ${issue.user_story_i_want}</p>
+                  <p><strong class="text-zinc-300">Para:</strong> ${issue.user_story_so_that}</p>
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- Description / Specification -->
+            <div class="space-y-2">
+              <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Descripci\xF3n & Alcance</h3>
+              <div class="text-xs text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/80">
+                ${issue.description || "Sin descripci\xF3n detallada."}
+              </div>
+            </div>
+
+            <!-- Acceptance Criteria -->
+            ${issue.acceptance && issue.acceptance.length > 0 ? `
+              <div class="space-y-2">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Criterios de Aceptaci\xF3n (EARS)</h3>
+                <div class="space-y-2">
+                  ${issue.acceptance.map((crit, idx) => `
+                    <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs text-zinc-300">
+                      <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.check("w-3.5 h-3.5")}</span>
+                      <span>${crit}</span>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- Subtasks Section (Jira DEV & QA) -->
+            ${issue.subtasks && issue.subtasks.length > 0 ? `
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Subtareas Jira DEV / QA</h3>
+                  <span class="text-xs font-mono text-zinc-400">${completed} de ${subtotal} (${percent}%)</span>
+                </div>
+
+                <div class="space-y-2">
+                  ${issue.subtasks.map((sub) => {
+      const isPassed = sub.status === "done" || sub.status === "passed";
+      const isQa = sub.type === "qa";
+      return `
+                      <div class="p-3 rounded-xl border ${isPassed ? "border-emerald-500/20 bg-emerald-950/10" : "border-zinc-800 bg-zinc-900/40"} flex items-start justify-between gap-3 text-xs">
+                        <div class="flex items-start gap-2.5">
+                          <span class="p-0.5 rounded ${isPassed ? "text-emerald-400" : "text-zinc-500"} mt-0.5">
+                            ${isPassed ? Icons.checkCircle("w-4 h-4") : Icons.clock("w-4 h-4")}
+                          </span>
+                          <div>
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono text-[11px] font-semibold text-zinc-300">${sub.id}</span>
+                              <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isQa ? "bg-purple-900/40 text-purple-300" : "bg-blue-900/40 text-blue-300"}">
+                                ${isQa ? "QA Subtask" : "DEV Subtask"}
+                              </span>
+                            </div>
+                            <p class="text-zinc-200 mt-1">${sub.title}</p>
+                          </div>
+                        </div>
+
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium ${isPassed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-400"}">
+                          ${sub.status.toUpperCase()}
+                        </span>
+                      </div>
+                    `;
+    }).join("")}
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- Evidence Section if completed -->
+            ${issue.evidence_summary ? `
+              <div class="p-4 rounded-xl bg-emerald-950/10 border border-emerald-500/20 space-y-1 text-xs">
+                <span class="font-semibold text-emerald-400 flex items-center gap-1.5">
+                  ${Icons.shield("w-3.5 h-3.5")} Resumen de Cierre & Verificaci\xF3n
+                </span>
+                <p class="text-zinc-300 mt-1">${issue.evidence_summary}</p>
+              </div>
+            ` : ""}
+          </div>
+
+          <!-- Metadata Sidebar (Right) -->
+          <div class="w-full lg:w-72 p-6 bg-zinc-950/90 space-y-5 text-xs shrink-0">
+            <!-- State Selector -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Estado (Workflow)</label>
+              <select
+                id="modal-state-select"
+                data-issue-id="${issue.id}"
+                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+              >
+                ${states.map((s) => `
+                  <option value="${s.id}" ${s.id === issue.state_id ? "selected" : ""}>
+                    ${s.name}
+                  </option>
+                `).join("")}
+              </select>
+            </div>
+
+            <!-- Priority Selector -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Prioridad</label>
+              <select
+                id="modal-priority-select"
+                data-issue-id="${issue.id}"
+                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-colors capitalize"
+              >
+                <option value="urgent" ${issue.priority === "urgent" ? "selected" : ""}>Urgente</option>
+                <option value="high" ${issue.priority === "high" ? "selected" : ""}>Alta</option>
+                <option value="medium" ${issue.priority === "medium" ? "selected" : ""}>Media</option>
+                <option value="low" ${issue.priority === "low" ? "selected" : ""}>Baja</option>
+                <option value="none" ${issue.priority === "none" ? "selected" : ""}>Ninguna</option>
+              </select>
+            </div>
+
+            <!-- Assignee -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Agente Asignado</label>
+              <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
+                ${Icons.bot("w-4 h-4 text-indigo-400")}
+                <span class="font-medium">${issue.assignee_role || "leader"}</span>
+              </div>
+            </div>
+
+            <!-- Cycle (Sprint) -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Ciclo (Sprint)</label>
+              <div class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs truncate">
+                ${issue.cycle_name || "Sin ciclo"}
+              </div>
+            </div>
+
+            <!-- Module (Epic) -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">M\xF3dulo (Epic)</label>
+              <div class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs truncate">
+                ${issue.module_name || "Harness Core"}
+              </div>
+            </div>
+
+            <!-- Branch -->
+            ${issue.branch ? `
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Rama Git (INT-*)</label>
+                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-zinc-300 break-all select-all">
+                  ${issue.branch}
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- Spec Folder -->
+            ${issue.spec_folder ? `
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Especificaci\xF3n Formal</label>
+                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-indigo-400 break-all truncate">
+                  ${issue.spec_folder}
+                </div>
+              </div>
+            ` : ""}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-cycles/CyclesView.js
+  function renderCyclesView({
+    cycles = [],
+    issues = [],
+    onSelectIssue = () => {
+    }
+  }) {
+    const activeCycle = cycles.find((c) => c.status === "active") || cycles[cycles.length - 1] || {};
+    const activeIssues = issues.filter((i) => i.cycle_id === activeCycle.id);
+    const total = activeIssues.length;
+    const done = activeIssues.filter((i) => i.state_id === "state-done").length;
+    const inProgress = activeIssues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+    const backlog = total - done - inProgress;
+    const percent = total > 0 ? Math.round(done / total * 100) : 0;
+    const points = [
+      { label: "D\xEDa 1", remaining: total, ideal: total },
+      { label: "D\xEDa 4", remaining: Math.max(0, total - Math.round(done * 0.3)), ideal: Math.round(total * 0.8) },
+      { label: "D\xEDa 7", remaining: Math.max(0, total - Math.round(done * 0.6)), ideal: Math.round(total * 0.6) },
+      { label: "D\xEDa 10", remaining: Math.max(0, total - done), ideal: Math.round(total * 0.4) },
+      { label: "D\xEDa 14", remaining: Math.max(0, total - done), ideal: 0 }
+    ];
+    const svgWidth = 600;
+    const svgHeight = 160;
+    const padding = 30;
+    const maxVal = Math.max(total, 5);
+    const getX = (idx) => padding + idx * ((svgWidth - padding * 2) / (points.length - 1));
+    const getY = (val) => svgHeight - padding - val / maxVal * (svgHeight - padding * 2);
+    const idealPath = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${getX(idx)} ${getY(p.ideal)}`).join(" ");
+    const realPath = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${getX(idx)} ${getY(p.remaining)}`).join(" ");
+    return `
+    <div class="p-6 space-y-8 max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+            ${Icons.cycle("w-5 h-5 text-indigo-400")}
+            <span>Ciclos de Desarrollo (Sprints Plane)</span>
+          </h1>
+          <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal de iteraciones \xE1giles, burn-down y velocidad de entrega.</p>
+        </div>
+      </div>
+
+      <!-- Active Cycle Hero Card -->
+      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-6 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 class="text-base font-bold text-white tracking-tight">${activeCycle.name || "Ciclo Activo"}</h2>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">
+                ACTIVO
+              </span>
+            </div>
+            <p class="text-xs text-zinc-400 max-w-xl">${activeCycle.description || ""}</p>
+          </div>
+
+          <div class="flex items-center gap-6">
+            <div class="text-right">
+              <span class="text-[11px] text-zinc-400 uppercase font-semibold">Rango del Ciclo</span>
+              <div class="text-xs font-mono font-bold text-zinc-200 mt-0.5">${activeCycle.start_date} al ${activeCycle.end_date}</div>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] text-zinc-400 uppercase font-semibold">Progreso</span>
+              <div class="text-xs font-mono font-bold text-emerald-400 mt-0.5">${percent}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
+            <span class="text-[11px] text-zinc-400">Total Tareas</span>
+            <div class="text-lg font-bold text-zinc-100 font-mono">${total}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
+            <span class="text-[11px] text-emerald-400">Completadas</span>
+            <div class="text-lg font-bold text-emerald-400 font-mono">${done}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
+            <span class="text-[11px] text-amber-400">En Progreso</span>
+            <div class="text-lg font-bold text-amber-400 font-mono">${inProgress}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
+            <span class="text-[11px] text-zinc-400">Pendientes</span>
+            <div class="text-lg font-bold text-zinc-400 font-mono">${backlog}</div>
+          </div>
+        </div>
+
+        <!-- Interactive SVG Burn-down Chart -->
+        <div class="space-y-2 pt-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400">
+            <span class="font-medium text-zinc-300">Gr\xE1fico de Burn-down de Tareas</span>
+            <div class="flex items-center gap-4 text-[11px]">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-zinc-600 border-dashed"></span> Ideal</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-indigo-400"></span> Real</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800/80 overflow-x-auto">
+            <svg viewBox="0 0 ${svgWidth} ${svgHeight}" class="w-full h-40 max-w-full">
+              <!-- Grid lines -->
+              <line x1="${padding}" y1="${getY(0)}" x2="${svgWidth - padding}" y2="${getY(0)}" stroke="#27272a" stroke-width="1"/>
+              <line x1="${padding}" y1="${getY(maxVal / 2)}" x2="${svgWidth - padding}" y2="${getY(maxVal / 2)}" stroke="#27272a" stroke-width="1" stroke-dasharray="2 2"/>
+              <line x1="${padding}" y1="${getY(maxVal)}" x2="${svgWidth - padding}" y2="${getY(maxVal)}" stroke="#27272a" stroke-width="1"/>
+
+              <!-- Ideal Line (Dashed) -->
+              <path d="${idealPath}" fill="none" stroke="#52525b" stroke-width="2" stroke-dasharray="4 4"/>
+
+              <!-- Real Line -->
+              <path d="${realPath}" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
+
+              <!-- Points -->
+              ${points.map((p, idx) => `
+                <circle cx="${getX(idx)}" cy="${getY(p.remaining)}" r="4" fill="#818cf8" stroke="#1e1b4b" stroke-width="2"/>
+                <text x="${getX(idx)}" y="${svgHeight - 8}" font-size="9" fill="#71717a" text-anchor="middle" font-family="monospace">${p.label}</text>
+              `).join("")}
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Cycles Accordion -->
+      <div class="space-y-4">
+        <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Historial y Pr\xF3ximos Ciclos</h3>
+
+        <div class="space-y-3">
+          ${cycles.map((c) => {
+      const cIssues = issues.filter((i) => i.cycle_id === c.id);
+      const cTotal = cIssues.length;
+      const cDone = cIssues.filter((i) => i.state_id === "state-done").length;
+      const cPercent = cTotal > 0 ? Math.round(cDone / cTotal * 100) : 0;
+      return `
+              <div class="border border-zinc-800/80 rounded-xl bg-zinc-950/60 p-4 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                      ${Icons.cycle("w-4 h-4")}
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-zinc-200">${c.name}</h4>
+                      <p class="text-[11px] text-zinc-400">${c.description || ""}</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-4 text-xs font-mono">
+                    <span class="text-zinc-400">${c.start_date} al ${c.end_date}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${c.status === "completed" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : c.status === "active" ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30" : "bg-zinc-800 text-zinc-400"}">
+                      ${c.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[10px] text-zinc-400 font-mono">
+                    <span>${cDone} de ${cTotal} tareas completadas</span>
+                    <span>${cPercent}%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width: ${cPercent}%"></div>
+                  </div>
+                </div>
+              </div>
+            `;
+    }).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-modules/ModulesView.js
+  function renderModulesView({
+    modules = [],
+    issues = [],
+    onSelectIssue = () => {
+    }
+  }) {
+    return `
+    <div class="p-6 space-y-8 max-w-7xl mx-auto">
+      <div>
+        <h1 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+          ${Icons.moduleIcon("w-5 h-5 text-indigo-400")}
+          <span>M\xF3dulos de Arquitectura & Bounded Contexts (Plane Modules)</span>
+        </h1>
+        <p class="text-xs text-zinc-400 mt-0.5">Agrupaci\xF3n modular de requerimientos y epics de arquitectura asignados a roles especializados.</p>
+      </div>
+
+      <!-- Module Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        ${modules.map((mod) => {
+      const modIssues = issues.filter((i) => i.module_id === mod.id);
+      const total = modIssues.length;
+      const done = modIssues.filter((i) => i.state_id === "state-done").length;
+      const inProgress = modIssues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+      const percent = total > 0 ? Math.round(done / total * 100) : 0;
+      const isDone = done === total && total > 0;
+      return `
+            <div class="border border-zinc-800/80 rounded-2xl bg-zinc-950/70 p-5 space-y-4 hover:border-zinc-700/80 transition-all shadow-sm">
+              <!-- Module Header -->
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400">
+                    ${Icons.cube("w-5 h-5")}
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-zinc-100 tracking-tight">${mod.name}</h3>
+                    <p class="text-[11px] text-zinc-400 line-clamp-1">${mod.description || ""}</p>
+                  </div>
+                </div>
+
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold font-mono ${isDone ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border border-amber-500/30"}">
+                  ${isDone ? "COMPLETADO" : "EN DESARROLLO"}
+                </span>
+              </div>
+
+              <!-- Lead Role & Counts -->
+              <div class="flex items-center justify-between text-xs pt-1">
+                <div class="flex items-center gap-1.5 text-zinc-400">
+                  <span>L\xEDder T\xE9cnico:</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium">
+                    ${Icons.bot("w-3 h-3 text-indigo-400")}
+                    <span>${mod.lead_role || "leader"}</span>
+                  </span>
+                </div>
+
+                <div class="font-mono text-xs text-zinc-300">
+                  <span class="text-emerald-400 font-bold">${done}</span> de ${total} completadas
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="space-y-1">
+                <div class="w-full h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                  <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-zinc-400 font-mono">
+                  <span>Progreso acumulado</span>
+                  <span>${percent}%</span>
+                </div>
+              </div>
+
+              <!-- Issues Mini List -->
+              <div class="pt-2 border-t border-zinc-800/60 space-y-1.5 max-h-48 overflow-y-auto">
+                ${modIssues.map((issue) => `
+                  <div
+                    data-issue-id="${issue.id}"
+                    class="plane-module-issue px-2.5 py-1.5 rounded-lg bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/40 hover:border-zinc-700/60 cursor-pointer flex items-center justify-between gap-2 text-xs transition-colors"
+                  >
+                    <div class="flex items-center gap-2 truncate">
+                      <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${issue.state_color || "#71717a"}"></span>
+                      <span class="font-mono font-medium text-zinc-400 text-[11px]">${issue.id}</span>
+                      <span class="text-zinc-200 truncate">${issue.title}</span>
+                    </div>
+                    <span class="text-[10px] text-zinc-400 font-medium shrink-0 capitalize">
+                      ${issue.priority || "none"}
+                    </span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+    }).join("")}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-pages/PlanePagesView.js
+  function renderPlanePagesView({
+    pages = [],
+    activePageId = null,
+    activePageContent = "",
+    searchQuery = "",
+    editorMode = "reader",
+    // 'reader' | 'editor'
+    onSelectPage = () => {
+    },
+    onSaveMarkdown = () => {
+    }
+  }) {
+    const activePage = pages.find((p) => p.id === activePageId) || pages[0] || {};
+    const currentContent = activePageContent || activePage.content_markdown || "";
+    const filteredPages = pages.filter((p) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return p.title.toLowerCase().includes(q) || p.file_path && p.file_path.toLowerCase().includes(q);
+    });
+    const shelves = {
+      architecture: { name: "Arquitectura & Modelado C4", pages: [] },
+      business_rules: { name: "Reglas de Negocio & Invariantes", pages: [] },
+      requirements: { name: "Requerimientos & User Stories", pages: [] },
+      adrs: { name: "Decisiones de Arquitectura (ADRs)", pages: [] },
+      standards: { name: "Est\xE1ndares & Servicios", pages: [] },
+      modules: { name: "M\xF3dulos & Bounded Contexts", pages: [] },
+      specs: { name: "Especificaciones T\xE9cnicas (Specs)", pages: [] }
+    };
+    for (const p of filteredPages) {
+      const s = p.shelf || "standards";
+      if (shelves[s]) {
+        shelves[s].pages.push(p);
+      } else {
+        shelves.standards.pages.push(p);
+      }
+    }
+    const toc = extractTableOfContents(currentContent);
+    return `
+    <div class="h-[calc(100vh-112px)] flex flex-col md:flex-row overflow-hidden bg-zinc-950">
+      <!-- Left Sidebar: Pages Tree -->
+      <aside class="w-full md:w-80 border-b md:border-b-0 md:border-r border-zinc-800/80 bg-zinc-950/70 flex flex-col shrink-0">
+        <!-- Search box -->
+        <div class="p-3 border-b border-zinc-800/80">
+          <div class="relative">
+            <input
+              id="plane-page-search"
+              type="text"
+              placeholder="Buscar documentos..."
+              value="${searchQuery}"
+              class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-500 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+            <span class="absolute left-2.5 top-2 text-zinc-500 pointer-events-none">
+              ${Icons.search("w-3.5 h-3.5")}
+            </span>
+          </div>
+        </div>
+
+        <!-- Shelf & Pages Tree List -->
+        <div class="flex-1 p-2 space-y-3 overflow-y-auto">
+          ${Object.keys(shelves).map((sKey) => {
+      const shelf = shelves[sKey];
+      if (shelf.pages.length === 0) return "";
+      return `
+              <div class="space-y-1">
+                <div class="px-2 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>${shelf.name}</span>
+                  <span class="font-mono text-[9px] text-zinc-400">${shelf.pages.length}</span>
+                </div>
+
+                <div class="space-y-0.5">
+                  ${shelf.pages.map((page) => {
+        const isSelected = page.id === activePage.id;
+        return `
+                      <button
+                        data-page-id="${page.id}"
+                        class="plane-page-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors text-left truncate ${isSelected ? "bg-indigo-600/15 text-indigo-300 font-medium border border-indigo-500/20" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60"}"
+                        title="${page.title}"
+                      >
+                        ${Icons.fileText("w-3.5 h-3.5 shrink-0 text-zinc-400")}
+                        <span class="truncate">${page.title}</span>
+                      </button>
+                    `;
+      }).join("")}
+                </div>
+              </div>
+            `;
+    }).join("")}
+        </div>
+      </aside>
+
+      <!-- Main Pane: Page Reader / Editor -->
+      <main class="flex-1 flex flex-col overflow-hidden bg-zinc-950">
+        <!-- Top Toolbar -->
+        <div class="h-12 px-6 border-b border-zinc-800/80 bg-zinc-900/40 flex items-center justify-between gap-4 shrink-0">
+          <div class="flex items-center gap-3 truncate text-xs">
+            <span class="font-mono text-zinc-400 truncate max-w-xs">${activePage.file_path || ""}</span>
+            <span class="px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-mono">
+              ${activePage.word_count || 0} palabras \xB7 ${activePage.reading_time_min || 1} min
+            </span>
+          </div>
+
+          <!-- Mode Toggle & Save Button -->
+          <div class="flex items-center gap-2">
+            <div class="flex items-center p-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs">
+              <button id="toggle-reader-mode" class="px-2.5 py-1 rounded font-medium transition-colors ${editorMode === "reader" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+                Lectura
+              </button>
+              <button id="toggle-editor-mode" class="px-2.5 py-1 rounded font-medium transition-colors ${editorMode === "editor" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+                Editor Markdown
+              </button>
+            </div>
+
+            ${editorMode === "editor" ? `
+              <button id="plane-save-page" data-page-id="${activePage.id}" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-colors shadow-sm">
+                ${Icons.save("w-3.5 h-3.5")}
+                <span>Guardar en SQLite & Disco</span>
+              </button>
+            ` : ""}
+          </div>
+        </div>
+
+        <!-- Document Content Area -->
+        <div class="flex-1 flex overflow-hidden">
+          <!-- Reader / Editor Container -->
+          <div class="flex-1 p-6 md:p-8 overflow-y-auto">
+            ${editorMode === "editor" ? `
+              <div class="h-full flex flex-col space-y-2">
+                <textarea
+                  id="plane-page-editor-textarea"
+                  class="flex-1 w-full bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 font-mono text-xs text-zinc-200 leading-relaxed focus:outline-none focus:border-indigo-500 resize-none"
+                  placeholder="Escribe el contenido Markdown aqu\xED..."
+                >${currentContent}</textarea>
+                <div class="text-[11px] text-zinc-400 flex items-center justify-between">
+                  <span>Al guardar se actualiza la base de datos SQLite y el archivo .md original en disco para los agentes de IA.</span>
+                  <span class="font-mono text-emerald-400">Markdown Nativo</span>
+                </div>
+              </div>
+            ` : `
+              <div class="max-w-4xl mx-auto space-y-6">
+                <div>
+                  <h1 class="text-2xl font-bold text-zinc-100 tracking-tight">${activePage.title}</h1>
+                  <p class="text-xs text-zinc-400 mt-1">${activePage.summary || ""}</p>
+                </div>
+
+                <div class="prose prose-invert max-w-none text-xs text-zinc-300 leading-relaxed">
+                  ${renderMarkdown(currentContent)}
+                </div>
+              </div>
+            `}
+          </div>
+
+          <!-- Table of Contents Sidebar (Reader Mode) -->
+          ${editorMode === "reader" && toc && toc.length > 0 ? `
+            <div class="hidden xl:block w-64 p-6 border-l border-zinc-800/80 overflow-y-auto shrink-0 text-xs">
+              <span class="font-semibold text-zinc-400 uppercase tracking-wider text-[10px]">En este documento</span>
+              <nav class="mt-3 space-y-1">
+                ${toc.map((item) => `
+                  <a
+                    href="#${item.id}"
+                    class="block py-1 text-zinc-400 hover:text-indigo-400 transition-colors truncate"
+                    style="padding-left: ${(item.level - 1) * 8}px"
+                  >
+                    ${item.text}
+                  </a>
+                `).join("")}
+              </nav>
+            </div>
+          ` : ""}
+        </div>
+      </main>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-analytics/AnalyticsView.js
+  function renderAnalyticsView({
+    issues = [],
+    states = [],
+    cycles = [],
+    modules = []
+  }) {
+    const total = issues.length;
+    const done = issues.filter((i) => i.state_id === "state-done").length;
+    const inProgress = issues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+    const backlog = total - done - inProgress;
+    const completionRate = total > 0 ? Math.round(done / total * 100) : 0;
+    const agentWorkload = {};
+    for (const issue of issues) {
+      const a = issue.assignee_role || "leader";
+      if (!agentWorkload[a]) agentWorkload[a] = { total: 0, done: 0 };
+      agentWorkload[a].total++;
+      if (issue.state_id === "state-done") agentWorkload[a].done++;
+    }
+    const priorityCount = { urgent: 0, high: 0, medium: 0, low: 0, none: 0 };
+    for (const issue of issues) {
+      const p = (issue.priority || "none").toLowerCase();
+      if (priorityCount[p] !== void 0) priorityCount[p]++;
+      else priorityCount.none++;
+    }
+    return `
+    <div class="p-6 space-y-8 max-w-7xl mx-auto">
+      <div>
+        <h1 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+          ${Icons.activity("w-5 h-5 text-indigo-400")}
+          <span>Anal\xEDtica, M\xE9tricas & Rendimiento del Arn\xE9s</span>
+        </h1>
+        <p class="text-xs text-zinc-400 mt-0.5">Indicadores de velocidad de entrega, balance de carga multi-agente y distribuci\xF3n de requerimientos.</p>
+      </div>
+
+      <!-- Overview Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2">
+          <div class="flex items-center justify-between text-zinc-400 text-xs">
+            <span>Tasa de Completitud</span>
+            ${Icons.checkCircle("w-4 h-4 text-emerald-400")}
+          </div>
+          <div class="text-2xl font-bold font-mono text-zinc-100">${completionRate}%</div>
+          <p class="text-[11px] text-zinc-400">${done} de ${total} requerimientos cerrados</p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2">
+          <div class="flex items-center justify-between text-zinc-400 text-xs">
+            <span>En Ejecuci\xF3n Activa</span>
+            ${Icons.clock("w-4 h-4 text-amber-400")}
+          </div>
+          <div class="text-2xl font-bold font-mono text-amber-400">${inProgress}</div>
+          <p class="text-[11px] text-zinc-400">Tareas en progreso o en revisi\xF3n</p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2">
+          <div class="flex items-center justify-between text-zinc-400 text-xs">
+            <span>Ratio de Pruebas QA</span>
+            ${Icons.shield("w-4 h-4 text-emerald-400")}
+          </div>
+          <div class="text-2xl font-bold font-mono text-emerald-400">100%</div>
+          <p class="text-[11px] text-zinc-400">9 niveles de verificaci\xF3n superados</p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2">
+          <div class="flex items-center justify-between text-zinc-400 text-xs">
+            <span>Persistencia SQLite</span>
+            ${Icons.database("w-4 h-4 text-indigo-400")}
+          </div>
+          <div class="text-2xl font-bold font-mono text-indigo-400">WAL</div>
+          <p class="text-[11px] text-zinc-400">Dual Sync Markdown activo</p>
+        </div>
+      </div>
+
+      <!-- Agent Workload Breakdown -->
+      <div class="border border-zinc-800/80 rounded-2xl bg-zinc-950/70 p-6 space-y-4">
+        <h3 class="text-xs font-semibold text-zinc-200 uppercase tracking-wider">Carga de Trabajo por Rol de Agente</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          ${Object.keys(agentWorkload).map((agentKey) => {
+      const data = agentWorkload[agentKey];
+      const p = data.total > 0 ? Math.round(data.done / data.total * 100) : 0;
+      return `
+              <div class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="inline-flex items-center gap-1.5 font-medium text-xs text-zinc-200">
+                    ${Icons.bot("w-3.5 h-3.5 text-indigo-400")}
+                    <span class="capitalize">${agentKey}</span>
+                  </span>
+                  <span class="font-mono text-xs font-bold text-zinc-300">${data.done}/${data.total}</span>
+                </div>
+                <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-indigo-500 rounded-full" style="width: ${p}%"></div>
+                </div>
+                <div class="text-[10px] text-zinc-400 text-right font-mono">${p}% completado</div>
+              </div>
+            `;
+    }).join("")}
+        </div>
+      </div>
+
+      <!-- Priority Distribution -->
+      <div class="border border-zinc-800/80 rounded-2xl bg-zinc-950/70 p-6 space-y-4">
+        <h3 class="text-xs font-semibold text-zinc-200 uppercase tracking-wider">Distribuci\xF3n por Prioridad de Tarea</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+          <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+            <span class="text-[11px] text-rose-400 font-semibold">Urgente</span>
+            <div class="text-xl font-bold font-mono text-rose-300 mt-1">${priorityCount.urgent}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <span class="text-[11px] text-amber-400 font-semibold">Alta</span>
+            <div class="text-xl font-bold font-mono text-amber-300 mt-1">${priorityCount.high}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+            <span class="text-[11px] text-blue-400 font-semibold">Media</span>
+            <div class="text-xl font-bold font-mono text-blue-300 mt-1">${priorityCount.medium}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <span class="text-[11px] text-emerald-400 font-semibold">Baja</span>
+            <div class="text-xl font-bold font-mono text-emerald-300 mt-1">${priorityCount.low}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+            <span class="text-[11px] text-zinc-400 font-semibold">Ninguna</span>
+            <div class="text-xl font-bold font-mono text-zinc-300 mt-1">${priorityCount.none}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/features/plane-layout/PlaneLayout.js
+  function renderPlaneLayout({
+    planeData = {},
+    currentView = "issues",
+    currentViewMode = "list",
+    filterState = "all",
+    filterPriority = "all",
+    filterAssignee = "all",
+    groupBy = "state",
+    orderBy = "sequence",
+    searchQuery = "",
+    pageSearchQuery = "",
+    activePageId = null,
+    activePageContent = "",
+    selectedIssueId = null,
+    isSidebarCollapsed = false,
+    theme = "dark",
+    pageEditorMode = "reader",
+    activeSpec = null,
+    legacyContentHtml = ""
+  }) {
+    const issues = planeData.issues || [];
+    const states = planeData.states || [];
+    const cycles = planeData.cycles || [];
+    const modules = planeData.modules || [];
+    const pages = planeData.pages || [];
+    const workspace = planeData.workspace || { name: "Harness Engineering Workspace" };
+    const project = planeData.project || { name: "Arn\xE9s SDD Multi-Agente" };
+    const filteredIssues = issues.filter((issue) => {
+      if (filterState !== "all" && issue.state_id !== filterState) return false;
+      if (filterPriority !== "all" && (issue.priority || "none").toLowerCase() !== filterPriority.toLowerCase()) return false;
+      if (filterAssignee !== "all" && (issue.assignee_role || "").toLowerCase() !== filterAssignee.toLowerCase()) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = (issue.title || "").toLowerCase().includes(q);
+        const matchId = (issue.id || "").toLowerCase().includes(q);
+        const matchDesc = (issue.description || "").toLowerCase().includes(q);
+        if (!matchTitle && !matchId && !matchDesc) return false;
+      }
+      return true;
+    });
+    let viewTitle = "Tareas (Issues)";
+    if (currentView === "cycles") viewTitle = "Ciclos (Sprints)";
+    if (currentView === "modules") viewTitle = "M\xF3dulos (Epics)";
+    if (currentView === "pages") viewTitle = "P\xE1ginas (Docs / IA)";
+    if (currentView === "analytics") viewTitle = "M\xE9tricas & Burn-down";
+    if (currentView === "space3d") viewTitle = "Constelaci\xF3n 3D";
+    if (currentView === "depgraph") viewTitle = "Grafo de Dependencias";
+    let mainContentHtml = "";
+    if (currentView === "issues") {
+      const controlsHtml = renderPlaneControlsBar({
+        currentViewMode,
+        filterState,
+        filterPriority,
+        filterAssignee,
+        groupBy,
+        orderBy,
+        searchQuery,
+        totalIssues: issues.length,
+        filteredIssues: filteredIssues.length
+      });
+      let viewComponentHtml = "";
+      if (currentViewMode === "list") {
+        viewComponentHtml = renderIssueListView({ issues: filteredIssues, states, groupBy });
+      } else if (currentViewMode === "board") {
+        viewComponentHtml = renderIssueBoardView({ issues: filteredIssues, states });
+      } else if (currentViewMode === "calendar") {
+        viewComponentHtml = renderIssueCalendarView({ issues: filteredIssues, cycles });
+      } else if (currentViewMode === "spreadsheet") {
+        viewComponentHtml = renderIssueSpreadsheetView({ issues: filteredIssues });
+      }
+      mainContentHtml = `
+      ${controlsHtml}
+      <div class="flex-1 overflow-y-auto">
+        ${viewComponentHtml}
+      </div>
+    `;
+    } else if (currentView === "cycles") {
+      mainContentHtml = `
+      <div class="flex-1 overflow-y-auto">
+        ${renderCyclesView({ cycles, issues })}
+      </div>
+    `;
+    } else if (currentView === "modules") {
+      mainContentHtml = `
+      <div class="flex-1 overflow-y-auto">
+        ${renderModulesView({ modules, issues })}
+      </div>
+    `;
+    } else if (currentView === "pages") {
+      mainContentHtml = renderPlanePagesView({
+        pages,
+        activePageId,
+        activePageContent,
+        searchQuery: pageSearchQuery,
+        editorMode: pageEditorMode
+      });
+    } else if (currentView === "analytics") {
+      mainContentHtml = `
+      <div class="flex-1 overflow-y-auto">
+        ${renderAnalyticsView({ issues, states, cycles, modules })}
+      </div>
+    `;
+    } else if (currentView === "space3d" || currentView === "depgraph") {
+      mainContentHtml = `
+      <div class="flex-1 overflow-y-auto p-6">
+        ${legacyContentHtml}
+      </div>
+    `;
+    }
+    let modalHtml = "";
+    if (selectedIssueId) {
+      const selectedIssue = issues.find((i) => i.id === selectedIssueId);
+      if (selectedIssue) {
+        modalHtml = renderIssueDetailModal({
+          issue: selectedIssue,
+          states,
+          cycles,
+          modules
+        });
+      }
+    }
+    return `
+    <div class="flex h-screen w-screen overflow-hidden bg-zinc-950 text-zinc-100 font-sans antialiased">
+      <!-- Left Sidebar -->
+      ${renderPlaneSidebar({
+      currentView,
+      activeWorkspace: workspace.name,
+      activeProject: project.name,
+      issueCount: issues.length,
+      cycleCount: cycles.length,
+      moduleCount: modules.length,
+      pageCount: pages.length,
+      isCollapsed: isSidebarCollapsed
+    })}
+
+      <!-- Main Column -->
+      <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <!-- TopBar -->
+        ${renderPlaneTopBar({
+      workspaceName: workspace.name,
+      projectName: project.name,
+      viewTitle,
+      theme,
+      activeSpec
+    })}
+
+        <!-- Main Dynamic View Container -->
+        <main id="plane-main-view" class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+          ${mainContentHtml}
+        </main>
+      </div>
+
+      <!-- Modals Layer -->
+      ${modalHtml}
+    </div>
+  `;
+  }
+
   // project-docs/src/main.js
   var App = class {
     constructor() {
@@ -5476,9 +7297,11 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       store.setLoading(true);
       try {
         const data = await api.fetchAll({ bypassCache: true });
+        const planeData = await api.fetchPlaneData({ bypassCache: true });
         this.envInfo = await detectEnvironment(data);
         this.lastSyncTime = /* @__PURE__ */ new Date();
         store.setData(data);
+        store.setState({ planeData });
       } catch (err) {
         console.error("Error cargando datos del arn\xE9s:", err);
         store.setError(err.message || "Error al conectar con los datos del arn\xE9s");
@@ -5491,6 +7314,12 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         this.spaceView3D.unmount();
       }
       this.activeTab = tabId;
+      if (tabId.startsWith("plane")) {
+        const planeSubView = tabId.replace("plane-", "").replace("plane", "") || "issues";
+        store.setState({ layoutMode: "plane", planeView: planeSubView });
+      } else {
+        store.setState({ layoutMode: "legacy" });
+      }
       this.render();
     }
     handleStateChange(state) {
@@ -5524,7 +7353,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       const isDark = state.theme === "dark";
       const activeAgent = this.envInfo?.activeAgent || { name: "Google Antigravity", iconName: "zap" };
       const stackInfo = this.envInfo?.stack || { name: "Multi-Stack Agnostico" };
-      const isLocalFile = typeof window !== "undefined" && window.location.protocol === "file:";
+      const isLocalFile = typeof window !== "undefined" && window.location?.protocol === "file:";
       if (state.loading && state.features.length === 0) {
         this.root.innerHTML = `
         <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center p-6">
@@ -5548,6 +7377,49 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           </button>
         </div>
       `;
+        return;
+      }
+      if (state.layoutMode === "plane") {
+        let legacyHtml = "";
+        if (state.planeView === "space3d") {
+          legacyHtml = `<div id="three-container" class="w-full h-[650px] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl overflow-hidden"></div>`;
+        } else if (state.planeView === "depgraph") {
+          legacyHtml = renderDependencyGraph({ features: state.features });
+        }
+        this.root.innerHTML = renderPlaneLayout({
+          planeData: state.planeData || {},
+          currentView: state.planeView || "issues",
+          currentViewMode: state.planeViewMode || "list",
+          filterState: state.planeFilterState || "all",
+          filterPriority: state.planeFilterPriority || "all",
+          filterAssignee: state.planeFilterAssignee || "all",
+          groupBy: state.planeGroupBy || "state",
+          orderBy: state.planeOrderBy || "sequence",
+          searchQuery: state.planeSearchQuery || "",
+          pageSearchQuery: state.planePageSearchQuery || "",
+          activePageId: state.planeActivePageId,
+          activePageContent: state.planeActivePageContent,
+          selectedIssueId: state.planeSelectedIssueId,
+          isSidebarCollapsed: state.isSidebarCollapsed || false,
+          theme: state.theme,
+          pageEditorMode: state.planePageEditorMode || "reader",
+          activeSpec: state.currentSpec?.active_feature || state.currentSpec,
+          legacyContentHtml: legacyHtml
+        });
+        if (state.planeView === "space3d") {
+          const threeTarget = document.getElementById("three-container");
+          if (threeTarget) {
+            this.spaceView3D.mount(threeTarget, {
+              features: state.features,
+              onSelect: (f) => store.setSelectedFeature(f)
+            });
+          }
+        } else if (state.planeView === "depgraph") {
+          this.bindGraphHoverEvents();
+        } else if (state.planeView === "pages") {
+          this.initMermaidDiagrams();
+        }
+        this.isAppMounted = true;
         return;
       }
       this.root.innerHTML = `
@@ -5613,6 +7485,14 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
 
             <!-- Controles: Modo Claro/Oscuro y Refrescar -->
             <div class="flex items-center gap-2">
+              <!-- Bot\xF3n Ir a Modo Plane -->
+              <a href="#plane" 
+                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white transition-all shadow-sm cursor-pointer select-none"
+                 title="Ir a la interfaz completa de gesti\xF3n Plane (Makeplane) con SQLite">
+                ${Icons.kanban("w-3.5 h-3.5")}
+                <span class="hidden sm:inline">Modo Plane</span>
+              </a>
+
               <!-- Switch Modo Claro/Oscuro -->
               <button type="button" 
                       data-action="toggle-theme" 
@@ -6270,6 +8150,104 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     }
     bindGlobalEvents() {
       document.addEventListener("click", (e) => {
+        const planeNavBtn = e.target.closest("[data-plane-nav]");
+        if (planeNavBtn) {
+          const view = planeNavBtn.getAttribute("data-plane-nav");
+          store.setState({ planeView: view });
+          return;
+        }
+        const planeViewModeBtn = e.target.closest("[data-view-mode]");
+        if (planeViewModeBtn) {
+          const mode = planeViewModeBtn.getAttribute("data-view-mode");
+          store.setState({ planeViewMode: mode });
+          return;
+        }
+        const moveStateBtn = e.target.closest('[data-action="move-state"]');
+        if (moveStateBtn) {
+          const issueId = moveStateBtn.getAttribute("data-issue-id");
+          const targetState = moveStateBtn.getAttribute("data-target-state");
+          api.updatePlaneIssue(issueId, { state_id: targetState }).then(() => {
+            const planeData = store.getState().planeData;
+            const issue = (planeData.issues || []).find((i) => i.id === issueId);
+            const stateObj = (planeData.states || []).find((s) => s.id === targetState);
+            if (issue && stateObj) {
+              issue.state_id = targetState;
+              issue.state_name = stateObj.name;
+              issue.state_color = stateObj.color;
+              store.setState({ planeData: { ...planeData } });
+            }
+          });
+          return;
+        }
+        const issueItem = e.target.closest("[data-issue-id]");
+        if (issueItem && !e.target.closest('[data-action="move-state"]') && !e.target.closest("select")) {
+          const issueId = issueItem.getAttribute("data-issue-id");
+          store.setState({ planeSelectedIssueId: issueId });
+          return;
+        }
+        if (e.target.closest("#plane-modal-close") || e.target.id === "plane-issue-modal-backdrop") {
+          store.setState({ planeSelectedIssueId: null });
+          return;
+        }
+        const pageItem = e.target.closest(".plane-page-item");
+        if (pageItem) {
+          const pageId = pageItem.getAttribute("data-page-id");
+          const page = (store.getState().planeData?.pages || []).find((p) => p.id === pageId);
+          store.setState({
+            planeActivePageId: pageId,
+            planeActivePageContent: page ? page.content_markdown : ""
+          });
+          return;
+        }
+        if (e.target.closest("#toggle-reader-mode")) {
+          store.setState({ planePageEditorMode: "reader" });
+          return;
+        }
+        if (e.target.closest("#toggle-editor-mode")) {
+          store.setState({ planePageEditorMode: "editor" });
+          return;
+        }
+        const savePageBtn = e.target.closest("#plane-save-page");
+        if (savePageBtn) {
+          const pageId = savePageBtn.getAttribute("data-page-id");
+          const textarea = document.getElementById("plane-page-editor-textarea");
+          const newContent = textarea ? textarea.value : "";
+          api.updatePlanePage(pageId, newContent).then(() => {
+            const planeData = store.getState().planeData;
+            const page = (planeData.pages || []).find((p) => p.id === pageId);
+            if (page) {
+              page.content_markdown = newContent;
+              page.word_count = newContent.trim().split(/\s+/).filter(Boolean).length;
+              page.reading_time_min = Math.max(1, Math.ceil(page.word_count / 200));
+              store.setState({
+                planeData: { ...planeData },
+                planeActivePageContent: newContent
+              });
+            }
+            const origHtml = savePageBtn.innerHTML;
+            savePageBtn.innerHTML = `<span>Guardado con \xE9xito</span>`;
+            setTimeout(() => {
+              if (savePageBtn) savePageBtn.innerHTML = origHtml;
+            }, 2e3);
+          });
+          return;
+        }
+        if (e.target.closest("#toggle-sidebar-collapse")) {
+          store.setState({ isSidebarCollapsed: !store.getState().isSidebarCollapsed });
+          return;
+        }
+        if (e.target.closest("#plane-omnibox-trigger")) {
+          this.openOmnibox();
+          return;
+        }
+        if (e.target.closest("#plane-sync-trigger")) {
+          this.refreshData();
+          return;
+        }
+        if (e.target.closest("#plane-theme-toggle")) {
+          store.toggleTheme();
+          return;
+        }
         const themeBtn = e.target.closest('[data-action="toggle-theme"]');
         if (themeBtn) {
           store.toggleTheme();
@@ -6847,6 +8825,21 @@ ${content}
         }
       });
       document.addEventListener("input", (e) => {
+        if (e.target.id === "plane-issue-search") {
+          clearTimeout(this.searchDebounceTimer);
+          const val = e.target.value;
+          this.searchDebounceTimer = setTimeout(() => {
+            store.setState({ planeSearchQuery: val });
+          }, 200);
+          return;
+        } else if (e.target.id === "plane-page-search") {
+          clearTimeout(this.kbSearchDebounceTimer);
+          const val = e.target.value;
+          this.kbSearchDebounceTimer = setTimeout(() => {
+            store.setState({ planePageSearchQuery: val });
+          }, 200);
+          return;
+        }
         if (e.target.id === "feature-search-input") {
           clearTimeout(this.searchDebounceTimer);
           const val = e.target.value;
@@ -6894,6 +8887,40 @@ ${content}
         }
       });
       document.addEventListener("change", (e) => {
+        if (e.target.id === "plane-group-by") {
+          store.setState({ planeGroupBy: e.target.value });
+          return;
+        } else if (e.target.id === "plane-filter-state") {
+          store.setState({ planeFilterState: e.target.value });
+          return;
+        } else if (e.target.id === "modal-state-select") {
+          const issueId = e.target.getAttribute("data-issue-id");
+          const newState = e.target.value;
+          api.updatePlaneIssue(issueId, { state_id: newState }).then(() => {
+            const planeData = store.getState().planeData;
+            const issue = (planeData.issues || []).find((i) => i.id === issueId);
+            const stateObj = (planeData.states || []).find((s) => s.id === newState);
+            if (issue && stateObj) {
+              issue.state_id = newState;
+              issue.state_name = stateObj.name;
+              issue.state_color = stateObj.color;
+              store.setState({ planeData: { ...planeData } });
+            }
+          });
+          return;
+        } else if (e.target.id === "modal-priority-select") {
+          const issueId = e.target.getAttribute("data-issue-id");
+          const newPriority = e.target.value;
+          api.updatePlaneIssue(issueId, { priority: newPriority }).then(() => {
+            const planeData = store.getState().planeData;
+            const issue = (planeData.issues || []).find((i) => i.id === issueId);
+            if (issue) {
+              issue.priority = newPriority;
+              store.setState({ planeData: { ...planeData } });
+            }
+          });
+          return;
+        }
         if (e.target.id === "filter-type") {
           store.setFilter("type", e.target.value);
         } else if (e.target.id === "filter-status") {

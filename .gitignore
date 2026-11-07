@@ -32,3 +32,8 @@ Thumbs.db
 # ─── Harness local config ──────────────────────────────────────────
 kickstart.json
 project-docs/kickstart.json
+
+# ─── SQLite temporary files ────────────────────────────────────────
+*.db-journal
+*.db-wal
+*.db-shm

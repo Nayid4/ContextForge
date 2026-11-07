@@ -16,6 +16,7 @@ import { SpaceView3D } from './features/space-view-3d/SpaceView3D.js';
 import { renderHistoryTimeline } from './features/history-timeline/HistoryTimeline.js';
 import { renderArchitectureDocs } from './features/architecture-docs/ArchitectureDocs.js';
 import { renderKnowledgeBase } from './features/knowledge-base/KnowledgeBase.js';
+import { renderPlaneLayout } from './features/plane-layout/PlaneLayout.js';
 import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksToMarkdown } from './shared/MarkdownViewer.js';
 
 class App {
@@ -106,9 +107,11 @@ class App {
     store.setLoading(true);
     try {
       const data = await api.fetchAll({ bypassCache: true });
+      const planeData = await api.fetchPlaneData({ bypassCache: true });
       this.envInfo = await detectEnvironment(data);
       this.lastSyncTime = new Date();
       store.setData(data);
+      store.setState({ planeData });
     } catch (err) {
       console.error('Error cargando datos del arnés:', err);
       store.setError(err.message || 'Error al conectar con los datos del arnés');
@@ -122,6 +125,12 @@ class App {
       this.spaceView3D.unmount();
     }
     this.activeTab = tabId;
+    if (tabId.startsWith('plane')) {
+      const planeSubView = tabId.replace('plane-', '').replace('plane', '') || 'issues';
+      store.setState({ layoutMode: 'plane', planeView: planeSubView });
+    } else {
+      store.setState({ layoutMode: 'legacy' });
+    }
     this.render();
   }
 
@@ -161,7 +170,7 @@ class App {
     const isDark = state.theme === 'dark';
     const activeAgent = this.envInfo?.activeAgent || { name: 'Google Antigravity', iconName: 'zap' };
     const stackInfo = this.envInfo?.stack || { name: 'Multi-Stack Agnostico' };
-    const isLocalFile = typeof window !== 'undefined' && window.location.protocol === 'file:';
+    const isLocalFile = typeof window !== 'undefined' && window.location?.protocol === 'file:';
 
     // 1. Loading State Inicial
     if (state.loading && state.features.length === 0) {
@@ -192,7 +201,55 @@ class App {
       return;
     }
 
-    // 3. Render Principal
+    // 3. Render Principal - Modo Plane
+    if (state.layoutMode === 'plane') {
+      let legacyHtml = '';
+      if (state.planeView === 'space3d') {
+        legacyHtml = `<div id="three-container" class="w-full h-[650px] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-xl overflow-hidden"></div>`;
+      } else if (state.planeView === 'depgraph') {
+        legacyHtml = renderDependencyGraph({ features: state.features });
+      }
+
+      this.root.innerHTML = renderPlaneLayout({
+        planeData: state.planeData || {},
+        currentView: state.planeView || 'issues',
+        currentViewMode: state.planeViewMode || 'list',
+        filterState: state.planeFilterState || 'all',
+        filterPriority: state.planeFilterPriority || 'all',
+        filterAssignee: state.planeFilterAssignee || 'all',
+        groupBy: state.planeGroupBy || 'state',
+        orderBy: state.planeOrderBy || 'sequence',
+        searchQuery: state.planeSearchQuery || '',
+        pageSearchQuery: state.planePageSearchQuery || '',
+        activePageId: state.planeActivePageId,
+        activePageContent: state.planeActivePageContent,
+        selectedIssueId: state.planeSelectedIssueId,
+        isSidebarCollapsed: state.isSidebarCollapsed || false,
+        theme: state.theme,
+        pageEditorMode: state.planePageEditorMode || 'reader',
+        activeSpec: state.currentSpec?.active_feature || state.currentSpec,
+        legacyContentHtml: legacyHtml
+      });
+
+      if (state.planeView === 'space3d') {
+        const threeTarget = document.getElementById('three-container');
+        if (threeTarget) {
+          this.spaceView3D.mount(threeTarget, {
+            features: state.features,
+            onSelect: (f) => store.setSelectedFeature(f)
+          });
+        }
+      } else if (state.planeView === 'depgraph') {
+        this.bindGraphHoverEvents();
+      } else if (state.planeView === 'pages') {
+        this.initMermaidDiagrams();
+      }
+
+      this.isAppMounted = true;
+      return;
+    }
+
+    // 4. Render Clásico de Respaldo
     this.root.innerHTML = `
       <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 transition-colors duration-200">
         
@@ -256,6 +313,14 @@ class App {
 
             <!-- Controles: Modo Claro/Oscuro y Refrescar -->
             <div class="flex items-center gap-2">
+              <!-- Botón Ir a Modo Plane -->
+              <a href="#plane" 
+                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white transition-all shadow-sm cursor-pointer select-none"
+                 title="Ir a la interfaz completa de gestión Plane (Makeplane) con SQLite">
+                ${Icons.kanban('w-3.5 h-3.5')}
+                <span class="hidden sm:inline">Modo Plane</span>
+              </a>
+
               <!-- Switch Modo Claro/Oscuro -->
               <button type="button" 
                       data-action="toggle-theme" 
@@ -978,6 +1043,127 @@ class App {
 
   bindGlobalEvents() {
     document.addEventListener('click', (e) => {
+      // Plane: Navegación de barra lateral
+      const planeNavBtn = e.target.closest('[data-plane-nav]');
+      if (planeNavBtn) {
+        const view = planeNavBtn.getAttribute('data-plane-nav');
+        store.setState({ planeView: view });
+        return;
+      }
+
+      // Plane: Selector de modo de vista
+      const planeViewModeBtn = e.target.closest('[data-view-mode]');
+      if (planeViewModeBtn) {
+        const mode = planeViewModeBtn.getAttribute('data-view-mode');
+        store.setState({ planeViewMode: mode });
+        return;
+      }
+
+      // Plane: Mover estado de tarea con chevrons en el Kanban
+      const moveStateBtn = e.target.closest('[data-action="move-state"]');
+      if (moveStateBtn) {
+        const issueId = moveStateBtn.getAttribute('data-issue-id');
+        const targetState = moveStateBtn.getAttribute('data-target-state');
+        api.updatePlaneIssue(issueId, { state_id: targetState }).then(() => {
+          const planeData = store.getState().planeData;
+          const issue = (planeData.issues || []).find(i => i.id === issueId);
+          const stateObj = (planeData.states || []).find(s => s.id === targetState);
+          if (issue && stateObj) {
+            issue.state_id = targetState;
+            issue.state_name = stateObj.name;
+            issue.state_color = stateObj.color;
+            store.setState({ planeData: { ...planeData } });
+          }
+        });
+        return;
+      }
+
+      // Plane: Seleccionar issue para abrir modal de detalle
+      const issueItem = e.target.closest('[data-issue-id]');
+      if (issueItem && !e.target.closest('[data-action="move-state"]') && !e.target.closest('select')) {
+        const issueId = issueItem.getAttribute('data-issue-id');
+        store.setState({ planeSelectedIssueId: issueId });
+        return;
+      }
+
+      // Plane: Cerrar modal de issue
+      if (e.target.closest('#plane-modal-close') || e.target.id === 'plane-issue-modal-backdrop') {
+        store.setState({ planeSelectedIssueId: null });
+        return;
+      }
+
+      // Plane: Páginas - Seleccionar documento
+      const pageItem = e.target.closest('.plane-page-item');
+      if (pageItem) {
+        const pageId = pageItem.getAttribute('data-page-id');
+        const page = (store.getState().planeData?.pages || []).find(p => p.id === pageId);
+        store.setState({
+          planeActivePageId: pageId,
+          planeActivePageContent: page ? page.content_markdown : ''
+        });
+        return;
+      }
+
+      // Plane: Páginas - Conmutar modo lectura
+      if (e.target.closest('#toggle-reader-mode')) {
+        store.setState({ planePageEditorMode: 'reader' });
+        return;
+      }
+
+      // Plane: Páginas - Conmutar modo editor
+      if (e.target.closest('#toggle-editor-mode')) {
+        store.setState({ planePageEditorMode: 'editor' });
+        return;
+      }
+
+      // Plane: Páginas - Guardar en SQLite y Disco
+      const savePageBtn = e.target.closest('#plane-save-page');
+      if (savePageBtn) {
+        const pageId = savePageBtn.getAttribute('data-page-id');
+        const textarea = document.getElementById('plane-page-editor-textarea');
+        const newContent = textarea ? textarea.value : '';
+        api.updatePlanePage(pageId, newContent).then(() => {
+          const planeData = store.getState().planeData;
+          const page = (planeData.pages || []).find(p => p.id === pageId);
+          if (page) {
+            page.content_markdown = newContent;
+            page.word_count = newContent.trim().split(/\s+/).filter(Boolean).length;
+            page.reading_time_min = Math.max(1, Math.ceil(page.word_count / 200));
+            store.setState({
+              planeData: { ...planeData },
+              planeActivePageContent: newContent
+            });
+          }
+          const origHtml = savePageBtn.innerHTML;
+          savePageBtn.innerHTML = `<span>Guardado con éxito</span>`;
+          setTimeout(() => { if (savePageBtn) savePageBtn.innerHTML = origHtml; }, 2000);
+        });
+        return;
+      }
+
+      // Plane: Colapsar/Expandir barra lateral
+      if (e.target.closest('#toggle-sidebar-collapse')) {
+        store.setState({ isSidebarCollapsed: !store.getState().isSidebarCollapsed });
+        return;
+      }
+
+      // Plane: Trigger Omnibox
+      if (e.target.closest('#plane-omnibox-trigger')) {
+        this.openOmnibox();
+        return;
+      }
+
+      // Plane: Sync SQLite trigger
+      if (e.target.closest('#plane-sync-trigger')) {
+        this.refreshData();
+        return;
+      }
+
+      // Plane: Theme toggle
+      if (e.target.closest('#plane-theme-toggle')) {
+        store.toggleTheme();
+        return;
+      }
       // Toggle de Modo Claro / Oscuro
       const themeBtn = e.target.closest('[data-action="toggle-theme"]');
       if (themeBtn) {
@@ -1628,6 +1814,22 @@ class App {
 
     // Inputs con debouncing
     document.addEventListener('input', (e) => {
+      if (e.target.id === 'plane-issue-search') {
+        clearTimeout(this.searchDebounceTimer);
+        const val = e.target.value;
+        this.searchDebounceTimer = setTimeout(() => {
+          store.setState({ planeSearchQuery: val });
+        }, 200);
+        return;
+      } else if (e.target.id === 'plane-page-search') {
+        clearTimeout(this.kbSearchDebounceTimer);
+        const val = e.target.value;
+        this.kbSearchDebounceTimer = setTimeout(() => {
+          store.setState({ planePageSearchQuery: val });
+        }, 200);
+        return;
+      }
+
       if (e.target.id === 'feature-search-input') {
         clearTimeout(this.searchDebounceTimer);
         const val = e.target.value;
@@ -1677,6 +1879,41 @@ class App {
     });
 
     document.addEventListener('change', (e) => {
+      if (e.target.id === 'plane-group-by') {
+        store.setState({ planeGroupBy: e.target.value });
+        return;
+      } else if (e.target.id === 'plane-filter-state') {
+        store.setState({ planeFilterState: e.target.value });
+        return;
+      } else if (e.target.id === 'modal-state-select') {
+        const issueId = e.target.getAttribute('data-issue-id');
+        const newState = e.target.value;
+        api.updatePlaneIssue(issueId, { state_id: newState }).then(() => {
+          const planeData = store.getState().planeData;
+          const issue = (planeData.issues || []).find(i => i.id === issueId);
+          const stateObj = (planeData.states || []).find(s => s.id === newState);
+          if (issue && stateObj) {
+            issue.state_id = newState;
+            issue.state_name = stateObj.name;
+            issue.state_color = stateObj.color;
+            store.setState({ planeData: { ...planeData } });
+          }
+        });
+        return;
+      } else if (e.target.id === 'modal-priority-select') {
+        const issueId = e.target.getAttribute('data-issue-id');
+        const newPriority = e.target.value;
+        api.updatePlaneIssue(issueId, { priority: newPriority }).then(() => {
+          const planeData = store.getState().planeData;
+          const issue = (planeData.issues || []).find(i => i.id === issueId);
+          if (issue) {
+            issue.priority = newPriority;
+            store.setState({ planeData: { ...planeData } });
+          }
+        });
+        return;
+      }
+
       if (e.target.id === 'filter-type') {
         store.setFilter('type', e.target.value);
       } else if (e.target.id === 'filter-status') {

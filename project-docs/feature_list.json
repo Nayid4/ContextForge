@@ -899,6 +899,124 @@
           "project-docs/specs/011_encapsulate_specs_and_scripts/evidence/03-knowledge-base-deepwiki.png"
         ]
       }
+    },
+    {
+      "id": 12,
+      "type": "feature",
+      "name": "plane_style_sqlite_project_management",
+      "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+      "description": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-012/plane_style_sqlite_project_management",
+      "spec_folder": "project-docs/specs/012_plane_style_sqlite_project_management",
+      "status": "done",
+      "acceptance": [
+        "Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.",
+        "Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.",
+        "Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).",
+        "Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).",
+        "Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.",
+        "Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.",
+        "Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.",
+        "Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.",
+        "Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).",
+        "Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones."
+      ],
+      "user_story": {
+        "as_a": "Ingeniero de Software y Agente de IA",
+        "i_want": "una plataforma de gestion de proyectos inspirada en Plane con vistas multiples y persistencia relacional SQLite sincronizada con Markdown",
+        "so_that": "la gestion visual del flujo de trabajo sea de primer nivel y los agentes autonomos puedan consultar y actualizar tareas y conocimiento en su formato nativo"
+      },
+      "subtasks": [
+        {
+          "id": "INT-012-DEV",
+          "type": "development",
+          "title": "Motor SQLite relacional, API REST en serve.js y vistas completas estilo Plane",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Crear modulo de base de datos SQLite project-docs/src/core/db.js con node:sqlite nativo",
+            "Implementar motor de sincronizacion bidireccional project-docs/src/core/sqlite-sync.js",
+            "Agregar endpoints REST en serve.js para consultas y mutaciones de Plane con auto-sync a disco",
+            "Desarrollar componentes PlaneLayout, IssueListView, IssueBoardView, IssueCalendarView, IssueSpreadsheetView",
+            "Desarrollar vistas CyclesView, ModulesView, PlanePagesView e IssueDetailModal"
+          ]
+        },
+        {
+          "id": "INT-012-QA",
+          "type": "qa",
+          "title": "Pruebas unitarias de SQLite, sincronizacion de archivos y pruebas de aceptacion Playwright",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Verificar esquema SQLite, consultas de agrupacion y persistencia relacional",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Verificar sincronizacion bidireccional SQLite <-> Markdown (.md) y JSON",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Verificar navegacion e interaccion fluida entre vistas de Plane con Playwright",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Verificar Zero-Emoji Gate y pureza extrema de la raiz",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T11:22:00-05:00",
+        "dev_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
+        "files_modified": [
+          "project-docs/src/core/db.js",
+          "project-docs/src/core/sqlite-sync.js",
+          "project-docs/serve.js",
+          "project-docs/sync-data.js",
+          "project-docs/src/shared/Icons.js",
+          "project-docs/src/features/plane-layout/PlaneSidebar.js",
+          "project-docs/src/features/plane-layout/PlaneTopBar.js",
+          "project-docs/src/features/plane-layout/PlaneControlsBar.js",
+          "project-docs/src/features/plane-layout/PlaneLayout.js",
+          "project-docs/src/features/plane-issues/IssueListView.js",
+          "project-docs/src/features/plane-issues/IssueBoardView.js",
+          "project-docs/src/features/plane-issues/IssueCalendarView.js",
+          "project-docs/src/features/plane-issues/IssueSpreadsheetView.js",
+          "project-docs/src/features/plane-issues/IssueDetailModal.js",
+          "project-docs/src/features/plane-cycles/CyclesView.js",
+          "project-docs/src/features/plane-modules/ModulesView.js",
+          "project-docs/src/features/plane-pages/PlanePagesView.js",
+          "project-docs/src/features/plane-analytics/AnalyticsView.js",
+          "project-docs/src/core/api.js",
+          "project-docs/src/core/store.js",
+          "project-docs/src/main.js"
+        ],
+        "tests_executed": [
+          "npm test (21 unit tests)",
+          "npm run test:e2e (5 smoke tests)",
+          "npm run test:whitebox (13 branch tests)",
+          "npm run test:blackbox (8 resilience tests)",
+          "npm run test:system (7 integration tests)",
+          "npm run test:load (100 reqs concurrency test)",
+          "npm run test:acceptance (14 Playwright E2E tests)",
+          "bash project-docs/verify.sh (9 verification levels)"
+        ],
+        "screenshots": [
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/012_plane_style_sqlite_project_management/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 }

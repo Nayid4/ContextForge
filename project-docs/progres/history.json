@@ -120,6 +120,17 @@
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Reubicación de specs/, verify.sh y project-spec.yaml en project-docs/. Actualización de agentes (.agents/agents/) y skills (.opencode/skills/ -> .github/skills/, .agents/skills/). Raíz con solo 4 carpetas y 4 archivos."
+    },
+    {
+      "id": 12,
+      "type": "feature",
+      "name": "plane_style_sqlite_project_management",
+      "title": "Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown",
+      "branch": "feature/INT-012/plane_style_sqlite_project_management",
+      "completed_at": "2026-11-07 11:25 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Replicacion de UX y arquitectura de Makeplane (Plane): vistas Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; Plane Pages; base de datos relacional SQLite (node:sqlite) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para consumo optimo por agentes IA."
     }
   ]
 }
