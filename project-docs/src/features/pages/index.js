@@ -1,4 +1,5 @@
-export { renderPlanePagesView } from './views/PagesView.js';
-export { PageShelfTree } from './components/PageShelfTree.js';
-export { DualMarkdownEditor } from './components/DualMarkdownEditor.js';
-export { renderKnowledgeBase } from './components/KnowledgeBase.js';
+/**
+ * Re-export canónico del dominio Pages desde modules/Pages/index.js
+ * Mantiene compatibilidad total hacia atrás con la arquitectura Screaming unificada.
+ */
+export * from '../../modules/Pages/index.js';

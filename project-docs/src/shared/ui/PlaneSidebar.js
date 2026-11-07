@@ -25,7 +25,8 @@ export function renderPlaneSidebar({
     { id: 'graph', legacyTab: 'graph', label: 'Grafo de Dependencias', icon: 'gitTree' },
     { id: 'tree', legacyTab: 'tree', label: 'Árbol Jerárquico', icon: 'gitTree' },
     { id: 'constellation', legacyTab: 'three', label: 'Constelación 3D', icon: 'cube' },
-    { id: 'analytics', label: 'Métricas & Burn-down', icon: 'activity' }
+    { id: 'analytics', label: 'Métricas & Burn-down', icon: 'activity' },
+    { id: 'harness', label: 'Agentes & Gobernanza', icon: 'bot' }
   ];
 
   const renderNavItem = (item) => {

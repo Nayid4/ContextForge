@@ -26,6 +26,7 @@ import { renderArchitectureDocs, renderArchitectureView } from './features/archi
 import { renderDependencyGraphView, renderDependencyGraph, DependencyTreeComponent } from './features/graph/index.js';
 import { renderConstellation3DView, SpaceView3D } from './features/constellation/index.js';
 import { renderAnalyticsView } from './features/analytics/index.js';
+import { renderHarnessView } from './modules/Harness/index.js';
 
 class App {
   constructor() {
@@ -186,7 +187,8 @@ class App {
       graph: 'Grafo & Árbol de Dependencias',
       tree: 'Árbol Jerárquico de Requerimientos',
       constellation: 'Constelación Piramidal 3D',
-      analytics: 'Analítica, Velocidad & Rendimiento'
+      analytics: 'Analítica, Velocidad & Rendimiento',
+      harness: 'Orquestación de Agentes & Gobernanza SDD'
     };
     const viewTitle = viewTitles[currentView] || 'Tareas';
 
@@ -274,6 +276,12 @@ class App {
       mainContentHtml = `
         <div class="flex-1 overflow-y-auto">
           ${renderAnalyticsView({ issues, states, cycles, modules })}
+        </div>
+      `;
+    } else if (currentView === 'harness' || currentView === 'agents') {
+      mainContentHtml = `
+        <div class="flex-1 overflow-y-auto">
+          ${renderHarnessView()}
         </div>
       `;
     }

@@ -1044,7 +1044,8 @@
       { id: "graph", legacyTab: "graph", label: "Grafo de Dependencias", icon: "gitTree" },
       { id: "tree", legacyTab: "tree", label: "\xC1rbol Jer\xE1rquico", icon: "gitTree" },
       { id: "constellation", legacyTab: "three", label: "Constelaci\xF3n 3D", icon: "cube" },
-      { id: "analytics", label: "M\xE9tricas & Burn-down", icon: "activity" }
+      { id: "analytics", label: "M\xE9tricas & Burn-down", icon: "activity" },
+      { id: "harness", label: "Agentes & Gobernanza", icon: "bot" }
     ];
     const renderNavItem = (item) => {
       const isActive = currentView === item.id;
@@ -2424,204 +2425,345 @@
     return IssueList({ ...props, groupBy: "none" });
   }
 
-  // project-docs/src/features/cycles/components/BurnDownChart.js
+  // project-docs/src/modules/Cycles/services/cycle.service.js
+  var CycleService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+    }
+    /**
+     * Obtiene todos los ciclos de sprint configurados.
+     * @param {{ bypassCache?: boolean }} [options]
+     * @returns {Promise<Array<Record<string, any>>>}
+     */
+    async getCycles(options = {}) {
+      const planeData = await this.client.fetchPlaneData(options);
+      if (planeData && Array.isArray(planeData.cycles) && planeData.cycles.length > 0) {
+        return planeData.cycles;
+      }
+      return [];
+    }
+    /**
+     * Obtiene un ciclo específico por su identificador.
+     * @param {string} cycleId
+     * @returns {Promise<Record<string, any>|null>}
+     */
+    async getCycleById(cycleId) {
+      const cycles = await this.getCycles();
+      return cycles.find((c) => c.id === cycleId) || null;
+    }
+    /**
+     * Calcula las métricas de avance de un ciclo dado un conjunto de tareas.
+     * @param {Record<string, any>} cycle
+     * @param {Array<Record<string, any>>} issues
+     * @returns {Record<string, any>}
+     */
+    calculateCycleMetrics(cycle = {}, issues = []) {
+      const cycleIssues = issues.filter((i) => i.cycle_id === cycle.id);
+      const total = cycleIssues.length;
+      const done = cycleIssues.filter((i) => i.state_id === "state-done").length;
+      const inProgress = cycleIssues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+      const backlog = total - done - inProgress;
+      const percent = total > 0 ? Math.round(done / total * 100) : 0;
+      return {
+        total,
+        done,
+        inProgress,
+        backlog,
+        percent,
+        issues: cycleIssues
+      };
+    }
+    /**
+     * Genera la serie de puntos temporales para el gráfico de Burn-down vectorial.
+     * @param {Record<string, any>} cycle
+     * @param {Array<Record<string, any>>} issues
+     * @returns {Array<{ label: string, remaining: number, ideal: number }>}
+     */
+    calculateBurnDownPoints(cycle = {}, issues = []) {
+      const { total, done } = this.calculateCycleMetrics(cycle, issues);
+      const safeTotal = Math.max(total, 1);
+      return [
+        { label: "D\xEDa 1", remaining: total, ideal: total },
+        { label: "D\xEDa 4", remaining: Math.max(0, total - Math.round(done * 0.3)), ideal: Math.round(safeTotal * 0.8) },
+        { label: "D\xEDa 7", remaining: Math.max(0, total - Math.round(done * 0.6)), ideal: Math.round(safeTotal * 0.6) },
+        { label: "D\xEDa 10", remaining: Math.max(0, total - done), ideal: Math.round(safeTotal * 0.4) },
+        { label: "D\xEDa 14", remaining: Math.max(0, total - done), ideal: 0 }
+      ];
+    }
+  };
+  var cycleService = new CycleService();
+
+  // project-docs/src/modules/Cycles/store/cycle.store.js
+  var initialCycleState = {
+    cycles: [],
+    selectedCycleId: null,
+    filterStatus: "all"
+    // 'all' | 'active' | 'completed' | 'draft'
+  };
+  var CycleStore = class {
+    constructor(initialState = initialCycleState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en CycleStore listener:", err);
+        }
+      }
+    }
+    setCycles(cycles) {
+      this.setState({ cycles });
+    }
+    selectCycle(cycleId) {
+      this.setState({ selectedCycleId: cycleId });
+    }
+    setFilterStatus(filterStatus) {
+      this.setState({ filterStatus });
+    }
+    getFilteredCycles() {
+      const { cycles, filterStatus } = this.state;
+      if (filterStatus === "all") return cycles;
+      return cycles.filter((c) => c.status === filterStatus);
+    }
+    reset() {
+      this.state = { ...initialCycleState };
+      this.notify();
+    }
+  };
+  var cycleStore = new CycleStore();
+
+  // project-docs/src/modules/Cycles/components/BurnDownChart.js
   function BurnDownChart({
     points = [],
     svgWidth = 600,
     svgHeight = 160,
-    padding = 30,
-    maxVal = 10,
-    idealPath = "",
-    realPath = "",
-    getX = () => 0,
-    getY = () => 0
-  }) {
-    return `
-    <div class="space-y-2 pt-2">
-      <div class="flex items-center justify-between text-xs text-zinc-400">
-        <span class="font-medium text-zinc-300">Gr\xE1fico de Burn-down de Tareas</span>
-        <div class="flex items-center gap-4 text-[11px]">
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-zinc-600 border-dashed"></span> Ideal</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-indigo-400"></span> Real</span>
-        </div>
+    padding = 30
+  } = {}) {
+    if (!points || points.length === 0) {
+      return `
+      <div class="h-40 flex items-center justify-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+        Sin datos de avance para generar el gr\xE1fico burn-down
       </div>
-
-      <div class="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800/80 overflow-x-auto">
-        <svg viewBox="0 0 ${svgWidth} ${svgHeight}" class="w-full h-40 max-w-full">
-          <!-- Grid lines -->
-          <line x1="${padding}" y1="${getY(0)}" x2="${svgWidth - padding}" y2="${getY(0)}" stroke="#27272a" stroke-width="1"/>
-          <line x1="${padding}" y1="${getY(maxVal / 2)}" x2="${svgWidth - padding}" y2="${getY(maxVal / 2)}" stroke="#27272a" stroke-width="1" stroke-dasharray="2 2"/>
-          <line x1="${padding}" y1="${getY(maxVal)}" x2="${svgWidth - padding}" y2="${getY(maxVal)}" stroke="#27272a" stroke-width="1"/>
-
-          <!-- Ideal Line (Dashed) -->
-          <path d="${idealPath}" fill="none" stroke="#52525b" stroke-width="2" stroke-dasharray="4 4"/>
-
-          <!-- Real Line -->
-          <path d="${realPath}" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
-
-          <!-- Points -->
-          ${renderList(points, (p, idx) => `
-            <circle cx="${getX(idx)}" cy="${getY(p.remaining)}" r="4" fill="#818cf8" stroke="#1e1b4b" stroke-width="2"/>
-            <text x="${getX(idx)}" y="${svgHeight - 8}" font-size="9" fill="#71717a" text-anchor="middle" font-family="monospace">${p.label}</text>
-          `)}
-        </svg>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/cycles/components/CycleCard.js
-  function CycleCard({ cycle, issues = [] }) {
-    const cycleIssues = issues.filter((i) => i.cycle_id === cycle.id);
-    const total = cycleIssues.length;
-    const done = cycleIssues.filter((i) => i.state_id === "state-done").length;
-    const percent = total > 0 ? Math.round(done / total * 100) : 0;
-    const isActive = cycle.status === "active";
-    return `
-    <div class="p-4 rounded-xl border ${isActive ? "border-indigo-500/30 bg-indigo-950/10" : "border-zinc-800 bg-zinc-900/40"} space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full ${isActive ? "bg-emerald-500 animate-pulse" : "bg-zinc-500"}"></span>
-          <span class="text-xs font-bold text-zinc-100">${cycle.name}</span>
-          ${isActive ? `
-            <span class="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 font-mono text-[10px] font-semibold">ACTIVO</span>
-          ` : `
-            <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 font-mono text-[10px]">CERRADO</span>
-          `}
-        </div>
-
-        <div class="text-xs font-mono text-zinc-400">
-          <span>${cycle.start_date || "N/A"} al ${cycle.end_date || "N/A"}</span>
-        </div>
-      </div>
-
-      <p class="text-xs text-zinc-400 line-clamp-2">${cycle.description || ""}</p>
-
-      <!-- Progress Bar -->
-      <div class="space-y-1">
-        <div class="flex justify-between text-[11px] font-mono text-zinc-400">
-          <span>${done}/${total} tareas completadas</span>
-          <span class="${percent === 100 ? "text-emerald-400" : "text-zinc-300"} font-bold">${percent}%</span>
-        </div>
-        <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-          <div class="h-full bg-indigo-500 rounded-full" style="width: ${percent}%"></div>
-        </div>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/cycles/views/CyclesView.js
-  function renderCyclesView({
-    cycles = [],
-    issues = [],
-    onSelectIssue = () => {
+    `;
     }
-  }) {
-    const activeCycle = cycles.find((c) => c.status === "active") || cycles[cycles.length - 1] || {};
-    const activeIssues = issues.filter((i) => i.cycle_id === activeCycle.id);
-    const total = activeIssues.length;
-    const done = activeIssues.filter((i) => i.state_id === "state-done").length;
-    const inProgress = activeIssues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
-    const backlog = total - done - inProgress;
-    const percent = total > 0 ? Math.round(done / total * 100) : 0;
-    const points = [
-      { label: "D\xEDa 1", remaining: total, ideal: total },
-      { label: "D\xEDa 4", remaining: Math.max(0, total - Math.round(done * 0.3)), ideal: Math.round(total * 0.8) },
-      { label: "D\xEDa 7", remaining: Math.max(0, total - Math.round(done * 0.6)), ideal: Math.round(total * 0.6) },
-      { label: "D\xEDa 10", remaining: Math.max(0, total - done), ideal: Math.round(total * 0.4) },
-      { label: "D\xEDa 14", remaining: Math.max(0, total - done), ideal: 0 }
-    ];
-    const svgWidth = 600;
-    const svgHeight = 160;
-    const padding = 30;
-    const maxVal = Math.max(total, 5);
+    const maxVal = Math.max(...points.map((p) => Math.max(p.ideal, p.remaining)), 5);
     const getX = (idx) => padding + idx * ((svgWidth - padding * 2) / (points.length - 1));
     const getY = (val) => svgHeight - padding - val / maxVal * (svgHeight - padding * 2);
     const idealPath = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${getX(idx)} ${getY(p.ideal)}`).join(" ");
     const realPath = points.map((p, idx) => `${idx === 0 ? "M" : "L"} ${getX(idx)} ${getY(p.remaining)}`).join(" ");
+    const areaPath = `${realPath} L ${getX(points.length - 1)} ${svgHeight - padding} L ${getX(0)} ${svgHeight - padding} Z`;
     return `
-    <div class="p-6 space-y-8 max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            ${Icons.cycle("w-5 h-5 text-indigo-400")}
-            <span>Ciclos de Desarrollo (Sprints Plane)</span>
-          </h2>
-          <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal de iteraciones \xE1giles, burn-down y velocidad de entrega.</p>
+    <div class="w-full overflow-x-auto select-none" role="img" aria-label="Gr\xE1fico de Burn-down de Tareas">
+      <svg viewBox="0 0 ${svgWidth} ${svgHeight}" class="w-full h-40 text-zinc-400">
+        <defs>
+          <linearGradient id="burndownGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"></stop>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0"></stop>
+          </linearGradient>
+        </defs>
+
+        <!-- Ejes y L\xEDneas Gu\xEDa -->
+        <line x1="${padding}" y1="${svgHeight - padding}" x2="${svgWidth - padding}" y2="${svgHeight - padding}" stroke="#27272a" stroke-width="1"></line>
+        <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${svgHeight - padding}" stroke="#27272a" stroke-width="1"></line>
+        <line x1="${padding}" y1="${getY(maxVal / 2)}" x2="${svgWidth - padding}" y2="${getY(maxVal / 2)}" stroke="#27272a" stroke-dasharray="4 4" stroke-width="1"></line>
+
+        <!-- \xC1rea bajo la curva -->
+        <path d="${areaPath}" fill="url(#burndownGrad)"></path>
+
+        <!-- Trayectoria Ideal (L\xEDnea punteada) -->
+        <path d="${idealPath}" fill="none" stroke="#71717a" stroke-width="2" stroke-dasharray="4 4"></path>
+
+        <!-- Trayectoria Real (L\xEDnea s\xF3lida) -->
+        <path d="${realPath}" fill="none" stroke="#6366f1" stroke-width="2.5"></path>
+
+        <!-- Puntos Reales con tooltip -->
+        ${points.map((p, idx) => `
+          <circle cx="${getX(idx)}" cy="${getY(p.remaining)}" r="4" class="fill-indigo-500 stroke-zinc-950 stroke-2 hover:r-6 transition-all cursor-pointer">
+            <title>${p.label}: ${p.remaining} tareas restantes</title>
+          </circle>
+          <text x="${getX(idx)}" y="${svgHeight - 10}" text-anchor="middle" class="text-[10px] fill-zinc-400 font-mono">
+            ${p.label}
+          </text>
+        `).join("")}
+      </svg>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Cycles/components/CycleCard.js
+  function CycleCard({
+    cycle = {},
+    metrics = {},
+    isActive = false
+  } = {}) {
+    const percent = metrics.percent || 0;
+    const total = metrics.total || 0;
+    const done = metrics.done || 0;
+    const isCompleted = cycle.status === "completed";
+    const statusBadge = isCompleted ? '<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono text-[10px] font-semibold">FINALIZADO</span>' : '<span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">ACTIVO</span>';
+    return `
+    <div class="p-5 rounded-2xl border ${isActive ? "border-indigo-500/40 bg-zinc-900/60 shadow-lg" : "border-zinc-800 bg-zinc-900/30 hover:border-zinc-700"} space-y-4 transition-all">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          ${Icons.cycle("w-4 h-4 text-indigo-400")}
+          <h4 class="text-sm font-bold text-zinc-200 tracking-tight">${cycle.name || "Ciclo"}</h4>
+        </div>
+        ${statusBadge}
+      </div>
+
+      <p class="text-xs text-zinc-400 line-clamp-2">${cycle.description || "Sin descripci\xF3n para este ciclo."}</p>
+
+      <div class="space-y-2 pt-2 border-t border-zinc-800/60 text-xs">
+        <div class="flex items-center justify-between text-zinc-400">
+          <span>Avance de entrega</span>
+          <span class="font-mono font-bold text-zinc-200">${done}/${total} tareas (${percent}%)</span>
+        </div>
+        <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+          <div class="h-full bg-indigo-500 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
         </div>
       </div>
 
-      <!-- Active Cycle Hero Card -->
-      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-6 shadow-xl">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <h2 class="text-base font-bold text-white tracking-tight">${activeCycle.name || "Ciclo Activo"}</h2>
-              <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">
-                ACTIVO
-              </span>
-            </div>
-            <p class="text-xs text-zinc-400 max-w-xl">${activeCycle.description || ""}</p>
-          </div>
+      <div class="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
+        <span>${cycle.start_date || "N/A"}</span>
+        <span>${cycle.end_date || "N/A"}</span>
+      </div>
+    </div>
+  `;
+  }
 
-          <div class="flex items-center gap-6">
-            <div class="text-right">
-              <span class="text-[11px] text-zinc-400 uppercase font-semibold">Rango del Ciclo</span>
-              <div class="text-xs font-mono font-bold text-zinc-200 mt-0.5">${activeCycle.start_date || "N/A"} al ${activeCycle.end_date || "N/A"}</div>
-            </div>
-            <div class="text-right">
-              <span class="text-[11px] text-zinc-400 uppercase font-semibold">Progreso</span>
-              <div class="text-xs font-mono font-bold text-emerald-400 mt-0.5">${percent}%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Metric KPI Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-zinc-400">Total Tareas</span>
-            <div class="text-lg font-bold text-zinc-100 font-mono">${total}</div>
-          </div>
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-emerald-400">Completadas</span>
-            <div class="text-lg font-bold text-emerald-400 font-mono">${done}</div>
-          </div>
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-amber-400">En Progreso</span>
-            <div class="text-lg font-bold text-amber-400 font-mono">${inProgress}</div>
-          </div>
-          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center space-y-1">
-            <span class="text-[11px] text-zinc-400">Pendientes</span>
-            <div class="text-lg font-bold text-zinc-400 font-mono">${backlog}</div>
-          </div>
-        </div>
-
-        <!-- Interactive SVG Burn-down Chart Component -->
-        ${BurnDownChart({
-      points,
-      svgWidth,
-      svgHeight,
-      padding,
-      maxVal,
-      idealPath,
-      realPath,
-      getX,
-      getY
+  // project-docs/src/modules/Cycles/components/CycleList.js
+  function CycleList({
+    cycles = [],
+    issues = [],
+    activeCycleId = null,
+    calculateMetrics = () => ({})
+  } = {}) {
+    if (!cycles || cycles.length === 0) {
+      return `
+      <div class="p-8 text-center border border-dashed border-zinc-800 rounded-2xl text-xs text-zinc-500">
+        No hay ciclos registrados en el proyecto
+      </div>
+    `;
+    }
+    return `
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${renderList(cycles, (cycle) => {
+      const metrics = calculateMetrics(cycle, issues);
+      return CycleCard({
+        cycle,
+        metrics,
+        isActive: cycle.id === activeCycleId
+      });
     })}
-      </div>
+    </div>
+  `;
+  }
 
-      <!-- All Cycles List -->
-      <div class="space-y-4">
-        <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Historial de Ciclos (${cycles.length})</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${renderList(cycles, (c) => CycleCard({ cycle: c, issues }))}
+  // project-docs/src/modules/Cycles/pages/CyclesPage.js
+  function CyclesPage({
+    cycles = [],
+    issues = []
+  } = {}) {
+    const activeCycle = cycles.find((c) => c.status === "active") || cycles[cycles.length - 1] || {};
+    const metrics = cycleService.calculateCycleMetrics(activeCycle, issues);
+    const points = cycleService.calculateBurnDownPoints(activeCycle, issues);
+    return `
+    <div class="flex-1 flex flex-col bg-zinc-950 overflow-y-auto">
+      <div class="p-6 space-y-8 max-w-7xl mx-auto w-full">
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+              ${Icons.cycle("w-5 h-5 text-indigo-400")}
+              <span>Ciclos de Desarrollo (Sprints Plane)</span>
+            </h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal de iteraciones \xE1giles, burn-down y velocidad de entrega.</p>
+          </div>
+        </div>
+
+        <!-- Active Cycle Hero Card -->
+        <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-6 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h3 class="text-base font-bold text-white tracking-tight">${activeCycle.name || "Ciclo Activo"}</h3>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-semibold">
+                  ACTIVO
+                </span>
+              </div>
+              <p class="text-xs text-zinc-400 max-w-xl">${activeCycle.description || ""}</p>
+            </div>
+
+            <div class="flex items-center gap-6">
+              <div class="text-right">
+                <span class="text-[11px] text-zinc-400 uppercase font-semibold">Rango del Ciclo</span>
+                <div class="text-xs font-mono font-bold text-zinc-200 mt-0.5">${activeCycle.start_date || "N/A"} al ${activeCycle.end_date || "N/A"}</div>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-zinc-400 uppercase font-semibold">Progreso</span>
+                <div class="text-xs font-mono font-bold text-emerald-400 mt-0.5">${metrics.done}/${metrics.total} (${metrics.percent}%)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Burn-down Chart Component -->
+          <div class="bg-zinc-950/70 p-4 rounded-xl border border-zinc-800/80 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-zinc-300">Gr\xE1fico de Burn-down de Tareas</span>
+              <div class="flex items-center gap-4 text-[11px] text-zinc-400">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-3 h-0.5 bg-zinc-500 border-dashed inline-block"></span>
+                  <span>L\xEDnea Ideal</span>
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span class="w-3 h-0.5 bg-indigo-500 inline-block"></span>
+                  <span>Avance Real</span>
+                </span>
+              </div>
+            </div>
+
+            ${BurnDownChart({ points })}
+          </div>
+        </div>
+
+        <!-- All Sprints / Cycles Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Historial de Ciclos (${cycles.length})</h3>
+            <span class="text-xs font-mono text-zinc-400">Sprints & Entregas</span>
+          </div>
+
+          ${CycleList({
+      cycles,
+      issues,
+      activeCycleId: activeCycle.id,
+      calculateMetrics: (c, iss) => cycleService.calculateCycleMetrics(c, iss)
+    })}
         </div>
       </div>
     </div>
   `;
+  }
+
+  // project-docs/src/modules/Cycles/index.js
+  function renderCyclesView(props = {}) {
+    return CyclesPage(props);
   }
 
   // project-docs/src/features/modules/components/ModuleCard.js
@@ -2712,8 +2854,154 @@
   `;
   }
 
+  // project-docs/src/modules/Pages/services/page.service.js
+  var PageService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+    }
+    /**
+     * Carga la lista completa de páginas de conocimiento.
+     * @param {{ bypassCache?: boolean }} [options]
+     * @returns {Promise<Array<Record<string, any>>>}
+     */
+    async getPages(options = {}) {
+      const planeData = await this.client.fetchPlaneData(options);
+      if (planeData && Array.isArray(planeData.pages) && planeData.pages.length > 0) {
+        return planeData.pages;
+      }
+      const allData = await this.client.fetchAll(options);
+      if (allData.knowledgeIndex && allData.knowledgeIndex.docs) {
+        return Object.entries(allData.knowledgeIndex.docs).map(([key, content], idx) => {
+          const titleMatch = content.match(/^#\s+(.+)$/m);
+          const title = titleMatch ? titleMatch[1].trim() : key;
+          const words = content.trim().split(/\s+/).filter(Boolean).length;
+          const readingTime = Math.max(1, Math.ceil(words / 200));
+          return {
+            id: `page-${key.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+            title,
+            file_path: key,
+            shelf: this.resolveShelf(key),
+            word_count: words,
+            reading_time_min: readingTime,
+            content_markdown: content
+          };
+        });
+      }
+      return [];
+    }
+    /**
+     * Obtiene una página por su ID con su contenido Markdown.
+     * @param {string} pageId
+     * @returns {Promise<Record<string, any>|null>}
+     */
+    async getPageById(pageId) {
+      const pages = await this.getPages();
+      return pages.find((p) => p.id === pageId) || null;
+    }
+    /**
+     * Guarda o actualiza el contenido Markdown de una página.
+     * @param {string} pageId
+     * @param {string} markdownContent
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    async savePageMarkdown(pageId, markdownContent) {
+      return this.client.updatePlanePage(pageId, markdownContent);
+    }
+    /**
+     * Determina el estante canónico a partir de la ruta del archivo.
+     * @param {string} filePath
+     * @returns {string}
+     */
+    resolveShelf(filePath = "") {
+      const p = filePath.toLowerCase();
+      if (p.includes("c4") || p.includes("architecture")) return "architecture";
+      if (p.includes("business-rule") || p.includes("invariants")) return "business_rules";
+      if (p.includes("requirements") || p.includes("user-stor")) return "requirements";
+      if (p.includes("adr") || p.includes("decision")) return "adrs";
+      if (p.includes("standard") || p.includes("service")) return "standards";
+      if (p.includes("module")) return "modules";
+      if (p.includes("spec")) return "specs";
+      return "standards";
+    }
+    /**
+     * Calcula métricas de lectura de un texto en Markdown.
+     * @param {string} markdown
+     * @returns {{ words: number, readingTimeMin: number }}
+     */
+    calculateReadingMetrics(markdown = "") {
+      const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+      const readingTimeMin = Math.max(1, Math.ceil(words / 200));
+      return { words, readingTimeMin };
+    }
+  };
+  var pageService = new PageService();
+
+  // project-docs/src/modules/Pages/store/page.store.js
+  var initialPageState = {
+    pages: [],
+    activePageId: null,
+    activePageContent: "",
+    searchQuery: "",
+    editorMode: "reader",
+    // 'reader' | 'editor'
+    activeShelf: "all"
+  };
+  var PageStore = class {
+    constructor(initialState = initialPageState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en PageStore listener:", err);
+        }
+      }
+    }
+    setPages(pages) {
+      this.setState({ pages });
+    }
+    selectPage(pageId, content = "") {
+      this.setState({ activePageId: pageId, activePageContent: content });
+    }
+    setEditorMode(mode) {
+      this.setState({ editorMode: mode });
+    }
+    setSearchQuery(searchQuery) {
+      this.setState({ searchQuery });
+    }
+    getFilteredPages() {
+      const { pages, searchQuery, activeShelf } = this.state;
+      return pages.filter((p) => {
+        if (activeShelf !== "all" && p.shelf !== activeShelf) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (p.title || "").toLowerCase().includes(q) || p.file_path && p.file_path.toLowerCase().includes(q);
+      });
+    }
+    reset() {
+      this.state = { ...initialPageState };
+      this.notify();
+    }
+  };
+  var pageStore = new PageStore();
+
   // project-docs/src/shared/MarkdownViewer.js
-  function renderMarkdown(content = "") {
+  function renderMarkdown2(content = "") {
     if (!content || typeof content !== "string") return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
     return parseMarkdownNative(content);
   }
@@ -3989,7 +4277,7 @@
           <!-- Contenido Principal del Art\xEDculo (Columna de Lectura) -->
           <div class="lg:col-span-9 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px]">
             <article id="doc-active-body" class="prose dark:prose-invert max-w-3xl mx-auto text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
-              ${renderMarkdown(activeDocContent)}
+              ${renderMarkdown2(activeDocContent)}
             </article>
           </div>
 
@@ -4081,7 +4369,7 @@
                 <span class="text-emerald-500 font-semibold">\u25CF Scroll Sincronizado</span>
               </div>
               <div id="doc-editor-live-preview" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 overflow-y-auto h-[560px] prose dark:prose-invert max-w-none text-xs">
-                ${renderMarkdown(activeDocContent)}
+                ${renderMarkdown2(activeDocContent)}
               </div>
             </div>
 
@@ -6697,6 +6985,372 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
   `;
   }
 
+  // project-docs/src/modules/Harness/services/harness.service.js
+  var CANONICAL_AGENTS = [
+    {
+      id: "leader",
+      name: "L\xEDder T\xE9cnico & Orquestador",
+      role: "Agente Principal (Master Leader)",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Orquesta el ciclo de vida SDD, valida entorno y ramas sem\xE1nticas INT-*, coordina subagentes y puertas humanas con ask_question.",
+      responsibilities: [
+        "Validaci\xF3n de rama base (main/master/dev) y creaci\xF3n de rama de trabajo <= 80c",
+        "Orquestaci\xF3n de invocaci\xF3n de subagentes (spec-author, implementer, reviewer)",
+        "Puerta de aprobaci\xF3n humana con ask_question",
+        "Pregunta de integraci\xF3n (merge o PR) y cierre de ciclo"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "run_command", "ask_question", "invoke_subagent", "send_message"]
+    },
+    {
+      id: "spec-author",
+      name: "Autor de Especificaciones SDD",
+      role: "Subagente Especialista en Requerimientos",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Redacta specifications t\xE9cnicas, decisiones arquitect\xF3nicas y subtareas Jira DEV/QA bajo el est\xE1ndar Scrum en project-docs/specs/.",
+      responsibilities: [
+        "Redacci\xF3n de User Stories Scrum (Como/Quiero/Para)",
+        "Definici\xF3n de criterios de aceptaci\xF3n con sintaxis EARS",
+        "Desglose formal de subtareas Jira DEV y QA",
+        "Listado de Definition of Done (DoD) y Definition of Ready (DoR)"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "search_web"]
+    },
+    {
+      id: "implementer",
+      name: "Implementador Agn\xF3stico & QA on-demand",
+      role: "Subagente de Construcci\xF3n y Pruebas",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Ejecuta las tareas t\xE9cnicas, escribe c\xF3digo de producci\xF3n y pruebas automatizadas (TDD, SDD o FTD), ejecutando verify.sh y registrando trazabilidad R-to-Tests.",
+      responsibilities: [
+        "Implementaci\xF3n guiada por pruebas (TDD primero rojo, luego verde)",
+        "Construcci\xF3n de c\xF3digo de producci\xF3n desacoplado",
+        "Ejecuci\xF3n del pipeline de verificaci\xF3n multinivel (verify.sh)",
+        "Documentaci\xF3n de trazabilidad de pruebas unitarias y E2E"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "run_command"]
+    },
+    {
+      id: "reviewer",
+      name: "Revisor de Calidad & Auditor\xEDa QA",
+      role: "Subagente Auditor Independiente",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Audita que la feature cumpla al 100% con su spec, matriz R-to-Tests, arquitectura screaming, cierre de subtareas Jira DEV/QA y capturas de evidencia. No edita c\xF3digo.",
+      responsibilities: [
+        "Auditor\xEDa estricta de cumplimiento de especificaci\xF3n sin modificar c\xF3digo",
+        "Verificaci\xF3n de capturas de pantalla de evidencia en project-docs/specs/.../evidence/",
+        "Inspecci\xF3n de cero emojis unicode en c\xF3digo fuente",
+        "Validaci\xF3n de cierre determinista de subtareas Jira DEV y QA"
+      ],
+      tools: ["read_file", "run_command"]
+    }
+  ];
+  var CANONICAL_SKILLS = [
+    { name: "technical-audit", description: "Auditor\xEDa t\xE9cnica y generaci\xF3n de project-spec.yaml", synced: true },
+    { name: "project-knowledge", description: "Extracci\xF3n de base de conocimiento soberana C4, UML y reglas", synced: true },
+    { name: "generate-verify", description: "Generaci\xF3n de script verify.sh multinivel", synced: true },
+    { name: "verification", description: "Documentaci\xF3n y consulta de niveles de verificaci\xF3n", synced: true },
+    { name: "requirements-analysis", description: "An\xE1lisis de requerimientos y generaci\xF3n de feature_list.json", synced: true },
+    { name: "generate-spec", description: "Generaci\xF3n de spec t\xE9cnico formal, tareas y decisiones", synced: true },
+    { name: "implement-tdd", description: "Implementaci\xF3n guiada por pruebas (TDD)", synced: true },
+    { name: "implement-sdd", description: "Implementaci\xF3n dirigida por spec por fases (SDD)", synced: true },
+    { name: "implement-ftd", description: "Implementaci\xF3n \xE1gil para cambios menores (FTD)", synced: true },
+    { name: "write-unit-tests", description: "Escritura de tests unitarios agn\xF3sticos al lenguaje", synced: true },
+    { name: "acceptance-testing", description: "Pruebas de aceptaci\xF3n con Playwright, caja blanca/negra y carga", synced: true },
+    { name: "targeted-qa", description: "Pruebas focalizadas de QA bajo demanda", synced: true },
+    { name: "verify-spec", description: "Reconciliaci\xF3n de metadata y verificaci\xF3n de cierre", synced: true },
+    { name: "api-test-plan", description: "Plan de pruebas API REST markdown y .http", synced: true },
+    { name: "execute-api-test-plan", description: "Ejecuci\xF3n de plan API con curl y hallazgos", synced: true },
+    { name: "sync-skills", description: "Sincronizaci\xF3n triple de skills hacia Copilot y Antigravity", synced: true },
+    { name: "start-feature", description: "Orquestaci\xF3n de ciclo SDD para nueva feature o bugfix", synced: true },
+    { name: "sdd-workflow", description: "Gu\xEDa y ejecuci\xF3n del flujo integral SDD multi-agente", synced: true }
+  ];
+  var HarnessService = class {
+    constructor() {
+      this.agents = [...CANONICAL_AGENTS];
+      this.skills = [...CANONICAL_SKILLS];
+    }
+    getAgents() {
+      return this.agents;
+    }
+    getAgentById(id) {
+      return this.agents.find((a) => a.id === id) || null;
+    }
+    getSkills() {
+      return this.skills;
+    }
+    getGovernanceOverview() {
+      return {
+        branchingConvention: "{feature|bugfix}/INT-{numero}/{nombre} (m\xE1ximo 80 caracteres)",
+        commitFormat: "feat(scope): descripci\xF3n / fix(scope): descripci\xF3n",
+        tripleSyncRoot: ".opencode/skills/ (fuente de verdad) -> .github/skills/ y .agents/skills/",
+        zeroEmojiInvariant: "100% c\xF3digo fuente, marcado y documentaci\xF3n sin caracteres emoji unicode",
+        rootCleanliness: "Estrictamente 4 directorios (.agents, .git, .github, .opencode, project-docs) y 4 archivos en ra\xEDz"
+      };
+    }
+  };
+  var harnessService = new HarnessService();
+
+  // project-docs/src/modules/Harness/store/harness.store.js
+  var initialHarnessState = {
+    agents: [...CANONICAL_AGENTS],
+    skills: [...CANONICAL_SKILLS],
+    selectedAgentId: "leader",
+    activeTab: "agents"
+    // 'agents' | 'skills' | 'rules'
+  };
+  var HarnessStore = class {
+    constructor(initialState = initialHarnessState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en HarnessStore listener:", err);
+        }
+      }
+    }
+    selectAgent(agentId) {
+      this.setState({ selectedAgentId: agentId });
+    }
+    setActiveTab(activeTab) {
+      this.setState({ activeTab });
+    }
+    reset() {
+      this.state = { ...initialHarnessState };
+      this.notify();
+    }
+  };
+  var harnessStore = new HarnessStore();
+
+  // project-docs/src/modules/Harness/components/AgentCard.js
+  function AgentCard({
+    agent = {},
+    isSelected = false
+  } = {}) {
+    const isMaster = agent.id === "leader";
+    const roleBadge = isMaster ? '<span class="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 font-mono text-[10px] font-semibold">MASTER LEADER</span>' : '<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono text-[10px] font-semibold">SUBAGENTE</span>';
+    return `
+    <div
+      data-agent-id="${agent.id}"
+      class="p-5 rounded-2xl border ${isSelected ? "border-indigo-500/50 bg-indigo-950/20 shadow-lg" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"} flex flex-col justify-between space-y-4 transition-all"
+    >
+      <div class="space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0 shadow-sm">
+              ${agent.id ? agent.id.slice(0, 2).toUpperCase() : "AG"}
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-zinc-100 tracking-tight">${agent.name}</h4>
+              <p class="text-[11px] text-zinc-400 font-medium">${agent.role}</p>
+            </div>
+          </div>
+          ${roleBadge}
+        </div>
+
+        <p class="text-xs text-zinc-300 leading-relaxed">${agent.description}</p>
+
+        <!-- Responsabilidades -->
+        <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+          <span class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Responsabilidades</span>
+          <div class="space-y-1">
+            ${renderList(agent.responsibilities || [], (resp) => `
+              <div class="flex items-start gap-2 text-xs text-zinc-300">
+                <span class="p-0.5 text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3 h-3")}</span>
+                <span class="leading-snug">${resp}</span>
+              </div>
+            `)}
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer: Tools -->
+      <div class="pt-3 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5">
+        <span class="text-[10px] text-zinc-400 uppercase font-semibold mr-1">Tools:</span>
+        ${renderList(agent.tools || [], (tool) => `
+          <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">
+            ${tool}
+          </span>
+        `)}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/AgentList.js
+  function AgentList({
+    agents = [],
+    selectedAgentId = "leader"
+  } = {}) {
+    return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${renderList(agents, (agent) => AgentCard({
+      agent,
+      isSelected: agent.id === selectedAgentId
+    }))}
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
+  function SkillSyncStatus({
+    skills = []
+  } = {}) {
+    return `
+    <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/40">
+        <div>
+          <h4 class="text-sm font-bold text-zinc-100 tracking-tight">Matriz de Sincronizaci\xF3n Triple de Skills</h4>
+          <p class="text-xs text-zinc-400 mt-0.5">Homologaci\xF3n bidireccional entre opencode, GitHub Copilot y Google Antigravity.</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-semibold">
+          100% HOMOLOGADO
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-zinc-900/60 text-zinc-400 uppercase font-semibold text-[10px] tracking-wider border-b border-zinc-800">
+            <tr>
+              <th class="px-6 py-3">Skill</th>
+              <th class="px-6 py-3">Descripci\xF3n</th>
+              <th class="px-4 py-3 text-center">opencode</th>
+              <th class="px-4 py-3 text-center">Copilot</th>
+              <th class="px-4 py-3 text-center">Antigravity</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/60 font-mono">
+            ${renderList(skills, (skill) => `
+              <tr class="hover:bg-zinc-900/30 transition-colors">
+                <td class="px-6 py-3.5 font-bold text-indigo-400">/${skill.name}</td>
+                <td class="px-6 py-3.5 font-sans text-zinc-300 font-normal">${skill.description}</td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/HarnessOverview.js
+  function HarnessOverview({
+    governance = {}
+  } = {}) {
+    return `
+    <div class="space-y-6">
+      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            ${Icons.shield("w-5 h-5")}
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white tracking-tight">Gobernanza del Arn\xE9s SDD Multi-Agente</h3>
+            <p class="text-xs text-zinc-400">Invariantes estrictas de calidad, control de ramas y arquitectura anti-sesgo.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Ramas Sem\xE1nticas (&le;80c)</span>
+            <p class="text-xs font-mono text-indigo-300 font-medium">${governance.branchingConvention || "{feature|bugfix}/INT-*"}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Formato de Commits</span>
+            <p class="text-xs font-mono text-emerald-300 font-medium">${governance.commitFormat || "feat(scope): desc"}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Pureza Anti-Emoji</span>
+            <p class="text-xs font-mono text-amber-300 font-medium">${governance.zeroEmojiInvariant || "0 emojis en todo el c\xF3digo"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/pages/HarnessPage.js
+  function HarnessPage({
+    agents = [],
+    skills = [],
+    selectedAgentId = "leader"
+  } = {}) {
+    const activeAgents = agents && agents.length > 0 ? agents : harnessService.getAgents();
+    const activeSkills = skills && skills.length > 0 ? skills : harnessService.getSkills();
+    const governance = harnessService.getGovernanceOverview();
+    return `
+    <div class="flex-1 flex flex-col bg-zinc-950 overflow-y-auto">
+      <div class="p-6 space-y-8 max-w-7xl mx-auto w-full">
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+              ${Icons.bot("w-5 h-5 text-indigo-400")}
+              <span>Orquestaci\xF3n de Agentes & Gobernanza SDD</span>
+            </h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, habilidades homologadas y verificaci\xF3n de reglas.</p>
+          </div>
+        </div>
+
+        <!-- Governance Overview Banner -->
+        ${HarnessOverview({ governance })}
+
+        <!-- Agents Grid -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">
+              Equipo de Agentes Especializados (${activeAgents.length})
+            </h3>
+            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD</span>
+          </div>
+
+          ${AgentList({ agents: activeAgents, selectedAgentId })}
+        </div>
+
+        <!-- Skills Triple Sync Section -->
+        <div class="space-y-4">
+          ${SkillSyncStatus({ skills: activeSkills })}
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/index.js
+  function renderHarnessView(props = {}) {
+    return HarnessPage(props);
+  }
+
   // project-docs/src/main.js
   var App = class {
     constructor() {
@@ -6833,7 +7487,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         graph: "Grafo & \xC1rbol de Dependencias",
         tree: "\xC1rbol Jer\xE1rquico de Requerimientos",
         constellation: "Constelaci\xF3n Piramidal 3D",
-        analytics: "Anal\xEDtica, Velocidad & Rendimiento"
+        analytics: "Anal\xEDtica, Velocidad & Rendimiento",
+        harness: "Orquestaci\xF3n de Agentes & Gobernanza SDD"
       };
       const viewTitle = viewTitles[currentView] || "Tareas";
       let mainContentHtml = "";
@@ -6916,6 +7571,12 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         mainContentHtml = `
         <div class="flex-1 overflow-y-auto">
           ${renderAnalyticsView({ issues, states, cycles, modules })}
+        </div>
+      `;
+      } else if (currentView === "harness" || currentView === "agents") {
+        mainContentHtml = `
+        <div class="flex-1 overflow-y-auto">
+          ${renderHarnessView()}
         </div>
       `;
       }
@@ -7131,7 +7792,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
               const docs = store.getState().knowledgeIndex?.docs || {};
               const content = docs[docKey] || "";
               if (textarea) textarea.value = content;
-              if (preview) preview.innerHTML = renderMarkdown(content);
+              if (preview) preview.innerHTML = renderMarkdown2(content);
               editorContainer.classList.remove("hidden");
               readerContainer.classList.add("hidden");
               if (btnText) btnText.textContent = "Modo Lectura";
@@ -7194,7 +7855,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           if (docKey) {
             store.saveDoc(docKey, newContent);
             const bodyEl = document.getElementById("doc-active-body");
-            if (bodyEl) bodyEl.innerHTML = renderMarkdown(newContent);
+            if (bodyEl) bodyEl.innerHTML = renderMarkdown2(newContent);
             const tocEl = document.getElementById("doc-active-toc");
             if (tocEl) tocEl.innerHTML = renderTocHtml(extractTableOfContents(newContent));
             document.getElementById("doc-editor-view-container")?.classList.add("hidden");
@@ -7336,7 +7997,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         if (e.target.id === "doc-editor-textarea") {
           const preview = document.getElementById("doc-editor-live-preview");
           if (preview) {
-            preview.innerHTML = renderMarkdown(e.target.value);
+            preview.innerHTML = renderMarkdown2(e.target.value);
           }
           return;
         }
@@ -7423,13 +8084,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (wordsEl) wordsEl.textContent = meta.wordCount || 0;
       if (brEl) brEl.textContent = meta.ruleCount || 0;
       if (rfEl) rfEl.textContent = meta.reqCount || 0;
-      if (bodyEl) bodyEl.innerHTML = renderMarkdown(content);
+      if (bodyEl) bodyEl.innerHTML = renderMarkdown2(content);
       if (tocEl) {
         const toc = extractTableOfContents(content);
         tocEl.innerHTML = renderTocHtml(toc);
       }
       if (textarea) textarea.value = content;
-      if (livePreview) livePreview.innerHTML = renderMarkdown(content);
+      if (livePreview) livePreview.innerHTML = renderMarkdown2(content);
       if (openInEditor) {
         readerContainer?.classList.add("hidden");
         editorContainer?.classList.remove("hidden");
