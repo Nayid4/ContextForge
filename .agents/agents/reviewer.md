@@ -25,15 +25,15 @@ Eres el **reviewer** del arnés de ingeniería SDD y Scrum en **Google Antigravi
 ## Checklist obligatorio de revisión
 
 ### 1. Trazabilidad `R<n> <-> Tests`
-- [ ] Lee `requirements.md` y lista todos los requerimientos `R<n>`.
-- [ ] Lee `progress/impl_{name}.md` y verifica que exista la tabla de trazabilidad `R<n> <-> Tests`.
+- [ ] Lee `requirements.md` en `project-docs/specs/{NNN}_{name}/` y lista todos los requerimientos `R<n>`.
+- [ ] Lee `project-docs/progres/impl_{name}.md` y verifica que exista la tabla de trazabilidad `R<n> <-> Tests`.
 - [ ] Comprueba en la carpeta de tests que cada prueba listada exista realmente, no esté vacía ni ignorada/skippeada, y valide el escenario correspondiente.
 - [ ] Verifica que **cada `R<n>`** tenga al menos un test concreto que valide su comportamiento en rutas de éxito y de error.
 
 ### 2. Verificación ejecutable (mediante `run_command`)
-- [ ] Consulta `project-spec.yaml` para obtener los comandos de verificación del stack (`checks.build`, `checks.test`, `checks.verify`).
+- [ ] Consulta `project-docs/project-spec.yaml` para obtener los comandos de verificación del stack (`checks.build`, `checks.test`, `checks.verify`).
 - [ ] **Build**: Ejecuta el comando de compilación del proyecto. Debe terminar con 0 errores y 0 warnings bloqueantes.
-- [ ] **Tests**: Ejecuta la suite de pruebas del proyecto (`verify.sh` o `npm test`). El 100% de los tests deben pasar en verde.
+- [ ] **Tests**: Ejecuta la suite de pruebas del proyecto (`bash project-docs/verify.sh` o `npm --prefix project-docs test`). El 100% de los tests deben pasar en verde.
 - [ ] **Auditoría de dependencias**: Ejecuta auditoría de seguridad del gestor de paquetes (`npm audit`, `pip-audit`, etc.).
 - [ ] **Sincronización del Tablero**: Ejecuta `node project-docs/sync-data.js` para asegurar que el tablero de seguimiento y el archivo de respaldo reflejen los datos reales.
 
@@ -50,12 +50,12 @@ Eres el **reviewer** del arnés de ingeniería SDD y Scrum en **Google Antigravi
   - Cero emojis en código fuente, comentarios o interfaces.
 
 ### 4. Subtareas Jira (DEV & QA) y Completitud
-- [ ] Lee `tasks.md` y confirma que la **Subtarea DEV (`INT-XXX-DEV`)** esté marcada `[x]` en todas sus tareas técnicas.
+- [ ] Lee `tasks.md` en `project-docs/specs/{NNN}_{name}/` y confirma que la **Subtarea DEV (`INT-XXX-DEV`)** esté marcada `[x]` en todas sus tareas técnicas.
 - [ ] Confirma que la **Subtarea QA (`INT-XXX-QA`)** haya sido ejecutada por el especialista de QA con todos sus casos de prueba aprobados.
 
 ### 5. Auditoría de Evidencias y Capturas de Pantalla (Screenshots)
-- [ ] Comprueba que existan capturas de pantalla reales en `specs/{NNN}_{name}/evidence/` generadas durante las pruebas.
-- [ ] Verifica que exista el archivo `specs/{NNN}_{name}/evidence.md` detallando:
+- [ ] Comprueba que existan capturas de pantalla reales en `project-docs/specs/{NNN}_{name}/evidence/` generadas durante las pruebas.
+- [ ] Verifica que exista el archivo `project-docs/specs/{NNN}_{name}/evidence.md` detallando:
   - Resumen de qué se implementó.
   - Qué pruebas se ejecutaron y sus resultados (`[PASS]`).
   - Galería visual con las capturas de pantalla incrustadas.
@@ -64,7 +64,7 @@ Eres el **reviewer** del arnés de ingeniería SDD y Scrum en **Google Antigravi
 
 ---
 
-## Veredicto y documentación en `progress/review_{name}.md`
+## Veredicto y documentación en `project-docs/progres/review_{name}.md`
 
 Al terminar tu auditoría, genera obligatoriamente el reporte formal:
 

@@ -14,11 +14,11 @@ Analiza documentación del proyecto para identificar features, historias de usua
 - **Documentación del proyecto** (obligatorio) - Cualquier documentación que contenga requerimientos
 
 ## Entrada Opcional
-- **project-spec.yaml** - Especificación técnica del proyecto
+- **project-spec.yaml** - Especificación técnica del proyecto (`project-docs/project-spec.yaml` o raíz)
 - **feature_list.json existente** - Para fusionar con nuevos requerimientos
 
 ## Salida
-Archivos `feature_list.json` en la raíz del proyecto o directorio especificado.
+Archivo `project-docs/feature_list.json` (y sincronizado con `node project-docs/sync-data.js`).
 
 ## Estructura del JSON
 

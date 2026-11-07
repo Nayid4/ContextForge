@@ -212,7 +212,7 @@ Informar al usuario:
 
 ### Paso 7: Cerrar el Spec (cuando la implementacion termina)
 
-> **Recomendado:** Ejecutar el skill `verify-spec` antes de este paso. Solo cierra el spec si `verify-spec` reporta el resultado como APROBADO (acceptance criteria, tasks, tests unitarios con cobertura, tests de API si aplica, y `verify.sh` en verde).
+> **Recomendado:** Ejecutar el skill `verify-spec` antes de este paso. Solo cierra el spec si `verify-spec` reporta el resultado como APROBADO (acceptance criteria, tasks, tests unitarios con cobertura, tests de API si aplica, y `project-docs/verify.sh` en verde).
 
 Una vez que la implementacion esta completa y aprobada:
 
@@ -364,9 +364,9 @@ in_progress → (implementar + verify-spec + reconciliar Paso 8) → done (compl
 
 - [ ] Subtarea de desarrollo (DEV) completada con codigo y tests unitarios
 - [ ] Subtarea de QA verificada con criterios de aceptacion y evidencias
-- [ ] Capturas de pantalla generadas y guardadas en specs/.../evidence/
+- [ ] Capturas de pantalla generadas y guardadas en project-docs/specs/.../evidence/
 - [ ] Documento evidence.md consolidado
-- [ ] 100% de tests en verde en verify.sh
+- [ ] 100% de tests en verde en project-docs/verify.sh
 
 ## Objetivo
 
@@ -488,7 +488,7 @@ in_progress → (implementar + verify-spec + reconciliar Paso 8) → done (compl
 ### Fase 4: Cierre
 
 - [ ] <tarea de cierre 1>
-- [ ] Ejecutar skill `verify-spec` (valida acceptance criteria, tasks, tests unitarios, tests de API y verify.sh antes de cerrar)
+- [ ] Ejecutar skill `verify-spec` (valida acceptance criteria, tasks, tests unitarios, tests de API y project-docs/verify.sh antes de cerrar)
 - [ ] Actualizar `Status` de `spec.md` a `Done`
 - [ ] Actualizar feature_list.json status a "done" y `closedAt`
 - [ ] Agregar record a history.json

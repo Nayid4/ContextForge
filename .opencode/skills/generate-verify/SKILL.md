@@ -11,14 +11,14 @@ Genera un script `verify.sh` personalizado para verificar que un proyecto esté 
 ## Uso
 Se debe proporcionar:
 - **Ruta del proyecto** (obligatorio)
-- **project-spec.yaml** (obligatorio) - Especificación técnica del proyecto
+- **project-spec.yaml** (obligatorio) - Especificación técnica del proyecto (en `project-docs/project-spec.yaml` o raíz)
 
 ## Entrada
 1. Ruta del directorio del proyecto
-2. Archivo `project-spec.yaml` (generado por skill `technical-audit`)
+2. Archivo `project-docs/project-spec.yaml` (generado por skill `technical-audit`)
 
 ## Salida
-Archivo `verify.sh` en la raíz del proyecto, con permisos de ejecución.
+Archivo `project-docs/verify.sh` (o en raíz según configuración del arnés), con permisos de ejecución.
 
 ## Estructura del Script
 

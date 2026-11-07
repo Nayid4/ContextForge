@@ -7,25 +7,25 @@ description: Use when writing unit tests for a feature/spec to reach code covera
 
 ## Descripción
 
-Genera tests unitarios para el código implementado en un spec, cubriendo casos de éxito y error, siguiendo las convenciones del framework de testing detectado en el proyecto. Es **agnóstico al lenguaje**: usa `project-spec.yaml` (`checks.test`, `runtime.language`) para elegir el framework correcto, o autodetecta si no existe.
+Genera tests unitarios para el código implementado en un spec, cubriendo casos de éxito y error, siguiendo las convenciones del framework de testing detectado en el proyecto. Es **agnóstico al lenguaje**: usa `project-docs/project-spec.yaml` (o `project-spec.yaml`, `checks.test`, `runtime.language`) para elegir el framework correcto, o autodetecta si no existe.
 
 > **Sugerencia:** Ejecutar después de implementar el spec (código de `generate-spec`) y antes de `verify-spec`, para asegurar que la tarea "tests unitarios" quede aprobada.
 
 ## Entrada Requerida
 
-- **Directorio del spec** (obligatorio) - Para extraer "Componentes Afectados" y "Acceptance Criteria" de `spec.md`
+- **Directorio del spec** (obligatorio) - Para extraer "Componentes Afectados" y "Acceptance Criteria" de `spec.md` (en `project-docs/specs/`)
 - **Módulo/directorio de código fuente** (obligatorio) - Donde se implementó la feature
 
 ## Entrada Opcional
 
-- **project-spec.yaml** - Framework/comando de test configurado
+- **project-spec.yaml** - Framework/comando de test configurado en `project-docs/project-spec.yaml` o raíz
 - **Herramienta de cobertura deseada** - Si el proyecto no tiene una configurada
 
 ## Detección de Lenguaje/Framework
 
 Prioridad de detección:
 
-1. `runtime.language` + `checks.test.command` de `project-spec.yaml`
+1. `runtime.language` + `checks.test.command` de `project-docs/project-spec.yaml` (o `project-spec.yaml`)
 2. Archivos de configuración en el módulo:
 
 | Lenguaje | Archivo indicador | Framework por defecto | Comando |

@@ -23,7 +23,7 @@ tags: ["ddd", "ubiquitous-language", "context-map", "crc-cards", "strategic-ddd"
    - **`triple-sync-engine`**: Motor de sincronización triple y garantía de paridad entre OpenCode, Copilot y Antigravity.
    - **`knowledge-engine`**: Motor de ingesta y preservación de contexto soberano Docs-as-Code anti-sesgo.
    - **`dashboard-visualizer`**: Tablero interactivo, lector editorial, editor dual ContextForge y visualizador 3D.
-   - **`testing-qa-suite`**: Automatización del arnés de verificación en 8 niveles y runner de `verify.sh`.
+   - **`testing-qa-suite`**: Automatización del arnés de verificación en 8 niveles y runner de `project-docs/verify.sh`.
 3. **Generic Subdomains (Subdominios Genéricos)**:
    - Control de versiones (Git), motor de renderizado Markdown y Three.js.
 
@@ -33,8 +33,8 @@ tags: ["ddd", "ubiquitous-language", "context-map", "crc-cards", "strategic-ddd"
 
 | Término Ubicuo | Definición Funcional y Técnica | Equivalente en Código / Artefactos |
 |---|---|---|
-| **Harness (Arnés)** | Conjunto de reglas, scripts, skills y roles que guían y restringen a los agentes de IA. | `.agents/`, `.opencode/`, `.github/`, `verify.sh` |
-| **Spec-Driven Development (SDD)** | Metodología donde ninguna línea de código se escribe antes de aprobar formalmente su spec. | `specs/{NNN}_{name}/`, `generate-spec` |
+| **Harness (Arnés)** | Conjunto de reglas, scripts, skills y roles que guían y restringen a los agentes de IA. | `.agents/`, `.opencode/`, `.github/`, `project-docs/verify.sh` |
+| **Spec-Driven Development (SDD)** | Metodología donde ninguna línea de código se escribe antes de aprobar formalmente su spec. | `project-docs/specs/{NNN}_{name}/`, `generate-spec` |
 | **Human Gate (Puerta Humana)** | Pausa obligatoria del flujo que bloquea la ejecución del agente hasta confirmación del humano. | Herramienta nativa `ask_question` |
 | **Rama INT-*** | Rama de trabajo dedicada que cumple `{feature\|bugfix}/INT-{numero}/{nombre}` $\le 80$ caracteres. | Convención en `AGENTS.md` y `branches.md` |
 | **Docs-as-Code** | Práctica de gestionar la documentación en Markdown versionado junto al código fuente. | `project-docs/knowledge/**` |
@@ -68,7 +68,7 @@ tags: ["ddd", "ubiquitous-language", "context-map", "crc-cards", "strategic-ddd"
 - **Responsabilidades**:
   1. Implementar código de producción siguiendo la técnica aprobada.
   2. Escribir tests unitarios y de integración según la convención del stack.
-  3. Ejecutar verificaciones automatizadas (`npm test`, `verify.sh`).
+  3. Ejecutar verificaciones automatizadas (`npm test`, `project-docs/verify.sh`).
   4. Registrar la trazabilidad bidireccional $R \leftrightarrow Tests$ en `progress/impl_{name}.md`.
 - **Colaboradores**: `ProjectSpec`, `TestRunner`, `LeaderAgent`, `ReviewerAgent`.
 

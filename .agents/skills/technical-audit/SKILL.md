@@ -14,7 +14,7 @@ Se debe proporcionar:
 - **Referencia previa** (opcional) - Archivo YAML/JSON existente para complementar
 
 ## Salida
-1. Archivo `project-spec.yaml` en la raíz del proyecto (para verify.sh, Docker y tooling CLI).
+1. Archivo `project-docs/project-spec.yaml` (y opcionalmente en raíz si el proyecto cliente lo requiere).
 2. Archivo `project-docs/project-spec.json` (versión JSON estructurada para el visualizador del tablero de seguimiento).
 3. Sincronización en `project-docs/data-fallback.js` (ejecutar `node project-docs/sync-data.js` para asegurar compatibilidad offline con doble clic).
 

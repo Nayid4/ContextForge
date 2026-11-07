@@ -11,7 +11,7 @@ sequenceDiagram
   participant Sync as "sync-data.js"
 
   User->>Skill: "Ejecutar /project-knowledge"
-  Skill->>Phase1: "Auditar package.json, project-spec.yaml, estructura de carpetas"
+  Skill->>Phase1: "Auditar package.json, project-docs/project-spec.yaml, estructura de carpetas"
   Phase1-->>Skill: "Identificados Bounded Contexts y fronteras"
   Skill->>Phase2: "Leer servicios de dominio, entidades, reglas y handlers"
   Phase2-->>Skill: "Extraídas reglas BR-*, requerimientos RF-* y diagramas C4/UML"

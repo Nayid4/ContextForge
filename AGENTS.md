@@ -10,7 +10,12 @@ Arnés de ingeniería dirigida por specs (Spec Driven Development) para desarrol
 ├── <backend>/           # API/servidor - nombre, lenguaje y framework dependen del proyecto
 ├── <frontend>/          # UI/cliente (opcional) - nombre, lenguaje y framework dependen del proyecto
 ├── infra/               # Infraestructura (Docker, IaC, etc.) - opcional según el proyecto
-├── project-docs/        # Documentación, pruebas internas y Tablero de seguimiento
+├── project-docs/        # Documentación, specs, tests, tooling, verify.sh y Tablero de seguimiento
+│   ├── specs/           # Especificaciones técnicas SDD (requirements, design, tasks, evidence)
+│   ├── tests/           # Suites de prueba multinivel (unit, whitebox, blackbox, system, load, e2e)
+│   ├── scripts/         # Scripts de soporte y captura de evidencias (capture-evidence.js)
+│   ├── project-spec.yaml # Especificación técnica del proyecto y arnés
+│   └── verify.sh        # Script de verificación integral autónomo
 ├── .agents/             # Configuración homologada para Google Antigravity
 │   ├── rules/           # Reglas de flujo, branching y arnés
 │   ├── agents/          # Roles especializados (leader, spec-author, implementer, reviewer)
@@ -24,9 +29,8 @@ Arnés de ingeniería dirigida por specs (Spec Driven Development) para desarrol
 │   └── skills/          # Skills de opencode (fuente de verdad)
 ├── AGENTS.md            # Reglas generales del arnés y orquestación
 ├── opencode.json        # Configuración principal de opencode
-├── project-spec.yaml    # Especificación técnica del proyecto y arnés
-├── verify.sh            # Script de verificación integral del arnés
-└── README.md            # Documentación general del arnés
+├── README.md            # Documentación general del arnés
+└── .gitignore           # Exclusiones de control de versiones
 ```
 
 > Las carpetas de backend/frontend/infra son ejemplos: su nombre, cantidad y tecnología cambian según el proyecto.

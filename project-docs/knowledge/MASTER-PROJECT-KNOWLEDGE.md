@@ -53,7 +53,7 @@ tags: ["master-dossier", "single-file-context", "sdd", "ieee-830", "c4-model", "
 
 ### 2.1 Screaming Architecture y Organización
 El proyecto aplica el principio de **Screaming Architecture**:
-- La raíz separa claramente la orquestación (`.agents/`, `.opencode/`, `.github/`), la interfaz y documentación (`project-docs/`) y el arnés de verificación (`tests/`, `verify.sh`).
+- La raíz separa claramente la orquestación (`.agents/`, `.opencode/`, `.github/`), la interfaz y documentación (`project-docs/`) y el arnés de verificación (`tests/`, `project-docs/verify.sh`).
 - El frontend en `project-docs/src/` está modularizado por dominio: `core/`, `features/` y `shared/`, compilado en un bundle IIFE (`dist/app.bundle.js`).
 
 ### 2.2 Patrones de Diseño Detectados
@@ -132,11 +132,11 @@ flowchart LR
 ### Requerimientos Funcionales Nucleares
 - **RF-ORCH-001**: Creación y validación de ramas `{type}/INT-{id}/{name}` con longitud $\le 80$ caracteres.
 - **RF-ORCH-002**: Puerta humana obligatoria con `ask_question` previa a la implementación.
-- **RF-ORCH-003**: Partición formal en subtareas Scrum Jira DEV/QA y captura automatizada de evidencias visuales en `specs/{NNN}_{name}/evidence/`.
+- **RF-ORCH-003**: Partición formal en subtareas Scrum Jira DEV/QA y captura automatizada de evidencias visuales en `project-docs/specs/{NNN}_{name}/evidence/`.
 - **RF-DASH-001**: Operación offline nativa en protocolo `file:///` con carga instantánea de fallback.
 - **RF-DASH-002**: Editor dual Markdown/Bloques con scroll sincronizado.
 - **RF-SYNC-001**: Sincronización unidireccional de 18 skills desde `.opencode/`.
-- **RF-TEST-001**: Verificación integral en 9 niveles mediante `verify.sh`.
+- **RF-TEST-001**: Verificación integral en 9 niveles mediante `project-docs/verify.sh`.
 
 ---
 
@@ -236,7 +236,7 @@ erDiagram
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
 ### 8.4 Módulo: testing-qa-suite
-- **Propósito**: Automatización de pruebas en 9 fases, runner de `verify.sh` y Playwright E2E.
+- **Propósito**: Automatización de pruebas en 9 fases, runner de `project-docs/verify.sh` y Playwright E2E.
 - **Tareas Asociadas**: `INT-007`, `INT-008`.
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
@@ -263,4 +263,4 @@ erDiagram
 | `RF-DASH-002` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/shared/MarkdownViewer.js` | `tests/acceptance/dual-editor.spec.js` | Cubierto |
 | `RF-DASH-003` | `BR-DASH-002` | `HU-DASH-01` | `project-docs/src/shared/Icons.js` | `tests/unit/ui-anti-emoji.test.js` | Cubierto |
 | `RF-SYNC-001` | `BR-SYNC-001` | `HU-SYNC-01` | `.agents/skills/sync-skills/` | `tests/whitebox/sync-pipeline.test.js` | Cubierto |
-| `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `verify.sh` | Suite de 9 fases (16 unit, 12 wb, 8 bb, 7 sys, 1 load, 5 e2e, 10 acceptance) | Cubierto |
+| `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `project-docs/verify.sh` | Suite de 9 fases (16 unit, 12 wb, 8 bb, 7 sys, 1 load, 5 e2e, 10 acceptance) | Cubierto |

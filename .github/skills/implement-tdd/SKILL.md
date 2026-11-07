@@ -7,17 +7,17 @@ description: Use when implementing a spec with Test-Driven Development. Writes f
 
 ## Descripción
 
-Implementa un spec activo siguiendo **Test-Driven Development**: escribir la prueba primero, confirmar que falla, escribir el código mínimo que la hace pasar, y recién entonces refactorizar. Es **agnóstico al lenguaje**: usa `project-spec.yaml` (`checks.test`, `runtime.language`) o autodetección para elegir framework y comandos.
+Implementa un spec activo siguiendo **Test-Driven Development**: escribir la prueba primero, confirmar que falla, escribir el código mínimo que la hace pasar, y recién entonces refactorizar. Es **agnóstico al lenguaje**: usa `project-docs/project-spec.yaml` (o `project-spec.yaml`, `checks.test`, `runtime.language`) o autodetección para elegir framework y comandos.
 
 > **Cuándo usar:** cuando `spec.md` recomienda TDD en su Metadata (campo `Tecnica de Implementacion`), o cuando la feature introduce lógica con ramas y rutas de error. Para cambios sin lógica nueva ver `implement-ftd`; para integración multi-módulo ver `implement-sdd`.
 
 ## Entrada Requerida
 
-- **Spec activo** en `project-docs/progres/current.json` (status `in_progress`) con su `directory`
+- **Spec activo** en `project-docs/progres/current.json` (status `in_progress`) con su `directory` (en `project-docs/specs/`)
 
 ## Entrada Opcional
 
-- `project-spec.yaml` del módulo — framework, comandos de test/build
+- `project-docs/project-spec.yaml` (o `project-spec.yaml`) — framework, comandos de test/build
 - `<spec-dir>/spec.md`, `tasks.md`, `decisions.md`
 
 ## Restricciones
@@ -47,7 +47,7 @@ Los hallazgos van a `<spec-dir>/refactor-findings.md` (crear si no existe) con: 
 
 1. Leer `project-docs/progres/current.json`. Si es `{}` o no existe: **ABORTAR** con "No hay spec activo. Ejecutar generate-spec primero."
 2. Leer `spec.md` → extraer `## Acceptance Criteria` y `## Componentes Afectados`.
-3. Determinar framework y comando de test (prioridad: `project-spec.yaml` → `verify.sh` → autodetección).
+3. Determinar framework y comando de test (prioridad: `project-docs/project-spec.yaml` → `project-docs/verify.sh` → autodetección).
 4. **Snapshot del baseline**: ejecutar la suite de tests completa ANTES de escribir nada. Registrar tests totales y fallidos. Si ya hay fallos preexistentes, registrarlos — sin ese número no se puede distinguir un rojo propio de un rojo ajeno.
 
 ### Fase 1: Red — Escribir los tests
@@ -88,7 +88,7 @@ Aplicar la tabla de "Restricción de Alcance del Refactor". Refactorizar solo lo
 
 ### Fase 5: Verificación
 
-1. Ejecutar `verify.sh` del módulo → exit 0.
+1. Ejecutar `project-docs/verify.sh` (o `verify.sh`) del módulo → exit 0.
 2. Ejecutar la suite completa con cobertura → registrar números reales.
 3. Confirmar que cada AC tiene al menos un test que lo cubra.
 

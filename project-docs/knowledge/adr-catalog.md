@@ -9,7 +9,7 @@
 - **Fecha**: 2026-11-02
 - **Estado**: Aceptado
 - **Contexto**: Anteriormente los subagentes `implementer` y `reviewer` ejecutaban comandos fijos de `.NET` (`dotnet build /warnaserror`), fallando en repositorios políglotas o basados en Node.js, Python o Go.
-- **Decisión**: Los subagentes inspeccionan dinámicamente el bloque `checks` de `project-spec.yaml` para obtener los comandos específicos de compilación y pruebas del proyecto objetivo.
+- **Decisión**: Los subagentes inspeccionan dinámicamente el bloque `checks` de `project-docs/project-spec.yaml` para obtener los comandos específicos de compilación y pruebas del proyecto objetivo.
 - **Consecuencias**: El arnés opera de manera transparente sobre cualquier stack tecnológico preservando la misma disciplina SDD.
 
 ---

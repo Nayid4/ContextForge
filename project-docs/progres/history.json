@@ -109,6 +109,17 @@
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Encapsulamiento de dependencias npm, scripts, tests y configuración en project-docs/, consolidación de ANTIGRAVITY.md en .agents/ y kickstart.json en project-docs/, y verify.sh transparente via npm --prefix."
+    },
+    {
+      "id": 11,
+      "type": "feature",
+      "name": "harness_deep_encapsulation_specs_and_scripts",
+      "title": "Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/",
+      "branch": "feature/INT-011/encapsulate_specs_and_scripts",
+      "completed_at": "2026-11-07 10:30 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Reubicación de specs/, verify.sh y project-spec.yaml en project-docs/. Actualización de agentes (.agents/agents/) y skills (.opencode/skills/ -> .github/skills/, .agents/skills/). Raíz con solo 4 carpetas y 4 archivos."
     }
   ]
 }

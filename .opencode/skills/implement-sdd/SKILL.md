@@ -17,7 +17,7 @@ Implementa un spec activo siguiendo **Spec-Driven Development**: el spec aprobad
 
 ## Entrada Opcional
 
-- `project-spec.yaml` del módulo — framework, comandos de test/build
+- `project-docs/project-spec.yaml` (o `project-spec.yaml`) — framework, comandos de test/build
 - `<spec-dir>/spec.md`, `tasks.md`, `decisions.md`
 
 ## Restricciones
@@ -40,7 +40,7 @@ Implementa un spec activo siguiendo **Spec-Driven Development**: el spec aprobad
    - `## Impacto / Componentes Afectados` → **la lista cerrada de archivos a tocar**
    - `## Fuera de Alcance` → **la lista de lo que no se toca**
 4. Verificar el estado de las dependencias declaradas. Si alguna está `pending` y el spec la requería, **parar y reportar**: implementar sobre una dependencia ausente produce código que no compila o no prueba nada.
-5. Determinar framework y comandos (prioridad: `project-spec.yaml` → `verify.sh` → autodetección).
+5. Determinar framework y comandos (prioridad: `project-docs/project-spec.yaml` → `project-docs/verify.sh` → autodetección).
 
 ### Fase 1: Preparación
 
@@ -65,7 +65,7 @@ Implementar **en el orden de `tasks.md`**, fase por fase:
 
 ### Fase 4: Verificación
 
-1. Ejecutar `verify.sh` del módulo → exit 0.
+1. Ejecutar `project-docs/verify.sh` (o `verify.sh`) del módulo → exit 0.
 2. Ejecutar la suite completa con cobertura → registrar números reales.
 3. Para cada AC, señalar la evidencia (código + test) que lo respalda.
 

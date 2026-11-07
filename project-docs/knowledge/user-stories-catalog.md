@@ -9,7 +9,7 @@
 
 ### Definition of Ready (DoR) — Criterios para iniciar una Feature
 - [ ] La feature cuenta con nombre descriptivo en `snake_case` y rama `{type}/INT-{id}/{name}` $\le 80$ caracteres.
-- [ ] Especificación técnica redactada por `spec-author` en `specs/{NNN}_{name}/` con requerimientos EARS, ADRs y checklist de tasks.
+- [ ] Especificación técnica redactada por `spec-author` en `project-docs/specs/{NNN}_{name}/` con requerimientos EARS, ADRs y checklist de tasks.
 - [ ] Criterios de aceptación redactados en formato Given / When / Then (Gherkin).
 - [ ] **Puerta Humana aprobada al 100%** mediante la herramienta `ask_question`.
 

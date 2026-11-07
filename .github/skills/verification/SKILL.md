@@ -10,7 +10,8 @@ Verifica que un proyecto esté correctamente configurado y funcional antes de se
 
 ## Uso
 ```bash
-./verify.sh
+bash project-docs/verify.sh
+# o ./project-docs/verify.sh
 ```
 
 ## Qué verifica
@@ -41,7 +42,7 @@ Verifica que un proyecto esté correctamente configurado y funcional antes de se
 - `1` - Al menos una verificación falló
 
 ## Personalización
-Cada proyecto debe tener su propio `verify.sh` en la raíz del proyecto.
+Cada proyecto debe tener su propio `verify.sh` en `project-docs/verify.sh` (o en la raíz del proyecto).
 El script debe usar colores para facilitar la lectura:
 - 🟢 Verde: OK
 - 🔴 Rojo: Error
