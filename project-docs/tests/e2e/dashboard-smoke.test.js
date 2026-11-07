@@ -22,6 +22,9 @@ test('Smoke Test: Archivos y enlaces críticos del tablero interactivo', () => {
 
 test('Smoke Test: Evaluación del bundle y renderizado sin excepciones', () => {
   global.window = global;
+  global.window.addEventListener = () => {};
+  global.window.removeEventListener = () => {};
+  global.window.location = { hash: '', protocol: 'file:' };
   global.document = {
     documentElement: { classList: { contains: () => true, add: () => {}, remove: () => {} } },
     addEventListener: () => {},

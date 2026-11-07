@@ -615,7 +615,8 @@
     fetchPlaneData,
     updatePlaneIssue,
     updatePlanePage,
-    startAutoSync
+    startAutoSync,
+    startPolling: startAutoSync
   };
 
   // project-docs/src/core/router.js
@@ -705,7 +706,9 @@
         this._dispatch(route, rawHash, params);
       };
       if (typeof window !== "undefined" && !this.isListening) {
-        window.addEventListener("hashchange", handleHashChange);
+        if (typeof window.addEventListener === "function") {
+          window.addEventListener("hashchange", handleHashChange);
+        }
         this.isListening = true;
         handleHashChange();
       }
@@ -1367,8 +1370,537 @@
   `;
   }
 
-  // project-docs/src/features/issues/components/IssueRow.js
-  function IssueRow(issue) {
+  // project-docs/src/core/api-client.js
+  var ApiClient = class {
+    constructor(baseUrl = "") {
+      this.baseUrl = baseUrl;
+    }
+    /**
+     * Determina si la aplicación se está ejecutando en modo offline (file:///)
+     * @returns {boolean}
+     */
+    isOffline() {
+      return typeof window !== "undefined" && window.location?.protocol === "file:";
+    }
+    /**
+     * Obtiene datos de respaldo embebidos en window.__FALLBACK_DATA__
+     * @returns {Record<string, any>}
+     */
+    getFallbackData() {
+      if (typeof window !== "undefined" && window.__FALLBACK_DATA__) {
+        return window.__FALLBACK_DATA__;
+      }
+      return {};
+    }
+    /**
+     * Realiza una petición GET segura con soporte de fallback.
+     * @param {string} endpoint 
+     * @param {RequestInit & { bypassCache?: boolean }} [options] 
+     * @returns {Promise<any>}
+     */
+    async get(endpoint, options = {}) {
+      if (this.isOffline()) {
+        return this.resolveOfflineFallback(endpoint);
+      }
+      const { bypassCache = false, ...fetchOpts } = options;
+      const url = bypassCache ? `${this.baseUrl}${endpoint}${endpoint.includes("?") ? "&" : "?"}_t=${Date.now()}` : `${this.baseUrl}${endpoint}`;
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { "Accept": "application/json" },
+          cache: bypassCache ? "no-store" : "default",
+          ...fetchOpts
+        });
+        if (!res.ok) {
+          throw new Error(`Error HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      } catch (err) {
+        const fallback = this.resolveOfflineFallback(endpoint);
+        if (fallback !== null) return fallback;
+        throw err;
+      }
+    }
+    /**
+     * Realiza una petición POST segura.
+     * @param {string} endpoint 
+     * @param {any} body 
+     * @param {RequestInit} [options] 
+     * @returns {Promise<any>}
+     */
+    async post(endpoint, body = {}, options = {}) {
+      if (this.isOffline()) {
+        console.warn(`Operaci\xF3n POST "${endpoint}" no persistida en servidor (modo offline file:///)`);
+        return { ok: true, offline: true };
+      }
+      const url = `${this.baseUrl}${endpoint}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(body),
+        ...options
+      });
+      if (!res.ok) {
+        throw new Error(`Error HTTP POST ${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    }
+    /**
+     * Resuelve datos desde el objeto de fallback según el endpoint solicitado.
+     * @param {string} endpoint 
+     * @returns {any}
+     */
+    resolveOfflineFallback(endpoint) {
+      const fallback = this.getFallbackData();
+      const clean = endpoint.toLowerCase();
+      if (clean.includes("feature_list") || clean.includes("/api/features")) {
+        return fallback.featureList || { project: "Proyecto (Modo Local)", features: [] };
+      }
+      if (clean.includes("current.json") || clean.includes("/api/spec/current")) {
+        return fallback.currentSpec || {};
+      }
+      if (clean.includes("history.json") || clean.includes("/api/history")) {
+        return fallback.historyData || { records: [] };
+      }
+      if (clean.includes("project-spec.json") || clean.includes("/api/spec/project")) {
+        return fallback.projectSpec || null;
+      }
+      if (clean.includes("knowledge") || clean.includes("/api/knowledge")) {
+        return fallback.knowledgeIndex || null;
+      }
+      if (clean.includes("plane") || clean.includes("/api/plane")) {
+        return fallback.planeData || {
+          workspace: { id: "ws-default", name: "Harness Workspace" },
+          project: { id: "proj-default", name: "Arn\xE9s SDD" },
+          states: [],
+          cycles: [],
+          modules: [],
+          issues: [],
+          pages: []
+        };
+      }
+      return null;
+    }
+    /**
+     * Carga todo el conjunto de datos del proyecto para el arnés.
+     * @param {{ bypassCache?: boolean }} [options] 
+     * @returns {Promise<Record<string, any>>}
+     */
+    async fetchAll(options = {}) {
+      if (this.isOffline()) {
+        const fb = this.getFallbackData();
+        const fList = fb.featureList || { project: "Proyecto (Modo Local)", features: [] };
+        return {
+          project: fList.project || "Proyecto",
+          features: Array.isArray(fList.features) ? fList.features : [],
+          currentSpec: fb.currentSpec || {},
+          historyData: fb.historyData || { records: [] },
+          projectSpec: fb.projectSpec || null,
+          knowledgeIndex: fb.knowledgeIndex || null,
+          protocol: "file:"
+        };
+      }
+      const { bypassCache = false } = options;
+      const cacheBuster = bypassCache ? `?_t=${Date.now()}` : "";
+      const [featuresRes, currentRes, historyRes, specRes, knowledgeRes] = await Promise.allSettled([
+        fetch(`feature_list.json${cacheBuster}`),
+        fetch(`progres/current.json${cacheBuster}`),
+        fetch(`progres/history.json${cacheBuster}`),
+        fetch(`project-spec.json${cacheBuster}`),
+        fetch(`knowledge/knowledge-index.json${cacheBuster}`)
+      ]);
+      const readJson = async (res) => {
+        if (res.status === "fulfilled" && res.value.ok) {
+          try {
+            return await res.value.json();
+          } catch (_) {
+            return null;
+          }
+        }
+        return null;
+      };
+      const fData = await readJson(featuresRes);
+      const cData = await readJson(currentRes);
+      const hData = await readJson(historyRes);
+      const sData = await readJson(specRes);
+      const kData = await readJson(knowledgeRes);
+      const fallback = this.getFallbackData();
+      return {
+        project: fData && fData.project || "Proyecto",
+        features: fData && Array.isArray(fData.features) ? fData.features : fallback.featureList?.features || [],
+        currentSpec: cData || fallback.currentSpec || {},
+        historyData: hData || fallback.historyData || { records: [] },
+        projectSpec: sData || fallback.projectSpec || null,
+        knowledgeIndex: kData || fallback.knowledgeIndex || null,
+        protocol: "http:"
+      };
+    }
+    /**
+     * Carga el estado estructurado de Plane (SQLite / fallback).
+     * @param {{ bypassCache?: boolean }} [options] 
+     * @returns {Promise<Record<string, any>>}
+     */
+    async fetchPlaneData(options = {}) {
+      if (this.isOffline()) {
+        return this.resolveOfflineFallback("plane");
+      }
+      try {
+        return await this.get("/api/plane/data", options);
+      } catch (_) {
+        return this.resolveOfflineFallback("plane");
+      }
+    }
+    /**
+     * Solicita una sincronización SQLite forzada al servidor local.
+     * @returns {Promise<any>}
+     */
+    async syncSQLite() {
+      try {
+        return await this.post("/api/plane/sync", {});
+      } catch (err) {
+        console.warn("Sincronizaci\xF3n SQLite no disponible:", err.message);
+        return { ok: false, error: err.message };
+      }
+    }
+  };
+  var apiClient = new ApiClient();
+
+  // project-docs/src/modules/Issues/services/issue.service.js
+  var CANONICAL_STATES = [
+    { id: "state-backlog", name: "Backlog", color: "bg-zinc-500", group: "backlog", sequence: 1 },
+    { id: "state-todo", name: "Por Hacer", color: "bg-sky-500", group: "unstarted", sequence: 2 },
+    { id: "state-in-progress", name: "En Progreso", color: "bg-amber-500", group: "started", sequence: 3 },
+    { id: "state-in-review", name: "En Revisi\xF3n", color: "bg-purple-500", group: "started", sequence: 4 },
+    { id: "state-done", name: "Completado", color: "bg-emerald-500", group: "completed", sequence: 5 },
+    { id: "state-cancelled", name: "Cancelado", color: "bg-rose-500", group: "cancelled", sequence: 6 }
+  ];
+  var IssueService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+      this.states = [...CANONICAL_STATES];
+    }
+    /**
+     * Obtiene todos los estados configurados en el proyecto.
+     * @returns {Array<{ id: string, name: string, color: string, group: string, sequence: number }>}
+     */
+    getStates() {
+      return this.states;
+    }
+    /**
+     * Carga todas las tareas con datos enriquecidos.
+     * @param {{ bypassCache?: boolean }} [options] 
+     * @returns {Promise<Array<Record<string, any>>>}
+     */
+    async getIssues(options = {}) {
+      try {
+        const planeData = await this.client.fetchPlaneData(options);
+        if (planeData && Array.isArray(planeData.issues) && planeData.issues.length > 0) {
+          if (Array.isArray(planeData.states) && planeData.states.length > 0) {
+            this.states = planeData.states;
+          }
+          return planeData.issues;
+        }
+      } catch (err) {
+        console.warn("Error obteniendo issues desde API, usando fallback:", err.message);
+      }
+      const allData = await this.client.fetchAll(options);
+      const features = Array.isArray(allData.features) ? allData.features : [];
+      return this.transformFeaturesToIssues(features);
+    }
+    /**
+     * Transforma la lista canónica de features de feature_list.json a formato IssueDTO de Plane.
+     * @param {Array<Record<string, any>>} features 
+     * @returns {Array<Record<string, any>>}
+     */
+    transformFeaturesToIssues(features) {
+      return features.map((f, idx) => {
+        let stateId = "state-backlog";
+        let stateName = "Backlog";
+        if (f.status === "done") {
+          stateId = "state-done";
+          stateName = "Completado";
+        } else if (f.status === "in_progress") {
+          stateId = "state-in-progress";
+          stateName = "En Progreso";
+        } else if (f.status === "spec_ready") {
+          stateId = "state-todo";
+          stateName = "Por Hacer";
+        } else if (f.status === "blocked") {
+          stateId = "state-cancelled";
+          stateName = "Cancelado";
+        }
+        const rawSubtasks = Array.isArray(f.subtasks) ? f.subtasks : [];
+        const subtasks = rawSubtasks.map((s) => ({
+          id: s.id,
+          type: s.type || "development",
+          title: s.title,
+          status: s.status || "pending",
+          assignee: s.assignee || "implementer"
+        }));
+        const doneSubtasks = subtasks.filter((s) => s.status === "done" || s.status === "passed").length;
+        return {
+          id: `INT-${String(f.id).padStart(3, "0")}`,
+          sequence_id: f.id,
+          title: f.title || f.name,
+          name: f.name,
+          description: f.description || "",
+          state_id: stateId,
+          state_name: stateName,
+          priority: (f.priority || "p2").toLowerCase(),
+          assignee_role: "implementer",
+          module_name: f.module || "General",
+          subtasks,
+          subtasks_count: subtasks.length,
+          subtasks_done: doneSubtasks,
+          acceptance_criteria: Array.isArray(f.acceptance) ? f.acceptance : [],
+          user_story: f.user_story || null,
+          user_story_as_a: f.user_story?.as_a || "",
+          user_story_i_want: f.user_story?.i_want || "",
+          user_story_so_that: f.user_story?.so_that || "",
+          branch: f.branch || `feature/INT-${String(f.id).padStart(3, "0")}/${f.name}`,
+          raw_feature: f
+        };
+      });
+    }
+    /**
+     * Obtiene una tarea específica por su ID.
+     * @param {string | number} id 
+     * @param {Array<Record<string, any>>} [issuesCache] 
+     * @returns {Promise<Record<string, any> | null>}
+     */
+    async getIssueById(id, issuesCache = null) {
+      const list = issuesCache || await this.getIssues();
+      const strId = String(id).toUpperCase();
+      const numId = parseInt(strId.replace(/\D/g, ""), 10);
+      return list.find(
+        (i) => String(i.id).toUpperCase() === strId || i.sequence_id === numId || i.id === `INT-${String(numId).padStart(3, "0")}`
+      ) || null;
+    }
+    /**
+     * Actualiza el estado de una tarea y lo persiste localmente y en SQLite si está disponible.
+     * @param {string} issueId 
+     * @param {string} targetStateId 
+     * @returns {Promise<{ ok: boolean, issueId: string, stateId: string }>}
+     */
+    async updateIssueState(issueId, targetStateId) {
+      const targetState = this.states.find((s) => s.id === targetStateId);
+      const stateName = targetState ? targetState.name : targetStateId;
+      try {
+        await this.client.post("/api/plane/issues/state", {
+          id: issueId,
+          state_id: targetStateId,
+          state_name: stateName
+        });
+      } catch (_) {
+      }
+      return { ok: true, issueId, stateId: targetStateId };
+    }
+    /**
+     * Actualiza el estado de una subtarea individual.
+     * @param {string} issueId 
+     * @param {string} subtaskId 
+     * @param {string} status 
+     * @returns {Promise<{ ok: boolean, issueId: string, subtaskId: string, status: string }>}
+     */
+    async updateSubtask(issueId, subtaskId, status) {
+      try {
+        await this.client.post("/api/plane/issues/subtask", {
+          issue_id: issueId,
+          subtask_id: subtaskId,
+          status
+        });
+      } catch (_) {
+      }
+      return { ok: true, issueId, subtaskId, status };
+    }
+    /**
+     * Calcula estadísticas resumidas sobre la lista de tareas.
+     * @param {Array<Record<string, any>>} issues 
+     * @returns {Record<string, any>}
+     */
+    calculateMetrics(issues = []) {
+      const total = issues.length;
+      const completed = issues.filter((i) => i.state_id === "state-done").length;
+      const inProgress = issues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+      const pending = issues.filter((i) => i.state_id === "state-backlog" || i.state_id === "state-todo").length;
+      const percentage = total > 0 ? Math.round(completed / total * 100) : 0;
+      return {
+        total,
+        completed,
+        inProgress,
+        pending,
+        percentage
+      };
+    }
+  };
+  var issueService = new IssueService();
+
+  // project-docs/src/modules/Issues/store/issue.store.js
+  var initialIssueState = {
+    viewMode: "board",
+    // 'board' | 'list' | 'calendar' | 'spreadsheet'
+    filters: {
+      state: "all",
+      priority: "all",
+      assignee: "all",
+      module: "all",
+      search: ""
+    },
+    groupBy: "state",
+    // 'state' | 'priority' | 'assignee'
+    orderBy: "sequence",
+    // 'sequence' | 'priority' | 'title'
+    selectedIssueId: null,
+    isDetailModalOpen: false,
+    issues: [],
+    states: [...CANONICAL_STATES],
+    loading: false,
+    error: null
+  };
+  var IssueStore = class {
+    constructor(initial = initialIssueState) {
+      this.state = {
+        ...initial,
+        filters: { ...initial.filters }
+      };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      if (typeof listener !== "function") throw new TypeError("El listener debe ser una funci\xF3n");
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en suscriptor de IssueStore:", err);
+        }
+      }
+    }
+    // --- Mutators ---
+    setViewMode(viewMode) {
+      if (["board", "list", "calendar", "spreadsheet"].includes(viewMode)) {
+        this.setState({ viewMode });
+      }
+    }
+    setFilter(key, value) {
+      this.setState({
+        filters: { ...this.state.filters, [key]: value }
+      });
+    }
+    resetFilters() {
+      this.setState({
+        filters: {
+          state: "all",
+          priority: "all",
+          assignee: "all",
+          module: "all",
+          search: ""
+        }
+      });
+    }
+    setGroupBy(groupBy) {
+      if (["state", "priority", "assignee"].includes(groupBy)) {
+        this.setState({ groupBy });
+      }
+    }
+    setOrderBy(orderBy) {
+      this.setState({ orderBy });
+    }
+    setIssues(issues) {
+      this.setState({ issues: Array.isArray(issues) ? issues : [] });
+    }
+    setStates(states) {
+      if (Array.isArray(states) && states.length > 0) {
+        this.setState({ states });
+      }
+    }
+    setSelectedIssueId(selectedIssueId) {
+      this.setState({
+        selectedIssueId,
+        isDetailModalOpen: Boolean(selectedIssueId)
+      });
+    }
+    openDetailModal(issueId) {
+      this.setState({
+        selectedIssueId: issueId,
+        isDetailModalOpen: true
+      });
+    }
+    closeDetailModal() {
+      this.setState({
+        selectedIssueId: null,
+        isDetailModalOpen: false
+      });
+    }
+    // --- Selectors ---
+    getSelectedIssue() {
+      if (!this.state.selectedIssueId) return null;
+      const strId = String(this.state.selectedIssueId).toUpperCase();
+      const numId = parseInt(strId.replace(/\D/g, ""), 10);
+      return this.state.issues.find(
+        (i) => String(i.id).toUpperCase() === strId || i.sequence_id === numId || i.id === `INT-${String(numId).padStart(3, "0")}`
+      ) || null;
+    }
+    getFilteredIssues() {
+      const { issues, filters, orderBy } = this.state;
+      const q = (filters.search || "").trim().toLowerCase();
+      const filtered = issues.filter((issue) => {
+        if (q) {
+          const matchTitle = (issue.title || "").toLowerCase().includes(q);
+          const matchId = (issue.id || "").toLowerCase().includes(q);
+          const matchDesc = (issue.description || "").toLowerCase().includes(q);
+          if (!matchTitle && !matchId && !matchDesc) return false;
+        }
+        if (filters.state !== "all" && issue.state_id !== filters.state) {
+          return false;
+        }
+        if (filters.priority !== "all") {
+          const p = (issue.priority || "").toLowerCase();
+          if (p !== filters.priority.toLowerCase()) return false;
+        }
+        if (filters.assignee !== "all") {
+          const a = (issue.assignee_role || issue.assignee || "").toLowerCase();
+          if (!a.includes(filters.assignee.toLowerCase())) return false;
+        }
+        if (filters.module !== "all") {
+          const m = (issue.module_name || issue.module || "").toLowerCase();
+          if (m !== filters.module.toLowerCase()) return false;
+        }
+        return true;
+      });
+      return filtered.sort((a, b) => {
+        if (orderBy === "priority") {
+          const weights = { urgent: 4, high: 3, medium: 2, low: 1, none: 0 };
+          return (weights[b.priority] || 0) - (weights[a.priority] || 0);
+        }
+        if (orderBy === "title") {
+          return (a.title || "").localeCompare(b.title || "");
+        }
+        const seqA = a.sequence_id || parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+        const seqB = b.sequence_id || parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+        return seqA - seqB;
+      });
+    }
+  };
+  var issueStore = new IssueStore();
+
+  // project-docs/src/modules/Issues/components/IssueCard.js
+  function IssueCard(issue) {
+    if (!issue) return "";
     const priorityIcons = {
       urgent: Icons.priorityUrgent("w-3.5 h-3.5 text-rose-500 shrink-0"),
       high: Icons.priorityHigh("w-3.5 h-3.5 text-amber-500 shrink-0"),
@@ -1377,7 +1909,91 @@
     };
     const pIcon = priorityIcons[(issue.priority || "none").toLowerCase()] || Icons.priorityLow("w-3.5 h-3.5 text-zinc-500 shrink-0");
     const totalSubtasks = issue.subtasks_count || (issue.subtasks ? issue.subtasks.length : 0);
-    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed).length : 0);
+    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed || s.status === "passed").length : 0);
+    const percentSubtasks = totalSubtasks > 0 ? Math.round(doneSubtasks / totalSubtasks * 100) : 0;
+    return `
+    <div
+      data-issue-id="${issue.id}"
+      class="plane-issue-card group p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/60 shadow-md hover:shadow-lg transition-all cursor-pointer select-none space-y-2.5"
+    >
+      <!-- Card Header: ID, Priority & Action Menu -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span title="Prioridad: ${issue.priority || "None"}">
+            ${pIcon}
+          </span>
+          <span class="text-xs font-mono font-bold text-indigo-400">
+            ${issue.id}
+          </span>
+        </div>
+
+        <!-- Quick move state buttons -->
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            data-action="quick-state"
+            data-target-state="state-in-progress"
+            data-issue-id="${issue.id}"
+            class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-amber-400 transition-colors"
+            title="Mover a En Progreso"
+          >
+            ${Icons.play("w-3 h-3")}
+          </button>
+          <button
+            data-action="quick-state"
+            data-target-state="state-done"
+            data-issue-id="${issue.id}"
+            class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-emerald-400 transition-colors"
+            title="Marcar como Completado"
+          >
+            ${Icons.check("w-3 h-3")}
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Title -->
+      <h4 class="text-xs font-medium text-zinc-100 group-hover:text-white line-clamp-2 leading-snug">
+        ${issue.title}
+      </h4>
+
+      <!-- Subtasks Jira Progress -->
+      ${totalSubtasks > 0 ? `
+        <div class="space-y-1 pt-1">
+          <div class="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+            <span>Subtareas Jira</span>
+            <span>${doneSubtasks}/${totalSubtasks} (${percentSubtasks}%)</span>
+          </div>
+          <div class="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-500 rounded-full" style="width: ${percentSubtasks}%"></div>
+          </div>
+        </div>
+      ` : ""}
+
+      <!-- Footer: Module Tag & Assignee Role -->
+      <div class="flex items-center justify-between pt-1 border-t border-zinc-800/60 text-[10px] text-zinc-400">
+        <span class="px-2 py-0.5 rounded bg-zinc-800/80 font-mono truncate max-w-[120px]" title="M\xF3dulo">
+          ${issue.module_name || "Harness"}
+        </span>
+        <div class="flex items-center gap-1.5 font-mono text-zinc-400">
+          ${Icons.bot("w-3 h-3 text-indigo-400")}
+          <span>${issue.assignee_role || "implementer"}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Issues/components/IssueRow.js
+  function IssueRow(issue) {
+    if (!issue) return "";
+    const priorityIcons = {
+      urgent: Icons.priorityUrgent("w-3.5 h-3.5 text-rose-500 shrink-0"),
+      high: Icons.priorityHigh("w-3.5 h-3.5 text-amber-500 shrink-0"),
+      medium: Icons.priorityMedium("w-3.5 h-3.5 text-blue-500 shrink-0"),
+      low: Icons.priorityLow("w-3.5 h-3.5 text-zinc-400 shrink-0")
+    };
+    const pIcon = priorityIcons[(issue.priority || "none").toLowerCase()] || Icons.priorityLow("w-3.5 h-3.5 text-zinc-500 shrink-0");
+    const totalSubtasks = issue.subtasks_count || (issue.subtasks ? issue.subtasks.length : 0);
+    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed || s.status === "passed").length : 0);
     const percentSubtasks = totalSubtasks > 0 ? Math.round(doneSubtasks / totalSubtasks * 100) : 0;
     return `
     <tr
@@ -1392,7 +2008,7 @@
         </div>
       </td>
 
-      <!-- Title & Badges -->
+      <!-- Title & Badges DEV / QA -->
       <td class="py-3 px-4 min-w-[240px]">
         <div class="flex items-center gap-2">
           <button
@@ -1424,370 +2040,81 @@
 
       <!-- Module -->
       <td class="py-3 px-4 w-36 hidden md:table-cell">
-        <span class="px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/60 text-[10px] text-zinc-300 font-mono truncate max-w-[120px] block">
-          ${issue.module_name || "Harness Core"}
+        <span class="text-[11px] font-mono text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded truncate max-w-[120px] inline-block">
+          ${issue.module_name || "Harness"}
         </span>
       </td>
 
       <!-- Assignee Agent -->
       <td class="py-3 px-4 w-32 hidden lg:table-cell">
-        <span class="flex items-center gap-1 text-[11px] text-zinc-400 font-medium">
-          ${Icons.user("w-3 h-3 text-indigo-400")}
-          <span class="truncate">${issue.assignee_role || issue.assignee_name || "leader"}</span>
-        </span>
+        <div class="flex items-center gap-1.5 text-zinc-400 font-mono text-[11px]">
+          ${Icons.bot("w-3.5 h-3.5 text-indigo-400")}
+          <span>${issue.assignee_role || "implementer"}</span>
+        </div>
       </td>
 
       <!-- State Badge -->
       <td class="py-3 px-4 w-32 text-right">
-        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${issue.state_id === "state-done" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : issue.state_id === "state-in-progress" ? "bg-amber-500/15 border-amber-500/30 text-amber-400" : issue.state_id === "state-in-review" ? "bg-purple-500/15 border-purple-500/30 text-purple-400" : "bg-zinc-800 border-zinc-700 text-zinc-400"}">
-          ${issue.state_name || issue.state_id}
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${issue.state_id === "state-done" ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30" : issue.state_id === "state-in-progress" || issue.state_id === "state-in-review" ? "bg-amber-950/60 text-amber-400 border border-amber-500/30" : "bg-zinc-800 text-zinc-400 border border-zinc-700/50"}">
+          <span class="w-1.5 h-1.5 rounded-full ${issue.state_id === "state-done" ? "bg-emerald-400" : issue.state_id === "state-in-progress" || issue.state_id === "state-in-review" ? "bg-amber-400" : "bg-zinc-500"}"></span>
+          ${issue.state_name || "Backlog"}
         </span>
       </td>
     </tr>
   `;
   }
 
-  // project-docs/src/features/issues/components/IssueCard.js
-  function IssueCard(issue) {
-    const priorityIcons = {
-      urgent: Icons.priorityUrgent("w-3.5 h-3.5 text-rose-500 shrink-0"),
-      high: Icons.priorityHigh("w-3.5 h-3.5 text-amber-500 shrink-0"),
-      medium: Icons.priorityMedium("w-3.5 h-3.5 text-blue-500 shrink-0"),
-      low: Icons.priorityLow("w-3.5 h-3.5 text-zinc-400 shrink-0")
-    };
-    const pIcon = priorityIcons[(issue.priority || "none").toLowerCase()] || Icons.priorityLow("w-3.5 h-3.5 text-zinc-500 shrink-0");
-    const totalSubtasks = issue.subtasks_count || (issue.subtasks ? issue.subtasks.length : 0);
-    const doneSubtasks = issue.subtasks_done || (issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.completed).length : 0);
-    const percentSubtasks = totalSubtasks > 0 ? Math.round(doneSubtasks / totalSubtasks * 100) : 0;
-    return `
-    <div
-      data-issue-id="${issue.id}"
-      class="plane-issue-card group p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/60 shadow-md hover:shadow-lg transition-all cursor-pointer select-none space-y-2.5"
-    >
-      <!-- Card Header: ID, Priority & Action Menu -->
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span title="Prioridad: ${issue.priority || "None"}">
-            ${pIcon}
-          </span>
-          <span class="text-xs font-mono font-bold text-indigo-400">
-            ${issue.id}
-          </span>
-        </div>
-
-        <!-- Quick move state buttons -->
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button data-action="quick-state" data-target-state="state-in-progress" data-issue-id="${issue.id}" class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-amber-400" title="Pasar a En Progreso">
-            ${Icons.play("w-3 h-3")}
-          </button>
-          <button data-action="quick-state" data-target-state="state-done" data-issue-id="${issue.id}" class="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-emerald-400" title="Marcar como Completado">
-            ${Icons.check("w-3 h-3")}
-          </button>
-        </div>
-      </div>
-
-      <!-- Card Title -->
-      <h4 class="text-xs font-medium text-zinc-100 group-hover:text-white line-clamp-2 leading-snug">
-        ${issue.title}
-      </h4>
-
-      <!-- Subtasks Progress -->
-      ${totalSubtasks > 0 ? `
-        <div class="space-y-1 pt-1">
-          <div class="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
-            <span>Subtareas Jira</span>
-            <span>${doneSubtasks}/${totalSubtasks} (${percentSubtasks}%)</span>
-          </div>
-          <div class="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div class="h-full bg-emerald-500 rounded-full" style="width: ${percentSubtasks}%"></div>
-          </div>
-        </div>
-      ` : ""}
-
-      <!-- Card Footer: Module & Assignee -->
-      <div class="pt-1 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-400">
-        <span class="truncate max-w-[110px] font-mono text-zinc-400">
-          ${issue.module_name || "General"}
-        </span>
-
-        <span class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 font-mono">
-          ${Icons.user("w-2.5 h-2.5 text-indigo-400")}
-          <span>${issue.assignee_role || "Agent"}</span>
-        </span>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/issues/components/IssueDetailModal.js
-  function IssueDetailModal({
-    issue = null,
-    states = [],
-    cycles = [],
-    modules = []
-  }) {
-    if (!issue) return "";
-    const subtotal = issue.subtasks ? issue.subtasks.length : 0;
-    const completed = issue.subtasks ? issue.subtasks.filter((s) => s.status === "done" || s.status === "passed").length : 0;
-    const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : 0;
-    const renderAcceptanceCriterion = (crit) => `
-    <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs text-zinc-300">
-      <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.check("w-3.5 h-3.5")}</span>
-      <span>${crit}</span>
-    </div>
-  `;
-    const renderSubtaskItem = (sub) => {
-      const isPassed = sub.status === "done" || sub.status === "passed";
-      const isQa = sub.type === "qa";
+  // project-docs/src/modules/Issues/components/IssueBoard.js
+  function IssueBoard({
+    issues = [],
+    states = []
+  } = {}) {
+    const activeStates = states && states.length > 0 ? states : CANONICAL_STATES;
+    const renderColumn = (state) => {
+      const colIssues = issues.filter((i) => i.state_id === state.id);
       return `
-      <div class="p-3 rounded-xl border ${isPassed ? "border-emerald-500/20 bg-emerald-950/10" : "border-zinc-800 bg-zinc-900/40"} flex items-start justify-between gap-3 text-xs">
-        <div class="flex items-start gap-2.5">
-          <span class="p-0.5 rounded ${isPassed ? "text-emerald-400" : "text-zinc-500"} mt-0.5">
-            ${isPassed ? Icons.checkCircle("w-4 h-4") : Icons.clock("w-4 h-4")}
-          </span>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-[11px] font-semibold text-zinc-300">${sub.id}</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isQa ? "bg-purple-900/40 text-purple-300" : "bg-blue-900/40 text-blue-300"}">
-                ${isQa ? "QA Subtask" : "DEV Subtask"}
-              </span>
-            </div>
-            <p class="text-zinc-200 mt-1">${sub.title}</p>
+      <div
+        data-state-column="${state.id}"
+        class="w-72 sm:w-80 shrink-0 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 flex flex-col max-h-[calc(100vh-12rem)] shadow-lg select-none"
+      >
+        <!-- Column Header -->
+        <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between gap-2 bg-zinc-900/40 rounded-t-2xl">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full ${state.color || "bg-zinc-400"} shrink-0 shadow-xs"></span>
+            <span class="text-xs font-bold text-zinc-200 truncate tracking-tight">${state.name}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono font-medium">
+              ${colIssues.length}
+            </span>
           </div>
         </div>
 
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium ${isPassed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-400"}">
-          ${sub.status.toUpperCase()}
-        </span>
+        <!-- Column Cards Container -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-3">
+          ${renderList(colIssues, IssueCard, () => `
+            <div class="p-6 text-center rounded-xl border border-dashed border-zinc-800/80 text-[11px] text-zinc-500">
+              Sin tareas en este estado
+            </div>
+          `)}
+        </div>
       </div>
     `;
     };
     return `
-    <div id="plane-issue-modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn">
-      <div id="plane-issue-modal-card" role="dialog" class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/50">
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md bg-zinc-800 text-indigo-400 border border-zinc-700/60">
-              ${issue.id}
-            </span>
-            <span class="text-zinc-500">/</span>
-            <span class="text-xs text-zinc-400 font-medium truncate max-w-sm">
-              ${issue.module_name || "Harness"}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button id="plane-modal-close" data-action="close-modal" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors" title="Cerrar modal">
-              ${Icons.close("w-4 h-4")}
-            </button>
-          </div>
-        </div>
-
-        <!-- Modal Body (Two Columns: Main Details + Metadata Sidebar) -->
-        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto">
-          <!-- Main Content (Left) -->
-          <div class="flex-1 p-6 space-y-6 lg:border-r border-zinc-800 overflow-y-auto">
-            <!-- Title -->
-            <div>
-              <h2 class="text-lg font-bold text-zinc-100 tracking-tight leading-snug">
-                ${issue.title}
-              </h2>
-            </div>
-
-            <!-- User Story Callout -->
-            <div class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5 text-xs">
-              <div class="font-semibold text-zinc-300 flex items-center gap-1.5">
-                ${Icons.lightbulb("w-3.5 h-3.5 text-amber-400")}
-                <span>Historia de Usuario (Scrum)</span>
-              </div>
-              <div class="text-zinc-400 pl-5 space-y-0.5">
-                <p><strong class="text-zinc-300">Como:</strong> ${issue.user_story_as_a || "Desarrollador / Agente"}</p>
-                <p><strong class="text-zinc-300">Quiero:</strong> ${issue.user_story_i_want || issue.title}</p>
-                <p><strong class="text-zinc-300">Para:</strong> ${issue.user_story_so_that || "garantizar la calidad y trazabilidad integral del software"}</p>
-              </div>
-            </div>
-
-            <!-- Description / Specification -->
-            <div class="space-y-2">
-              <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Descripci\xF3n & Alcance</h3>
-              <div class="text-xs text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/80">
-                ${issue.description || "Sin descripci\xF3n detallada."}
-              </div>
-            </div>
-
-            <!-- Acceptance Criteria -->
-            ${issue.acceptance && issue.acceptance.length > 0 ? `
-              <div class="space-y-2">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Criterios de Aceptaci\xF3n (EARS)</h3>
-                <div class="space-y-2">
-                  ${renderList(issue.acceptance, renderAcceptanceCriterion)}
-                </div>
-              </div>
-            ` : ""}
-
-            <!-- Subtasks Section (Jira DEV & QA) -->
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Subtareas Jira DEV / QA</h4>
-                <span class="text-xs font-mono text-zinc-400">${completed} de ${subtotal} (${percent}%)</span>
-              </div>
-
-              <div class="space-y-2">
-                ${issue.subtasks && issue.subtasks.length > 0 ? renderList(issue.subtasks, renderSubtaskItem) : `
-                  <div class="space-y-2">
-                    <div class="p-3 rounded-xl border border-emerald-500/20 bg-emerald-950/10 flex items-start justify-between gap-3 text-xs">
-                      <div class="flex items-start gap-2.5">
-                        <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.checkCircle("w-4 h-4")}</span>
-                        <div>
-                          <div class="flex items-center gap-2">
-                            <span class="font-mono text-[11px] font-semibold text-zinc-300">${issue.id}-DEV</span>
-                            <span class="text-[10px] px-1.5 py-0.2 rounded font-medium bg-blue-900/40 text-blue-300">DEV Subtask</span>
-                          </div>
-                          <p class="text-zinc-200 mt-1">Implementaci\xF3n t\xE9cnica y suites de pruebas</p>
-                        </div>
-                      </div>
-                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DONE</span>
-                    </div>
-                    <div class="p-3 rounded-xl border border-emerald-500/20 bg-emerald-950/10 flex items-start justify-between gap-3 text-xs">
-                      <div class="flex items-start gap-2.5">
-                        <span class="p-0.5 rounded text-emerald-400 mt-0.5">${Icons.checkCircle("w-4 h-4")}</span>
-                        <div>
-                          <div class="flex items-center gap-2">
-                            <span class="font-mono text-[11px] font-semibold text-zinc-300">${issue.id}-QA</span>
-                            <span class="text-[10px] px-1.5 py-0.2 rounded font-medium bg-purple-900/40 text-purple-300">QA Subtask</span>
-                          </div>
-                          <p class="text-zinc-200 mt-1">Auditor\xEDa de calidad y verificaci\xF3n integral</p>
-                        </div>
-                      </div>
-                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DONE</span>
-                    </div>
-                  </div>
-                `}
-              </div>
-            </div>
-
-            <!-- Definition of Done Section -->
-            <div class="space-y-3">
-              <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Definition of Done (DoD)</h4>
-              <div class="space-y-1.5 text-xs text-zinc-300">
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800">
-                  <span class="text-emerald-400">${Icons.check("w-3.5 h-3.5")}</span>
-                  <span>100% de subtareas Jira DEV implementadas con tests unitarios y suites multinivel</span>
-                </div>
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800">
-                  <span class="text-emerald-400">${Icons.check("w-3.5 h-3.5")}</span>
-                  <span>100% de subtareas Jira QA verificadas con evidencias de ejecuci\xF3n</span>
-                </div>
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800">
-                  <span class="text-emerald-400">${Icons.check("w-3.5 h-3.5")}</span>
-                  <span>Script aut\xF3nomo verify.sh pasa al 100% (c\xF3digo de salida 0)</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Evidence Section if completed -->
-            ${issue.evidence_summary ? `
-              <div class="p-4 rounded-xl bg-emerald-950/10 border border-emerald-500/20 space-y-1 text-xs">
-                <span class="font-semibold text-emerald-400 flex items-center gap-1.5">
-                  ${Icons.shield("w-3.5 h-3.5")} Resumen de Cierre & Verificaci\xF3n
-                </span>
-                <p class="text-zinc-300 mt-1">${issue.evidence_summary}</p>
-              </div>
-            ` : ""}
-          </div>
-
-          <!-- Metadata Sidebar (Right) -->
-          <div class="w-full lg:w-72 p-6 bg-zinc-950/90 space-y-5 text-xs shrink-0">
-            <!-- State Selector -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Estado (Workflow)</label>
-              <select
-                id="modal-state-select"
-                data-issue-id="${issue.id}"
-                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
-              >
-                ${renderList(states, (s) => `
-                  <option value="${s.id}" ${s.id === issue.state_id ? "selected" : ""}>
-                    ${s.name}
-                  </option>
-                `)}
-              </select>
-            </div>
-
-            <!-- Priority Selector -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Prioridad</label>
-              <select
-                id="modal-priority-select"
-                data-issue-id="${issue.id}"
-                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-colors capitalize"
-              >
-                <option value="urgent" ${issue.priority === "urgent" ? "selected" : ""}>Urgente</option>
-                <option value="high" ${issue.priority === "high" ? "selected" : ""}>Alta</option>
-                <option value="medium" ${issue.priority === "medium" ? "selected" : ""}>Media</option>
-                <option value="low" ${issue.priority === "low" ? "selected" : ""}>Baja</option>
-                <option value="none" ${issue.priority === "none" ? "selected" : ""}>Ninguna</option>
-              </select>
-            </div>
-
-            <!-- Assignee -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Agente Asignado</label>
-              <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
-                ${Icons.bot("w-4 h-4 text-indigo-400")}
-                <span class="font-medium">${issue.assignee_role || "leader"}</span>
-              </div>
-            </div>
-
-            <!-- Cycle (Sprint) -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Ciclo (Sprint)</label>
-              <div class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs truncate">
-                ${issue.cycle_name || "Sin ciclo"}
-              </div>
-            </div>
-
-            <!-- Module (Epic) -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">M\xF3dulo (Epic)</label>
-              <div class="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs truncate">
-                ${issue.module_name || "Harness Core"}
-              </div>
-            </div>
-
-            <!-- Branch -->
-            ${issue.branch ? `
-              <div class="space-y-1.5">
-                <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Rama Git (INT-*)</label>
-                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-zinc-300 break-all select-all">
-                  ${issue.branch}
-                </div>
-              </div>
-            ` : ""}
-
-            <!-- Spec Folder -->
-            ${issue.spec_folder ? `
-              <div class="space-y-1.5">
-                <label class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Especificaci\xF3n Formal</label>
-                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-indigo-400 break-all truncate">
-                  ${issue.spec_folder}
-                </div>
-              </div>
-            ` : ""}
-          </div>
-        </div>
+    <div id="plane-board-container" class="p-6 overflow-x-auto min-h-full">
+      <div class="flex items-start gap-4 pb-4">
+        ${renderList(activeStates, renderColumn)}
       </div>
     </div>
   `;
   }
 
-  // project-docs/src/features/issues/views/IssueListView.js
-  function renderIssueListView({
+  // project-docs/src/modules/Issues/components/IssueList.js
+  function IssueList({
     issues = [],
     states = [],
     groupBy = "state"
-  }) {
+  } = {}) {
+    const activeStates = states && states.length > 0 ? states : CANONICAL_STATES;
     if (issues.length === 0) {
       return `
       <div class="p-12 text-center space-y-3">
@@ -1801,8 +2128,8 @@
     }
     if (groupBy === "state") {
       return `
-      <div class="p-4">
-        <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-sm">
+      <div id="plane-list-container" class="p-4">
+        <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-xs">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-zinc-900/80 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -1814,7 +2141,7 @@
                 <th class="py-2.5 px-4 w-32 text-right">Estado</th>
               </tr>
             </thead>
-            ${renderList(states, (state) => {
+            ${renderList(activeStates, (state) => {
         const stateIssues = issues.filter((i) => i.state_id === state.id);
         if (stateIssues.length === 0) return "";
         return `
@@ -1840,8 +2167,8 @@
     `;
     }
     return `
-    <div class="p-4">
-      <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-sm">
+    <div id="plane-list-container" class="p-4">
+      <div class="rounded-xl border border-zinc-800/80 bg-zinc-950/60 overflow-hidden shadow-xs">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-zinc-900/80 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -1853,7 +2180,7 @@
               <th class="py-2.5 px-4 w-32 text-right">Estado</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-zinc-800/40">
             ${renderList(issues, IssueRow)}
           </tbody>
         </table>
@@ -1862,151 +2189,239 @@
   `;
   }
 
-  // project-docs/src/features/issues/views/IssueBoardView.js
-  function renderIssueBoardView({
-    issues = [],
-    states = []
-  }) {
-    const defaultStates = states.length > 0 ? states : [
-      { id: "state-backlog", name: "Backlog", color: "bg-zinc-500" },
-      { id: "state-todo", name: "Por Hacer", color: "bg-sky-500" },
-      { id: "state-in-progress", name: "En Progreso", color: "bg-amber-500" },
-      { id: "state-in-review", name: "En Revisi\xF3n", color: "bg-purple-500" },
-      { id: "state-done", name: "Completado", color: "bg-emerald-500" },
-      { id: "state-cancelled", name: "Cancelado", color: "bg-rose-500" }
-    ];
-    const renderColumn = (state) => {
-      const colIssues = issues.filter((i) => i.state_id === state.id);
+  // project-docs/src/modules/Issues/components/IssueDetailModal.js
+  function IssueDetailModal({
+    issue = null,
+    states = [],
+    cycles = [],
+    modules = []
+  } = {}) {
+    if (!issue) return "";
+    const activeStates = states && states.length > 0 ? states : CANONICAL_STATES;
+    const rawSubtasks = Array.isArray(issue.subtasks) ? issue.subtasks : [];
+    const subtotal = rawSubtasks.length;
+    const completed = rawSubtasks.filter((s) => s.status === "done" || s.status === "passed" || s.completed).length;
+    const percent = subtotal > 0 ? Math.round(completed / subtotal * 100) : 0;
+    const acceptanceCriteria = Array.isArray(issue.acceptance_criteria) ? issue.acceptance_criteria : Array.isArray(issue.acceptance) ? issue.acceptance : [];
+    const renderAcceptanceCriterion = (crit) => `
+    <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs text-zinc-300">
+      <span class="p-0.5 rounded text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3.5 h-3.5")}</span>
+      <span class="leading-relaxed">${crit}</span>
+    </div>
+  `;
+    const renderSubtaskItem = (sub) => {
+      const isPassed = sub.status === "done" || sub.status === "passed";
+      const isQa = sub.type === "qa";
       return `
-      <div
-        data-state-column="${state.id}"
-        class="w-72 sm:w-80 shrink-0 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 flex flex-col max-h-[calc(100vh-12rem)] shadow-lg"
-      >
-        <!-- Column Header -->
-        <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between gap-2 bg-zinc-900/40 rounded-t-2xl">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="w-2.5 h-2.5 rounded-full ${state.color || "bg-zinc-400"} shrink-0 shadow-sm"></span>
-            <span class="text-xs font-bold text-zinc-200 truncate tracking-tight">${state.name}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono font-medium">
-              ${colIssues.length}
-            </span>
+      <div class="p-3 rounded-xl border ${isPassed ? "border-emerald-500/20 bg-emerald-950/10" : "border-zinc-800 bg-zinc-900/40"} flex items-start justify-between gap-3 text-xs">
+        <div class="flex items-start gap-2.5 min-w-0">
+          <span class="p-0.5 rounded ${isPassed ? "text-emerald-400" : "text-zinc-500"} mt-0.5 shrink-0">
+            ${isPassed ? Icons.checkCircle("w-4 h-4") : Icons.clock("w-4 h-4")}
+          </span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[11px] font-semibold text-zinc-300">${sub.id}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isQa ? "bg-purple-900/40 text-purple-300" : "bg-blue-900/40 text-blue-300"}">
+                ${isQa ? "QA Subtask" : "DEV Subtask"}
+              </span>
+            </div>
+            <p class="text-zinc-200 mt-1 leading-snug">${sub.title}</p>
           </div>
         </div>
 
-        <!-- Column Cards Container -->
-        <div class="flex-1 overflow-y-auto p-3 space-y-3">
-          ${renderList(colIssues, IssueCard, () => `
-            <div class="p-6 text-center rounded-xl border border-dashed border-zinc-800/80 text-[11px] text-zinc-400">
-              Sin tareas en este estado
-            </div>
-          `)}
-        </div>
+        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium shrink-0 ${isPassed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-400"}">
+          ${String(sub.status || "pending").toUpperCase()}
+        </span>
       </div>
     `;
     };
-    return `
-    <div class="p-6 overflow-x-auto min-h-full">
-      <div class="flex items-start gap-4 pb-4">
-        ${renderList(defaultStates, renderColumn)}
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/issues/views/IssueCalendarView.js
-  function renderIssueCalendarView({
-    issues = [],
-    cycles = []
-  }) {
-    const renderTimelineItem = (issue) => `
-    <div
-      data-issue-id="${issue.id}"
-      class="plane-issue-row p-3 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-between gap-4 transition-all cursor-pointer"
-    >
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="text-xs font-mono font-bold text-indigo-400 shrink-0">${issue.id}</span>
-        <span class="text-xs text-zinc-200 font-medium truncate">${issue.title}</span>
-      </div>
-
-      <div class="flex items-center gap-3 shrink-0 text-xs">
-        <span class="text-[11px] font-mono text-zinc-400">${issue.cycle_name || "Sprint Activo"}</span>
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono ${issue.state_id === "state-done" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-300"}">
-          ${issue.state_name || issue.state_id}
-        </span>
-      </div>
+    const dodItems = [
+      "Especificaci\xF3n t\xE9cnica y trazabilidad R-to-Tests 100% aprobada",
+      "Tests unitarios y pruebas de aceptaci\xF3n pasando en verde",
+      "Cero emojis unicode en c\xF3digo fuente, interfaz y pruebas",
+      "Rama sem\xE1ntica INT-* verificada (m\xE1ximo 80 caracteres)",
+      "Evidencia de verificaci\xF3n y capturas de pantalla documentadas"
+    ];
+    const renderDodItem = (item) => `
+    <div class="flex items-center gap-2.5 text-xs text-zinc-300">
+      <span class="text-emerald-400 shrink-0">${Icons.checkCircle("w-3.5 h-3.5")}</span>
+      <span>${item}</span>
     </div>
   `;
     return `
-    <div class="p-6 space-y-6 max-w-6xl mx-auto">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-sm font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            ${Icons.calendar("w-4 h-4 text-indigo-400")}
-            <span>Cronograma Temporal de Tareas (Calendar & Timeline)</span>
-          </h2>
-          <p class="text-xs text-zinc-400 mt-0.5">Seguimiento temporal por ciclos e iteraciones de entrega.</p>
+    <div id="plane-issue-modal-backdrop" data-action="close-modal-backdrop" class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-150">
+      <div id="plane-issue-modal-card" role="dialog" aria-modal="true" aria-labelledby="plane-modal-issue-title" class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/50">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md bg-zinc-800 text-indigo-400 border border-zinc-700/60">
+              ${issue.id}
+            </span>
+            <span class="text-zinc-600">/</span>
+            <span class="text-xs text-zinc-400 font-medium truncate max-w-sm">
+              ${issue.module_name || "Harness"}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="plane-modal-close" data-action="close-modal" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors" title="Cerrar modal (ESC)" aria-label="Cerrar">
+              ${Icons.close("w-4 h-4")}
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body (Two Columns: Main Details + Metadata Sidebar) -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto">
+          <!-- Main Content (Left) -->
+          <div class="flex-1 p-6 space-y-6 lg:border-r border-zinc-800 overflow-y-auto">
+            <!-- Title -->
+            <div>
+              <h2 id="plane-modal-issue-title" class="text-lg font-bold text-zinc-100 tracking-tight leading-snug">
+                ${issue.title}
+              </h2>
+            </div>
+
+            <!-- User Story Scrum Callout -->
+            <div class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2 text-xs">
+              <div class="font-semibold text-zinc-300 flex items-center gap-2">
+                ${Icons.lightbulb("w-4 h-4 text-amber-400")}
+                <span>Historia de Usuario (Scrum)</span>
+              </div>
+              <div class="text-zinc-400 pl-6 space-y-1">
+                <p><strong class="text-indigo-400 uppercase text-[11px] mr-1">Como:</strong> ${issue.user_story_as_a || issue.user_story?.as_a || "Desarrollador / Agente"}</p>
+                <p><strong class="text-indigo-400 uppercase text-[11px] mr-1">Quiero:</strong> ${issue.user_story_i_want || issue.user_story?.i_want || issue.title}</p>
+                <p><strong class="text-indigo-400 uppercase text-[11px] mr-1">Para:</strong> ${issue.user_story_so_that || issue.user_story?.so_that || "garantizar la calidad y trazabilidad integral del software"}</p>
+              </div>
+            </div>
+
+            <!-- Description / Scope -->
+            <div class="space-y-2">
+              <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Descripci\xF3n & Alcance</h3>
+              <div class="text-xs text-zinc-300 leading-relaxed bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/80">
+                ${issue.description || "Sin descripci\xF3n adicional para esta tarea."}
+              </div>
+            </div>
+
+            <!-- Acceptance Criteria (EARS) -->
+            ${acceptanceCriteria.length > 0 ? `
+              <div class="space-y-3">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Criterios de Aceptaci\xF3n (EARS / DoR)
+                </h3>
+                <div class="space-y-2">
+                  ${renderList(acceptanceCriteria, renderAcceptanceCriterion)}
+                </div>
+              </div>
+            ` : ""}
+
+            <!-- Subtasks Jira (DEV & QA) -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Subtareas Jira \xB7 Subtareas T\xE9cnicas Jira (${subtotal})
+                </h4>
+                <span class="text-xs font-mono text-zinc-400">${completed}/${subtotal} completadas (${percent}%)</span>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+              </div>
+
+              <div class="space-y-2 pt-1">
+                ${renderList(rawSubtasks, renderSubtaskItem, () => `
+                  <div class="p-4 text-center rounded-xl border border-dashed border-zinc-800 text-xs text-zinc-500">
+                    No hay subtareas registradas para esta tarea
+                  </div>
+                `)}
+              </div>
+            </div>
+
+            <!-- Definition of Done (DoD) Checklist -->
+            <div class="space-y-3 p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+              <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                ${Icons.shield("w-4 h-4 text-emerald-400")}
+                <span>Definition of Done (DoD)</span>
+              </h4>
+              <div class="space-y-2 pl-2">
+                ${renderList(dodItems, renderDodItem)}
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata Sidebar (Right) -->
+          <div class="w-full lg:w-80 p-6 bg-zinc-900/30 space-y-6 text-xs">
+            <!-- Properties Section -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-zinc-400 uppercase tracking-wider text-[11px]">Propiedades</h4>
+
+              <!-- State Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Estado</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span class="w-2.5 h-2.5 rounded-full ${issue.state_id === "state-done" ? "bg-emerald-400" : "bg-amber-400"}"></span>
+                  <span class="font-medium text-zinc-200">${issue.state_name || "En Progreso"}</span>
+                </div>
+              </div>
+
+              <!-- Priority Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Prioridad</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800 font-mono text-zinc-200 uppercase">
+                  ${Icons.priorityHigh("w-3.5 h-3.5 text-amber-500")}
+                  <span>${issue.priority || "P0"}</span>
+                </div>
+              </div>
+
+              <!-- Assignee Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Agente Asignado</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  ${Icons.bot("w-4 h-4 text-indigo-400")}
+                  <span class="font-mono text-zinc-200">${issue.assignee_role || "implementer"}</span>
+                </div>
+              </div>
+
+              <!-- Module Field -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">M\xF3dulo</label>
+                <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
+                  ${Icons.moduleIcon("w-4 h-4 text-purple-400")}
+                  <span>${issue.module_name || "Harness SDD"}</span>
+                </div>
+              </div>
+
+              <!-- Git Branch -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] text-zinc-400 font-medium">Rama Git de Trabajo</label>
+                <div class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] break-all flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    ${Icons.gitBranch("w-3.5 h-3.5 text-indigo-400 shrink-0")}
+                    <span class="truncate">${issue.branch || `feature/INT-${String(issue.sequence_id || "001").padStart(3, "0")}/${issue.name || "task"}`}</span>
+                  </div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-emerald-400 shrink-0 font-mono">&le;80c</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="space-y-2">
-        ${renderList(issues, renderTimelineItem, "No hay tareas programadas")}
-      </div>
     </div>
   `;
   }
 
-  // project-docs/src/features/issues/views/IssueSpreadsheetView.js
-  function renderIssueSpreadsheetView({
-    issues = []
-  }) {
-    const renderTableRow = (issue, idx) => `
-    <tr
-      data-issue-id="${issue.id}"
-      class="plane-issue-row border-b border-zinc-800/50 hover:bg-zinc-900/60 transition-colors cursor-pointer text-xs"
-    >
-      <td class="p-3 text-center text-zinc-500 font-mono">${idx + 1}</td>
-      <td class="p-3 font-mono font-bold text-indigo-400">${issue.id}</td>
-      <td class="p-3 font-medium text-zinc-200 truncate max-w-xs">${issue.title}</td>
-      <td class="p-3">
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono ${issue.state_id === "state-done" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : issue.state_id === "state-in-progress" ? "bg-amber-500/15 text-amber-400 border border-amber-500/30" : "bg-zinc-800 text-zinc-400"}">
-          ${issue.state_name || issue.state_id}
-        </span>
-      </td>
-      <td class="p-3 font-mono text-[11px] text-zinc-300 capitalize">${issue.priority || "none"}</td>
-      <td class="p-3 text-zinc-400 font-mono text-[11px]">${issue.assignee_role || "leader"}</td>
-      <td class="p-3 text-zinc-400 font-mono text-[11px]">${issue.module_name || "Harness Core"}</td>
-      <td class="p-3 text-zinc-400 font-mono text-[11px]">${issue.cycle_name || "Sprint Activo"}</td>
-    </tr>
-  `;
-    return `
-    <div class="p-6 overflow-x-auto">
-      <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 overflow-hidden shadow-xl">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-zinc-900/80 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              <th class="p-3 text-center w-12">#</th>
-              <th class="p-3 w-28">ID</th>
-              <th class="p-3">T\xEDtulo de la Tarea</th>
-              <th class="p-3 w-32">Estado</th>
-              <th class="p-3 w-28">Prioridad</th>
-              <th class="p-3 w-32">Agente</th>
-              <th class="p-3 w-36">M\xF3dulo</th>
-              <th class="p-3 w-36">Ciclo</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-zinc-800/40">
-            ${renderList(issues, renderTableRow, () => `
-              <tr>
-                <td colspan="8" class="p-8 text-center text-xs text-zinc-400">
-                  No hay tareas registradas en la hoja de c\xE1lculo
-                </td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
+  // project-docs/src/modules/Issues/index.js
+  function renderIssueListView(props = {}) {
+    return IssueList(props);
+  }
+  function renderIssueBoardView(props = {}) {
+    return IssueBoard(props);
+  }
+  function renderIssueCalendarView(props = {}) {
+    return IssueBoard(props);
+  }
+  function renderIssueSpreadsheetView(props = {}) {
+    return IssueList({ ...props, groupBy: "none" });
   }
 
   // project-docs/src/features/cycles/components/BurnDownChart.js
@@ -6361,7 +6776,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       if (!this.root) return;
       const state = store.getState();
       const planeData = state.planeData || {};
-      const issues = planeData.issues || state.features || [];
+      const issues = planeData.issues && planeData.issues.length > 0 ? planeData.issues : state.features || [];
       const states = planeData.states || [];
       const cycles = planeData.cycles || [];
       const modules = planeData.modules || [];
@@ -6648,7 +7063,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         const viewDetailBtn = e.target.closest('button[data-action="view-detail"]');
         if (viewDetailBtn) {
           const id = viewDetailBtn.getAttribute("data-id");
-          const issues = store.getState().planeData?.issues || store.getState().features || [];
+          const pdIssues = store.getState().planeData?.issues;
+          const issues = pdIssues && pdIssues.length > 0 ? pdIssues : store.getState().features || [];
           const match = issues.find((i) => String(i.id) === String(id) || String(i.id) === `INT-${String(id).padStart(3, "0")}` || String(i.sequence_id) === String(id));
           if (match) {
             this.openIssueModal(match.id);
@@ -7155,7 +7571,13 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     }
   }
   var app = new App();
-  document.addEventListener("DOMContentLoaded", () => {
-    app.init();
-  });
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        app.init();
+      });
+    } else {
+      app.init();
+    }
+  }
 })();

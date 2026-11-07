@@ -105,7 +105,9 @@ export class Router {
     };
 
     if (typeof window !== 'undefined' && !this.isListening) {
-      window.addEventListener('hashchange', handleHashChange);
+      if (typeof window.addEventListener === 'function') {
+        window.addEventListener('hashchange', handleHashChange);
+      }
       this.isListening = true;
       handleHashChange();
     }

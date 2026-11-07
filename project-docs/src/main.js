@@ -120,7 +120,7 @@ class App {
 
     const state = store.getState();
     const planeData = state.planeData || {};
-    const issues = planeData.issues || state.features || [];
+    const issues = (planeData.issues && planeData.issues.length > 0) ? planeData.issues : (state.features || []);
     const states = planeData.states || [];
     const cycles = planeData.cycles || [];
     const modules = planeData.modules || [];
@@ -445,7 +445,8 @@ class App {
       const viewDetailBtn = e.target.closest('button[data-action="view-detail"]');
       if (viewDetailBtn) {
         const id = viewDetailBtn.getAttribute('data-id');
-        const issues = store.getState().planeData?.issues || store.getState().features || [];
+        const pdIssues = store.getState().planeData?.issues;
+        const issues = (pdIssues && pdIssues.length > 0) ? pdIssues : (store.getState().features || []);
         const match = issues.find(i => String(i.id) === String(id) || String(i.id) === `INT-${String(id).padStart(3, '0')}` || String(i.sequence_id) === String(id));
         if (match) {
           this.openIssueModal(match.id);
@@ -1039,6 +1040,12 @@ function getBlockTypeLabel(type) {
 
 // Inicialización de la aplicación
 const app = new App();
-document.addEventListener('DOMContentLoaded', () => {
-  app.init();
-});
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
+  } else {
+    app.init();
+  }
+}
