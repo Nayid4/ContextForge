@@ -409,3 +409,23 @@ export class Store {
 }
 
 export const store = new Store();
+
+/**
+ * Functional factory for isolated reactive domain stores
+ */
+export function createStore(initialState = {}) {
+  let state = { ...initialState };
+  const listeners = new Set();
+  return {
+    getState: () => state,
+    setState: (updater) => {
+      const next = typeof updater === 'function' ? updater(state) : updater;
+      state = { ...state, ...next };
+      listeners.forEach(fn => fn(state));
+    },
+    subscribe: (fn) => {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    }
+  };
+}
