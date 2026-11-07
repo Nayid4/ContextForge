@@ -8,4 +8,5 @@ export { renderBaseModal } from './BaseModal.js';
 export { renderMasterLayout } from './MasterLayout.js';
 export { renderPlaneSidebar } from './PlaneSidebar.js';
 export { renderPlaneTopBar } from './PlaneTopBar.js';
+export { renderPlaneControlsBar } from './PlaneControlsBar.js';
 export { renderOmniboxModal } from './OmniboxModal.js';

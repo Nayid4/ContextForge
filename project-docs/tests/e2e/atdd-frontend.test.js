@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
-import { renderArchitectureDocs } from '../../src/features/architecture/index.js';
-import { renderKnowledgeBase } from '../../src/features/pages/index.js';
+import { renderArchitectureDocs } from '../../src/modules/Architecture/index.js';
+import { renderKnowledgeBase } from '../../src/modules/Pages/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -4,29 +4,33 @@ import { router } from './core/router.js';
 import { detectEnvironment } from './core/detector.js';
 import { Icons } from './shared/Icons.js';
 
-// Screaming Architecture Domain Features
+// Screaming Architecture Domain Modules & Shared UI
 import {
   renderMasterLayout,
   renderPlaneControlsBar
-} from './features/layout/index.js';
+} from './shared/ui/index.js';
 
 import {
   renderIssueListView,
   renderIssueBoardView,
   renderIssueCalendarView,
   renderIssueSpreadsheetView,
-  IssueDetailModal
-} from './features/issues/index.js';
-
-import { renderCyclesView } from './features/cycles/index.js';
-import { renderModulesView } from './features/modules/index.js';
-import { renderPlanePagesView, renderKnowledgeBase } from './features/pages/index.js';
+  IssueDetailModal,
+  renderCyclesView,
+  renderModulesView,
+  renderPlanePagesView,
+  renderKnowledgeBase,
+  renderArchitectureDocs,
+  renderArchitectureView,
+  renderDependencyGraphView,
+  renderDependencyGraph,
+  DependencyTreeComponent,
+  renderConstellation3DView,
+  SpaceView3D,
+  renderAnalyticsView,
+  renderHarnessView
+} from './modules/index.js';
 import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksToMarkdown } from './shared/MarkdownViewer.js';
-import { renderArchitectureDocs, renderArchitectureView } from './features/architecture/index.js';
-import { renderDependencyGraphView, renderDependencyGraph, DependencyTreeComponent } from './features/graph/index.js';
-import { renderConstellation3DView, SpaceView3D } from './features/constellation/index.js';
-import { renderAnalyticsView } from './features/analytics/index.js';
-import { renderHarnessView } from './modules/Harness/index.js';
 
 class App {
   constructor() {

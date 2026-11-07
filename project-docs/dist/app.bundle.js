@@ -374,6 +374,22 @@
     }
   };
   var store = new Store();
+  function createStore(initialState = {}) {
+    let state = { ...initialState };
+    const listeners = /* @__PURE__ */ new Set();
+    return {
+      getState: () => state,
+      setState: (updater) => {
+        const next = typeof updater === "function" ? updater(state) : updater;
+        state = { ...state, ...next };
+        listeners.forEach((fn) => fn(state));
+      },
+      subscribe: (fn) => {
+        listeners.add(fn);
+        return () => listeners.delete(fn);
+      }
+    };
+  }
 
   // project-docs/src/core/api.js
   async function fetchProjectData(options = {}) {
@@ -1288,7 +1304,7 @@
   `;
   }
 
-  // project-docs/src/features/layout/components/PlaneControlsBar.js
+  // project-docs/src/shared/ui/PlaneControlsBar.js
   function renderPlaneControlsBar({
     currentViewMode = "list",
     filterState = "all",
@@ -1299,7 +1315,7 @@
     searchQuery = "",
     totalIssues = 0,
     filteredIssues = 0
-  }) {
+  } = {}) {
     const viewModes = [
       { id: "list", label: "Lista", icon: "alignLeft" },
       { id: "board", label: "Tablero (Kanban)", icon: "kanban" },
@@ -1568,6 +1584,134 @@
     }
   };
   var apiClient = new ApiClient();
+
+  // project-docs/src/modules/Projects/services/project.service.js
+  var ProjectService = class {
+    constructor(client = apiClient) {
+      this.client = client;
+    }
+    /**
+     * Obtiene la información del Workspace activo.
+     * @param {{ bypassCache?: boolean }} [options]
+     * @returns {Promise<Record<string, any>>}
+     */
+    async getWorkspace(options = {}) {
+      const planeData = await this.client.fetchPlaneData(options);
+      if (planeData && planeData.workspace) {
+        return planeData.workspace;
+      }
+      return {
+        id: "ws-harness",
+        name: "Harness Engineering Workspace",
+        slug: "harness",
+        description: "Espacio de trabajo soberano para orquestaci\xF3n SDD con agentes de IA"
+      };
+    }
+    /**
+     * Obtiene la información del Proyecto activo.
+     * @param {{ bypassCache?: boolean }} [options]
+     * @returns {Promise<Record<string, any>>}
+     */
+    async getProject(options = {}) {
+      const planeData = await this.client.fetchPlaneData(options);
+      if (planeData && planeData.project) {
+        return planeData.project;
+      }
+      return {
+        id: "proj-harness-core",
+        name: "Arn\xE9s de Ingenier\xEDa SDD Multi-Agente",
+        identifier: "INT",
+        description: "Plataforma de especificaci\xF3n formal, desarrollo guiado por pruebas y trazabilidad Scrum",
+        methodology: "SDD + TDD"
+      };
+    }
+    /**
+     * Calcula métricas y KPIs globales del proyecto.
+     * @param {Array<Record<string, any>>} [issues]
+     * @param {Array<Record<string, any>>} [cycles]
+     * @param {Array<Record<string, any>>} [modules]
+     * @param {Array<Record<string, any>>} [pages]
+     * @returns {Record<string, any>}
+     */
+    calculateProjectStats(issues = [], cycles = [], modules = [], pages = []) {
+      const totalIssues = issues.length;
+      const completedIssues = issues.filter((i) => i.state_id === "state-done").length;
+      const inProgressIssues = issues.filter((i) => i.state_id === "state-in-progress" || i.state_id === "state-in-review").length;
+      const backlogIssues = totalIssues - completedIssues - inProgressIssues;
+      const progressPercent = totalIssues > 0 ? Math.round(completedIssues / totalIssues * 100) : 0;
+      const agentDistribution = {};
+      for (const issue of issues) {
+        const agent = issue.assignee_role || "unassigned";
+        agentDistribution[agent] = (agentDistribution[agent] || 0) + 1;
+      }
+      return {
+        totalIssues,
+        completedIssues,
+        inProgressIssues,
+        backlogIssues,
+        progressPercent,
+        cycleCount: cycles.length,
+        moduleCount: modules.length,
+        pageCount: pages.length,
+        agentDistribution
+      };
+    }
+  };
+  var projectService = new ProjectService();
+
+  // project-docs/src/modules/Projects/store/project.store.js
+  var initialProjectState = {
+    workspace: null,
+    project: null,
+    activeTab: "overview",
+    // 'overview' | 'settings' | 'team'
+    searchQuery: "",
+    stats: null
+  };
+  var ProjectStore = class {
+    constructor(initialState = initialProjectState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en ProjectStore listener:", err);
+        }
+      }
+    }
+    setWorkspace(workspace) {
+      this.setState({ workspace });
+    }
+    setProject(project) {
+      this.setState({ project });
+    }
+    setActiveTab(activeTab) {
+      this.setState({ activeTab });
+    }
+    setStats(stats) {
+      this.setState({ stats });
+    }
+    reset() {
+      this.state = { ...initialProjectState };
+      this.notify();
+    }
+  };
+  var projectStore = new ProjectStore();
 
   // project-docs/src/modules/Issues/services/issue.service.js
   var CANONICAL_STATES = [
@@ -2766,7 +2910,26 @@
     return CyclesPage(props);
   }
 
-  // project-docs/src/features/modules/components/ModuleCard.js
+  // project-docs/src/modules/Modules/services/module.service.js
+  var ModuleService = class {
+    getModules() {
+      const state = store.getState();
+      return state.planeData?.modules || state.projectSpec?.modules || [];
+    }
+    getModuleById(id) {
+      const modules = this.getModules();
+      return modules.find((m) => m.id === id || m.name === id) || null;
+    }
+  };
+  var moduleService = new ModuleService();
+
+  // project-docs/src/modules/Modules/store/module.store.js
+  var moduleStore = createStore({
+    selectedModuleId: null,
+    filterStatus: "all"
+  });
+
+  // project-docs/src/modules/Modules/components/ModuleCard.js
   function ModuleCard({ module, issues = [] }) {
     const modIssues = issues.filter((i) => i.module_id === module.id || i.module_name === module.name);
     const total = modIssues.length;
@@ -2822,13 +2985,13 @@
   `;
   }
 
-  // project-docs/src/features/modules/views/ModulesView.js
+  // project-docs/src/modules/Modules/pages/ModulesPage.js
   function renderModulesView({
     modules = [],
     issues = [],
     onSelectIssue = () => {
     }
-  }) {
+  } = {}) {
     return `
     <div class="p-6 space-y-6 max-w-7xl mx-auto">
       <!-- Header -->
@@ -3420,7 +3583,7 @@
     };
   }
 
-  // project-docs/src/features/pages/components/KnowledgeBase.js
+  // project-docs/src/modules/Pages/components/KnowledgeBase.js
   function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [] }) {
     const kData = knowledgeIndex || getFallbackKnowledge();
     const rules = kData.business_rules || [];
@@ -4848,6 +5011,409 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     };
   }
 
+  // project-docs/src/modules/Harness/services/harness.service.js
+  var CANONICAL_AGENTS = [
+    {
+      id: "leader",
+      name: "L\xEDder T\xE9cnico & Orquestador",
+      role: "Agente Principal (Master Leader)",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Orquesta el ciclo de vida SDD, valida entorno y ramas sem\xE1nticas INT-*, coordina subagentes y puertas humanas con ask_question.",
+      responsibilities: [
+        "Validaci\xF3n de rama base (main/master/dev) y creaci\xF3n de rama de trabajo <= 80c",
+        "Orquestaci\xF3n de invocaci\xF3n de subagentes (spec-author, implementer, reviewer)",
+        "Puerta de aprobaci\xF3n humana con ask_question",
+        "Pregunta de integraci\xF3n (merge o PR) y cierre de ciclo"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "run_command", "ask_question", "invoke_subagent", "send_message"]
+    },
+    {
+      id: "spec-author",
+      name: "Autor de Especificaciones SDD",
+      role: "Subagente Especialista en Requerimientos",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Redacta specifications t\xE9cnicas, decisiones arquitect\xF3nicas y subtareas Jira DEV/QA bajo el est\xE1ndar Scrum en project-docs/specs/.",
+      responsibilities: [
+        "Redacci\xF3n de User Stories Scrum (Como/Quiero/Para)",
+        "Definici\xF3n de criterios de aceptaci\xF3n con sintaxis EARS",
+        "Desglose formal de subtareas Jira DEV y QA",
+        "Listado de Definition of Done (DoD) y Definition of Ready (DoR)"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "search_web"]
+    },
+    {
+      id: "implementer",
+      name: "Implementador Agn\xF3stico & QA on-demand",
+      role: "Subagente de Construcci\xF3n y Pruebas",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Ejecuta las tareas t\xE9cnicas, escribe c\xF3digo de producci\xF3n y pruebas automatizadas (TDD, SDD o FTD), ejecutando verify.sh y registrando trazabilidad R-to-Tests.",
+      responsibilities: [
+        "Implementaci\xF3n guiada por pruebas (TDD primero rojo, luego verde)",
+        "Construcci\xF3n de c\xF3digo de producci\xF3n desacoplado",
+        "Ejecuci\xF3n del pipeline de verificaci\xF3n multinivel (verify.sh)",
+        "Documentaci\xF3n de trazabilidad de pruebas unitarias y E2E"
+      ],
+      tools: ["read_file", "write_file", "edit_file", "run_command"]
+    },
+    {
+      id: "reviewer",
+      name: "Revisor de Calidad & Auditor\xEDa QA",
+      role: "Subagente Auditor Independiente",
+      model: "inherit",
+      workspace: "inherit",
+      description: "Audita que la feature cumpla al 100% con su spec, matriz R-to-Tests, arquitectura screaming, cierre de subtareas Jira DEV/QA y capturas de evidencia. No edita c\xF3digo.",
+      responsibilities: [
+        "Auditor\xEDa estricta de cumplimiento de especificaci\xF3n sin modificar c\xF3digo",
+        "Verificaci\xF3n de capturas de pantalla de evidencia en project-docs/specs/.../evidence/",
+        "Inspecci\xF3n de cero emojis unicode en c\xF3digo fuente",
+        "Validaci\xF3n de cierre determinista de subtareas Jira DEV y QA"
+      ],
+      tools: ["read_file", "run_command"]
+    }
+  ];
+  var CANONICAL_SKILLS = [
+    { name: "technical-audit", description: "Auditor\xEDa t\xE9cnica y generaci\xF3n de project-spec.yaml", synced: true },
+    { name: "project-knowledge", description: "Extracci\xF3n de base de conocimiento soberana C4, UML y reglas", synced: true },
+    { name: "generate-verify", description: "Generaci\xF3n de script verify.sh multinivel", synced: true },
+    { name: "verification", description: "Documentaci\xF3n y consulta de niveles de verificaci\xF3n", synced: true },
+    { name: "requirements-analysis", description: "An\xE1lisis de requerimientos y generaci\xF3n de feature_list.json", synced: true },
+    { name: "generate-spec", description: "Generaci\xF3n de spec t\xE9cnico formal, tareas y decisiones", synced: true },
+    { name: "implement-tdd", description: "Implementaci\xF3n guiada por pruebas (TDD)", synced: true },
+    { name: "implement-sdd", description: "Implementaci\xF3n dirigida por spec por fases (SDD)", synced: true },
+    { name: "implement-ftd", description: "Implementaci\xF3n \xE1gil para cambios menores (FTD)", synced: true },
+    { name: "write-unit-tests", description: "Escritura de tests unitarios agn\xF3sticos al lenguaje", synced: true },
+    { name: "acceptance-testing", description: "Pruebas de aceptaci\xF3n con Playwright, caja blanca/negra y carga", synced: true },
+    { name: "targeted-qa", description: "Pruebas focalizadas de QA bajo demanda", synced: true },
+    { name: "verify-spec", description: "Reconciliaci\xF3n de metadata y verificaci\xF3n de cierre", synced: true },
+    { name: "api-test-plan", description: "Plan de pruebas API REST markdown y .http", synced: true },
+    { name: "execute-api-test-plan", description: "Ejecuci\xF3n de plan API con curl y hallazgos", synced: true },
+    { name: "sync-skills", description: "Sincronizaci\xF3n triple de skills hacia Copilot y Antigravity", synced: true },
+    { name: "start-feature", description: "Orquestaci\xF3n de ciclo SDD para nueva feature o bugfix", synced: true },
+    { name: "sdd-workflow", description: "Gu\xEDa y ejecuci\xF3n del flujo integral SDD multi-agente", synced: true }
+  ];
+  var HarnessService = class {
+    constructor() {
+      this.agents = [...CANONICAL_AGENTS];
+      this.skills = [...CANONICAL_SKILLS];
+    }
+    getAgents() {
+      return this.agents;
+    }
+    getAgentById(id) {
+      return this.agents.find((a) => a.id === id) || null;
+    }
+    getSkills() {
+      return this.skills;
+    }
+    getGovernanceOverview() {
+      return {
+        branchingConvention: "{feature|bugfix}/INT-{numero}/{nombre} (m\xE1ximo 80 caracteres)",
+        commitFormat: "feat(scope): descripci\xF3n / fix(scope): descripci\xF3n",
+        tripleSyncRoot: ".opencode/skills/ (fuente de verdad) -> .github/skills/ y .agents/skills/",
+        zeroEmojiInvariant: "100% c\xF3digo fuente, marcado y documentaci\xF3n sin caracteres emoji unicode",
+        rootCleanliness: "Estrictamente 4 directorios (.agents, .git, .github, .opencode, project-docs) y 4 archivos en ra\xEDz"
+      };
+    }
+  };
+  var harnessService = new HarnessService();
+
+  // project-docs/src/modules/Harness/store/harness.store.js
+  var initialHarnessState = {
+    agents: [...CANONICAL_AGENTS],
+    skills: [...CANONICAL_SKILLS],
+    selectedAgentId: "leader",
+    activeTab: "agents"
+    // 'agents' | 'skills' | 'rules'
+  };
+  var HarnessStore = class {
+    constructor(initialState = initialHarnessState) {
+      this.state = { ...initialState };
+      this.listeners = /* @__PURE__ */ new Set();
+    }
+    getState() {
+      return this.state;
+    }
+    setState(updater) {
+      const next = typeof updater === "function" ? updater(this.state) : updater;
+      this.state = { ...this.state, ...next };
+      this.notify();
+    }
+    subscribe(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notify() {
+      for (const listener of this.listeners) {
+        try {
+          listener(this.state);
+        } catch (err) {
+          console.error("Error en HarnessStore listener:", err);
+        }
+      }
+    }
+    selectAgent(agentId) {
+      this.setState({ selectedAgentId: agentId });
+    }
+    setActiveTab(activeTab) {
+      this.setState({ activeTab });
+    }
+    reset() {
+      this.state = { ...initialHarnessState };
+      this.notify();
+    }
+  };
+  var harnessStore = new HarnessStore();
+
+  // project-docs/src/modules/Harness/components/AgentCard.js
+  function AgentCard({
+    agent = {},
+    isSelected = false
+  } = {}) {
+    const isMaster = agent.id === "leader";
+    const roleBadge = isMaster ? '<span class="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 font-mono text-[10px] font-semibold">MASTER LEADER</span>' : '<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono text-[10px] font-semibold">SUBAGENTE</span>';
+    return `
+    <div
+      data-agent-id="${agent.id}"
+      class="p-5 rounded-2xl border ${isSelected ? "border-indigo-500/50 bg-indigo-950/20 shadow-lg" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"} flex flex-col justify-between space-y-4 transition-all"
+    >
+      <div class="space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0 shadow-sm">
+              ${agent.id ? agent.id.slice(0, 2).toUpperCase() : "AG"}
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-zinc-100 tracking-tight">${agent.name}</h4>
+              <p class="text-[11px] text-zinc-400 font-medium">${agent.role}</p>
+            </div>
+          </div>
+          ${roleBadge}
+        </div>
+
+        <p class="text-xs text-zinc-300 leading-relaxed">${agent.description}</p>
+
+        <!-- Responsabilidades -->
+        <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
+          <span class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Responsabilidades</span>
+          <div class="space-y-1">
+            ${renderList(agent.responsibilities || [], (resp) => `
+              <div class="flex items-start gap-2 text-xs text-zinc-300">
+                <span class="p-0.5 text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3 h-3")}</span>
+                <span class="leading-snug">${resp}</span>
+              </div>
+            `)}
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer: Tools -->
+      <div class="pt-3 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5">
+        <span class="text-[10px] text-zinc-400 uppercase font-semibold mr-1">Tools:</span>
+        ${renderList(agent.tools || [], (tool) => `
+          <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">
+            ${tool}
+          </span>
+        `)}
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/AgentList.js
+  function AgentList({
+    agents = [],
+    selectedAgentId = "leader"
+  } = {}) {
+    return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${renderList(agents, (agent) => AgentCard({
+      agent,
+      isSelected: agent.id === selectedAgentId
+    }))}
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
+  function SkillSyncStatus({
+    skills = []
+  } = {}) {
+    return `
+    <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/40">
+        <div>
+          <h4 class="text-sm font-bold text-zinc-100 tracking-tight">Matriz de Sincronizaci\xF3n Triple de Skills</h4>
+          <p class="text-xs text-zinc-400 mt-0.5">Homologaci\xF3n bidireccional entre opencode, GitHub Copilot y Google Antigravity.</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-semibold">
+          100% HOMOLOGADO
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-zinc-900/60 text-zinc-400 uppercase font-semibold text-[10px] tracking-wider border-b border-zinc-800">
+            <tr>
+              <th class="px-6 py-3">Skill</th>
+              <th class="px-6 py-3">Descripci\xF3n</th>
+              <th class="px-4 py-3 text-center">opencode</th>
+              <th class="px-4 py-3 text-center">Copilot</th>
+              <th class="px-4 py-3 text-center">Antigravity</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/60 font-mono">
+            ${renderList(skills, (skill) => `
+              <tr class="hover:bg-zinc-900/30 transition-colors">
+                <td class="px-6 py-3.5 font-bold text-indigo-400">/${skill.name}</td>
+                <td class="px-6 py-3.5 font-sans text-zinc-300 font-normal">${skill.description}</td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+                <td class="px-4 py-3.5 text-center text-emerald-400">
+                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
+                </td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/components/HarnessOverview.js
+  function HarnessOverview({
+    governance = {}
+  } = {}) {
+    return `
+    <div class="space-y-6">
+      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            ${Icons.shield("w-5 h-5")}
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white tracking-tight">Gobernanza del Arn\xE9s SDD Multi-Agente</h3>
+            <p class="text-xs text-zinc-400">Invariantes estrictas de calidad, control de ramas y arquitectura anti-sesgo.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Ramas Sem\xE1nticas (&le;80c)</span>
+            <p class="text-xs font-mono text-indigo-300 font-medium">${governance.branchingConvention || "{feature|bugfix}/INT-*"}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Formato de Commits</span>
+            <p class="text-xs font-mono text-emerald-300 font-medium">${governance.commitFormat || "feat(scope): desc"}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
+            <span class="text-[10px] uppercase font-semibold text-zinc-400">Pureza Anti-Emoji</span>
+            <p class="text-xs font-mono text-amber-300 font-medium">${governance.zeroEmojiInvariant || "0 emojis en todo el c\xF3digo"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/pages/HarnessPage.js
+  function HarnessPage({
+    agents = [],
+    skills = [],
+    selectedAgentId = "leader"
+  } = {}) {
+    const activeAgents = agents && agents.length > 0 ? agents : harnessService.getAgents();
+    const activeSkills = skills && skills.length > 0 ? skills : harnessService.getSkills();
+    const governance = harnessService.getGovernanceOverview();
+    return `
+    <div class="flex-1 flex flex-col bg-zinc-950 overflow-y-auto">
+      <div class="p-6 space-y-8 max-w-7xl mx-auto w-full">
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+              ${Icons.bot("w-5 h-5 text-indigo-400")}
+              <span>Orquestaci\xF3n de Agentes & Gobernanza SDD</span>
+            </h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, habilidades homologadas y verificaci\xF3n de reglas.</p>
+          </div>
+        </div>
+
+        <!-- Governance Overview Banner -->
+        ${HarnessOverview({ governance })}
+
+        <!-- Agents Grid -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">
+              Equipo de Agentes Especializados (${activeAgents.length})
+            </h3>
+            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD</span>
+          </div>
+
+          ${AgentList({ agents: activeAgents, selectedAgentId })}
+        </div>
+
+        <!-- Skills Triple Sync Section -->
+        <div class="space-y-4">
+          ${SkillSyncStatus({ skills: activeSkills })}
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Harness/index.js
+  function renderHarnessView(props = {}) {
+    return HarnessPage(props);
+  }
+
+  // project-docs/src/modules/Architecture/services/architecture.service.js
+  var ArchitectureService = class {
+    getProjectSpec() {
+      const state = store.getState();
+      return state.projectSpec || {};
+    }
+    getKnowledgeIndex() {
+      const state = store.getState();
+      return state.knowledgeIndex || {};
+    }
+    getModules() {
+      const spec = this.getProjectSpec();
+      return spec.modules || [];
+    }
+    getTechStack() {
+      const spec = this.getProjectSpec();
+      return spec.tech_stack || {};
+    }
+    getDiagrams() {
+      const kData = this.getKnowledgeIndex();
+      return kData.diagrams || [];
+    }
+    getLayers() {
+      const spec = this.getProjectSpec();
+      return spec.architecture?.layers || [];
+    }
+  };
+  var architectureService = new ArchitectureService();
+
+  // project-docs/src/modules/Architecture/store/architecture.store.js
+  var architectureStore = createStore({
+    activeTab: "c4",
+    // 'c4' | 'stack' | 'layers' | 'goals'
+    selectedDiagram: "context",
+    zoomLevel: 100
+  });
+
   // project-docs/src/shared/MermaidViewer.js
   function renderMermaidViewer(diagram) {
     const { id, title, type, level, description, mermaid: code } = diagram;
@@ -4952,7 +5518,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     return String(text).replace(/"/g, "&quot;");
   }
 
-  // project-docs/src/features/architecture/views/ArchitectureView.js
+  // project-docs/src/modules/Architecture/pages/ArchitecturePage.js
   function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
     const spec = projectSpec || {};
     const kData = knowledgeIndex || {};
@@ -5571,7 +6137,36 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // project-docs/src/features/graph/components/DependencyGraph.js
+  // project-docs/src/modules/Graph/services/graph.service.js
+  var GraphService = class {
+    getFeatures() {
+      const state = store.getState();
+      return state.features || [];
+    }
+    getDependencies() {
+      const features = this.getFeatures();
+      const deps = [];
+      features.forEach((f) => {
+        if (Array.isArray(f.dependencies)) {
+          f.dependencies.forEach((depId) => {
+            deps.push({ source: depId, target: f.id });
+          });
+        }
+      });
+      return deps;
+    }
+  };
+  var graphService = new GraphService();
+
+  // project-docs/src/modules/Graph/store/graph.store.js
+  var graphStore = createStore({
+    graphMode: "graph",
+    // 'graph' | 'tree'
+    selectedFeatureId: null,
+    zoomLevel: 100
+  });
+
+  // project-docs/src/modules/Graph/components/DependencyGraph.js
   function renderDependencyGraph({ features }) {
     if (!features || features.length === 0) {
       return `<div class="p-12 text-center text-slate-500 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">No hay datos de dependencias disponibles.</div>`;
@@ -5883,48 +6478,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
   `;
   }
 
-  // project-docs/src/features/graph/views/DependencyGraphView.js
-  function renderDependencyGraphView({
-    features = [],
-    graphMode = "graph",
-    // 'graph' | 'tree'
-    onSelectFeature = () => {
-    }
-  }) {
-    return `
-    <div class="p-6 space-y-6 max-w-7xl mx-auto">
-      <!-- Header with Mode Switch -->
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            ${Icons.gitTree("w-5 h-5 text-indigo-400")}
-            <span>Grafo & \xC1rbol de Dependencias del Proyecto</span>
-          </h1>
-          <p class="text-xs text-zinc-400 mt-0.5">Topolog\xEDa t\xE9cnica ac\xEDclica (DAG) y taxonom\xEDa de requerimientos.</p>
-        </div>
-
-        <!-- Mode Toggle -->
-        <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-          <button id="toggle-graph-mode-dag" class="px-3 py-1.5 rounded-md text-xs font-semibold ${graphMode === "graph" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
-            Grafo en Malla (DAG)
-          </button>
-          <button id="toggle-graph-mode-tree" class="px-3 py-1.5 rounded-md text-xs font-semibold ${graphMode === "tree" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
-            \xC1rbol Jer\xE1rquico
-          </button>
-        </div>
-      </div>
-
-      <!-- Graph Container Card -->
-      <div class="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-xl overflow-hidden min-h-[500px]">
-        <div id="dependency-interactive-target">
-          ${renderDependencyGraph({ features })}
-        </div>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/features/graph/components/DependencyTree.js
+  // project-docs/src/modules/Graph/components/DependencyTree.js
   var DependencyTreeComponent = class {
     constructor(containerEl, { features, currentSpec, onSelect }) {
       this.container = containerEl;
@@ -6241,36 +6795,64 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // project-docs/src/features/constellation/views/Constellation3DView.js
-  function renderConstellation3DView() {
+  // project-docs/src/modules/Graph/pages/GraphPage.js
+  function renderDependencyGraphView({
+    features = [],
+    graphMode = "graph",
+    // 'graph' | 'tree'
+    onSelectFeature = () => {
+    }
+  } = {}) {
     return `
-    <div class="p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-120px)] flex flex-col">
-      <!-- Header -->
-      <div class="flex items-center justify-between shrink-0">
+    <div class="p-6 space-y-6 max-w-7xl mx-auto">
+      <!-- Header with Mode Switch -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            ${Icons.cube("w-5 h-5 text-indigo-400")}
-            <span>Constelaci\xF3n Piramidal 3D (Three.js)</span>
+            ${Icons.gitTree("w-5 h-5 text-indigo-400")}
+            <span>Grafo & \xC1rbol de Dependencias del Proyecto</span>
           </h1>
-          <p class="text-xs text-zinc-400 mt-0.5">Topolog\xEDa piramidal de 4 niveles arquitect\xF3nicos con flujo de part\xEDculas.</p>
+          <p class="text-xs text-zinc-400 mt-0.5">Topolog\xEDa t\xE9cnica ac\xEDclica (DAG) y taxonom\xEDa de requerimientos.</p>
         </div>
 
-        <div class="flex items-center gap-2 text-xs font-mono text-zinc-400">
-          <span class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800">Arrastra para rotar \xB7 Rueda para zoom</span>
+        <!-- Mode Toggle -->
+        <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+          <button id="toggle-graph-mode-dag" class="px-3 py-1.5 rounded-md text-xs font-semibold ${graphMode === "graph" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+            Grafo en Malla (DAG)
+          </button>
+          <button id="toggle-graph-mode-tree" class="px-3 py-1.5 rounded-md text-xs font-semibold ${graphMode === "tree" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}">
+            \xC1rbol Jer\xE1rquico
+          </button>
         </div>
       </div>
 
-      <!-- 3D Canvas Mounting Container -->
-      <div id="space-3d-canvas-container" class="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden relative shadow-2xl">
-        <div class="absolute inset-0 flex items-center justify-center text-xs text-zinc-500 font-mono">
-          Iniciando motor Three.js...
+      <!-- Graph Container Card -->
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-xl overflow-hidden min-h-[500px]">
+        <div id="dependency-interactive-target">
+          ${renderDependencyGraph({ features })}
         </div>
       </div>
     </div>
   `;
   }
 
-  // project-docs/src/features/constellation/components/SpaceView3D.js
+  // project-docs/src/modules/Constellation/services/constellation.service.js
+  var ConstellationService = class {
+    getFeatures() {
+      const state = store.getState();
+      return state.features || [];
+    }
+  };
+  var constellationService = new ConstellationService();
+
+  // project-docs/src/modules/Constellation/store/constellation.store.js
+  var constellationStore = createStore({
+    selectedNodeId: null,
+    isRotating: true,
+    cameraDistance: 600
+  });
+
+  // project-docs/src/modules/Constellation/components/SpaceView3D.js
   var SpaceView3D = class {
     constructor() {
       this.container = null;
@@ -6854,7 +7436,60 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     }
   };
 
-  // project-docs/src/features/analytics/views/AnalyticsView.js
+  // project-docs/src/modules/Constellation/pages/ConstellationPage.js
+  function renderConstellation3DView() {
+    return `
+    <div class="p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-120px)] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between shrink-0">
+        <div>
+          <h1 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+            ${Icons.cube("w-5 h-5 text-indigo-400")}
+            <span>Constelaci\xF3n Piramidal 3D (Three.js)</span>
+          </h1>
+          <p class="text-xs text-zinc-400 mt-0.5">Topolog\xEDa piramidal de 4 niveles arquitect\xF3nicos con flujo de part\xEDculas.</p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-mono text-zinc-400">
+          <span class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800">Arrastra para rotar \xB7 Rueda para zoom</span>
+        </div>
+      </div>
+
+      <!-- 3D Canvas Mounting Container -->
+      <div id="space-3d-canvas-container" class="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden relative shadow-2xl">
+        <div class="absolute inset-0 flex items-center justify-center text-xs text-zinc-500 font-mono">
+          Iniciando motor Three.js...
+        </div>
+      </div>
+    </div>
+  `;
+  }
+
+  // project-docs/src/modules/Analytics/services/analytics.service.js
+  var AnalyticsService = class {
+    getIssues() {
+      const state = store.getState();
+      return state.features || [];
+    }
+    getMetrics() {
+      const issues = this.getIssues();
+      const total = issues.length;
+      const done = issues.filter((i) => i.status === "done" || i.state_id === "state-done").length;
+      const inProgress = issues.filter((i) => i.status === "in_progress" || i.state_id === "state-in-progress").length;
+      const completionRate = total > 0 ? Math.round(done / total * 100) : 0;
+      return { total, done, inProgress, completionRate };
+    }
+  };
+  var analyticsService = new AnalyticsService();
+
+  // project-docs/src/modules/Analytics/store/analytics.store.js
+  var analyticsStore = createStore({
+    timeRange: "all",
+    // 'sprint' | 'month' | 'all'
+    selectedAgent: "all"
+  });
+
+  // project-docs/src/modules/Analytics/pages/AnalyticsPage.js
   function renderAnalyticsView({
     issues = [],
     states = [],
@@ -6983,372 +7618,6 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       </div>
     </div>
   `;
-  }
-
-  // project-docs/src/modules/Harness/services/harness.service.js
-  var CANONICAL_AGENTS = [
-    {
-      id: "leader",
-      name: "L\xEDder T\xE9cnico & Orquestador",
-      role: "Agente Principal (Master Leader)",
-      model: "inherit",
-      workspace: "inherit",
-      description: "Orquesta el ciclo de vida SDD, valida entorno y ramas sem\xE1nticas INT-*, coordina subagentes y puertas humanas con ask_question.",
-      responsibilities: [
-        "Validaci\xF3n de rama base (main/master/dev) y creaci\xF3n de rama de trabajo <= 80c",
-        "Orquestaci\xF3n de invocaci\xF3n de subagentes (spec-author, implementer, reviewer)",
-        "Puerta de aprobaci\xF3n humana con ask_question",
-        "Pregunta de integraci\xF3n (merge o PR) y cierre de ciclo"
-      ],
-      tools: ["read_file", "write_file", "edit_file", "run_command", "ask_question", "invoke_subagent", "send_message"]
-    },
-    {
-      id: "spec-author",
-      name: "Autor de Especificaciones SDD",
-      role: "Subagente Especialista en Requerimientos",
-      model: "inherit",
-      workspace: "inherit",
-      description: "Redacta specifications t\xE9cnicas, decisiones arquitect\xF3nicas y subtareas Jira DEV/QA bajo el est\xE1ndar Scrum en project-docs/specs/.",
-      responsibilities: [
-        "Redacci\xF3n de User Stories Scrum (Como/Quiero/Para)",
-        "Definici\xF3n de criterios de aceptaci\xF3n con sintaxis EARS",
-        "Desglose formal de subtareas Jira DEV y QA",
-        "Listado de Definition of Done (DoD) y Definition of Ready (DoR)"
-      ],
-      tools: ["read_file", "write_file", "edit_file", "search_web"]
-    },
-    {
-      id: "implementer",
-      name: "Implementador Agn\xF3stico & QA on-demand",
-      role: "Subagente de Construcci\xF3n y Pruebas",
-      model: "inherit",
-      workspace: "inherit",
-      description: "Ejecuta las tareas t\xE9cnicas, escribe c\xF3digo de producci\xF3n y pruebas automatizadas (TDD, SDD o FTD), ejecutando verify.sh y registrando trazabilidad R-to-Tests.",
-      responsibilities: [
-        "Implementaci\xF3n guiada por pruebas (TDD primero rojo, luego verde)",
-        "Construcci\xF3n de c\xF3digo de producci\xF3n desacoplado",
-        "Ejecuci\xF3n del pipeline de verificaci\xF3n multinivel (verify.sh)",
-        "Documentaci\xF3n de trazabilidad de pruebas unitarias y E2E"
-      ],
-      tools: ["read_file", "write_file", "edit_file", "run_command"]
-    },
-    {
-      id: "reviewer",
-      name: "Revisor de Calidad & Auditor\xEDa QA",
-      role: "Subagente Auditor Independiente",
-      model: "inherit",
-      workspace: "inherit",
-      description: "Audita que la feature cumpla al 100% con su spec, matriz R-to-Tests, arquitectura screaming, cierre de subtareas Jira DEV/QA y capturas de evidencia. No edita c\xF3digo.",
-      responsibilities: [
-        "Auditor\xEDa estricta de cumplimiento de especificaci\xF3n sin modificar c\xF3digo",
-        "Verificaci\xF3n de capturas de pantalla de evidencia en project-docs/specs/.../evidence/",
-        "Inspecci\xF3n de cero emojis unicode en c\xF3digo fuente",
-        "Validaci\xF3n de cierre determinista de subtareas Jira DEV y QA"
-      ],
-      tools: ["read_file", "run_command"]
-    }
-  ];
-  var CANONICAL_SKILLS = [
-    { name: "technical-audit", description: "Auditor\xEDa t\xE9cnica y generaci\xF3n de project-spec.yaml", synced: true },
-    { name: "project-knowledge", description: "Extracci\xF3n de base de conocimiento soberana C4, UML y reglas", synced: true },
-    { name: "generate-verify", description: "Generaci\xF3n de script verify.sh multinivel", synced: true },
-    { name: "verification", description: "Documentaci\xF3n y consulta de niveles de verificaci\xF3n", synced: true },
-    { name: "requirements-analysis", description: "An\xE1lisis de requerimientos y generaci\xF3n de feature_list.json", synced: true },
-    { name: "generate-spec", description: "Generaci\xF3n de spec t\xE9cnico formal, tareas y decisiones", synced: true },
-    { name: "implement-tdd", description: "Implementaci\xF3n guiada por pruebas (TDD)", synced: true },
-    { name: "implement-sdd", description: "Implementaci\xF3n dirigida por spec por fases (SDD)", synced: true },
-    { name: "implement-ftd", description: "Implementaci\xF3n \xE1gil para cambios menores (FTD)", synced: true },
-    { name: "write-unit-tests", description: "Escritura de tests unitarios agn\xF3sticos al lenguaje", synced: true },
-    { name: "acceptance-testing", description: "Pruebas de aceptaci\xF3n con Playwright, caja blanca/negra y carga", synced: true },
-    { name: "targeted-qa", description: "Pruebas focalizadas de QA bajo demanda", synced: true },
-    { name: "verify-spec", description: "Reconciliaci\xF3n de metadata y verificaci\xF3n de cierre", synced: true },
-    { name: "api-test-plan", description: "Plan de pruebas API REST markdown y .http", synced: true },
-    { name: "execute-api-test-plan", description: "Ejecuci\xF3n de plan API con curl y hallazgos", synced: true },
-    { name: "sync-skills", description: "Sincronizaci\xF3n triple de skills hacia Copilot y Antigravity", synced: true },
-    { name: "start-feature", description: "Orquestaci\xF3n de ciclo SDD para nueva feature o bugfix", synced: true },
-    { name: "sdd-workflow", description: "Gu\xEDa y ejecuci\xF3n del flujo integral SDD multi-agente", synced: true }
-  ];
-  var HarnessService = class {
-    constructor() {
-      this.agents = [...CANONICAL_AGENTS];
-      this.skills = [...CANONICAL_SKILLS];
-    }
-    getAgents() {
-      return this.agents;
-    }
-    getAgentById(id) {
-      return this.agents.find((a) => a.id === id) || null;
-    }
-    getSkills() {
-      return this.skills;
-    }
-    getGovernanceOverview() {
-      return {
-        branchingConvention: "{feature|bugfix}/INT-{numero}/{nombre} (m\xE1ximo 80 caracteres)",
-        commitFormat: "feat(scope): descripci\xF3n / fix(scope): descripci\xF3n",
-        tripleSyncRoot: ".opencode/skills/ (fuente de verdad) -> .github/skills/ y .agents/skills/",
-        zeroEmojiInvariant: "100% c\xF3digo fuente, marcado y documentaci\xF3n sin caracteres emoji unicode",
-        rootCleanliness: "Estrictamente 4 directorios (.agents, .git, .github, .opencode, project-docs) y 4 archivos en ra\xEDz"
-      };
-    }
-  };
-  var harnessService = new HarnessService();
-
-  // project-docs/src/modules/Harness/store/harness.store.js
-  var initialHarnessState = {
-    agents: [...CANONICAL_AGENTS],
-    skills: [...CANONICAL_SKILLS],
-    selectedAgentId: "leader",
-    activeTab: "agents"
-    // 'agents' | 'skills' | 'rules'
-  };
-  var HarnessStore = class {
-    constructor(initialState = initialHarnessState) {
-      this.state = { ...initialState };
-      this.listeners = /* @__PURE__ */ new Set();
-    }
-    getState() {
-      return this.state;
-    }
-    setState(updater) {
-      const next = typeof updater === "function" ? updater(this.state) : updater;
-      this.state = { ...this.state, ...next };
-      this.notify();
-    }
-    subscribe(listener) {
-      this.listeners.add(listener);
-      return () => this.listeners.delete(listener);
-    }
-    notify() {
-      for (const listener of this.listeners) {
-        try {
-          listener(this.state);
-        } catch (err) {
-          console.error("Error en HarnessStore listener:", err);
-        }
-      }
-    }
-    selectAgent(agentId) {
-      this.setState({ selectedAgentId: agentId });
-    }
-    setActiveTab(activeTab) {
-      this.setState({ activeTab });
-    }
-    reset() {
-      this.state = { ...initialHarnessState };
-      this.notify();
-    }
-  };
-  var harnessStore = new HarnessStore();
-
-  // project-docs/src/modules/Harness/components/AgentCard.js
-  function AgentCard({
-    agent = {},
-    isSelected = false
-  } = {}) {
-    const isMaster = agent.id === "leader";
-    const roleBadge = isMaster ? '<span class="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 font-mono text-[10px] font-semibold">MASTER LEADER</span>' : '<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono text-[10px] font-semibold">SUBAGENTE</span>';
-    return `
-    <div
-      data-agent-id="${agent.id}"
-      class="p-5 rounded-2xl border ${isSelected ? "border-indigo-500/50 bg-indigo-950/20 shadow-lg" : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"} flex flex-col justify-between space-y-4 transition-all"
-    >
-      <div class="space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0 shadow-sm">
-              ${agent.id ? agent.id.slice(0, 2).toUpperCase() : "AG"}
-            </div>
-            <div>
-              <h4 class="text-sm font-bold text-zinc-100 tracking-tight">${agent.name}</h4>
-              <p class="text-[11px] text-zinc-400 font-medium">${agent.role}</p>
-            </div>
-          </div>
-          ${roleBadge}
-        </div>
-
-        <p class="text-xs text-zinc-300 leading-relaxed">${agent.description}</p>
-
-        <!-- Responsabilidades -->
-        <div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
-          <span class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Responsabilidades</span>
-          <div class="space-y-1">
-            ${renderList(agent.responsibilities || [], (resp) => `
-              <div class="flex items-start gap-2 text-xs text-zinc-300">
-                <span class="p-0.5 text-emerald-400 mt-0.5 shrink-0">${Icons.check("w-3 h-3")}</span>
-                <span class="leading-snug">${resp}</span>
-              </div>
-            `)}
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer: Tools -->
-      <div class="pt-3 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5">
-        <span class="text-[10px] text-zinc-400 uppercase font-semibold mr-1">Tools:</span>
-        ${renderList(agent.tools || [], (tool) => `
-          <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">
-            ${tool}
-          </span>
-        `)}
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/modules/Harness/components/AgentList.js
-  function AgentList({
-    agents = [],
-    selectedAgentId = "leader"
-  } = {}) {
-    return `
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      ${renderList(agents, (agent) => AgentCard({
-      agent,
-      isSelected: agent.id === selectedAgentId
-    }))}
-    </div>
-  `;
-  }
-
-  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
-  function SkillSyncStatus({
-    skills = []
-  } = {}) {
-    return `
-    <div class="border border-zinc-800 rounded-2xl bg-zinc-950 overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between gap-4 bg-zinc-900/40">
-        <div>
-          <h4 class="text-sm font-bold text-zinc-100 tracking-tight">Matriz de Sincronizaci\xF3n Triple de Skills</h4>
-          <p class="text-xs text-zinc-400 mt-0.5">Homologaci\xF3n bidireccional entre opencode, GitHub Copilot y Google Antigravity.</p>
-        </div>
-        <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-semibold">
-          100% HOMOLOGADO
-        </span>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-zinc-900/60 text-zinc-400 uppercase font-semibold text-[10px] tracking-wider border-b border-zinc-800">
-            <tr>
-              <th class="px-6 py-3">Skill</th>
-              <th class="px-6 py-3">Descripci\xF3n</th>
-              <th class="px-4 py-3 text-center">opencode</th>
-              <th class="px-4 py-3 text-center">Copilot</th>
-              <th class="px-4 py-3 text-center">Antigravity</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-zinc-800/60 font-mono">
-            ${renderList(skills, (skill) => `
-              <tr class="hover:bg-zinc-900/30 transition-colors">
-                <td class="px-6 py-3.5 font-bold text-indigo-400">/${skill.name}</td>
-                <td class="px-6 py-3.5 font-sans text-zinc-300 font-normal">${skill.description}</td>
-                <td class="px-4 py-3.5 text-center text-emerald-400">
-                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
-                </td>
-                <td class="px-4 py-3.5 text-center text-emerald-400">
-                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
-                </td>
-                <td class="px-4 py-3.5 text-center text-emerald-400">
-                  <span class="inline-flex items-center gap-1 text-[11px] font-semibold">${Icons.check("w-3.5 h-3.5")} OK</span>
-                </td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/modules/Harness/components/HarnessOverview.js
-  function HarnessOverview({
-    governance = {}
-  } = {}) {
-    return `
-    <div class="space-y-6">
-      <div class="border border-indigo-500/30 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-indigo-950/20 p-6 space-y-4 shadow-xl">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-            ${Icons.shield("w-5 h-5")}
-          </div>
-          <div>
-            <h3 class="text-base font-bold text-white tracking-tight">Gobernanza del Arn\xE9s SDD Multi-Agente</h3>
-            <p class="text-xs text-zinc-400">Invariantes estrictas de calidad, control de ramas y arquitectura anti-sesgo.</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
-            <span class="text-[10px] uppercase font-semibold text-zinc-400">Ramas Sem\xE1nticas (&le;80c)</span>
-            <p class="text-xs font-mono text-indigo-300 font-medium">${governance.branchingConvention || "{feature|bugfix}/INT-*"}</p>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
-            <span class="text-[10px] uppercase font-semibold text-zinc-400">Formato de Commits</span>
-            <p class="text-xs font-mono text-emerald-300 font-medium">${governance.commitFormat || "feat(scope): desc"}</p>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-1">
-            <span class="text-[10px] uppercase font-semibold text-zinc-400">Pureza Anti-Emoji</span>
-            <p class="text-xs font-mono text-amber-300 font-medium">${governance.zeroEmojiInvariant || "0 emojis en todo el c\xF3digo"}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/modules/Harness/pages/HarnessPage.js
-  function HarnessPage({
-    agents = [],
-    skills = [],
-    selectedAgentId = "leader"
-  } = {}) {
-    const activeAgents = agents && agents.length > 0 ? agents : harnessService.getAgents();
-    const activeSkills = skills && skills.length > 0 ? skills : harnessService.getSkills();
-    const governance = harnessService.getGovernanceOverview();
-    return `
-    <div class="flex-1 flex flex-col bg-zinc-950 overflow-y-auto">
-      <div class="p-6 space-y-8 max-w-7xl mx-auto w-full">
-        <!-- Header -->
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-              ${Icons.bot("w-5 h-5 text-indigo-400")}
-              <span>Orquestaci\xF3n de Agentes & Gobernanza SDD</span>
-            </h2>
-            <p class="text-xs text-zinc-400 mt-0.5">Control de subagentes especializados, habilidades homologadas y verificaci\xF3n de reglas.</p>
-          </div>
-        </div>
-
-        <!-- Governance Overview Banner -->
-        ${HarnessOverview({ governance })}
-
-        <!-- Agents Grid -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">
-              Equipo de Agentes Especializados (${activeAgents.length})
-            </h3>
-            <span class="text-xs font-mono text-zinc-400">Arquitectura Multi-Agente SDD</span>
-          </div>
-
-          ${AgentList({ agents: activeAgents, selectedAgentId })}
-        </div>
-
-        <!-- Skills Triple Sync Section -->
-        <div class="space-y-4">
-          ${SkillSyncStatus({ skills: activeSkills })}
-        </div>
-      </div>
-    </div>
-  `;
-  }
-
-  // project-docs/src/modules/Harness/index.js
-  function renderHarnessView(props = {}) {
-    return HarnessPage(props);
   }
 
   // project-docs/src/main.js

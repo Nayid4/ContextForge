@@ -1253,6 +1253,110 @@
           "project-docs/specs/014_screaming_modules_core_shared/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 15,
+      "type": "feature",
+      "name": "screaming_modules_plane_unification",
+      "title": "Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane",
+      "description": "Erradicacion definitiva de la carpeta legacy project-docs/src/features/ y consolidacion de los 10 dominios canonicos bajo Screaming Architecture pura en project-docs/src/modules/ (Analytics, Architecture, Constellation, Cycles, Graph, Harness, Issues, Modules, Pages, Projects). Diseno uniforme estilo Plane con paleta dark slate, cero emojis, iconografia 100% SVG nativa y 100% de verificacion en verde.",
+      "module": "dashboard-visualizer",
+      "priority": "P0",
+      "weight": 100,
+      "branch": "feature/INT-015/screaming_modules_plane_unification",
+      "spec_folder": "project-docs/specs/015_screaming_modules_plane_unification",
+      "status": "done",
+      "acceptance": [
+        "Eliminacion fisica completa de project-docs/src/features/ sin directorios residuales.",
+        "Consolidacion estricta de 10 modulos en project-docs/src/modules/ con components/, pages/, services/, store/ y barriles index.js.",
+        "Punto de entrada src/main.js consumiendo exclusivamente src/modules/ y src/shared/ui/.",
+        "Diseno visual coherente estilo Plane en todas las vistas con paleta dark slate y 0 emojis.",
+        "Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright y los 9 niveles de verify.sh en verde."
+      ],
+      "user_story": {
+        "as_a": "Desarrollador y Agente de IA",
+        "i_want": "un frontend con Screaming Architecture pura en src/modules/ sin carpetas hibridas ni dependencias legacy",
+        "so_that": "el arnes opere con maxima coherencia estetica estilo Plane y pureza arquitectonica absoluta"
+      },
+      "subtasks": [
+        {
+          "id": "INT-015-DEV",
+          "type": "development",
+          "title": "Migracion modular de los 5 dominios restantes, eliminacion de features/ y unificacion en main.js",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Crear modulos Architecture, Graph, Constellation, Analytics y Modules en src/modules/",
+            "Mover PlaneControlsBar a src/shared/ui/ y hacer nativo KnowledgeBase en Pages",
+            "Refactorizar src/main.js y eliminar src/features/",
+            "Recompilar bundle con esbuild"
+          ]
+        },
+        {
+          "id": "INT-015-QA",
+          "type": "qa",
+          "title": "Actualizacion de tests unitarios y aceptacion Playwright en 9 niveles",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar inexistencia absoluta de carpeta src/features/",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar estructura de 10 modulos en src/modules/",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Validar Playwright 14/14 y verify.sh 9 niveles en verde",
+              "status": "passed"
+            },
+            {
+              "id": "TC-04",
+              "title": "Validar pureza de raiz (4 carpetas, 4 archivos) y zero emojis",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T18:58:00.000Z",
+        "dev_summary": "Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.",
+        "files_modified": [
+          "project-docs/src/modules/Architecture/",
+          "project-docs/src/modules/Graph/",
+          "project-docs/src/modules/Constellation/",
+          "project-docs/src/modules/Analytics/",
+          "project-docs/src/modules/Modules/",
+          "project-docs/src/shared/ui/PlaneControlsBar.js",
+          "project-docs/src/shared/ui/index.js",
+          "project-docs/src/modules/Pages/components/KnowledgeBase.js",
+          "project-docs/src/modules/index.js",
+          "project-docs/src/core/store.js",
+          "project-docs/src/main.js",
+          "project-docs/tests/e2e/atdd-frontend.test.js",
+          "project-docs/tests/unit/screaming-architecture.test.js"
+        ],
+        "tests_executed": [
+          "npm test (66 unit tests)",
+          "npm run test:e2e (5 smoke tests)",
+          "npm run test:whitebox (12 branch tests)",
+          "npm run test:blackbox (8 resilience tests)",
+          "npm run test:system (7 integration tests)",
+          "npm run test:load (100 reqs concurrency test)",
+          "npm run test:acceptance (14 Playwright E2E tests)",
+          "bash project-docs/verify.sh (9 verification levels)"
+        ],
+        "screenshots": [
+          "project-docs/specs/015_screaming_modules_plane_unification/evidence/01-plane-kanban-board.png",
+          "project-docs/specs/015_screaming_modules_plane_unification/evidence/02-plane-issue-detail-modal.png",
+          "project-docs/specs/015_screaming_modules_plane_unification/evidence/03-plane-cycles-burndown.png",
+          "project-docs/specs/015_screaming_modules_plane_unification/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 }
