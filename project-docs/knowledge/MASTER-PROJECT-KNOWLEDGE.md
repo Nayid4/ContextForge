@@ -53,8 +53,13 @@ tags: ["master-dossier", "single-file-context", "sdd", "ieee-830", "c4-model", "
 
 ### 2.1 Screaming Architecture y Organización
 El proyecto aplica el principio de **Screaming Architecture**:
-- La raíz separa claramente la orquestación (`.agents/`, `.opencode/`, `.github/`), la interfaz y documentación (`project-docs/`) y el arnés de verificación (`tests/`, `project-docs/verify.sh`).
-- El frontend en `project-docs/src/` está modularizado por dominio: `core/`, `features/` y `shared/`, compilado en un bundle IIFE (`dist/app.bundle.js`).
+- La raíz separa claramente la orquestación (`.agents/`, `.opencode/`, `.github/`), la interfaz y documentación (`project-docs/`) y el arnés de verificación (`project-docs/verify.sh`).
+- El frontend en `project-docs/src/` está modularizado bajo Screaming Architecture orientada a dominios de negocio:
+  * `core/`: Núcleo reactivo Observer / Pub-Sub (`store.js`), Hash Router (`router.js`), `event-bus.js`, `api-client.js` y persistencia SQLite (`db.js`).
+  * `modules/`: Dominios de negocio puros (`Projects`, `Issues`, `Cycles`, `Pages`, `Harness`).
+  * `shared/`: Componentes UI y utilidades (`MasterLayout.js`, `PlaneSidebar.js`, `PlaneTopBar.js`, `Icons.js`, `renderList.js`).
+  * `data/`: Persistencia relacional SQLite WAL (`harness.db`) con sincronización dual bidireccional hacia Markdown en disco.
+- El build se empaqueta en un bundle universal IIFE (`dist/app.bundle.js`) compatible con ejecución offline (`file:///`) y servidor HTTP (`serve.js`).
 
 ### 2.2 Patrones de Diseño Detectados
 1. **Reactive Store (Pub/Sub)**: `store.js` gestiona el estado y propaga cambios a la vista reactivamente.
