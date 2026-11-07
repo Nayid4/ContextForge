@@ -222,7 +222,8 @@ test('Shared UI Suite: MasterLayout, PlaneSidebar, PlaneTopBar y OmniboxModal', 
     issueCount: 12
   });
   assert.ok(sidebar.includes('Workspace Test'));
-  assert.ok(sidebar.includes('Tareas (Issues)'));
+  assert.ok(sidebar.includes('Work items'));
+  assert.ok(sidebar.includes('Library'));
   assert.ok(sidebar.includes('12'));
 
   const topbar = renderPlaneTopBar({

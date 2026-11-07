@@ -3749,7 +3749,7 @@ window.__FALLBACK_DATA__ = {
     "owner_id": "user-leader",
     "organization_size": "10-50",
     "timezone": "America/Bogota",
-    "updated_at": "2026-11-07 20:19:44"
+    "updated_at": "2026-11-07 20:46:34"
   },
   "project": {
     "id": "proj-harness",
@@ -3771,7 +3771,7 @@ window.__FALLBACK_DATA__ = {
     "default_state_id": "state-backlog",
     "default_assignee_id": "user-leader",
     "project_lead_id": "user-leader",
-    "updated_at": "2026-11-07 20:19:44"
+    "updated_at": "2026-11-07 20:46:34"
   },
   "users": [
     {
@@ -4405,7 +4405,7 @@ window.__FALLBACK_DATA__ = {
       "model": "gemini-2.5-pro",
       "category": "AI_ENGINE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-07 20:19:44"
+      "updated_at": "2026-11-07 20:46:34"
     },
     {
       "id": "aicfg-provider",
@@ -4416,7 +4416,7 @@ window.__FALLBACK_DATA__ = {
       "model": "gemini-2.5-pro",
       "category": "AI_ENGINE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-07 20:19:44"
+      "updated_at": "2026-11-07 20:46:34"
     },
     {
       "id": "aicfg-branching",
@@ -4427,7 +4427,7 @@ window.__FALLBACK_DATA__ = {
       "model": "git-guard",
       "category": "GOVERNANCE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-07 20:19:44"
+      "updated_at": "2026-11-07 20:46:34"
     },
     {
       "id": "aicfg-sync",
@@ -4438,7 +4438,7 @@ window.__FALLBACK_DATA__ = {
       "model": "sync-skills-v2",
       "category": "GOVERNANCE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-07 20:19:44"
+      "updated_at": "2026-11-07 20:46:34"
     },
     {
       "id": "aicfg-persistence",
@@ -4449,7 +4449,7 @@ window.__FALLBACK_DATA__ = {
       "model": "sqlite-3-wal",
       "category": "STORAGE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-07 20:19:44"
+      "updated_at": "2026-11-07 20:46:34"
     }
   ],
   "aiRuns": [
@@ -5194,7 +5194,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce\",\"Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests\",\"package.json y suite de tests unitarios están configurados y pasando en verde\",\"El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Auditoría real del repositorio, saneamiento de mocks e-commerce residuales, desacoplamiento universal de subagentes y configuración de tests automatizados.",
@@ -5382,7 +5382,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/\",\"Frontmatter name y description idénticos en los 3 espejos\",\"Skill sync-skills disponible para auditoría de discrepancias\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Mecanismo de replicación y paridad entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/.",
@@ -5569,7 +5569,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Escaneo de topología en Fase 1 sin saturación de tokens\",\"Documentación profunda por módulo en Fase 2\",\"Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Protocolo de elicitación profunda en 2 fases con C4, UML, ERD, diccionario de datos, reglas BR-* y ADRs.",
@@ -5756,7 +5756,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Biblioteca organizada por estantes temáticos con tarjeta Hero destacada\",\"Lector de artículos con ancho centrado a 780px e interlineado 1.75em\",\"Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional\",\"Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde\",\"Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Interfaz visual con Tailwind CSS v4, iconografia SVG accesible (0 emojis), tabla tecnica de stack, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
@@ -5952,7 +5952,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)\",\"Distribución radial armónica para evitar colisión de etiquetas\",\"Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Visualización 3D espacial estructurada en 4 niveles arquitectónicos con anillos translúcidos y flujo de energía Bezier.",
@@ -6146,7 +6146,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección\",\"Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts\",\"Navegación fluida por teclado (Up, Down, Enter, Escape)\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Buscador omnibox modal (Ctrl+K / Cmd+K) con filtrado reactivo de tareas, documentos, reglas y módulos.",
@@ -6340,7 +6340,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Suite de tests unitarios nativos ejecutables con npm test\",\"Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown\",\"Validación de cálculo de tiempos de lectura y clasificación en estantes\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Pruebas automatizadas con Node.js Test Runner para sync-data.js, serializadores de markdown, TOC y reglas de branching.",
@@ -6527,7 +6527,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Script de prueba automatizada verificando carga de index.html\",\"Verificación de renderizado de la constelación 3D y conmutación de pestañas\",\"Prueba de edición y persistencia en el editor dual\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Automatización integral de pruebas E2E, caja blanca y caja negra para validar el tablero, constelación 3D y editor dual.",
@@ -6714,7 +6714,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Los specs incorporan estructura Scrum con User Story (Como/Quiero/Para), DoR y DoD\",\"Cada tarea principal desglosa una Subtarea de Desarrollo (DEV) y una Subtarea de QA estilo Jira\",\"Al cerrar la tarea se documenta en el spec y en JSON qué se hizo, qué pruebas se realizaron y capturas de pantalla\",\"Toda la persistencia se realiza 100% en JSON sin bases de datos SQL\",\"El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla\"]",
       "evidence_summary": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Estandarización de especificaciones con User Stories Scrum (Como/Quiero/Para), desglose formal de subtareas de Desarrollo (DEV) y de QA estilo Jira, y protocolo de cierre con evidencias técnicas y capturas de pantalla integradas en JSON.",
@@ -6903,7 +6903,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)\",\"Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión\",\"Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente\",\"Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js\",\"El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json\",\"ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md\",\"verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)\",\"El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas\",\"El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga\"]",
       "evidence_summary": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Reorganizar la arquitectura de archivos del arnés para que la raíz contenga exclusivamente los archivos y carpetas indispensables de adopción (.agents/, .github/, .opencode/, project-docs/, AGENTS.md, opencode.json, project-spec.yaml, verify.sh), encapsulando el tooling npm, scripts, suites de prueba y specs dentro de project-docs/ para prevenir cualquier colisión al copiar y pegar el arnés en proyectos externos (.NET, Python, Java, Go, etc.).",
@@ -7096,7 +7096,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La carpeta specs/ reside exclusivamente dentro de project-docs/specs/\",\"El archivo project-spec.yaml reside en project-docs/project-spec.yaml\",\"El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación\",\"La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)\",\"Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/\",\"Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/\",\"El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde\",\"El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0\"]",
       "evidence_summary": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Reubicar specs/, verify.sh y project-spec.yaml dentro de project-docs/ para dejar la raíz con exclusivamente 4 carpetas (.agents/, .github/, .opencode/, project-docs/) y 4 archivos indispensables (AGENTS.md, opencode.json, README.md, .gitignore). Actualizar exhaustivamente todos los agentes y skills de Antigravity, Copilot y OpenCode para crear y consumir archivos en las nuevas rutas.",
@@ -7288,7 +7288,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.\",\"Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.\",\"Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).\",\"Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).\",\"Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.\",\"Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.\",\"Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.\",\"Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.\",\"Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).\",\"Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
@@ -7513,7 +7513,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).\",\"Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.\",\"Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.\",\"Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.\",\"Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.\",\"Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.\",\"Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.\",\"Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
       "created_at": "2026-11-07 16:47:57",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Refactorizacion arquitectonica integral del frontend bajo Screaming Architecture: cada dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) encapsula sus propios componentes, vistas y helpers con bucles funcionales de renderizado (estilo React en Vanilla JS). Unificacion total del tablero en una experiencia unica inspirada en Plane sin depender del tablero clasico, diseno UI/UX y graficos mejorados (burn-down, C4, constelacion 3D), y CLI soberana ('node project-docs/cli.js') para manipulacion y consulta directa de tareas y base de conocimiento por agentes de IA, skills y terminal.",
@@ -7712,7 +7712,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/modules/ con dominios Projects, Issues, Cycles, Pages y Harness encapsulados con components/, pages/, services/, store/ y barriles index.js.\",\"Nucleo transversal reactivo en project-docs/src/core/ con Store Observer Pub-Sub, Router hash con soporte de query parameters, EventBus desacoplado y ApiClient con fallback offline.\",\"Capa compartida agnostica en project-docs/src/shared/ con 40+ iconos vectoriales 100% SVG nativos, utilidades funcionales renderList y shell MasterLayout unificado.\",\"Persistencia dual determinista con SQLite WAL (project-docs/data/harness.db) y espejo continuo en archivos Markdown en disco para agentes y CLI.\",\"Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright, tests de whitebox, blackbox, sistema y carga pasando al 100% en verde.\",\"Zero emojis en codigo fuente, interfaces y documentacion, con cumplimiento de limite de 80 caracteres en ramas y pureza estricta en la raiz del proyecto.\"]",
       "evidence_summary": "Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.",
       "created_at": "2026-11-07 18:35:47",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Reestructuracion modular estricta orientada a dominios de negocio bajo Screaming Architecture pura: src/modules/ (Projects, Issues, Cycles, Pages, Harness), src/core/ (Store Observer Pub-Sub, Router hash con URL params, EventBus, ApiClient, persistencia SQLite WAL) y src/shared/ (Icons 100% SVG nativo, renderList funcional, MasterLayout, Sidebar, TopBar, Omnibox). Soporte para persistencia dual (SQLite + Markdown), cero emojis, arquitectura desacoplada para agentes y skills, y cobertura completa en 9 niveles de verificacion.",
@@ -7909,7 +7909,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Eliminacion fisica completa de project-docs/src/features/ sin directorios residuales.\",\"Consolidacion estricta de 10 modulos en project-docs/src/modules/ con components/, pages/, services/, store/ y barriles index.js.\",\"Punto de entrada src/main.js consumiendo exclusivamente src/modules/ y src/shared/ui/.\",\"Diseno visual coherente estilo Plane en todas las vistas con paleta dark slate y 0 emojis.\",\"Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright y los 9 niveles de verify.sh en verde.\"]",
       "evidence_summary": "Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.",
       "created_at": "2026-11-07 18:59:13",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Erradicacion definitiva de la carpeta legacy project-docs/src/features/ y consolidacion de los 10 dominios canonicos bajo Screaming Architecture pura en project-docs/src/modules/ (Analytics, Architecture, Constellation, Cycles, Graph, Harness, Issues, Modules, Pages, Projects). Diseno uniforme estilo Plane con paleta dark slate, cero emojis, iconografia 100% SVG nativa y 100% de verificacion en verde.",
@@ -8105,7 +8105,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"26 tablas relacionales del modelo Plane e IA operativas en project-docs/data/harness.db con integridad referencial y migracion automatica.\",\"Sincronizacion bidireccional de ejecuciones IA (ai_runs) hacia project-docs/knowledge/ai-runs-log.md y de evidencias/relaciones hacia feature_list.json.\",\"CLI soberana (project-docs/cli.js) y API REST (project-docs/serve.js) soportando registro de ai log, issue evidence, issue comment, issue relate, page upsert y user list.\",\"Visualizacion de etiquetas Plane, puntos Fibonacci, relaciones, evidencias QA, ai_configs, api_tokens bot y bitacora ai_runs en IssueDetailModal y HarnessPage.\",\"21 skills SDD homologadas en .opencode/skills/, .github/skills/ y .agents/skills/ configuradas para enviar toda documentacion, evidencia y reporte al proyecto.\"]",
       "evidence_summary": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
       "created_at": "2026-11-07 19:36:23",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Implementacion integral del modelo de datos relacional de Makeplane (Plane) y su subsistema de Inteligencia Artificial en SQLite (project-docs/data/harness.db con 26 tablas: workspaces, users con is_bot=1, workspace_members, api_tokens, projects, states, labels, estimates, estimate_points, issue_types, cycles, cycle_issues, modules, module_issues, issues, subtasks, issue_assignees, issue_labels, issue_relations, issue_activities, issue_comments, issue_evidences, pages, page_versions, issue_views, ai_configs, ai_runs) sincronizado bidireccionalmente con archivos Markdown (knowledge/ai-runs-log.md, specs/, feature_list.json). Ampliacion de CLI, API REST, vistas Screaming (IssueDetailModal, AiEngineMonitor en HarnessPage) y homologacion de las 21 skills SDD para enviar toda informacion, evidencia y reporte al proyecto.",
@@ -8429,7 +8429,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"28 tablas relacionales operativas en project-docs/data/harness.db incluyendo page_logs y page_labels.\",\"PageShelfTree.js con pestañas de filtro rapido (Todas, Favoritas, Normativas, Por Modulo) e iconos SVG de bloqueo, favorito y conteo de diagramas.\",\"PageHeaderActions con badge SQLite + .md Synced, botones interactivos de Favorito, Bloqueo Normativo, Ancho Completo, Copiar Markdown, Ask Harness AI y toggle de inspector.\",\"PageNavigationPane.js con las 4 pestañas de Plane (Outline, Info con 4 KPI cards y PageLog Graph, Assets con diagramas Mermaid, Historial con restauracion de page_versions).\",\"PageReader.js con Smart Entity Chips que convierten menciones INT-XXX en chips interactivos que abren IssueDetailModal y BR/RF/ADR/CAP en insignias tecnicas.\",\"Skill /project-knowledge actualizada y sincronizada en triple espejo (.opencode/skills/, .github/skills/, .agents/skills/).\"]",
       "evidence_summary": "Implementada la evolucion de la Base de Conocimiento al patron Plane Pages: 28 tablas en SQLite (page_logs, page_labels y telemetria en pages), PageShelfTree con 4 filtros rapidos, PageHeaderActions con Ask Harness AI, PageNavigationPane de 4 pestañas (Outline, Info, Assets, Historial), Smart Entity Chips en PageReader y actualizacion triple de la skill /project-knowledge.",
       "created_at": "2026-11-07 20:17:23",
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Extension relacional en SQLite a 28 tablas con page_logs (menciones automaticas a INT-XXX, BR-XXX, RF-XXX, ADR-XXX, CAP-XXX, back_link y forward_link), page_labels y telemetria documental (word_count, char_count, paragraph_count, diagrams_count, is_locked, is_favorite, view_props). Rediseño de PageShelfTree (filtros Todas, Favoritas, Normativas, Por Modulo), PageHeaderActions (Ask Harness AI, Lock, Favorite, Full Width, Sync Badge), PageNavigationPane (4 pestañas: Outline, Info, Assets, Historial) y PageReader (Smart Entity Chips clicables), junto con la evolucion de la skill /project-knowledge.",
@@ -8575,7 +8575,7 @@ window.__FALLBACK_DATA__ = {
           "file_path": "project-docs/specs/017_plane_pages_knowledge_graph_ai/verification-report.md",
           "asset_url": "",
           "file_size": 0,
-          "report_markdown": "# Reporte de Verificación y Cierre — INT-017\n\n- **Tarea:** `INT-017` — Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA\n- **Rama:** `feature/INT-017/plane_pages_knowledge_graph_ai`\n- **Estado:** `VERIFIED & CLOSED`\n\n## Resultados del Pipeline de 9 Niveles (`project-docs/verify.sh`)\n- **Nivel 1 (Estructura y Ramas):** PASS\n- **Nivel 2 (Build & Sintaxis ES Modules):** PASS\n- **Nivel 3 (Pruebas Unitarias):** PASS (70/70 tests)\n- **Nivel 4 (Pruebas de Caja Blanca):** PASS (13/13 tests)\n- **Nivel 5 (Pruebas de Caja Negra):** PASS (8/8 tests)\n- **Nivel 6 (Pruebas de Integración de Sistema):** PASS (7/7 tests)\n- **Nivel 7 (Pruebas de Carga y Rendimiento):** PASS (100 peticiones concurrentes, 0% error)\n- **Nivel 8 (Pruebas E2E Playwright):** PASS (14/14 tests)\n- **Nivel 9 (Auditoría de Evidencias Scrum/QA):** PASS\n",
+          "report_markdown": "# Reporte de Verificación y Cierre — INT-017\r\n\r\n- **Tarea:** `INT-017` — Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA\r\n- **Rama:** `feature/INT-017/plane_pages_knowledge_graph_ai`\r\n- **Estado:** `VERIFIED & CLOSED`\r\n\r\n## Resultados del Pipeline de 9 Niveles (`project-docs/verify.sh`)\r\n- **Nivel 1 (Estructura y Ramas):** PASS\r\n- **Nivel 2 (Build & Sintaxis ES Modules):** PASS\r\n- **Nivel 3 (Pruebas Unitarias):** PASS (70/70 tests)\r\n- **Nivel 4 (Pruebas de Caja Blanca):** PASS (13/13 tests)\r\n- **Nivel 5 (Pruebas de Caja Negra):** PASS (8/8 tests)\r\n- **Nivel 6 (Pruebas de Integración de Sistema):** PASS (7/7 tests)\r\n- **Nivel 7 (Pruebas de Carga y Rendimiento):** PASS (100 peticiones concurrentes, 0% error)\r\n- **Nivel 8 (Pruebas E2E Playwright):** PASS (14/14 tests)\r\n- **Nivel 9 (Auditoría de Evidencias Scrum/QA):** PASS\r\n",
           "metrics_json": "{\"status\":\"passed\",\"verified\":true}",
           "created_by_skill": "verify-spec",
           "is_uploaded": 1,
@@ -8736,7 +8736,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_business-rules_md-v1",
@@ -8745,7 +8745,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 599,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -8894,7 +8894,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 13,
       "diagrams_count": 4,
       "reading_time_min": 10,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_03-capabilities-and-features_md-v1",
@@ -8903,7 +8903,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 1989,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9239,7 +9239,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 8,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_adr-catalog_md-v1",
@@ -9248,7 +9248,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 592,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9357,7 +9357,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_user-stories-catalog_md-v1",
@@ -9366,7 +9366,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 627,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9415,7 +9415,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_external-services_md-v1",
@@ -9424,7 +9424,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
           "owned_by_role": "leader",
           "word_count": 215,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9462,7 +9462,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 4,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_016_plane_data_model_ai_tracking_tasks_md-v1",
@@ -9471,7 +9471,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 301,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9520,7 +9520,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_009_scrum_spec_subtasks_and_qa_evidence_tasks_md-v1",
@@ -9529,7 +9529,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 336,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9578,7 +9578,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_001_refactor_harness_architecture_tasks_md-v1",
@@ -9587,7 +9587,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 144,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9643,7 +9643,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_008_playwright_acceptance_testing_tasks_md-v1",
@@ -9652,7 +9652,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 179,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9701,7 +9701,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_011_encapsulate_specs_and_scripts_design_md-v1",
@@ -9710,7 +9710,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```",
           "owned_by_role": "spec-author",
           "word_count": 385,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9779,7 +9779,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 18,
       "diagrams_count": 1,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_010_harness_root_cleanliness_encapsulation_design_md-v1",
@@ -9788,7 +9788,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "spec-author",
           "word_count": 826,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9865,7 +9865,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_02-architecture-and-patterns_md-v1",
@@ -9874,7 +9874,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
           "owned_by_role": "leader",
           "word_count": 789,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -9923,7 +9923,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 17,
       "diagrams_count": 4,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_uml-diagrams_md-v1",
@@ -9932,7 +9932,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
           "owned_by_role": "leader",
           "word_count": 515,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10010,7 +10010,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 10,
       "diagrams_count": 1,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_data-dictionary_md-v1",
@@ -10019,7 +10019,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 857,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10096,7 +10096,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 9,
       "diagrams_count": 1,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_013_screaming_architecture_plane_refactor_design_md-v1",
@@ -10105,7 +10105,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
           "owned_by_role": "spec-author",
           "word_count": 1205,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10226,7 +10226,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_014_screaming_modules_core_shared_design_md-v1",
@@ -10235,7 +10235,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El principio rector es **Screaming Architecture**: la organizacion del codigo grita el proposito del negocio y sus dominios funcionales principales.",
           "owned_by_role": "spec-author",
           "word_count": 764,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10344,7 +10344,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_015_screaming_modules_plane_unification_design_md-v1",
@@ -10353,7 +10353,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```text",
           "owned_by_role": "spec-author",
           "word_count": 409,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10427,16 +10427,16 @@ window.__FALLBACK_DATA__ = {
       "title": "Diseño Arquitectónico y Decisiones (ADRs) — INT-017",
       "summary": "",
       "shelf": "specs",
-      "content_markdown": "# Diseño Arquitectónico y Decisiones (ADRs) — INT-017\n\n## ADR-017-1: Extensión del Esquema SQLite a 28 Tablas (`page_logs` y `page_labels`)\n- **Contexto:** En Plane (`apps/api/plane/db/models/page.py`), cada `Page` registra sus vínculos transaccionales hacia entidades (`PageLog`) y sus etiquetas (`PageLabel`), además de propiedades de vista (`view_props`, `is_locked`).\n- **Decisión:** Añadir las tablas `page_logs` y `page_labels` en `project-docs/src/core/db.js`, completando 28 tablas relacionales, y construir el extractor determinista `extractPageTelemetryAndLogs(content, relPath)` en `project-docs/src/core/sqlite-sync.js`.\n\n## ADR-017-2: Panel de Inspección Derecho de 4 Pestañas (`PageNavigationPane.js`) y Smart Entity Chips\n- **Contexto:** Plane organiza la inspección de una página en un panel lateral derecho con 4 pestañas (`Outline`, `Info`, `Assets`, `Version History`) y barras flotantes cuando se contrae.\n- **Decisión:** Implementar `PageNavigationPane.js` con las 4 pestañas, integrar `renderPageHeaderActions` con el asistente contextual `Ask Harness AI`, y enriquecer `PageReader.js` mediante `enrichMarkdownWithSmartChips(html, issues)` para transformar `INT-XXX` en chips interactivos que abren `IssueDetailModal` sin alterar bloques `<pre>` ni diagramas Mermaid.\n",
+      "content_markdown": "# Diseño Arquitectónico y Decisiones (ADRs) — INT-017\r\n\r\n## ADR-017-1: Extensión del Esquema SQLite a 28 Tablas (`page_logs` y `page_labels`)\r\n- **Contexto:** En Plane (`apps/api/plane/db/models/page.py`), cada `Page` registra sus vínculos transaccionales hacia entidades (`PageLog`) y sus etiquetas (`PageLabel`), además de propiedades de vista (`view_props`, `is_locked`).\r\n- **Decisión:** Añadir las tablas `page_logs` y `page_labels` en `project-docs/src/core/db.js`, completando 28 tablas relacionales, y construir el extractor determinista `extractPageTelemetryAndLogs(content, relPath)` en `project-docs/src/core/sqlite-sync.js`.\r\n\r\n## ADR-017-2: Panel de Inspección Derecho de 4 Pestañas (`PageNavigationPane.js`) y Smart Entity Chips\r\n- **Contexto:** Plane organiza la inspección de una página en un panel lateral derecho con 4 pestañas (`Outline`, `Info`, `Assets`, `Version History`) y barras flotantes cuando se contrae.\r\n- **Decisión:** Implementar `PageNavigationPane.js` con las 4 pestañas, integrar `renderPageHeaderActions` con el asistente contextual `Ask Harness AI`, y enriquecer `PageReader.js` mediante `enrichMarkdownWithSmartChips(html, issues)` para transformar `INT-XXX` en chips interactivos que abren `IssueDetailModal` sin alterar bloques `<pre>` ni diagramas Mermaid.\r\n",
       "is_locked": 0,
       "is_favorite": 0,
       "view_props": "{\"full_width\":false,\"assets\":[]}",
       "word_count": 149,
-      "char_count": 1290,
+      "char_count": 1299,
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_design_md-v1",
@@ -10445,7 +10445,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 149,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -10504,7 +10504,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_016_plane_data_model_ai_tracking_design_md-v1",
@@ -10513,7 +10513,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Esta especificación extiende el núcleo de datos del arnés (`project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js`), la CLI (`project-docs/cli.js...",
           "owned_by_role": "spec-author",
           "word_count": 461,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10562,7 +10562,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-specs_001_refactor_harness_architecture_design_md-v1",
@@ -10571,7 +10571,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
           "owned_by_role": "spec-author",
           "word_count": 248,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10627,7 +10627,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_008_playwright_acceptance_testing_design_md-v1",
@@ -10636,7 +10636,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
           "owned_by_role": "spec-author",
           "word_count": 392,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10685,7 +10685,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_009_scrum_spec_subtasks_and_qa_evidence_design_md-v1",
@@ -10694,7 +10694,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
           "owned_by_role": "spec-author",
           "word_count": 645,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10773,7 +10773,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 21,
       "diagrams_count": 4,
       "reading_time_min": 9,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_MASTER-PROJECT-KNOWLEDGE_md-v1",
@@ -10782,7 +10782,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
           "owned_by_role": "leader",
           "word_count": 1778,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11151,7 +11151,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 11,
       "diagrams_count": 0,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_012_plane_style_sqlite_project_management_design_md-v1",
@@ -11160,7 +11160,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
           "owned_by_role": "spec-author",
           "word_count": 1257,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11266,7 +11266,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_012_plane_style_sqlite_project_management_requirements_md-v1",
@@ -11275,7 +11275,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El arnés actual cuenta con un tablero de seguimiento visual (`project-docs/index.html`) con una tabla de features, visor 3D Three.js, grafo de dependencias y ba...",
           "owned_by_role": "spec-author",
           "word_count": 1269,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11345,7 +11345,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 13,
       "diagrams_count": 0,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_013_screaming_architecture_plane_refactor_requirements_md-v1",
@@ -11354,7 +11354,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Tras la implementación inicial de las vistas de Plane y el motor SQLite en INT-012, el arnés dispone de dos layouts simultáneos (el clásico y el modo Plane).",
           "owned_by_role": "spec-author",
           "word_count": 1231,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11434,7 +11434,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_014_screaming_modules_core_shared_requirements_md-v1",
@@ -11443,7 +11443,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Tras la unificacion inicial del tablero con estetica Plane en INT-013, se requiere formalizar y desacoplar la arquitectura frontend siguiendo una estricta **Scr...",
           "owned_by_role": "spec-author",
           "word_count": 858,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11519,7 +11519,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_015_screaming_modules_plane_unification_requirements_md-v1",
@@ -11528,7 +11528,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Tras la creacion inicial de los primeros 5 modulos en `src/modules/` en INT-014, coexistia aun la carpeta `src/features/` conteniendo 5 dominios residuales (`ar...",
           "owned_by_role": "spec-author",
           "word_count": 504,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11601,7 +11601,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_016_plane_data_model_ai_tracking_requirements_md-v1",
@@ -11610,7 +11610,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 492,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11666,7 +11666,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 8,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_009_scrum_spec_subtasks_and_qa_evidence_requirements_md-v1",
@@ -11675,7 +11675,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Antes de iniciar la implementación, se validó que:",
           "owned_by_role": "spec-author",
           "word_count": 582,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11731,7 +11731,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_functional-requirements_md-v1",
@@ -11740,7 +11740,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 657,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11920,16 +11920,16 @@ window.__FALLBACK_DATA__ = {
       "title": "Especificación de Requerimientos — INT-017: Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA",
       "summary": "| Atributo | Valor |",
       "shelf": "specs",
-      "content_markdown": "# Especificación de Requerimientos — INT-017: Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA\n\n| Atributo | Valor |\n| --- | --- |\n| **ID** | `INT-017` |\n| **Nombre** | `plane_pages_knowledge_graph_ai` |\n| **Rama** | `feature/INT-017/plane_pages_knowledge_graph_ai` |\n| **Prioridad** | `P0` |\n| **Técnica de Implementación** | `SDD` + `TDD` |\n| **Estado** | `done` |\n\n## 1. Historia de Usuario (Scrum)\n\n- **Como:** Arquitecto de Software, Desarrollador y Agente de IA\n- **Quiero:** gestionar la Base de Conocimiento del proyecto con la experiencia UI/UX completa de Plane Pages (`PageShelfTree` con pestañas de filtro, `PageHeaderActions` con `Ask Harness AI`, `PageReader` con Smart Entity Chips y `PageNavigationPane` de 4 pestañas) respaldada por las tablas relacionales `page_logs` y `page_labels` en SQLite (28 tablas)\n- **Para que:** cada documento técnico de arquitectura, reglas o especificaciones exponga su telemetría en vivo, sus vínculos bidireccionales hacia tareas (`INT-*`), invariantes (`BR-*`/`RF-*`/`ADR-*`/`CAP-*`), diagramas Mermaid e historial de versiones (`page_versions`), alimentado automáticamente desde la skill `/project-knowledge`.\n\n## 2. Requerimientos EARS\n\n- **R1 (Ubicuo):** El motor SQLite (`project-docs/src/core/db.js` y `sqlite-sync.js`) deberá gestionar 28 tablas relacionales incluyendo `page_logs` (#24) y `page_labels` (#25), además de columnas de telemetría documental en `pages` (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `module_id`, `updated_by_id`, `is_locked`, `is_favorite`, `view_props`).\n- **R2 (Dirigido por eventos):** Cuando se sincronice o actualice una página Markdown, el sistema deberá extraer automáticamente todas sus menciones a tareas (`INT-XXX`), reglas (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`), capacidades (`CAP-XXX`) y enlaces entre documentos (`forward_link` y `back_link`) en la tabla `page_logs`.\n- **R3 (Ubicuo):** `PageShelfTree.js` deberá incluir las 4 pestañas de filtro rápido estilo Plane (`Todas`, `Favoritas`, `Normativas`, `Por Módulo`) e indicadores vectoriales SVG de página bloqueada (`lock`), favorita (`star`) y conteo de diagramas.\n- **R4 (Ubicuo):** `PagesPage.js` y `KnowledgeBase.js` deberán incluir `PageHeaderActions` (badge `SQLite + .md Synced`, `Favorito`, `Bloquear/Desbloquear`, `Ancho Completo`, `Copiar Markdown`, `Ask Harness AI` y toggle del panel derecho) junto con `PageNavigationPane.js` de 4 pestañas (`Outline`, `Info`, `Assets`, `Historial`) y `PageReader.js` con Smart Entity Chips clicables.\n- **R5 (Ubicuo):** La skill `/project-knowledge` deberá mantenerse sincronizada en triple espejo (`.opencode/skills/`, `.github/skills/`, `.agents/skills/`) documentando el envío de metadatos Plane (`--locked`, `--favorite`, `--full-width`, `--labels`, `--module`) hacia `cli.js page upsert`.\n",
+      "content_markdown": "# Especificación de Requerimientos — INT-017: Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA\r\n\r\n| Atributo | Valor |\r\n| --- | --- |\r\n| **ID** | `INT-017` |\r\n| **Nombre** | `plane_pages_knowledge_graph_ai` |\r\n| **Rama** | `feature/INT-017/plane_pages_knowledge_graph_ai` |\r\n| **Prioridad** | `P0` |\r\n| **Técnica de Implementación** | `SDD` + `TDD` |\r\n| **Estado** | `done` |\r\n\r\n## 1. Historia de Usuario (Scrum)\r\n\r\n- **Como:** Arquitecto de Software, Desarrollador y Agente de IA\r\n- **Quiero:** gestionar la Base de Conocimiento del proyecto con la experiencia UI/UX completa de Plane Pages (`PageShelfTree` con pestañas de filtro, `PageHeaderActions` con `Ask Harness AI`, `PageReader` con Smart Entity Chips y `PageNavigationPane` de 4 pestañas) respaldada por las tablas relacionales `page_logs` y `page_labels` en SQLite (28 tablas)\r\n- **Para que:** cada documento técnico de arquitectura, reglas o especificaciones exponga su telemetría en vivo, sus vínculos bidireccionales hacia tareas (`INT-*`), invariantes (`BR-*`/`RF-*`/`ADR-*`/`CAP-*`), diagramas Mermaid e historial de versiones (`page_versions`), alimentado automáticamente desde la skill `/project-knowledge`.\r\n\r\n## 2. Requerimientos EARS\r\n\r\n- **R1 (Ubicuo):** El motor SQLite (`project-docs/src/core/db.js` y `sqlite-sync.js`) deberá gestionar 28 tablas relacionales incluyendo `page_logs` (#24) y `page_labels` (#25), además de columnas de telemetría documental en `pages` (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `module_id`, `updated_by_id`, `is_locked`, `is_favorite`, `view_props`).\r\n- **R2 (Dirigido por eventos):** Cuando se sincronice o actualice una página Markdown, el sistema deberá extraer automáticamente todas sus menciones a tareas (`INT-XXX`), reglas (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`), capacidades (`CAP-XXX`) y enlaces entre documentos (`forward_link` y `back_link`) en la tabla `page_logs`.\r\n- **R3 (Ubicuo):** `PageShelfTree.js` deberá incluir las 4 pestañas de filtro rápido estilo Plane (`Todas`, `Favoritas`, `Normativas`, `Por Módulo`) e indicadores vectoriales SVG de página bloqueada (`lock`), favorita (`star`) y conteo de diagramas.\r\n- **R4 (Ubicuo):** `PagesPage.js` y `KnowledgeBase.js` deberán incluir `PageHeaderActions` (badge `SQLite + .md Synced`, `Favorito`, `Bloquear/Desbloquear`, `Ancho Completo`, `Copiar Markdown`, `Ask Harness AI` y toggle del panel derecho) junto con `PageNavigationPane.js` de 4 pestañas (`Outline`, `Info`, `Assets`, `Historial`) y `PageReader.js` con Smart Entity Chips clicables.\r\n- **R5 (Ubicuo):** La skill `/project-knowledge` deberá mantenerse sincronizada en triple espejo (`.opencode/skills/`, `.github/skills/`, `.agents/skills/`) documentando el envío de metadatos Plane (`--locked`, `--favorite`, `--full-width`, `--labels`, `--module`) hacia `cli.js page upsert`.\r\n",
       "is_locked": 1,
       "is_favorite": 0,
       "view_props": "{\"full_width\":false,\"assets\":[]}",
       "word_count": 361,
-      "char_count": 2902,
+      "char_count": 2926,
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_requirements_md-v1",
@@ -11938,7 +11938,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Atributo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 361,
-          "last_saved_at": "2026-11-07 20:19:45",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -12024,7 +12024,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_001_refactor_harness_architecture_requirements_md-v1",
@@ -12033,7 +12033,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 252,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12096,7 +12096,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_008_playwright_acceptance_testing_requirements_md-v1",
@@ -12105,7 +12105,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 383,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12161,7 +12161,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_coding-standards_md-v1",
@@ -12170,7 +12170,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
           "owned_by_role": "leader",
           "word_count": 265,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12210,16 +12210,16 @@ window.__FALLBACK_DATA__ = {
       "title": "Evidencia de Implementación y Pruebas — INT-017",
       "summary": "",
       "shelf": "specs",
-      "content_markdown": "# Evidencia de Implementación y Pruebas — INT-017\n\n## 1. Resumen de Implementación\n- **Esquema SQLite (28 Tablas):** Tablas `page_logs` y `page_labels` operativas en `project-docs/data/harness.db`, con cálculo automático de `word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `back_link` y `forward_link`.\n- **UI/UX Plane Pages:** `PageShelfTree.js` con 4 filtros rápidos (`Todas`, `Favoritas`, `Normativas`, `Por Módulo`), `PageHeaderActions` con `Ask Harness AI`, `PageReader.js` con Smart Entity Chips (`INT-XXX`, `BR-*`, `RF-*`, `ADR-*`, `CAP-*`) y `PageNavigationPane.js` con 4 pestañas (`Outline`, `Info`, `Assets`, `Historial`).\n- **Skill `/project-knowledge`:** Actualizada y sincronizada en las 3 plataformas.\n\n## 2. Capturas de Pantalla E2E\n- `evidence/01-plane-kanban-board.png`\n- `evidence/02-plane-issue-detail-modal.png`\n- `evidence/03-plane-cycles-burndown.png`\n- `evidence/04-plane-pages-docs.png`\n",
+      "content_markdown": "# Evidencia de Implementación y Pruebas — INT-017\r\n\r\n## 1. Resumen de Implementación\r\n- **Esquema SQLite (28 Tablas):** Tablas `page_logs` y `page_labels` operativas en `project-docs/data/harness.db`, con cálculo automático de `word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `back_link` y `forward_link`.\r\n- **UI/UX Plane Pages:** `PageShelfTree.js` con 4 filtros rápidos (`Todas`, `Favoritas`, `Normativas`, `Por Módulo`), `PageHeaderActions` con `Ask Harness AI`, `PageReader.js` con Smart Entity Chips (`INT-XXX`, `BR-*`, `RF-*`, `ADR-*`, `CAP-*`) y `PageNavigationPane.js` con 4 pestañas (`Outline`, `Info`, `Assets`, `Historial`).\r\n- **Skill `/project-knowledge`:** Actualizada y sincronizada en las 3 plataformas.\r\n\r\n## 2. Capturas de Pantalla E2E\r\n- `evidence/01-plane-kanban-board.png`\r\n- `evidence/02-plane-issue-detail-modal.png`\r\n- `evidence/03-plane-cycles-burndown.png`\r\n- `evidence/04-plane-pages-docs.png`\r\n",
       "is_locked": 0,
       "is_favorite": 0,
       "view_props": "{\"full_width\":false,\"assets\":[]}",
       "word_count": 98,
-      "char_count": 927,
+      "char_count": 939,
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_evidence_md-v1",
@@ -12228,7 +12228,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 98,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -12277,7 +12277,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_016_plane_data_model_ai_tracking_evidence_md-v1",
@@ -12286,7 +12286,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Esquema Relacional Completo de Plane + IA (`project-docs/src/core/db.js`)**:",
           "owned_by_role": "spec-author",
           "word_count": 258,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12335,7 +12335,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 9,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_012_plane_style_sqlite_project_management_evidence_md-v1",
@@ -12344,7 +12344,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 420,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12422,7 +12422,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 9,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_014_screaming_modules_core_shared_evidence_md-v1",
@@ -12431,7 +12431,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 437,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12516,7 +12516,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 9,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_015_screaming_modules_plane_unification_evidence_md-v1",
@@ -12525,7 +12525,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 345,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12603,7 +12603,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 9,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_013_screaming_architecture_plane_refactor_evidence_md-v1",
@@ -12612,7 +12612,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 456,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12697,7 +12697,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_010_harness_root_cleanliness_encapsulation_evidence_md-v1",
@@ -12706,7 +12706,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 355,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12784,7 +12784,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_011_encapsulate_specs_and_scripts_evidence_md-v1",
@@ -12793,7 +12793,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 335,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12864,7 +12864,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 1,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_sequence_md-v1",
@@ -12873,7 +12873,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 95,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12933,7 +12933,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 1,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_sequence_md-v1",
@@ -12942,7 +12942,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 100,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13006,7 +13006,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 1,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_sequence_md-v1",
@@ -13015,7 +13015,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 115,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13068,7 +13068,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 1,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_sequence_md-v1",
@@ -13077,7 +13077,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 71,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13130,7 +13130,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 1,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_sequence_md-v1",
@@ -13139,7 +13139,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 66,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13192,7 +13192,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_system-capabilities_md-v1",
@@ -13201,7 +13201,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
           "owned_by_role": "leader",
           "word_count": 362,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13417,7 +13417,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_traceability-matrix_md-v1",
@@ -13426,7 +13426,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
           "owned_by_role": "leader",
           "word_count": 250,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13725,7 +13725,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 15,
       "diagrams_count": 4,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_c4-model_md-v1",
@@ -13734,7 +13734,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
           "owned_by_role": "leader",
           "word_count": 402,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13801,7 +13801,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_04-domain-ddd-and-crc_md-v1",
@@ -13810,7 +13810,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Core Domain (Dominio Central)**:",
           "owned_by_role": "leader",
           "word_count": 637,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13862,7 +13862,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 4,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_data-and-transactions_md-v1",
@@ -13871,7 +13871,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El orquestador interactúa con dos fuentes de persistencia:",
           "owned_by_role": "leader",
           "word_count": 169,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13909,7 +13909,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md-v1",
@@ -13918,7 +13918,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
           "owned_by_role": "leader",
           "word_count": 139,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13956,7 +13956,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_module-spec_md-v1",
@@ -13965,7 +13965,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 437,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14031,7 +14031,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 4,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_requirements-and-rules_md-v1",
@@ -14040,7 +14040,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 556,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14166,7 +14166,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 19,
       "diagrams_count": 6,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_diagrams_md-v1",
@@ -14175,7 +14175,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 440,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14274,7 +14274,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_data-and-transactions_md-v1",
@@ -14283,7 +14283,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 172,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14321,7 +14321,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md-v1",
@@ -14330,7 +14330,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
           "owned_by_role": "leader",
           "word_count": 161,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14375,7 +14375,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 6,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_module-spec_md-v1",
@@ -14384,7 +14384,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 354,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14422,7 +14422,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md-v1",
@@ -14431,7 +14431,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 255,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14537,7 +14537,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 16,
       "diagrams_count": 6,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_diagrams_md-v1",
@@ -14546,7 +14546,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 377,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14634,7 +14634,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_data-and-transactions_md-v1",
@@ -14643,7 +14643,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El archivo `knowledge-index.json` persiste:",
           "owned_by_role": "leader",
           "word_count": 98,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14681,7 +14681,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md-v1",
@@ -14690,7 +14690,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
           "owned_by_role": "leader",
           "word_count": 121,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14728,7 +14728,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_module-spec_md-v1",
@@ -14737,7 +14737,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 208,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14775,7 +14775,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_requirements-and-rules_md-v1",
@@ -14784,7 +14784,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 211,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14880,7 +14880,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 17,
       "diagrams_count": 6,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_diagrams_md-v1",
@@ -14889,7 +14889,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 381,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14977,7 +14977,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_data-and-transactions_md-v1",
@@ -14986,7 +14986,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 68,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15024,7 +15024,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md-v1",
@@ -15033,7 +15033,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 94,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15071,7 +15071,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_module-spec_md-v1",
@@ -15080,7 +15080,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 214,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15118,7 +15118,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_requirements-and-rules_md-v1",
@@ -15127,7 +15127,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 170,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15203,7 +15203,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 15,
       "diagrams_count": 6,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_diagrams_md-v1",
@@ -15212,7 +15212,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 364,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15300,7 +15300,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_data-and-transactions_md-v1",
@@ -15309,7 +15309,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 72,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15347,7 +15347,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 2,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md-v1",
@@ -15356,7 +15356,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 78,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15405,7 +15405,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_module-spec_md-v1",
@@ -15414,7 +15414,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 196,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15452,7 +15452,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_requirements-and-rules_md-v1",
@@ -15461,7 +15461,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 148,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15537,7 +15537,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 16,
       "diagrams_count": 6,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_diagrams_md-v1",
@@ -15546,7 +15546,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 352,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15625,16 +15625,16 @@ window.__FALLBACK_DATA__ = {
       "title": "Plan de Tareas (DEV & QA) — INT-017",
       "summary": "",
       "shelf": "specs",
-      "content_markdown": "# Plan de Tareas (DEV & QA) — INT-017\n\n## Subtarea DEV (`INT-017-DEV`)\n- [x] T1: Añadir tablas `page_logs` y `page_labels` y columnas de telemetría en `project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js` (28 tablas).\n- [x] T2: Ampliar `project-docs/cli.js` (`page upsert --locked --favorite --full-width --labels --module`) y `project-docs/serve.js` (`PUT/PATCH /api/plane/pages/:id`).\n- [x] T3: Crear `PageNavigationPane.js` (4 pestañas: `Outline`, `Info`, `Assets`, `Historial`) y actualizar `PageShelfTree.js`, `PageReader.js`, `PagesPage.js` y `KnowledgeBase.js`.\n- [x] T4: Actualizar `.opencode/skills/project-knowledge/SKILL.md` y propagar a `.github/skills/` y `.agents/skills/`.\n\n## Subtarea QA (`INT-017-QA`)\n- [x] QA1: Validar las 28 tablas SQLite, `extractPageTelemetryAndLogs` y `updatePagePropertiesInSQLite` en `sqlite-db.test.js`.\n- [x] QA2: Validar `PageNavigationPane`, `enrichMarkdownWithSmartChips` y `renderPageHeaderActions` en `pages.test.js`.\n- [x] QA3: Ejecutar el pipeline completo de 9 niveles en `project-docs/verify.sh`.\n",
+      "content_markdown": "# Plan de Tareas (DEV & QA) — INT-017\r\n\r\n## Subtarea DEV (`INT-017-DEV`)\r\n- [x] T1: Añadir tablas `page_logs` y `page_labels` y columnas de telemetría en `project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js` (28 tablas).\r\n- [x] T2: Ampliar `project-docs/cli.js` (`page upsert --locked --favorite --full-width --labels --module`) y `project-docs/serve.js` (`PUT/PATCH /api/plane/pages/:id`).\r\n- [x] T3: Crear `PageNavigationPane.js` (4 pestañas: `Outline`, `Info`, `Assets`, `Historial`) y actualizar `PageShelfTree.js`, `PageReader.js`, `PagesPage.js` y `KnowledgeBase.js`.\r\n- [x] T4: Actualizar `.opencode/skills/project-knowledge/SKILL.md` y propagar a `.github/skills/` y `.agents/skills/`.\r\n\r\n## Subtarea QA (`INT-017-QA`)\r\n- [x] QA1: Validar las 28 tablas SQLite, `extractPageTelemetryAndLogs` y `updatePagePropertiesInSQLite` en `sqlite-db.test.js`.\r\n- [x] QA2: Validar `PageNavigationPane`, `enrichMarkdownWithSmartChips` y `renderPageHeaderActions` en `pages.test.js`.\r\n- [x] QA3: Ejecutar el pipeline completo de 9 niveles en `project-docs/verify.sh`.\r\n",
       "is_locked": 0,
       "is_favorite": 0,
       "view_props": "{\"full_width\":false,\"assets\":[]}",
       "word_count": 115,
-      "char_count": 1067,
+      "char_count": 1079,
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:45",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_tasks_md-v1",
@@ -15643,7 +15643,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 115,
-          "last_saved_at": "2026-11-07 20:19:45",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -15692,7 +15692,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 8,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_012_plane_style_sqlite_project_management_tasks_md-v1",
@@ -15701,7 +15701,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 425,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15757,7 +15757,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_013_screaming_architecture_plane_refactor_tasks_md-v1",
@@ -15766,7 +15766,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 449,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15822,7 +15822,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_014_screaming_modules_core_shared_tasks_md-v1",
@@ -15831,7 +15831,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 480,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15880,7 +15880,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_015_screaming_modules_plane_unification_tasks_md-v1",
@@ -15889,7 +15889,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 333,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15938,7 +15938,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 15,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_ai-runs-log_md-v1",
@@ -15947,7 +15947,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
           "owned_by_role": "leader",
           "word_count": 2852,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16156,7 +16156,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_agent-orchestrator_rules_md-v1",
@@ -16165,7 +16165,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 141,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16234,7 +16234,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_dashboard-visualizer_rules_md-v1",
@@ -16243,7 +16243,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 91,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16302,7 +16302,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_knowledge-engine_rules_md-v1",
@@ -16311,7 +16311,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 102,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16370,7 +16370,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_testing-qa-suite_rules_md-v1",
@@ -16379,7 +16379,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 99,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16438,7 +16438,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_modules_triple-sync-engine_rules_md-v1",
@@ -16447,7 +16447,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 96,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16506,7 +16506,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 8,
       "diagrams_count": 0,
       "reading_time_min": 4,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_009_scrum_spec_subtasks_and_qa_evidence_evidence_md-v1",
@@ -16515,7 +16515,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Se extendió y estandarizó la arquitectura del arnés para alinearla con el estándar de la industria en **Scrum / Agile** y **Jira**:",
           "owned_by_role": "spec-author",
           "word_count": 658,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16593,7 +16593,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_014_screaming_modules_core_shared_verification-report_md-v1",
@@ -16602,7 +16602,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 528,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16651,7 +16651,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_015_screaming_modules_plane_unification_verification-report_md-v1",
@@ -16660,7 +16660,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 406,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16709,7 +16709,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 13,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_010_harness_root_cleanliness_encapsulation_verification-report_md-v1",
@@ -16718,7 +16718,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Criterio | Estado | Evidencia |",
           "owned_by_role": "spec-author",
           "word_count": 513,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16767,7 +16767,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 11,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_011_encapsulate_specs_and_scripts_verification-report_md-v1",
@@ -16776,7 +16776,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Criterio | Estado | Evidencia |",
           "owned_by_role": "spec-author",
           "word_count": 306,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16825,7 +16825,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 2,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_016_plane_data_model_ai_tracking_verification-report_md-v1",
@@ -16834,7 +16834,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Criterio | Estado | Evidencia |",
           "owned_by_role": "spec-author",
           "word_count": 228,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16883,7 +16883,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_012_plane_style_sqlite_project_management_verification-report_md-v1",
@@ -16892,7 +16892,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 462,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16941,7 +16941,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 7,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_013_screaming_architecture_plane_refactor_verification-report_md-v1",
@@ -16950,7 +16950,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 497,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16997,16 +16997,16 @@ window.__FALLBACK_DATA__ = {
       "title": "Reporte de Verificación y Cierre — INT-017",
       "summary": "",
       "shelf": "specs",
-      "content_markdown": "# Reporte de Verificación y Cierre — INT-017\n\n- **Tarea:** `INT-017` — Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA\n- **Rama:** `feature/INT-017/plane_pages_knowledge_graph_ai`\n- **Estado:** `VERIFIED & CLOSED`\n\n## Resultados del Pipeline de 9 Niveles (`project-docs/verify.sh`)\n- **Nivel 1 (Estructura y Ramas):** PASS\n- **Nivel 2 (Build & Sintaxis ES Modules):** PASS\n- **Nivel 3 (Pruebas Unitarias):** PASS (70/70 tests)\n- **Nivel 4 (Pruebas de Caja Blanca):** PASS (13/13 tests)\n- **Nivel 5 (Pruebas de Caja Negra):** PASS (8/8 tests)\n- **Nivel 6 (Pruebas de Integración de Sistema):** PASS (7/7 tests)\n- **Nivel 7 (Pruebas de Carga y Rendimiento):** PASS (100 peticiones concurrentes, 0% error)\n- **Nivel 8 (Pruebas E2E Playwright):** PASS (14/14 tests)\n- **Nivel 9 (Auditoría de Evidencias Scrum/QA):** PASS\n",
+      "content_markdown": "# Reporte de Verificación y Cierre — INT-017\r\n\r\n- **Tarea:** `INT-017` — Evolución de la Base de Conocimiento al Patrón Plane Pages, Grafo Relacional (`page_logs`, `page_labels`) y Asistente IA\r\n- **Rama:** `feature/INT-017/plane_pages_knowledge_graph_ai`\r\n- **Estado:** `VERIFIED & CLOSED`\r\n\r\n## Resultados del Pipeline de 9 Niveles (`project-docs/verify.sh`)\r\n- **Nivel 1 (Estructura y Ramas):** PASS\r\n- **Nivel 2 (Build & Sintaxis ES Modules):** PASS\r\n- **Nivel 3 (Pruebas Unitarias):** PASS (70/70 tests)\r\n- **Nivel 4 (Pruebas de Caja Blanca):** PASS (13/13 tests)\r\n- **Nivel 5 (Pruebas de Caja Negra):** PASS (8/8 tests)\r\n- **Nivel 6 (Pruebas de Integración de Sistema):** PASS (7/7 tests)\r\n- **Nivel 7 (Pruebas de Carga y Rendimiento):** PASS (100 peticiones concurrentes, 0% error)\r\n- **Nivel 8 (Pruebas E2E Playwright):** PASS (14/14 tests)\r\n- **Nivel 9 (Auditoría de Evidencias Scrum/QA):** PASS\r\n",
       "is_locked": 0,
       "is_favorite": 0,
       "view_props": "{\"full_width\":false,\"assets\":[]}",
       "word_count": 131,
-      "char_count": 890,
+      "char_count": 906,
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:45",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_verification-report_md-v1",
@@ -17015,7 +17015,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 131,
-          "last_saved_at": "2026-11-07 20:19:45",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -17064,7 +17064,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_011_encapsulate_specs_and_scripts_requirements_md-v1",
@@ -17073,7 +17073,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Campo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 406,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17129,7 +17129,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 10,
       "diagrams_count": 0,
       "reading_time_min": 5,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_010_harness_root_cleanliness_encapsulation_requirements_md-v1",
@@ -17138,7 +17138,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Campo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 854,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17194,7 +17194,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 1,
       "diagrams_count": 0,
       "reading_time_min": 1,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_011_encapsulate_specs_and_scripts_tasks_md-v1",
@@ -17203,7 +17203,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 167,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17252,7 +17252,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 3,
       "diagrams_count": 0,
       "reading_time_min": 3,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:35",
       "versions": [
         {
           "id": "pv-page-specs_010_harness_root_cleanliness_encapsulation_tasks_md-v1",
@@ -17261,7 +17261,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 566,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:35",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17310,7 +17310,7 @@ window.__FALLBACK_DATA__ = {
       "paragraph_count": 10,
       "diagrams_count": 0,
       "reading_time_min": 7,
-      "updated_at": "2026-11-07 20:19:44",
+      "updated_at": "2026-11-07 20:46:34",
       "versions": [
         {
           "id": "pv-page-knowledge_01-project-overview-and-business_md-v1",
@@ -17319,7 +17319,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
           "owned_by_role": "leader",
           "word_count": 1211,
-          "last_saved_at": "2026-11-07 20:19:44",
+          "last_saved_at": "2026-11-07 20:46:34",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21251,563 +21251,13 @@ window.__FALLBACK_DATA__ = {
   ],
   "pageVersions": [
     {
-      "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_requirements_md-v1",
-      "page_id": "page-specs_017_plane_pages_knowledge_graph_ai_requirements_md",
-      "version_number": 1,
-      "description_stripped": "| Atributo | Valor |",
-      "owned_by_role": "spec-author",
-      "word_count": 361,
-      "last_saved_at": "2026-11-07 20:19:45",
-      "created_at": "2026-11-07 20:17:24"
-    },
-    {
-      "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_tasks_md-v1",
-      "page_id": "page-specs_017_plane_pages_knowledge_graph_ai_tasks_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "spec-author",
-      "word_count": 115,
-      "last_saved_at": "2026-11-07 20:19:45",
-      "created_at": "2026-11-07 20:17:24"
-    },
-    {
-      "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_verification-report_md-v1",
-      "page_id": "page-specs_017_plane_pages_knowledge_graph_ai_verification-report_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "spec-author",
-      "word_count": 131,
-      "last_saved_at": "2026-11-07 20:19:45",
-      "created_at": "2026-11-07 20:17:24"
-    },
-    {
-      "id": "pv-page-knowledge_01-project-overview-and-business_md-v1",
-      "page_id": "page-knowledge_01-project-overview-and-business_md",
-      "version_number": 1,
-      "description_stripped": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
-      "owned_by_role": "leader",
-      "word_count": 1211,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_02-architecture-and-patterns_md-v1",
-      "page_id": "page-knowledge_02-architecture-and-patterns_md",
-      "version_number": 1,
-      "description_stripped": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
-      "owned_by_role": "leader",
-      "word_count": 789,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_03-capabilities-and-features_md-v1",
-      "page_id": "page-knowledge_03-capabilities-and-features_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 1989,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_04-domain-ddd-and-crc_md-v1",
-      "page_id": "page-knowledge_04-domain-ddd-and-crc_md",
-      "version_number": 1,
-      "description_stripped": "1. **Core Domain (Dominio Central)**:",
-      "owned_by_role": "leader",
-      "word_count": 637,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_adr-catalog_md-v1",
-      "page_id": "page-knowledge_adr-catalog_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 592,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_ai-runs-log_md-v1",
-      "page_id": "page-knowledge_ai-runs-log_md",
-      "version_number": 1,
-      "description_stripped": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
-      "owned_by_role": "leader",
-      "word_count": 2852,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_business-rules_md-v1",
-      "page_id": "page-knowledge_business-rules_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 599,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_c4-model_md-v1",
-      "page_id": "page-knowledge_c4-model_md",
-      "version_number": 1,
-      "description_stripped": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
-      "owned_by_role": "leader",
-      "word_count": 402,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_coding-standards_md-v1",
-      "page_id": "page-knowledge_coding-standards_md",
-      "version_number": 1,
-      "description_stripped": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
-      "owned_by_role": "leader",
-      "word_count": 265,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_data-dictionary_md-v1",
-      "page_id": "page-knowledge_data-dictionary_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 857,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_external-services_md-v1",
-      "page_id": "page-knowledge_external-services_md",
-      "version_number": 1,
-      "description_stripped": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
-      "owned_by_role": "leader",
-      "word_count": 215,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_functional-requirements_md-v1",
-      "page_id": "page-knowledge_functional-requirements_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 657,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_MASTER-PROJECT-KNOWLEDGE_md-v1",
-      "page_id": "page-knowledge_MASTER-PROJECT-KNOWLEDGE_md",
-      "version_number": 1,
-      "description_stripped": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
-      "owned_by_role": "leader",
-      "word_count": 1778,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_data-and-transactions_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_data-and-transactions_md",
-      "version_number": 1,
-      "description_stripped": "El orquestador interactúa con dos fuentes de persistencia:",
-      "owned_by_role": "leader",
-      "word_count": 169,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_diagrams_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_diagrams_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 440,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_module-spec_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_module-spec_md",
-      "version_number": 1,
-      "description_stripped": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
-      "owned_by_role": "leader",
-      "word_count": 437,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_requirements-and-rules_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_requirements-and-rules_md",
-      "version_number": 1,
-      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
-      "owned_by_role": "leader",
-      "word_count": 556,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_rules_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_rules_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 141,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_sequence_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_sequence_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 100,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md-v1",
-      "page_id": "page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md",
-      "version_number": 1,
-      "description_stripped": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
-      "owned_by_role": "leader",
-      "word_count": 139,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_data-and-transactions_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_data-and-transactions_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 172,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_diagrams_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_diagrams_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 377,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_module-spec_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_module-spec_md",
-      "version_number": 1,
-      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
-      "owned_by_role": "leader",
-      "word_count": 354,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md",
-      "version_number": 1,
-      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
-      "owned_by_role": "leader",
-      "word_count": 255,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_rules_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_rules_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 91,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_sequence_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_sequence_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 115,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md-v1",
-      "page_id": "page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md",
-      "version_number": 1,
-      "description_stripped": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
-      "owned_by_role": "leader",
-      "word_count": 161,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_data-and-transactions_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_data-and-transactions_md",
-      "version_number": 1,
-      "description_stripped": "El archivo `knowledge-index.json` persiste:",
-      "owned_by_role": "leader",
-      "word_count": 98,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_diagrams_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_diagrams_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 381,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_module-spec_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_module-spec_md",
-      "version_number": 1,
-      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
-      "owned_by_role": "leader",
-      "word_count": 208,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_requirements-and-rules_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_requirements-and-rules_md",
-      "version_number": 1,
-      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
-      "owned_by_role": "leader",
-      "word_count": 211,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_rules_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_rules_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 102,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_sequence_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_sequence_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 95,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md-v1",
-      "page_id": "page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md",
-      "version_number": 1,
-      "description_stripped": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
-      "owned_by_role": "leader",
-      "word_count": 121,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_data-and-transactions_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_data-and-transactions_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 68,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_diagrams_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_diagrams_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 364,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_module-spec_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_module-spec_md",
-      "version_number": 1,
-      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
-      "owned_by_role": "leader",
-      "word_count": 214,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_requirements-and-rules_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_requirements-and-rules_md",
-      "version_number": 1,
-      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
-      "owned_by_role": "leader",
-      "word_count": 170,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_rules_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_rules_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 99,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_sequence_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_sequence_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 66,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md-v1",
-      "page_id": "page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 94,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_data-and-transactions_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_data-and-transactions_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 72,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_diagrams_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_diagrams_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 352,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_module-spec_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_module-spec_md",
-      "version_number": 1,
-      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
-      "owned_by_role": "leader",
-      "word_count": 196,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_requirements-and-rules_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_requirements-and-rules_md",
-      "version_number": 1,
-      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
-      "owned_by_role": "leader",
-      "word_count": 148,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_rules_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_rules_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 96,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_sequence_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_sequence_md",
-      "version_number": 1,
-      "description_stripped": "```mermaid",
-      "owned_by_role": "leader",
-      "word_count": 71,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md-v1",
-      "page_id": "page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 78,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_system-capabilities_md-v1",
-      "page_id": "page-knowledge_system-capabilities_md",
-      "version_number": 1,
-      "description_stripped": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
-      "owned_by_role": "leader",
-      "word_count": 362,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_traceability-matrix_md-v1",
-      "page_id": "page-knowledge_traceability-matrix_md",
-      "version_number": 1,
-      "description_stripped": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
-      "owned_by_role": "leader",
-      "word_count": 250,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_uml-diagrams_md-v1",
-      "page_id": "page-knowledge_uml-diagrams_md",
-      "version_number": 1,
-      "description_stripped": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
-      "owned_by_role": "leader",
-      "word_count": 515,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
-      "id": "pv-page-knowledge_user-stories-catalog_md-v1",
-      "page_id": "page-knowledge_user-stories-catalog_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "leader",
-      "word_count": 627,
-      "last_saved_at": "2026-11-07 20:19:44",
-      "created_at": "2026-11-07 19:36:23"
-    },
-    {
       "id": "pv-page-specs_001_refactor_harness_architecture_design_md-v1",
       "page_id": "page-specs_001_refactor_harness_architecture_design_md",
       "version_number": 1,
       "description_stripped": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
       "owned_by_role": "spec-author",
       "word_count": 248,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21817,7 +21267,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 252,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21827,7 +21277,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 144,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21837,7 +21287,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
       "owned_by_role": "spec-author",
       "word_count": 392,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21847,7 +21297,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 383,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21857,7 +21307,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 179,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21867,7 +21317,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
       "owned_by_role": "spec-author",
       "word_count": 645,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21877,7 +21327,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Se extendió y estandarizó la arquitectura del arnés para alinearla con el estándar de la industria en **Scrum / Agile** y **Jira**:",
       "owned_by_role": "spec-author",
       "word_count": 658,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21887,7 +21337,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Antes de iniciar la implementación, se validó que:",
       "owned_by_role": "spec-author",
       "word_count": 582,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21897,7 +21347,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 336,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21907,7 +21357,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "spec-author",
       "word_count": 826,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21917,7 +21367,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 355,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21927,7 +21377,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Campo | Valor |",
       "owned_by_role": "spec-author",
       "word_count": 854,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21937,7 +21387,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 566,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21947,7 +21397,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Criterio | Estado | Evidencia |",
       "owned_by_role": "spec-author",
       "word_count": 513,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21957,7 +21407,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```",
       "owned_by_role": "spec-author",
       "word_count": 385,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21967,7 +21417,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 335,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21977,7 +21427,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Campo | Valor |",
       "owned_by_role": "spec-author",
       "word_count": 406,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21987,7 +21437,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 167,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -21997,7 +21447,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Criterio | Estado | Evidencia |",
       "owned_by_role": "spec-author",
       "word_count": 306,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22007,7 +21457,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
       "owned_by_role": "spec-author",
       "word_count": 1257,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22017,7 +21467,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 420,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22027,7 +21477,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El arnés actual cuenta con un tablero de seguimiento visual (`project-docs/index.html`) con una tabla de features, visor 3D Three.js, grafo de dependencias y ba...",
       "owned_by_role": "spec-author",
       "word_count": 1269,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22037,7 +21487,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 425,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22047,7 +21497,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 462,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22057,7 +21507,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
       "owned_by_role": "spec-author",
       "word_count": 1205,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22067,7 +21517,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 456,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22077,7 +21527,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Tras la implementación inicial de las vistas de Plane y el motor SQLite en INT-012, el arnés dispone de dos layouts simultáneos (el clásico y el modo Plane).",
       "owned_by_role": "spec-author",
       "word_count": 1231,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22087,7 +21537,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 449,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22097,7 +21547,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 497,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22107,7 +21557,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El principio rector es **Screaming Architecture**: la organizacion del codigo grita el proposito del negocio y sus dominios funcionales principales.",
       "owned_by_role": "spec-author",
       "word_count": 764,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22117,7 +21567,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 437,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22127,7 +21577,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Tras la unificacion inicial del tablero con estetica Plane en INT-013, se requiere formalizar y desacoplar la arquitectura frontend siguiendo una estricta **Scr...",
       "owned_by_role": "spec-author",
       "word_count": 858,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22137,7 +21587,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 480,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22147,7 +21597,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 528,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22157,7 +21607,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```text",
       "owned_by_role": "spec-author",
       "word_count": 409,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22167,7 +21617,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 345,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22177,7 +21627,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Tras la creacion inicial de los primeros 5 modulos en `src/modules/` en INT-014, coexistia aun la carpeta `src/features/` conteniendo 5 dominios residuales (`ar...",
       "owned_by_role": "spec-author",
       "word_count": 504,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22187,7 +21637,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 333,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22197,7 +21647,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 406,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22207,7 +21657,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Esta especificación extiende el núcleo de datos del arnés (`project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js`), la CLI (`project-docs/cli.js...",
       "owned_by_role": "spec-author",
       "word_count": 461,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22217,7 +21667,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Esquema Relacional Completo de Plane + IA (`project-docs/src/core/db.js`)**:",
       "owned_by_role": "spec-author",
       "word_count": 258,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22227,7 +21677,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 492,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22237,7 +21687,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 301,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22247,7 +21697,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Criterio | Estado | Evidencia |",
       "owned_by_role": "spec-author",
       "word_count": 228,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -22257,7 +21707,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 149,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 20:17:24"
     },
     {
@@ -22267,8 +21717,558 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 98,
-      "last_saved_at": "2026-11-07 20:19:44",
+      "last_saved_at": "2026-11-07 20:46:35",
       "created_at": "2026-11-07 20:17:24"
+    },
+    {
+      "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_requirements_md-v1",
+      "page_id": "page-specs_017_plane_pages_knowledge_graph_ai_requirements_md",
+      "version_number": 1,
+      "description_stripped": "| Atributo | Valor |",
+      "owned_by_role": "spec-author",
+      "word_count": 361,
+      "last_saved_at": "2026-11-07 20:46:35",
+      "created_at": "2026-11-07 20:17:24"
+    },
+    {
+      "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_tasks_md-v1",
+      "page_id": "page-specs_017_plane_pages_knowledge_graph_ai_tasks_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "spec-author",
+      "word_count": 115,
+      "last_saved_at": "2026-11-07 20:46:35",
+      "created_at": "2026-11-07 20:17:24"
+    },
+    {
+      "id": "pv-page-specs_017_plane_pages_knowledge_graph_ai_verification-report_md-v1",
+      "page_id": "page-specs_017_plane_pages_knowledge_graph_ai_verification-report_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "spec-author",
+      "word_count": 131,
+      "last_saved_at": "2026-11-07 20:46:35",
+      "created_at": "2026-11-07 20:17:24"
+    },
+    {
+      "id": "pv-page-knowledge_01-project-overview-and-business_md-v1",
+      "page_id": "page-knowledge_01-project-overview-and-business_md",
+      "version_number": 1,
+      "description_stripped": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
+      "owned_by_role": "leader",
+      "word_count": 1211,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_02-architecture-and-patterns_md-v1",
+      "page_id": "page-knowledge_02-architecture-and-patterns_md",
+      "version_number": 1,
+      "description_stripped": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
+      "owned_by_role": "leader",
+      "word_count": 789,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_03-capabilities-and-features_md-v1",
+      "page_id": "page-knowledge_03-capabilities-and-features_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 1989,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_04-domain-ddd-and-crc_md-v1",
+      "page_id": "page-knowledge_04-domain-ddd-and-crc_md",
+      "version_number": 1,
+      "description_stripped": "1. **Core Domain (Dominio Central)**:",
+      "owned_by_role": "leader",
+      "word_count": 637,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_adr-catalog_md-v1",
+      "page_id": "page-knowledge_adr-catalog_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 592,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_ai-runs-log_md-v1",
+      "page_id": "page-knowledge_ai-runs-log_md",
+      "version_number": 1,
+      "description_stripped": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
+      "owned_by_role": "leader",
+      "word_count": 2852,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_business-rules_md-v1",
+      "page_id": "page-knowledge_business-rules_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 599,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_c4-model_md-v1",
+      "page_id": "page-knowledge_c4-model_md",
+      "version_number": 1,
+      "description_stripped": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
+      "owned_by_role": "leader",
+      "word_count": 402,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_coding-standards_md-v1",
+      "page_id": "page-knowledge_coding-standards_md",
+      "version_number": 1,
+      "description_stripped": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
+      "owned_by_role": "leader",
+      "word_count": 265,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_data-dictionary_md-v1",
+      "page_id": "page-knowledge_data-dictionary_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 857,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_external-services_md-v1",
+      "page_id": "page-knowledge_external-services_md",
+      "version_number": 1,
+      "description_stripped": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
+      "owned_by_role": "leader",
+      "word_count": 215,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_functional-requirements_md-v1",
+      "page_id": "page-knowledge_functional-requirements_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 657,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_MASTER-PROJECT-KNOWLEDGE_md-v1",
+      "page_id": "page-knowledge_MASTER-PROJECT-KNOWLEDGE_md",
+      "version_number": 1,
+      "description_stripped": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
+      "owned_by_role": "leader",
+      "word_count": 1778,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_data-and-transactions_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_data-and-transactions_md",
+      "version_number": 1,
+      "description_stripped": "El orquestador interactúa con dos fuentes de persistencia:",
+      "owned_by_role": "leader",
+      "word_count": 169,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_diagrams_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_diagrams_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 440,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_module-spec_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_module-spec_md",
+      "version_number": 1,
+      "description_stripped": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
+      "owned_by_role": "leader",
+      "word_count": 437,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_requirements-and-rules_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_requirements-and-rules_md",
+      "version_number": 1,
+      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "owned_by_role": "leader",
+      "word_count": 556,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_rules_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_rules_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 141,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_sequence_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_sequence_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 100,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md-v1",
+      "page_id": "page-knowledge_modules_agent-orchestrator_technical-debt-refactoring_md",
+      "version_number": 1,
+      "description_stripped": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
+      "owned_by_role": "leader",
+      "word_count": 139,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_data-and-transactions_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_data-and-transactions_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 172,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_diagrams_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_diagrams_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 377,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_module-spec_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_module-spec_md",
+      "version_number": 1,
+      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "owned_by_role": "leader",
+      "word_count": 354,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_requirements-and-rules_md",
+      "version_number": 1,
+      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "owned_by_role": "leader",
+      "word_count": 255,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_rules_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_rules_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 91,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_sequence_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_sequence_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 115,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md-v1",
+      "page_id": "page-knowledge_modules_dashboard-visualizer_technical-debt-refactoring_md",
+      "version_number": 1,
+      "description_stripped": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
+      "owned_by_role": "leader",
+      "word_count": 161,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_data-and-transactions_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_data-and-transactions_md",
+      "version_number": 1,
+      "description_stripped": "El archivo `knowledge-index.json` persiste:",
+      "owned_by_role": "leader",
+      "word_count": 98,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_diagrams_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_diagrams_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 381,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_module-spec_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_module-spec_md",
+      "version_number": 1,
+      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "owned_by_role": "leader",
+      "word_count": 208,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_requirements-and-rules_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_requirements-and-rules_md",
+      "version_number": 1,
+      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "owned_by_role": "leader",
+      "word_count": 211,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_rules_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_rules_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 102,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_sequence_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_sequence_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 95,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md-v1",
+      "page_id": "page-knowledge_modules_knowledge-engine_technical-debt-refactoring_md",
+      "version_number": 1,
+      "description_stripped": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
+      "owned_by_role": "leader",
+      "word_count": 121,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_data-and-transactions_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_data-and-transactions_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 68,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_diagrams_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_diagrams_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 364,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_module-spec_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_module-spec_md",
+      "version_number": 1,
+      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "owned_by_role": "leader",
+      "word_count": 214,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_requirements-and-rules_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_requirements-and-rules_md",
+      "version_number": 1,
+      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "owned_by_role": "leader",
+      "word_count": 170,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_rules_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_rules_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 99,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_sequence_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_sequence_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 66,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md-v1",
+      "page_id": "page-knowledge_modules_testing-qa-suite_technical-debt-refactoring_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 94,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_data-and-transactions_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_data-and-transactions_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 72,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_diagrams_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_diagrams_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 352,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_module-spec_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_module-spec_md",
+      "version_number": 1,
+      "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
+      "owned_by_role": "leader",
+      "word_count": 196,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_requirements-and-rules_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_requirements-and-rules_md",
+      "version_number": 1,
+      "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
+      "owned_by_role": "leader",
+      "word_count": 148,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_rules_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_rules_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 96,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_sequence_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_sequence_md",
+      "version_number": 1,
+      "description_stripped": "```mermaid",
+      "owned_by_role": "leader",
+      "word_count": 71,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md-v1",
+      "page_id": "page-knowledge_modules_triple-sync-engine_technical-debt-refactoring_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 78,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_system-capabilities_md-v1",
+      "page_id": "page-knowledge_system-capabilities_md",
+      "version_number": 1,
+      "description_stripped": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
+      "owned_by_role": "leader",
+      "word_count": 362,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_traceability-matrix_md-v1",
+      "page_id": "page-knowledge_traceability-matrix_md",
+      "version_number": 1,
+      "description_stripped": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
+      "owned_by_role": "leader",
+      "word_count": 250,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_uml-diagrams_md-v1",
+      "page_id": "page-knowledge_uml-diagrams_md",
+      "version_number": 1,
+      "description_stripped": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
+      "owned_by_role": "leader",
+      "word_count": 515,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
+    },
+    {
+      "id": "pv-page-knowledge_user-stories-catalog_md-v1",
+      "page_id": "page-knowledge_user-stories-catalog_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "leader",
+      "word_count": 627,
+      "last_saved_at": "2026-11-07 20:46:34",
+      "created_at": "2026-11-07 19:36:23"
     }
   ]
 }
