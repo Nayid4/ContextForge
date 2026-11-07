@@ -9,54 +9,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const SRC_DIR = path.resolve(__dirname, '../../src');
 const FEATURES_DIR = path.join(SRC_DIR, 'features');
+const MODULES_DIR = path.join(SRC_DIR, 'modules');
 
-test('Screaming Architecture: Validación de Dominios de Negocio Puros', (t) => {
-  const expectedDomains = [
-    'analytics',
-    'architecture',
-    'constellation',
-    'cycles',
-    'graph',
-    'issues',
-    'layout',
-    'modules',
-    'pages'
-  ];
-
-  const actualDirs = fs.readdirSync(FEATURES_DIR).filter(item => {
-    return fs.statSync(path.join(FEATURES_DIR, item)).isDirectory();
-  }).sort();
-
-  assert.deepEqual(actualDirs, expectedDomains, 'La carpeta features/ debe contener exactamente los 9 dominios Screaming');
-
-  // Cada dominio debe exportar un index.js
-  for (const domain of expectedDomains) {
-    const indexPath = path.join(FEATURES_DIR, domain, 'index.js');
-    assert.ok(fs.existsSync(indexPath), `El dominio ${domain} debe tener un archivo index.js de entrada`);
-  }
-
-  // Ninguna carpeta legacy debe existir
-  const prohibitedLegacy = [
-    'architecture-docs',
-    'current-spec',
-    'dependency-graph',
-    'dependency-tree',
-    'feature-list',
-    'history-timeline',
-    'knowledge-base',
-    'plane-analytics',
-    'plane-cycles',
-    'plane-issues',
-    'plane-layout',
-    'plane-modules',
-    'plane-pages',
-    'space-view-3d',
-    'stats'
-  ];
-
-  for (const leg of prohibitedLegacy) {
-    assert.ok(!fs.existsSync(path.join(FEATURES_DIR, leg)), `La carpeta legacy '${leg}' no debe existir en features/`);
-  }
+test('Screaming Architecture: Eliminación Completa de Carpeta Legacy features/', () => {
+  // Invariante de pureza: features/ debe haber sido eliminada por completo
+  assert.ok(!fs.existsSync(FEATURES_DIR), 'La carpeta legacy src/features/ no debe existir en el proyecto');
 });
 
 test('Functional Component Helper: renderList bucles declarativos', () => {
@@ -81,16 +38,27 @@ test('Functional Component Helper: renderList bucles declarativos', () => {
   assert.equal(nullRender, '');
 });
 
-test('Screaming Architecture: Validación de Módulos de Dominio (src/modules/)', () => {
-  const MODULES_DIR = path.join(SRC_DIR, 'modules');
+test('Screaming Architecture: Validación de los 10 Módulos de Dominio (src/modules/)', () => {
   assert.ok(fs.existsSync(MODULES_DIR), 'La carpeta src/modules/ debe existir');
 
-  const expectedModules = ['Cycles', 'Harness', 'Issues', 'Pages', 'Projects'];
+  const expectedModules = [
+    'Analytics',
+    'Architecture',
+    'Constellation',
+    'Cycles',
+    'Graph',
+    'Harness',
+    'Issues',
+    'Modules',
+    'Pages',
+    'Projects'
+  ].sort();
+
   const actualDirs = fs.readdirSync(MODULES_DIR).filter(item => {
     return fs.statSync(path.join(MODULES_DIR, item)).isDirectory();
   }).sort();
 
-  assert.deepEqual(actualDirs, expectedModules, 'src/modules/ debe contener los dominios canónicos');
+  assert.deepEqual(actualDirs, expectedModules, 'src/modules/ debe contener exactamente los 10 dominios de negocio Screaming');
 
   for (const mod of expectedModules) {
     const modPath = path.join(MODULES_DIR, mod);
