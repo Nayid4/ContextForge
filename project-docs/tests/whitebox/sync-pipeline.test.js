@@ -14,7 +14,8 @@ describe('White-Box Testing: Pipeline de Sincronización y Mapeo en sync-data.js
   });
 
   test('Branch Coverage: Clasificación de documentos en estantes canónicos', () => {
-    const indexRaw = fs.readFileSync('project-docs/knowledge/knowledge-index.json', 'utf8');
+    const indexPath = fs.existsSync('knowledge/knowledge-index.json') ? 'knowledge/knowledge-index.json' : 'project-docs/knowledge/knowledge-index.json';
+    const indexRaw = fs.readFileSync(indexPath, 'utf8');
     const indexData = JSON.parse(indexRaw);
 
     assert.ok(indexData.shelves && typeof indexData.shelves === 'object', 'Debe incluir un diccionario de estantes');
@@ -36,7 +37,7 @@ describe('White-Box Testing: Pipeline de Sincronización y Mapeo en sync-data.js
   });
 
   test('Branch Coverage: Integridad del archivo generado data-fallback.js', () => {
-    const fallbackPath = 'project-docs/data-fallback.js';
+    const fallbackPath = fs.existsSync('data-fallback.js') ? 'data-fallback.js' : 'project-docs/data-fallback.js';
     assert.ok(fs.existsSync(fallbackPath), 'data-fallback.js debe existir físicamente');
 
     const content = fs.readFileSync(fallbackPath, 'utf8');

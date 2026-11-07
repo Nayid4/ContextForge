@@ -6,7 +6,7 @@ import {
   parseMarkdownToBlocks, 
   blocksToMarkdown, 
   renderMarkdown 
-} from '../../project-docs/src/shared/MarkdownViewer.js';
+} from '../../src/shared/MarkdownViewer.js';
 
 test('slugify genera identificadores limpios para anchors', () => {
   assert.equal(slugify('Modelo C4 del Sistema'), 'modelo-c4-del-sistema');

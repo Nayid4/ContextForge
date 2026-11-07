@@ -3,19 +3,19 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
-import { renderArchitectureDocs } from '../../project-docs/src/features/architecture-docs/ArchitectureDocs.js';
-import { renderKnowledgeBase } from '../../project-docs/src/features/knowledge-base/KnowledgeBase.js';
+import { renderArchitectureDocs } from '../../src/features/architecture-docs/ArchitectureDocs.js';
+import { renderKnowledgeBase } from '../../src/features/knowledge-base/KnowledgeBase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..', '..');
+const DOCS_DIR = path.resolve(__dirname, '..', '..');
 
 const EMOJI_REGEX = /(?:\p{Extended_Pictographic}|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F\uDE80-\uDEFF]|[\u2600-\u26FF\u2700-\u27BF])/u;
 
 test('ATDD Scenario 1: Interfaz 100% Vectorial sin Emojis en Componentes Principales', () => {
   // GIVEN datos reales del arnés
-  const specPath = path.join(ROOT_DIR, 'project-docs', 'project-spec.json');
-  const kIndexPath = path.join(ROOT_DIR, 'project-docs', 'knowledge', 'knowledge-index.json');
+  const specPath = path.join(DOCS_DIR, 'project-spec.json');
+  const kIndexPath = path.join(DOCS_DIR, 'knowledge', 'knowledge-index.json');
   const projectSpec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
   const knowledgeIndex = JSON.parse(fs.readFileSync(kIndexPath, 'utf8'));
 
@@ -30,7 +30,7 @@ test('ATDD Scenario 1: Interfaz 100% Vectorial sin Emojis en Componentes Princip
 
 test('ATDD Scenario 2: Stack Tecnológico estructurado en Tabla Técnica Compacta', () => {
   // GIVEN especificación técnica del proyecto
-  const specPath = path.join(ROOT_DIR, 'project-docs', 'project-spec.json');
+  const specPath = path.join(DOCS_DIR, 'project-spec.json');
   const projectSpec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 
   // WHEN se renderiza la vista técnica de arquitectura
@@ -48,7 +48,7 @@ test('ATDD Scenario 2: Stack Tecnológico estructurado en Tabla Técnica Compact
 
 test('ATDD Scenario 3: Base de Conocimiento con Estantes Temáticos y Editor Dual ContextForge', () => {
   // GIVEN la base de conocimiento indexada
-  const kIndexPath = path.join(ROOT_DIR, 'project-docs', 'knowledge', 'knowledge-index.json');
+  const kIndexPath = path.join(DOCS_DIR, 'knowledge', 'knowledge-index.json');
   const knowledgeIndex = JSON.parse(fs.readFileSync(kIndexPath, 'utf8'));
 
   // WHEN se renderiza la Base de Conocimiento

@@ -3,8 +3,8 @@ id: DOC-MASTER-KNOWLEDGE
 title: "Dossier Maestro Consolidado de Ingeniería — AI Agentic SDD Engineering Harness"
 module: "global"
 status: "Publicado"
-version: "4.0.0"
-last_updated: "2026-11-03"
+version: "4.2.0"
+last_updated: "2026-11-07"
 tags: ["master-dossier", "single-file-context", "sdd", "ieee-830", "c4-model", "uml", "ddd"]
 ---
 
@@ -132,10 +132,11 @@ flowchart LR
 ### Requerimientos Funcionales Nucleares
 - **RF-ORCH-001**: Creación y validación de ramas `{type}/INT-{id}/{name}` con longitud $\le 80$ caracteres.
 - **RF-ORCH-002**: Puerta humana obligatoria con `ask_question` previa a la implementación.
+- **RF-ORCH-003**: Partición formal en subtareas Scrum Jira DEV/QA y captura automatizada de evidencias visuales en `specs/{NNN}_{name}/evidence/`.
 - **RF-DASH-001**: Operación offline nativa en protocolo `file:///` con carga instantánea de fallback.
 - **RF-DASH-002**: Editor dual Markdown/Bloques con scroll sincronizado.
 - **RF-SYNC-001**: Sincronización unidireccional de 18 skills desde `.opencode/`.
-- **RF-TEST-001**: Verificación integral en 8 niveles mediante `verify.sh`.
+- **RF-TEST-001**: Verificación integral en 9 niveles mediante `verify.sh`.
 
 ---
 
@@ -150,6 +151,10 @@ flowchart LR
    - `TI-DASH-02`: Detección de protocolo `file:///` en `api.js`.
 3. **HU-SYNC-01**: Homologación triple de skills (2 SP).
    - `TI-SYNC-01`: Script verificador de paridad de frontmatter YAML.
+4. **HU-ORCH-02**: Desglose Scrum DEV/QA y captura automatizada de evidencias (5 SP).
+   - `TI-ORCH-03`: Implementar runner de capturas headless en `scripts/capture-evidence.js`.
+   - `TI-ORCH-04`: Integrar visualización de subtareas DEV/QA y visor de evidencias en `Modal.js`.
+   - `TI-ORCH-05`: Añadir pruebas E2E con Playwright en `tests/acceptance/scrum-evidence-capture.spec.js`.
 
 ---
 
@@ -204,6 +209,7 @@ erDiagram
 - **BR-ORCH-001**: Ramas Git obligatoriamente `{feature|bugfix}/INT-{numero}/{nombre}` y longitud $\le 80$ caracteres.
 - **BR-ORCH-002**: Prohibido implementar código sin aprobación del spec al 100% mediante `ask_question`.
 - **BR-ORCH-003**: El subagente `reviewer` audita de forma imparcial y no modifica código.
+- **BR-ORCH-004**: Toda User Story cerrada debe contar con subtareas Scrum DEV/QA completadas y al menos una captura de pantalla de evidencia.
 - **BR-SYNC-001**: `.opencode/skills/` es la única fuente de verdad; los demás son espejos.
 - **BR-KNOW-001**: Sintaxis Mermaid ultra-estricta (IDs alfanuméricos simples y textos entrecomillados).
 - **BR-KNOW-002**: Consulta obligatoria de `project-docs/knowledge/` antes de codificar.
@@ -215,23 +221,28 @@ erDiagram
 ## Capítulo 8: Enciclopedia de Módulos & Bounded Contexts
 
 ### 8.1 Módulo: agent-orchestrator
-- **Propósito**: Orquestación multi-agente, validación de ramas git y gobernanza de puertas humanas.
+- **Propósito**: Orquestación multi-agente, validación de ramas git, gobernanza de puertas humanas y subtareas Scrum DEV/QA.
+- **Tareas Asociadas**: `INT-001` (Refactorización del arnés) e `INT-009` (Subtareas Scrum Jira DEV/QA y evidencias de prueba).
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
 ### 8.2 Módulo: dashboard-visualizer
 - **Propósito**: Tablero web interactivo, métricas KPI, editor dual ContextForge y soporte offline `file:///`.
+- **Tareas Asociadas**: `INT-004`, `INT-005`, `INT-006`.
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
 ### 8.3 Módulo: knowledge-engine
 - **Propósito**: Extracción, preservación y estandarización de la base de conocimiento Docs-as-Code.
+- **Tareas Asociadas**: `INT-003`.
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
 ### 8.4 Módulo: testing-qa-suite
-- **Propósito**: Automatización de pruebas en 8 niveles, runner de `verify.sh` y Playwright E2E.
+- **Propósito**: Automatización de pruebas en 9 fases, runner de `verify.sh` y Playwright E2E.
+- **Tareas Asociadas**: `INT-007`, `INT-008`.
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
 ### 8.5 Módulo: triple-sync-engine
 - **Propósito**: Sincronización triple y paridad absoluta de 18 skills entre OpenCode, Copilot y Antigravity.
+- **Tareas Asociadas**: `INT-002`.
 - **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.
 
 ---
@@ -247,8 +258,9 @@ erDiagram
 |---|---|---|---|---|---|
 | `RF-ORCH-001` | `BR-ORCH-001` | `HU-ORCH-01` | `.opencode/rules/branches.md` | `tests/unit/branching-rules.test.js`, `tests/blackbox/bva-inputs.test.js` | Cubierto |
 | `RF-ORCH-002` | `BR-ORCH-002` | `HU-ORCH-01` | `.agents/rules/antigravity-harness.md` | Manual con `ask_question` | Cubierto |
+| `RF-ORCH-003` | `BR-ORCH-004` | `HU-ORCH-02` | `scripts/capture-evidence.js`, `Modal.js` | `tests/acceptance/scrum-evidence-capture.spec.js` | Cubierto |
 | `RF-DASH-001` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/core/api.js` | `tests/system/offline-fallback.test.js` | Cubierto |
 | `RF-DASH-002` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/shared/MarkdownViewer.js` | `tests/acceptance/dual-editor.spec.js` | Cubierto |
 | `RF-DASH-003` | `BR-DASH-002` | `HU-DASH-01` | `project-docs/src/shared/Icons.js` | `tests/unit/ui-anti-emoji.test.js` | Cubierto |
 | `RF-SYNC-001` | `BR-SYNC-001` | `HU-SYNC-01` | `.agents/skills/sync-skills/` | `tests/whitebox/sync-pipeline.test.js` | Cubierto |
-| `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `verify.sh` | Suite de 8 niveles (56 tests) | Cubierto |
+| `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `verify.sh` | Suite de 9 fases (16 unit, 12 wb, 8 bb, 7 sys, 1 load, 5 e2e, 10 acceptance) | Cubierto |

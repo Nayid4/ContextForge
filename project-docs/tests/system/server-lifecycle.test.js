@@ -11,7 +11,7 @@ describe('System Testing: Ciclo de Vida del Servidor HTTP y Contratos de Entrega
 
   before(async () => {
     // Importar dinámicamente o levantar el servidor de serve.js
-    const rootDir = process.cwd();
+    const rootDir = fs.existsSync('index.html') ? path.resolve('..') : process.cwd();
     const mimeTypes = {
       '.html': 'text/html; charset=utf-8',
       '.js': 'application/javascript; charset=utf-8',

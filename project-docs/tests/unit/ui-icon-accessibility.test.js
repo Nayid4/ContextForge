@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Icons } from '../../project-docs/src/shared/Icons.js';
+import { Icons } from '../../src/shared/Icons.js';
 
 test('Icon Component Suite: Todos los iconos exportados deben ser funciones con soporte de interpolación string', () => {
   const iconKeys = Object.keys(Icons);

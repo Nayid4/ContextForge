@@ -6,28 +6,28 @@ set -e
 echo "🔍 Iniciando verificación integral de AI Agentic SDD Engineering Harness..."
 
 echo "📦 1. Compilación y bundling..."
-npm run build
+npm --prefix project-docs run build
 
 echo "🧪 2. Pruebas unitarias nativas..."
-npm test
+npm --prefix project-docs test
 
 echo "🌐 3. Pruebas de aceptación smoke ATDD..."
-npm run test:e2e
+npm --prefix project-docs run test:e2e
 
 echo "🔬 4. Pruebas de caja blanca (branch coverage)..."
-npm run test:whitebox
+npm --prefix project-docs run test:whitebox
 
 echo "🎯 5. Pruebas de caja negra (BVA, clases de equivalencia y resiliencia)..."
-npm run test:blackbox
+npm --prefix project-docs run test:blackbox
 
 echo "🔗 6. Pruebas de sistema e integración..."
-npm run test:system
+npm --prefix project-docs run test:system
 
 echo "⚡ 7. Pruebas de carga y rendimiento concurrente..."
-npm run test:load
+npm --prefix project-docs run test:load
 
 echo "🎭 8. Pruebas de aceptación E2E con Playwright (navegador real)..."
-npm run test:acceptance
+npm --prefix project-docs run test:acceptance
 
 echo "💾 9. Sincronización y consistencia de datos..."
 node project-docs/sync-data.js

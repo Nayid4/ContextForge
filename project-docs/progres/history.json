@@ -65,6 +65,50 @@
       "commit": "HEAD",
       "executor": "implementer + reviewer",
       "summary": "Auditoría real del arnés, desacoplamiento universal de subagentes, erradicación de mocks e-commerce y suite de pruebas unitarias y e2e."
+    },
+    {
+      "id": 7,
+      "type": "feature",
+      "name": "automated_unit_testing_suite",
+      "title": "Suite de Pruebas Automatizadas Unitarias y E2E Smoke",
+      "branch": "feature/INT-007/automated_unit_testing_suite",
+      "completed_at": "2026-11-02 23:00 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Implementación de suites de pruebas unitarias y e2e smoke con Node.js test runner nativo."
+    },
+    {
+      "id": 8,
+      "type": "feature",
+      "name": "playwright_acceptance_testing",
+      "title": "Aseguramiento de Calidad Integral en 5 Niveles y Pruebas de Aceptación E2E con Playwright",
+      "branch": "feature/INT-008/playwright_acceptance_testing",
+      "completed_at": "2026-11-02 23:30 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Suite de calidad en 5 niveles (unit, whitebox, blackbox, system, load) y aceptación E2E con Playwright en Chrome."
+    },
+    {
+      "id": 9,
+      "type": "feature",
+      "name": "scrum_spec_subtasks_qa_evidence",
+      "title": "Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON",
+      "branch": "feature/INT-009/scrum_spec_subtasks_qa_evidence",
+      "completed_at": "2026-11-03 14:26 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Estandarización de especificaciones con User Stories Scrum, subtareas Jira DEV/QA, DoD y captura de evidencias."
+    },
+    {
+      "id": 10,
+      "type": "feature",
+      "name": "harness_root_cleanliness_encapsulation",
+      "title": "Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés",
+      "branch": "feature/INT-010/harness_root_cleanliness_encapsulation",
+      "completed_at": "2026-11-07 10:05 UTC",
+      "commit": "HEAD",
+      "executor": "implementer + reviewer",
+      "summary": "Encapsulamiento de dependencias npm, scripts, tests y configuración en project-docs/, consolidación de ANTIGRAVITY.md en .agents/ y kickstart.json en project-docs/, y verify.sh transparente via npm --prefix."
     }
   ]
 }

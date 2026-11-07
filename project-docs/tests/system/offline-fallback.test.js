@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 describe('System Testing: Interoperabilidad Offline y Protocolo file:///', () => {
   test('Offline Compatibility: data-fallback.js es autocontenido y parseable en sandbox sin red', () => {
-    const fallbackPath = 'project-docs/data-fallback.js';
+    const fallbackPath = fs.existsSync('data-fallback.js') ? 'data-fallback.js' : 'project-docs/data-fallback.js';
     assert.ok(fs.existsSync(fallbackPath));
 
     const code = fs.readFileSync(fallbackPath, 'utf8');
@@ -40,7 +40,7 @@ describe('System Testing: Interoperabilidad Offline y Protocolo file:///', () =>
   });
 
   test('Offline Compatibility: knowledgeIndex contiene diagramas C4, UML y ERD con sintaxis Mermaid válida', () => {
-    const fallbackPath = 'project-docs/data-fallback.js';
+    const fallbackPath = fs.existsSync('data-fallback.js') ? 'data-fallback.js' : 'project-docs/data-fallback.js';
     const code = fs.readFileSync(fallbackPath, 'utf8');
 
     const sandbox = { window: {}, console };
@@ -64,7 +64,7 @@ describe('System Testing: Interoperabilidad Offline y Protocolo file:///', () =>
   });
 
   test('Offline Compatibility: fetchProjectData() en file: retorna fallback directamente sin invocar fetch ni lanzar CORS', async () => {
-    const { fetchProjectData, startAutoSync } = await import('../../project-docs/src/core/api.js');
+    const { fetchProjectData, startAutoSync } = await import('../../src/core/api.js');
 
     // Simular navegador en file:/// sin conectividad HTTP
     globalThis.window = {

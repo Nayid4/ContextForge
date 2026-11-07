@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { store } from '../../project-docs/src/core/store.js';
+import { store } from '../../src/core/store.js';
 
 describe('White-Box Testing: Reactividad, Estado y Mutaciones en Store', () => {
   test('Branch Coverage: Suscripción y notificación reactiva a listeners', () => {

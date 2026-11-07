@@ -6,7 +6,8 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..', '..');
+const DOCS_DIR = path.resolve(__dirname, '..', '..');
+const ROOT_DIR = path.resolve(DOCS_DIR, '..');
 
 // Expresión regular canónica que captura el rango completo de emojis Unicode
 const EMOJI_REGEX = /(?:\p{Extended_Pictographic}|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F\uDE80-\uDEFF]|[\u2600-\u26FF\u2700-\u27BF])/u;
@@ -37,7 +38,7 @@ function scanDirForEmojis(dir, violations = []) {
 }
 
 test('Anti-Emoji Gate: project-docs/src/ debe tener 0 emojis unicode en código fuente', () => {
-  const srcDir = path.join(ROOT_DIR, 'project-docs', 'src');
+  const srcDir = path.join(DOCS_DIR, 'src');
   const violations = scanDirForEmojis(srcDir);
   
   if (violations.length > 0) {
@@ -48,7 +49,7 @@ test('Anti-Emoji Gate: project-docs/src/ debe tener 0 emojis unicode en código 
 });
 
 test('Anti-Emoji Gate: project-docs/index.html debe tener 0 emojis unicode', () => {
-  const indexPath = path.join(ROOT_DIR, 'project-docs', 'index.html');
+  const indexPath = path.join(DOCS_DIR, 'index.html');
   const content = fs.readFileSync(indexPath, 'utf-8');
   const lines = content.split(/\r?\n/);
   const violations = [];
@@ -62,7 +63,7 @@ test('Anti-Emoji Gate: project-docs/index.html debe tener 0 emojis unicode', () 
 });
 
 test('Anti-Emoji Gate: project-docs/sync-data.js debe tener 0 emojis unicode', () => {
-  const syncPath = path.join(ROOT_DIR, 'project-docs', 'sync-data.js');
+  const syncPath = path.join(DOCS_DIR, 'sync-data.js');
   const content = fs.readFileSync(syncPath, 'utf-8');
   const lines = content.split(/\r?\n/);
   const violations = [];

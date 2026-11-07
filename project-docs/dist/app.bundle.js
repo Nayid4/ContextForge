@@ -489,7 +489,7 @@
         badge: "Antigravity 2.0",
         iconName: "zap",
         color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
-        paths: [".agents/rules/antigravity-harness.md", "ANTIGRAVITY.md", ".agents/agents/leader.md"]
+        paths: [".agents/rules/antigravity-harness.md", ".agents/ANTIGRAVITY.md", "ANTIGRAVITY.md", ".agents/agents/leader.md"]
       },
       {
         id: "opencode",

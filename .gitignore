@@ -13,7 +13,9 @@ dist/
 build/
 coverage/
 test-results/
+project-docs/test-results/
 playwright-report/
+project-docs/playwright-report/
 *.log
 
 # ─── IDE ───────────────────────────────────────────────────────────
@@ -29,3 +31,4 @@ Thumbs.db
 
 # ─── Harness local config ──────────────────────────────────────────
 kickstart.json
+project-docs/kickstart.json

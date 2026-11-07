@@ -5,7 +5,8 @@ import path from 'path';
 test.describe('Aceptación E2E & Evidencias: Especificación Scrum y Subtareas Jira DEV/QA', () => {
   test.describe.configure({ mode: 'serial' });
 
-  const evidenceDir = path.resolve(process.cwd(), 'specs/009_scrum_spec_subtasks_and_qa_evidence/evidence');
+  const rootDir = fs.existsSync(path.resolve(process.cwd(), 'specs')) ? process.cwd() : path.resolve(process.cwd(), '..');
+  const evidenceDir = path.resolve(rootDir, 'specs/009_scrum_spec_subtasks_and_qa_evidence/evidence');
 
   test.beforeAll(() => {
     if (!fs.existsSync(evidenceDir)) {
