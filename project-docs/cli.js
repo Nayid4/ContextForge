@@ -40,6 +40,8 @@ import {
   recordIssueRelation,
   createIssueInSQLite,
   upsertPageInSQLite,
+  updatePagePropertiesInSQLite,
+  duplicatePageInSQLite,
   mapRoleToUserId
 } from './src/core/sqlite-sync.js';
 import path from 'node:path';
@@ -581,11 +583,25 @@ function handleModuleList() {
 
 function handlePageList() {
   const shelfFilter = getArg('--shelf');
-  let query = 'SELECT id, title, shelf, owned_by_role, updated_by_id, module_id, is_locked, is_favorite, word_count, char_count, paragraph_count, diagrams_count, reading_time_min, file_path FROM pages WHERE 1=1';
+  const accessFilter = getArg('--access');
+  let query = 'SELECT id, title, shelf, owned_by_role, updated_by_id, module_id, access, is_locked, is_favorite, archived_at, word_count, char_count, paragraph_count, diagrams_count, reading_time_min, file_path, created_at, updated_at FROM pages WHERE 1=1';
   const params = [];
   if (shelfFilter) {
     query += ' AND shelf = ?';
     params.push(shelfFilter);
+  }
+  if (accessFilter === 'public') {
+    query += ' AND access = 0 AND archived_at IS NULL';
+  } else if (accessFilter === 'private') {
+    query += ' AND access = 1 AND archived_at IS NULL';
+  } else if (accessFilter === 'archived') {
+    query += ' AND archived_at IS NOT NULL';
+  }
+  if (args.includes('--favorites')) {
+    query += ' AND is_favorite = 1';
+  }
+  if (args.includes('--locked')) {
+    query += ' AND is_locked = 1';
   }
   query += ' ORDER BY is_favorite DESC, shelf ASC, title ASC';
 
@@ -600,12 +616,13 @@ function handlePageList() {
     return;
   }
 
-  console.log(`\nPaginas de la Base de Conocimiento (Plane Pages):\n`);
-  console.log('ESTANTE'.padEnd(16) + 'FAV/LOCK'.padEnd(10) + 'PALABRAS'.padEnd(10) + 'DIAG'.padEnd(6) + 'TITULO');
-  console.log('-'.repeat(85));
+  console.log(`\nPaginas de la Base de Conocimiento (Plane Library):\n`);
+  console.log('ESTANTE'.padEnd(16) + 'ACCESO'.padEnd(10) + 'FAV/LOCK'.padEnd(12) + 'PALABRAS'.padEnd(10) + 'DIAG'.padEnd(6) + 'TITULO');
+  console.log('-'.repeat(92));
   for (const p of pages) {
+    const acc = p.archived_at ? 'ARCHIVED' : (p.access === 1 ? 'PRIVATE' : 'PUBLIC');
     const flags = `${p.is_favorite ? '[FAV]' : ''}${p.is_locked ? '[LOCK]' : ''}` || '-';
-    console.log(`${(p.shelf || 'doc').padEnd(16)}${flags.padEnd(10)}${String(p.word_count || 0).padEnd(10)}${String(p.diagrams_count || 0).padEnd(6)}${p.title}`);
+    console.log(`${(p.shelf || 'doc').padEnd(16)}${acc.padEnd(10)}${flags.padEnd(12)}${String(p.word_count || 0).padEnd(10)}${String(p.diagrams_count || 0).padEnd(6)}${p.title}`);
   }
   console.log('');
 }
@@ -627,12 +644,17 @@ function handlePageGet() {
 }
 
 function handlePageUpsert() {
-  const relPath = getArg('--path');
+  const sourceFile = getArg('--file', null);
+  let relPath = getArg('--path');
+  if (!relPath && sourceFile) {
+    relPath = sourceFile.replace(/^project-docs[\\/]/, '').replace(/\\/g, '/');
+  }
   const title = getArg('--title');
   const shelf = getArg('--shelf', 'standards');
-  const sourceFile = getArg('--file', null);
   let content = getArg('--content', '');
   const role = getArg('--role', 'spec-author');
+  const accessArg = getArg('--access', null);
+  const accessVal = accessArg === 'private' || accessArg === '1' ? 1 : (accessArg === 'public' || accessArg === '0' ? 0 : (args.includes('--private') ? 1 : 0));
   const isLocked = args.includes('--locked') ? 1 : (args.includes('--unlocked') ? 0 : null);
   const isFavorite = args.includes('--favorite') ? 1 : null;
   const fullWidth = args.includes('--full-width') ? true : null;
@@ -641,7 +663,7 @@ function handlePageUpsert() {
   const moduleId = getArg('--module', null);
 
   if (!relPath || !title) {
-    console.error('Uso: node project-docs/cli.js page upsert --path <rel_path> --title <titulo> [--shelf <shelf>] [--file <md_file>] [--content <md>] [--locked] [--favorite] [--full-width] [--labels <csv>] [--module <mod>]');
+    console.error('Uso: node project-docs/cli.js page upsert --path <rel_path> --title <titulo> [--shelf <shelf>] [--file <md_file>] [--content <md>] [--access public|private] [--locked] [--favorite] [--full-width] [--labels <csv>] [--module <mod>]');
     process.exit(1);
   }
 
@@ -663,6 +685,7 @@ function handlePageUpsert() {
     shelf,
     content_markdown: content || `# ${title}\n`,
     owned_by_role: role,
+    access: accessVal,
     is_locked: isLocked,
     is_favorite: isFavorite,
     full_width: fullWidth,
@@ -674,7 +697,35 @@ function handlePageUpsert() {
     console.log(JSON.stringify(page, null, 2));
     return;
   }
-  console.log(`[OK] Pagina '${page.title}' (${page.file_path}) registrada en SQLite (con historial PageVersion) y sincronizada en disco.`);
+  console.log(`[OK] Pagina '${page.title}' (${page.file_path}) registrada en SQLite (Plane Library) y sincronizada en disco.`);
+}
+
+function handlePageLifecycle(action) {
+  const slug = args[2];
+  if (!slug) {
+    console.error(`Uso: node project-docs/cli.js page ${action} <id_o_slug>`);
+    process.exit(1);
+  }
+  const page = db.prepare('SELECT * FROM pages WHERE id = ? OR file_path LIKE ?').get(slug, `%${slug}%`);
+  if (!page) {
+    console.error(`Error: Pagina '${slug}' no encontrada.`);
+    process.exit(1);
+  }
+  if (action === 'archive') {
+    const updated = updatePagePropertiesInSQLite(db, page.id, { archived: true });
+    console.log(`[OK] Pagina '${updated.title}' archivada en Plane Library (is_favorite reiniciado a 0).`);
+  } else if (action === 'restore') {
+    const updated = updatePagePropertiesInSQLite(db, page.id, { archived: false });
+    console.log(`[OK] Pagina '${updated.title}' restaurada en Plane Library.`);
+  } else if (action === 'duplicate') {
+    const copy = duplicatePageInSQLite(db, page.id);
+    console.log(`[OK] Pagina duplicada como '${copy.title}' (${copy.file_path}).`);
+  } else if (action === 'access') {
+    const mode = getArg('--mode', 'public');
+    const accessVal = mode === 'private' || mode === '1' ? 1 : 0;
+    const updated = updatePagePropertiesInSQLite(db, page.id, { access: accessVal });
+    console.log(`[OK] Acceso de pagina '${updated.title}' actualizado a ${updated.access === 1 ? 'PRIVATE' : 'PUBLIC'}.`);
+  }
 }
 
 function handleUserList() {
@@ -729,6 +780,7 @@ switch (command) {
   case 'page':
     if (args[1] === 'get') handlePageGet();
     else if (args[1] === 'upsert') handlePageUpsert();
+    else if (['archive', 'restore', 'duplicate', 'access'].includes(args[1])) handlePageLifecycle(args[1]);
     else handlePageList();
     break;
   case 'user':

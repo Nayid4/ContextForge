@@ -2,21 +2,37 @@ import { Icons } from '../../../shared/Icons.js';
 import { renderBadge } from '../../../shared/Badge.js';
 import { renderMarkdown, extractTableOfContents, parseMarkdownToBlocks, blocksToMarkdown } from '../../../shared/MarkdownViewer.js';
 import { PagesPage, renderPageHeaderActions } from '../pages/PagesPage.js';
-import { PageNavigationPane } from './PageNavigationPane.js';
+import { PageNavigationPane, renderFloatingOutlineBars } from './PageNavigationPane.js';
 import { enrichMarkdownWithSmartChips } from './PageReader.js';
 
 /**
  * KnowledgeBaseComponent (Plane Library / PagesListView & PageRoot)
- * Implementa 1:1 la experiencia UI/UX de Plane Library (@makeplane/propel):
- *  - PagesListHeaderRoot: Barra superior con pestañas underline (Public/All, Modules DDD, Master Bundle, Split View, Governance)
- *    + buscador reactivo + filtros por estante + acciones compactas (New page, Import, Export .md, AI Context).
- *  - PageListBlock: Filas horizontales de alta densidad estilo Plane con icono de página, título, ruta .md,
- *    chips de telemetría (BR, RF, ADR, Diagramas), icono Lock/Public, estrella de Favorito, avatar de Bot IA y acciones rápidas.
- *  - PageRoot (#kb-view-article): Lienzo editorial/editor a pantalla completa con PageEditorToolbarRoot sticky,
- *    Smart Entity Chips (INT-XXX, BR-XXX, RF-XXX) y PageNavigationPane de 4 pestañas (Outline, Info, Assets, Historial) acoplado a la derecha.
+ * Implementa 1:1 la arquitectura, flujos, reglas de negocio y UI/UX de Plane Library (@makeplane/propel):
+ *  - PagesListHeaderRoot:
+ *      * Pestañas de ciclo de vida y visibilidad de Plane: Public (access=0), Private (access=1), Archived (archived_at!=null)
+ *      * Perspectivas de ingeniería soberana: Modules (DDD), Master Bundle, Split Workspace, Rules & Contracts
+ *      * Buscador reactivo, selector de ordenamiento Plane (OrderBy: Updated / Created / Name + Asc/Desc),
+ *        popover de Filtros (Favorites, Locked, Owner Bot) y acciones rápidas (Add page, Import, Export, AI Context).
+ *  - PageAppliedFiltersList: Barra de filtros aplicados con chips removibles y botón Clear all.
+ *  - PageListBlock & BlockItemAction: Filas de alta densidad con icono vectorial, título (fallback Untitled),
+ *    ruta .md, chips semánticos (BR, RF, ADR, Diagramas), Access toggle (Public/Private), Lock toggle,
+ *    Owner Bot Avatar, estrella de Favorito y menú contextual (...) con las reglas de negocio de Plane:
+ *      * BR-PAGE-01: Fallback "Untitled" para páginas sin título.
+ *      * BR-PAGE-02: Bloqueo de edición cuando is_locked=1 o archived_at!=null con banner informativo.
+ *      * BR-PAGE-03: Archivar una página desmarca automáticamente is_favorite=0.
+ *      * BR-PAGE-04: Cambio de acceso (Public/Private) solo permitido cuando la página no está archivada;
+ *                    eliminación habilitada al archivar o mediante confirmación explícita.
+ *      * BR-PAGE-05: Duplicación (Make a copy) en SQLite + espejo .md.
+ *  - PageRoot (#kb-view-article): Lienzo editorial centrado (max-w-[720px] o Full-Width max-w-[1152px]),
+ *    PageEditorToolbarRoot sticky, banner de estado Lock/Archive, Smart Entity Chips (INT-XXX, BR-XXX, RF-XXX),
+ *    PageNavigationPane de 4 pestañas acoplado a la derecha y Floating Outline Bars cuando el panel se oculta.
  *
  * 100% Vectorial, 0 dependencias externas, 0 emojis.
  */
+
+export function getPageName(title = '') {
+  return (!title || !String(title).trim()) ? 'Untitled' : String(title).trim();
+}
 
 export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [], planePages = [], planePageState = {} }) {
   const kData = knowledgeIndex || getFallbackKnowledge();
@@ -70,16 +86,30 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
   const findPlanePage = (docKey, meta = {}) => {
     return planePages.find(p => (p.file_path || '').endsWith(docKey) || p.file_path === `knowledge/${docKey}`) || {
       id: `page-kb-${String(docKey).replace(/[^a-zA-Z0-9_-]/g, '_')}`,
-      title: meta.title || docKey,
+      title: getPageName(meta.title || docKey),
       file_path: `knowledge/${docKey}`,
       word_count: meta.wordCount || 450,
       reading_time_min: meta.readingTime || 3,
       diagrams_count: meta.diagramsCount || 0,
       owned_by_role: 'spec-author',
+      access: 0,
       is_locked: 1,
-      is_favorite: docKey === 'c4-model.md' ? 1 : 0
+      is_favorite: docKey === 'c4-model.md' ? 1 : 0,
+      archived_at: null,
+      created_at: '2026-11-01T10:00:00Z',
+      updated_at: '2026-11-07T15:00:00Z'
     };
   };
+
+  // Compute Plane Access & Lifecycle Tab counts across all indexed pages
+  const resolvedRows = docKeys.map(k => findPlanePage(k, docMetadata[k] || {}));
+  const publicCount = resolvedRows.filter(p => !p.archived_at && Number(p.access || 0) === 0).length;
+  const privateCount = resolvedRows.filter(p => !p.archived_at && Number(p.access || 0) === 1).length;
+  const archivedCount = resolvedRows.filter(p => Boolean(p.archived_at)).length;
+
+  const activePlanePage = findPlanePage(activeDocKey, activeDocMeta);
+  const isActiveLocked = Boolean(activePlanePage.is_locked);
+  const isActiveArchived = Boolean(activePlanePage.archived_at);
 
   return `
     <div class="flex flex-col flex-1 min-h-0 bg-zinc-950 text-zinc-100 select-none" id="kb-container">
@@ -89,24 +119,51 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
       <!-- ============================================================== -->
       <div id="kb-view-library" class="flex flex-col flex-1 min-h-0">
 
-        <!-- 1.1 Plane PagesListHeaderRoot: Tabs Underline + Search + Quick Actions -->
-        <div class="min-h-11 px-5 border-b border-zinc-800/80 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
-          <!-- Left: Plane PageTabNavigation (Underline Tabs) -->
+        <!-- 1.1 Plane PagesListHeaderRoot: Access/Lifecycle Tabs + Perspectives + Search/Sort/Filter + Actions -->
+        <div class="min-h-11 px-5 border-b border-zinc-800/80 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20">
+          <!-- Left: Plane PageTabNavigation (Public, Private, Archived | Modules, Master, Split, Governance) -->
           <div class="flex items-center gap-1 overflow-x-auto" id="kb-perspective-nav">
+            <!-- Plane Primary Access Tabs (TPageNavigationTabs) -->
             <button
               type="button"
               data-kb-perspective="global"
-              class="kb-perspective-btn active h-11 px-3 inline-flex items-center gap-2 text-xs font-semibold text-zinc-100 border-b-2 border-indigo-500 transition-all cursor-pointer shrink-0"
+              data-page-access-tab="public"
+              class="kb-perspective-btn kb-access-tab-btn active h-11 px-3 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-100 border-b-2 border-indigo-500 transition-all cursor-pointer shrink-0"
             >
-              ${Icons.page('w-3.5 h-3.5 text-indigo-400')}
-              <span>Public / All</span>
-              <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300">${docKeys.length}</span>
+              ${Icons.globe('w-3.5 h-3.5 text-indigo-400')}
+              <span>Public</span>
+              <span id="kb-tab-count-public" class="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300">${publicCount}</span>
             </button>
 
             <button
               type="button"
+              data-kb-perspective="global"
+              data-page-access-tab="private"
+              class="kb-perspective-btn kb-access-tab-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.lock('w-3.5 h-3.5')}
+              <span>Private</span>
+              <span id="kb-tab-count-private" class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">${privateCount}</span>
+            </button>
+
+            <button
+              type="button"
+              data-kb-perspective="global"
+              data-page-access-tab="archived"
+              class="kb-perspective-btn kb-access-tab-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.archive('w-3.5 h-3.5')}
+              <span>Archived</span>
+              <span id="kb-tab-count-archived" class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">${archivedCount}</span>
+            </button>
+
+            <span class="h-4 w-px bg-zinc-800 mx-1 shrink-0" aria-hidden="true"></span>
+
+            <!-- Harness Domain Perspectives -->
+            <button
+              type="button"
               data-kb-perspective="modules"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.folder('w-3.5 h-3.5')}
               <span>Modules (DDD)</span>
@@ -116,7 +173,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <button
               type="button"
               data-kb-perspective="master"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.fileText('w-3.5 h-3.5')}
               <span>Master Bundle</span>
@@ -126,7 +183,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <button
               type="button"
               data-kb-perspective="plane-workspace"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.bookOpen('w-3.5 h-3.5')}
               <span>Split Workspace</span>
@@ -136,7 +193,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             <button
               type="button"
               data-kb-perspective="governance"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.scale('w-3.5 h-3.5')}
               <span>Rules & Contracts</span>
@@ -144,21 +201,105 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             </button>
           </div>
 
-          <!-- Right: Plane PageHeaderFilters & Actions -->
-          <div class="flex flex-wrap items-center gap-2 py-1.5">
-            <!-- Inline Search -->
+          <!-- Right: Plane PageHeaderFilters (Search, OrderBy, Filters) & Actions -->
+          <div class="flex flex-wrap items-center gap-1.5 py-1.5">
+            <!-- 1. Plane Search Input -->
             <div class="relative">
               <input
                 type="text"
                 id="kb-library-search-input"
                 placeholder="Search pages (title, module, BR-*)..."
-                class="h-7 w-48 sm:w-60 pl-7 pr-2.5 rounded-md text-xs bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono transition-colors"
+                class="h-7 w-44 sm:w-56 pl-7 pr-2.5 rounded-md text-xs bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono transition-colors"
               />
               <span class="absolute left-2 top-1.5 text-zinc-500 pointer-events-none">
                 ${Icons.search('w-3.5 h-3.5')}
               </span>
             </div>
 
+            <!-- 2. Plane PageOrderByDropdown (Sort by Name / Updated / Created + Asc/Desc) -->
+            <div class="inline-flex items-center rounded-md bg-zinc-900 border border-zinc-800 h-7 px-1.5 gap-1">
+              <span class="text-zinc-500">${Icons.arrowUpDown('w-3 h-3')}</span>
+              <select
+                id="kb-sort-by-select"
+                aria-label="Ordenar páginas por"
+                class="bg-transparent text-zinc-300 text-[11px] font-mono focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="updated_at" class="bg-zinc-900 text-zinc-200">Date modified</option>
+                <option value="created_at" class="bg-zinc-900 text-zinc-200">Date created</option>
+                <option value="name" class="bg-zinc-900 text-zinc-200">Name (A-Z)</option>
+              </select>
+              <button
+                type="button"
+                id="kb-sort-dir-btn"
+                data-action="toggle-kb-sort-dir"
+                data-sort-dir="desc"
+                class="px-1 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-mono text-indigo-300 cursor-pointer"
+                title="Alternar orden Ascendente / Descendente"
+              >
+                DESC
+              </button>
+            </div>
+
+            <!-- 3. Plane PageFiltersSelection Popover -->
+            <div class="relative">
+              <button
+                type="button"
+                data-action="toggle-kb-filters-popover"
+                class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+                title="Filtrar páginas por Favoritas, Normativas (Locked) o Agente Creador"
+              >
+                ${Icons.filter('w-3 h-3 text-zinc-400')}
+                <span>Filters</span>
+              </button>
+
+              <div
+                id="kb-filters-popover"
+                class="hidden absolute right-0 top-8 z-40 w-64 p-3 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl space-y-3 text-xs"
+              >
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                  <span class="font-semibold text-zinc-200">Plane Page Filters</span>
+                  <button
+                    type="button"
+                    data-action="clear-kb-filters"
+                    class="text-[10px] font-mono text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <label class="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-zinc-800/60 cursor-pointer">
+                  <span class="flex items-center gap-2 text-zinc-300">
+                    ${Icons.star('w-3.5 h-3.5 text-amber-400')}
+                    <span>Favorites only</span>
+                  </span>
+                  <input type="checkbox" id="kb-filter-favorites-chk" class="accent-indigo-500 rounded cursor-pointer" />
+                </label>
+
+                <label class="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-zinc-800/60 cursor-pointer">
+                  <span class="flex items-center gap-2 text-zinc-300">
+                    ${Icons.lock('w-3.5 h-3.5 text-amber-400')}
+                    <span>Locked (Normative)</span>
+                  </span>
+                  <input type="checkbox" id="kb-filter-locked-chk" class="accent-indigo-500 rounded cursor-pointer" />
+                </label>
+
+                <div class="space-y-1 pt-1 border-t border-zinc-800/80">
+                  <span class="text-[10px] font-mono uppercase text-zinc-400">Created by (Bot Agent)</span>
+                  <select
+                    id="kb-filter-owner-select"
+                    class="w-full h-7 px-2 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-xs font-mono focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">All Agents</option>
+                    <option value="spec-author">spec-author (BOT)</option>
+                    <option value="leader">leader (BOT)</option>
+                    <option value="reviewer">reviewer (BOT)</option>
+                    <option value="implementer">implementer (BOT)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Ask AI Context -->
             <button
               type="button"
               data-action="open-ai-context-modal"
@@ -166,30 +307,32 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               title="Generar System Prompt Anti-Sesgo para IA"
             >
               ${Icons.sparkles('w-3.5 h-3.5')}
-              <span class="hidden sm:inline">Ask AI Context</span>
+              <span class="hidden xl:inline">AI Context</span>
             </button>
 
+            <!-- 5. Import & Export -->
             <button
               type="button"
               data-action="trigger-import-doc"
-              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+              class="h-7 inline-flex items-center gap-1.5 px-2 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
               title="Importar archivo Markdown (.md)"
             >
               ${Icons.upload('w-3.5 h-3.5')}
-              <span class="hidden md:inline">Import</span>
+              <span class="hidden xl:inline">Import</span>
             </button>
             <input type="file" id="import-doc-file-input" accept=".md,.markdown" class="hidden" />
 
             <button
               type="button"
-              data-action="export-all-knowledge"
-              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
-              title="Exportar toda la base de conocimiento consolidada en formato Markdown (.md)"
+              data-action="open-export-page-modal"
+              class="h-7 inline-flex items-center gap-1.5 px-2 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+              title="Exportar páginas (Plane Export Modal: Markdown / Reporte)"
             >
               ${Icons.download('w-3.5 h-3.5')}
-              <span class="hidden md:inline">Export (.md)</span>
+              <span class="hidden xl:inline">Export</span>
             </button>
 
+            <!-- 6. Add Page -->
             <button
               type="button"
               data-action="open-new-doc-modal"
@@ -201,7 +344,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         </div>
 
-        <!-- 1.2 Plane Secondary Filter & Telemetry Sub-bar -->
+        <!-- 1.2 Plane Secondary Shelf Filter Pills & Sovereign Telemetry Bar -->
         <div class="px-5 py-2 border-b border-zinc-800/60 bg-zinc-900/25 flex flex-wrap items-center justify-between gap-3 text-xs">
           <!-- Shelf Filter Pills -->
           <div class="flex items-center gap-1 overflow-x-auto font-mono" id="kb-shelf-filter-pills">
@@ -235,14 +378,29 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         </div>
 
+        <!-- 1.2b Plane PageAppliedFiltersList (Active Filter Chips + Clear All) -->
+        <div
+          id="kb-applied-filters-bar"
+          class="hidden px-5 py-1.5 border-b border-zinc-800/60 bg-indigo-950/15 flex-wrap items-center justify-between gap-2 text-[11px] font-mono"
+        >
+          <div class="flex flex-wrap items-center gap-1.5" id="kb-applied-filters-chips"></div>
+          <button
+            type="button"
+            data-action="clear-kb-filters"
+            class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[10px] cursor-pointer"
+          >
+            Clear all filters
+          </button>
+        </div>
+
         <!-- ============================================================== -->
-        <!-- PANEL TIER 1: PLANE PAGES LIST (Public / All Pages)            -->
+        <!-- PANEL TIER 1: PLANE PAGES LIST (Public / Private / Archived)   -->
         <!-- ============================================================== -->
         <div id="kb-perspective-panel-global" class="kb-perspective-panel flex-1 flex flex-col">
 
           <!-- Pinned Featured Row (c4-model.md) + IEEE 830 / DeepWiki Quick Rows -->
           ${heroDocKey ? `
-            <div class="border-b border-zinc-800/80 bg-indigo-950/10">
+            <div id="kb-pinned-featured-strip" class="border-b border-zinc-800/80 bg-indigo-950/10">
               <div class="px-5 py-1.5 border-b border-zinc-800/60 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-indigo-300/90">
                 <span class="flex items-center gap-1.5">
                   ${Icons.star('w-3 h-3 fill-amber-400 text-amber-400')}
@@ -254,8 +412,10 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <!-- Featured C4 Model Row (First open-article-read & open-article-edit in DOM for E2E contracts) -->
               <div class="group flex flex-wrap items-center justify-between gap-3 px-5 py-2.5 hover:bg-zinc-900/75 border-b border-zinc-800/40 transition-colors">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <span class="text-indigo-400 shrink-0">${Icons.page('w-4 h-4')}</span>
-                  <span class="text-xs font-semibold text-zinc-100 truncate">${escapeHtml(heroDocMeta.title || heroDocKey)}</span>
+                  <span class="w-6 h-6 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                    ${Icons.page('w-3.5 h-3.5')}
+                  </span>
+                  <span class="text-xs font-semibold text-zinc-100 truncate">${escapeHtml(getPageName(heroDocMeta.title || heroDocKey))}</span>
                   <code class="text-[11px] font-mono text-indigo-400 bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-500/20 hidden sm:inline">${heroDocKey}</code>
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-950/60 text-amber-300 border border-amber-500/30">Pinned</span>
                 </div>
@@ -318,6 +478,24 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
             </div>
           ` : ''}
 
+          <!-- Empty State for Filtered / Private / Archived Views -->
+          <div id="kb-empty-filter-state" class="hidden p-12 text-center space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+              ${Icons.page('w-5 h-5')}
+            </div>
+            <div class="text-sm font-semibold text-zinc-200">No pages match the selected Library view or filter</div>
+            <p class="text-xs text-zinc-500 max-w-md mx-auto">
+              You can switch back to the Public tab, clear active filters, or toggle any page's visibility (Public / Private) or Archive status from its row actions.
+            </p>
+            <button
+              type="button"
+              data-action="clear-kb-filters"
+              class="h-7 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium cursor-pointer"
+            >
+              Show all Public pages
+            </button>
+          </div>
+
           <!-- 1.3 Plane Pages List Groups (#kb-shelves-container) -->
           <div class="divide-y divide-zinc-800/70" id="kb-shelves-container">
             ${Object.values(shelvesData).map(sh => {
@@ -333,15 +511,15 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       <h3 class="text-xs font-semibold text-zinc-200 tracking-tight">
                         ${escapeHtml(sh.title)}
                       </h3>
-                      <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
+                      <span class="kb-shelf-visible-count text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
                         ${sh.docs.length}
                       </span>
                     </div>
-                    <span class="text-[10px] font-mono text-zinc-500 hidden sm:inline">Public · Docs-as-Code</span>
+                    <span class="text-[10px] font-mono text-zinc-500 hidden sm:inline">Plane Library · Docs-as-Code</span>
                   </div>
 
                   <!-- Plane PageListBlock Rows -->
-                  <div class="divide-y divide-zinc-800/50">
+                  <div class="kb-shelf-rows-list divide-y divide-zinc-800/50">
                     ${sh.docs.map(key => {
                       const meta = docMetadata[key] || {
                         title: key,
@@ -355,34 +533,62 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                       const matchedPage = findPlanePage(key, meta);
                       const isFav = Boolean(matchedPage.is_favorite);
                       const isLocked = Boolean(matchedPage.is_locked);
+                      const isArchived = Boolean(matchedPage.archived_at);
+                      const isPrivate = Number(matchedPage.access || 0) === 1;
                       const ownerRole = matchedPage.owned_by_role || 'spec-author';
-                      const avatarInitials = ownerRole === 'reviewer' ? 'RV' : ownerRole === 'leader' ? 'LD' : 'SA';
+                      const avatarInitials = ownerRole === 'reviewer' ? 'RV' : ownerRole === 'leader' ? 'LD' : ownerRole === 'implementer' ? 'IM' : 'SA';
+                      const displayTitle = getPageName(meta.title || matchedPage.title);
+                      const updatedDateShort = String(matchedPage.updated_at || '2026-11-07').slice(0, 10);
 
                       return `
                         <div
                           class="kb-shelf-doc-card plane-page-item group relative flex items-center justify-between gap-3 px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900/75 transition-colors"
+                          data-page-id="${matchedPage.id}"
                           data-doc-key="${escapeAttr(key)}"
                           data-doc-shelf="${escapeAttr(sh.id)}"
-                          data-doc-title="${escapeAttr(meta.title)}"
+                          data-doc-title="${escapeAttr(displayTitle)}"
                           data-doc-module="${escapeAttr(meta.moduleName || '')}"
+                          data-page-access="${isPrivate ? '1' : '0'}"
+                          data-page-archived="${isArchived ? '1' : '0'}"
+                          data-page-favorite="${isFav ? '1' : '0'}"
+                          data-page-locked="${isLocked ? '1' : '0'}"
+                          data-page-owner="${escapeAttr(ownerRole)}"
+                          data-page-words="${meta.wordCount || 300}"
+                          data-page-updated="${escapeAttr(matchedPage.updated_at || '2026-11-07T15:00:00Z')}"
+                          data-page-created="${escapeAttr(matchedPage.created_at || '2026-11-01T10:00:00Z')}"
                         >
-                          <!-- Left: Page Icon + Title + Path + Telemetry Chips -->
+                          <!-- Left: Page Icon Box + Clickable Title + Path + Telemetry Chips -->
                           <div class="flex items-center gap-3 min-w-0 flex-1">
-                            <span class="text-zinc-400 group-hover:text-indigo-400 transition-colors shrink-0">
-                              ${Icons.page('w-4 h-4')}
+                            <span class="w-6 h-6 rounded-md bg-zinc-900 border border-zinc-800/90 group-hover:border-indigo-500/30 flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 transition-colors shrink-0">
+                              ${Icons.page('w-3.5 h-3.5')}
                             </span>
 
                             <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                              <span class="text-xs font-medium text-zinc-100 group-hover:text-white truncate">
-                                ${escapeHtml(meta.title)}
-                              </span>
+                              <button
+                                type="button"
+                                data-action="open-article-read"
+                                data-doc-key="${escapeAttr(key)}"
+                                class="text-xs font-medium text-zinc-100 group-hover:text-indigo-300 truncate text-left cursor-pointer transition-colors"
+                              >
+                                ${escapeHtml(displayTitle)}
+                              </button>
                               <span class="text-[11px] font-mono text-zinc-500 truncate hidden lg:inline">
                                 ${escapeHtml(key)}
                               </span>
                             </div>
 
-                            <!-- Plane Row Badges (Module, BR, RF, ADR) -->
+                            <!-- Plane Row Badges (Access, Archived, Module, BR, RF, ADR) -->
                             <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+                              ${isArchived ? `
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-rose-950/70 text-rose-300 border border-rose-500/30">
+                                  Archived
+                                </span>
+                              ` : ''}
+                              ${isPrivate ? `
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-violet-950/70 text-violet-300 border border-violet-500/30">
+                                  Private
+                                </span>
+                              ` : ''}
                               ${meta.moduleName ? `
                                 <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-purple-950/60 text-purple-300 border border-purple-500/30">
                                   ${escapeHtml(meta.moduleName)}
@@ -406,46 +612,63 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                             </div>
                           </div>
 
-                          <!-- Right: Plane BlockItemAction (Access/Lock, Owner Avatar, Reading Time, Favorite Star, Open/Edit) -->
-                          <div class="flex items-center gap-2 shrink-0">
-                            <!-- Lock / Access Status -->
+                          <!-- Right: Plane BlockItemAction (Access, Lock, Owner Avatar, Info Tooltip, Favorite Star, Open/Edit, ... Menu) -->
+                          <div class="flex items-center gap-1.5 shrink-0">
+                            <!-- 1. Access Indicator & Toggle (Public Globe vs Private Lock per BR-PAGE-01 & BR-PAGE-04) -->
+                            <button
+                              type="button"
+                              data-action="toggle-page-access"
+                              data-page-id="${matchedPage.id}"
+                              ${isArchived ? 'disabled' : ''}
+                              class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
+                              title="${isArchived ? 'Archived page (restore to change access)' : isPrivate ? 'Private page (click to make Public)' : 'Public page (click to make Private)'}"
+                            >
+                              ${isPrivate ? Icons.lock('w-3.5 h-3.5 text-violet-400') : Icons.globe('w-3.5 h-3.5 text-zinc-500 group-hover:text-indigo-400')}
+                            </button>
+
+                            <!-- 2. Lock / Normative Protection Toggle -->
                             <button
                               type="button"
                               data-action="toggle-page-lock"
                               data-page-id="${matchedPage.id}"
                               class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
-                              title="${isLocked ? 'Locked normative page' : 'Unlocked page'}"
+                              title="${isLocked ? 'Locked normative page (click to unlock)' : 'Unlocked page (click to lock)'}"
                             >
-                              ${isLocked ? Icons.lock('w-3.5 h-3.5 text-amber-400/80') : Icons.unlock('w-3.5 h-3.5')}
+                              ${isLocked ? Icons.lock('w-3.5 h-3.5 text-amber-400/85') : Icons.unlock('w-3.5 h-3.5')}
                             </button>
 
-                            <!-- Owner Bot Avatar -->
+                            <!-- 3. Owner Bot Avatar -->
                             <div
                               class="w-5 h-5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-[9px] font-mono font-bold text-indigo-300 flex items-center justify-center"
-                              title="Owned by: ${ownerRole} (BOT)"
+                              title="Owned by: ${ownerRole} (BOT) · Updated ${updatedDateShort}"
                             >
                               ${avatarInitials}
                             </div>
 
-                            <!-- Reading time -->
-                            <span class="text-[11px] font-mono text-zinc-500 w-10 text-right hidden md:inline">
+                            <!-- 4. Info & Reading time -->
+                            <span
+                              class="text-[11px] font-mono text-zinc-500 w-10 text-right hidden md:inline"
+                              title="Updated ${updatedDateShort} · ${meta.wordCount || 300} words · ${meta.readingTime} min read"
+                            >
                               ${meta.readingTime}m
                             </span>
 
-                            <!-- Favorite Star -->
-                            <button
-                              type="button"
-                              data-action="toggle-page-favorite"
-                              data-page-id="${matchedPage.id}"
-                              class="w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${
-                                isFav ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'
-                              }"
-                              title="${isFav ? 'Remove from favorites' : 'Add to favorites'}"
-                            >
-                              ${Icons.star(`w-3.5 h-3.5 ${isFav ? 'fill-amber-400' : ''}`)}
-                            </button>
+                            <!-- 5. Favorite Star (Hidden when archived per Plane BR-PAGE-03) -->
+                            ${!isArchived ? `
+                              <button
+                                type="button"
+                                data-action="toggle-page-favorite"
+                                data-page-id="${matchedPage.id}"
+                                class="w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${
+                                  isFav ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'
+                                }"
+                                title="${isFav ? 'Remove from favorites' : 'Add to favorites'}"
+                              >
+                                ${Icons.star(`w-3.5 h-3.5 ${isFav ? 'fill-amber-400' : ''}`)}
+                              </button>
+                            ` : ''}
 
-                            <!-- Open & Edit Buttons -->
+                            <!-- 6. Open & Edit Buttons -->
                             <button
                               type="button"
                               data-action="open-article-read"
@@ -465,6 +688,107 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                             >
                               ${Icons.edit('w-3 h-3')}
                             </button>
+
+                            <!-- 7. Plane Row Quick Actions Dropdown (...) -->
+                            <div class="relative">
+                              <button
+                                type="button"
+                                data-action="toggle-page-row-menu"
+                                data-page-id="${matchedPage.id}"
+                                class="h-6 w-6 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 border border-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+                                title="More page actions (Plane PageActions)"
+                              >
+                                ${Icons.dotsHorizontal('w-3.5 h-3.5')}
+                              </button>
+
+                              <div
+                                id="page-row-menu-${matchedPage.id}"
+                                class="plane-row-actions-menu hidden absolute right-0 top-7 z-40 w-48 py-1 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl text-xs font-sans"
+                              >
+                                <button
+                                  type="button"
+                                  data-action="open-article-read"
+                                  data-doc-key="${escapeAttr(key)}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.bookOpen('w-3.5 h-3.5 text-indigo-400')}
+                                  <span>Open page</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-action="copy-page-markdown"
+                                  data-page-id="${matchedPage.id}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.copy('w-3.5 h-3.5 text-zinc-400')}
+                                  <span>Copy markdown</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-action="copy-page-link"
+                                  data-doc-key="${escapeAttr(key)}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.link('w-3.5 h-3.5 text-zinc-400')}
+                                  <span>Copy page link</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-action="duplicate-page"
+                                  data-page-id="${matchedPage.id}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.plus('w-3.5 h-3.5 text-emerald-400')}
+                                  <span>Make a copy</span>
+                                </button>
+
+                                <div class="my-1 border-t border-zinc-800"></div>
+
+                                ${!isArchived ? `
+                                  <button
+                                    type="button"
+                                    data-action="toggle-page-lock"
+                                    data-page-id="${matchedPage.id}"
+                                    class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                  >
+                                    ${isLocked ? Icons.unlock('w-3.5 h-3.5 text-amber-400') : Icons.lock('w-3.5 h-3.5 text-amber-400')}
+                                    <span>${isLocked ? 'Unlock page' : 'Lock page'}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    data-action="toggle-page-access"
+                                    data-page-id="${matchedPage.id}"
+                                    class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                  >
+                                    ${isPrivate ? Icons.globe('w-3.5 h-3.5 text-indigo-400') : Icons.lock('w-3.5 h-3.5 text-violet-400')}
+                                    <span>${isPrivate ? 'Make public' : 'Make private'}</span>
+                                  </button>
+                                ` : ''}
+
+                                <button
+                                  type="button"
+                                  data-action="open-export-page-modal"
+                                  data-page-id="${matchedPage.id}"
+                                  data-doc-key="${escapeAttr(key)}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.download('w-3.5 h-3.5 text-cyan-400')}
+                                  <span>Export page</span>
+                                </button>
+
+                                <div class="my-1 border-t border-zinc-800"></div>
+
+                                <button
+                                  type="button"
+                                  data-action="toggle-page-archive"
+                                  data-page-id="${matchedPage.id}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 ${isArchived ? 'text-emerald-400' : 'text-rose-400'} hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${isArchived ? Icons.archiveRestore('w-3.5 h-3.5') : Icons.archive('w-3.5 h-3.5')}
+                                  <span>${isArchived ? 'Restore page' : 'Archive page'}</span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       `;
@@ -860,7 +1184,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           <div class="flex flex-wrap items-center gap-1.5">
             <div id="article-plane-header-actions">
               ${renderPageHeaderActions({
-                activePage: findPlanePage(activeDocKey, activeDocMeta),
+                activePage: activePlanePage,
                 isFullWidth: Boolean(planePageState.isFullWidth),
                 showNavigationPane: planePageState.showNavigationPane !== false,
                 showAiMenu: Boolean(planePageState.showAiMenu)
@@ -910,14 +1234,55 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
         </div>
 
-        <!-- 2.2 Plane PageEditorBody + Right Docked PageNavigationPane -->
-        <div id="doc-reader-view-container" class="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-96px)] bg-zinc-950">
+        <!-- 2.1b Plane Lock / Archive Read-Only Protection Banner (BR-PAGE-02) -->
+        <div
+          id="article-status-banner"
+          class="${(isActiveLocked || isActiveArchived) ? 'flex' : 'hidden'} px-5 py-2 border-b ${isActiveArchived ? 'bg-rose-950/25 border-rose-500/30 text-rose-200' : 'bg-amber-950/20 border-amber-500/30 text-amber-200'} items-center justify-between gap-3 text-xs"
+        >
+          <div class="flex items-center gap-2">
+            ${isActiveArchived ? Icons.archive('w-3.5 h-3.5 text-rose-400') : Icons.lock('w-3.5 h-3.5 text-amber-400')}
+            <span id="article-status-banner-text">
+              ${isActiveArchived
+                ? 'This page is archived in Plane Library (read-only). Restore it to make changes.'
+                : 'Normative page locked against accidental edits (Plane Lock active). You can still open Dual Editor or unlock below.'}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            ${isActiveArchived ? `
+              <button
+                type="button"
+                data-action="toggle-page-archive"
+                data-page-id="${activePlanePage.id}"
+                class="px-2.5 py-1 rounded bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/40 text-rose-200 text-[11px] font-mono font-semibold cursor-pointer"
+              >
+                Restore page
+              </button>
+            ` : `
+              <button
+                type="button"
+                data-action="toggle-page-lock"
+                data-page-id="${activePlanePage.id}"
+                class="px-2.5 py-1 rounded bg-amber-600/20 hover:bg-amber-600/35 border border-amber-500/40 text-amber-200 text-[11px] font-mono font-semibold cursor-pointer"
+              >
+                Unlock page
+              </button>
+            `}
+          </div>
+        </div>
 
-          <!-- Center Document Canvas (Distraction-Free Plane Page Canvas) -->
+        <!-- 2.2 Plane PageEditorBody + Right Docked PageNavigationPane -->
+        <div id="doc-reader-view-container" class="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-96px)] bg-zinc-950 relative">
+
+          <!-- Center Document Canvas (Distraction-Free Plane Page Canvas: max-w-[720px] or max-w-[1152px] Full Width) -->
           <div id="doc-reader-main-col" class="flex-1 overflow-y-auto px-6 sm:px-14 py-8 bg-zinc-950">
-            <!-- Plane Page Telemetry Subtitle Bar -->
-            <div class="${planePageState.isFullWidth ? 'max-w-none w-full' : 'max-w-3xl mx-auto'} mb-6 pb-3 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-400">
+            <!-- Plane PageEditorHeaderRoot & Telemetry Subtitle Bar -->
+            <div class="${planePageState.isFullWidth ? 'max-w-[1152px]' : 'max-w-[720px]'} mx-auto mb-6 pb-3 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-400">
               <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1 text-indigo-300">
+                  ${Icons.bot('w-3.5 h-3.5')}
+                  <span>${activePlanePage.owned_by_role || 'spec-author'}</span>
+                </span>
+                <span>·</span>
                 <span>Words: <strong id="article-meta-words" class="text-zinc-200">${activeDocMeta.wordCount || 0}</strong></span>
                 <span>Rules BR: <strong id="article-meta-br" class="text-amber-400">${activeDocMeta.ruleCount || 0}</strong></span>
                 <span>Reqs RF: <strong id="article-meta-rf" class="text-emerald-400">${activeDocMeta.reqCount || 0}</strong></span>
@@ -925,16 +1290,21 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               <span class="text-zinc-500">Smart Chips Active (INT-* / BR-* / RF-*)</span>
             </div>
 
-            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? 'max-w-none w-full' : 'max-w-3xl mx-auto'} text-zinc-200 leading-relaxed text-sm">
+            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? 'max-w-[1152px]' : 'max-w-[720px]'} mx-auto text-zinc-200 leading-relaxed text-sm">
               ${enrichMarkdownWithSmartChips(renderMarkdown(activeDocContent), features)}
             </article>
+          </div>
+
+          <!-- Floating Outline Mini-Bars when PageNavigationPane is collapsed -->
+          <div id="article-floating-outline-wrapper" class="${planePageState.showNavigationPane === false ? 'block' : 'hidden'}">
+            ${renderFloatingOutlineBars(activeDocToc)}
           </div>
 
           <!-- Right Docked Plane PageNavigationPane (4 Tabs: Outline, Info, Assets, Historial) -->
           <div id="doc-reader-right-col" class="${planePageState.showNavigationPane === false ? 'hidden' : 'w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-zinc-800 bg-zinc-950 shrink-0 flex flex-col'}">
             <div id="article-plane-inspector-container" class="flex-1 flex flex-col">
               ${PageNavigationPane({
-                page: findPlanePage(activeDocKey, activeDocMeta),
+                page: activePlanePage,
                 content: activeDocContent,
                 toc: activeDocToc,
                 activeTab: planePageState.activeNavTab || 'outline',
@@ -1045,7 +1415,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
       </div>
 
       <!-- ============================================================== -->
-      <!-- MODAL: CREAR NUEVA PÁGINA EN LIBRARY                           -->
+      <!-- MODAL: CREAR NUEVA PÁGINA EN LIBRARY (Plane CreatePageModal)   -->
       <!-- ============================================================== -->
       <div id="new-doc-modal" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
         <div class="w-full max-w-xl bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl p-5 space-y-4">
@@ -1059,9 +1429,18 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
           </div>
 
           <form id="new-doc-form" class="space-y-3 text-xs">
-            <div>
-              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>
-              <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none" required />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>
+                <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none" required />
+              </div>
+              <div>
+                <label class="block font-mono text-[11px] text-zinc-400 mb-1">Page Access (Plane Visibility):</label>
+                <select id="new-doc-access" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none">
+                  <option value="0">Public (Visible in Library)</option>
+                  <option value="1">Private (Personal / Draft)</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -1083,6 +1462,59 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- MODAL: EXPORTAR PÁGINA (Plane ExportPageModal)                 -->
+      <!-- ============================================================== -->
+      <div id="export-page-modal" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="w-full max-w-md bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl p-5 space-y-4 text-xs">
+          <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h3 class="text-xs font-bold text-zinc-100 flex items-center gap-2">
+              ${Icons.download('w-4 h-4 text-indigo-400')} <span>Export Page (Plane Library Exporter)</span>
+            </h3>
+            <button type="button" data-action="close-export-page-modal" class="w-6 h-6 rounded bg-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center justify-center cursor-pointer">
+              ${Icons.close('w-3.5 h-3.5')}
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Export Scope:</label>
+              <select id="export-page-scope" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="active">Active / Selected Page</option>
+                <option value="all">Full Sovereign Library Bundle (All Pages)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Format:</label>
+              <select id="export-page-format" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="md">Markdown (.md)</option>
+                <option value="html">Standalone HTML Report (.html)</option>
+              </select>
+            </div>
+
+            <label class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 cursor-pointer">
+              <span class="text-zinc-300">Include Mermaid Diagrams & Assets</span>
+              <input type="checkbox" id="export-page-include-assets" checked class="accent-indigo-500 rounded cursor-pointer" />
+            </label>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+            <button type="button" data-action="close-export-page-modal" class="h-7 px-3 rounded-md text-zinc-400 hover:bg-zinc-800 font-medium cursor-pointer">
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-action="confirm-export-page"
+              class="h-7 px-3.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+              ${Icons.download('w-3.5 h-3.5')}
+              <span>Export</span>
+            </button>
+          </div>
         </div>
       </div>
 

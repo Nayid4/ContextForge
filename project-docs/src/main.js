@@ -21,6 +21,7 @@ import {
   renderPlanePagesView,
   renderPageHeaderActions,
   PageNavigationPane,
+  renderFloatingOutlineBars,
   enrichMarkdownWithSmartChips,
   renderKnowledgeBase,
   renderArchitectureDocs,
@@ -678,22 +679,15 @@ class App {
       // Filtrar estantes por píldora en la Biblioteca
       const shelfPill = e.target.closest('.kb-shelf-pill');
       if (shelfPill) {
-        const targetShelf = shelfPill.getAttribute('data-shelf-filter');
+        const targetShelf = shelfPill.getAttribute('data-shelf-filter') || '';
+        this.kbActiveShelfFilter = targetShelf;
         document.querySelectorAll('.kb-shelf-pill').forEach(p => {
           p.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-semibold');
           p.classList.add('bg-zinc-900', 'text-zinc-400');
         });
         shelfPill.classList.add('active', 'bg-indigo-600', 'text-white', 'font-semibold');
         shelfPill.classList.remove('bg-zinc-900', 'text-zinc-400');
-
-        document.querySelectorAll('.kb-shelf-section').forEach(sec => {
-          const sId = sec.getAttribute('data-shelf-id');
-          if (!targetShelf || sId === targetShelf) {
-            sec.classList.remove('hidden');
-          } else {
-            sec.classList.add('hidden');
-          }
-        });
+        this.applyLibraryFiltersAndSort();
         return;
       }
 
@@ -730,11 +724,15 @@ class App {
         return;
       }
 
-      // Conmutar entre Niveles de Perspectiva (Global / Módulos / Dossier Maestro / Plane Workspace / Governance)
+      // Conmutar entre Niveles de Perspectiva y Pestañas Plane (Public / Private / Archived / Modules / Master / Split / Governance)
       const perspectiveBtn = e.target.closest('[data-kb-perspective]');
       if (perspectiveBtn) {
         const targetPersp = perspectiveBtn.getAttribute('data-kb-perspective');
+        const accessTab = perspectiveBtn.getAttribute('data-page-access-tab');
         this.activeKbPerspective = targetPersp || 'global';
+        if (accessTab) {
+          this.kbAccessTab = accessTab;
+        }
         document.querySelectorAll('.kb-perspective-btn').forEach(btn => {
           btn.classList.remove('active', 'border-indigo-500', 'text-zinc-100', 'font-semibold');
           btn.classList.add('border-transparent', 'text-zinc-400', 'font-medium');
@@ -749,7 +747,190 @@ class App {
         if (targetPanel) {
           targetPanel.classList.remove('hidden');
         }
+        if (targetPersp === 'global') {
+          this.applyLibraryFiltersAndSort();
+        }
         this.initMermaidDiagrams();
+        return;
+      }
+
+      // Alternar dirección de ordenamiento Ascendente / Descendente (Plane OrderBy)
+      const sortDirBtn = e.target.closest('[data-action="toggle-kb-sort-dir"]');
+      if (sortDirBtn) {
+        const curr = sortDirBtn.getAttribute('data-sort-dir') || 'desc';
+        const next = curr === 'desc' ? 'asc' : 'desc';
+        sortDirBtn.setAttribute('data-sort-dir', next);
+        sortDirBtn.textContent = next.toUpperCase();
+        this.kbSortDir = next;
+        this.applyLibraryFiltersAndSort();
+        return;
+      }
+
+      // Mostrar / Ocultar Popover de Filtros de Library
+      const toggleFiltersPopoverBtn = e.target.closest('[data-action="toggle-kb-filters-popover"]');
+      if (toggleFiltersPopoverBtn) {
+        const pop = document.getElementById('kb-filters-popover');
+        if (pop) pop.classList.toggle('hidden');
+        return;
+      }
+
+      // Limpiar todos los filtros de Library (Plane Clear all)
+      const clearKbFiltersBtn = e.target.closest('[data-action="clear-kb-filters"]');
+      if (clearKbFiltersBtn) {
+        this.kbAccessTab = 'public';
+        this.kbActiveShelfFilter = '';
+        this.kbSearchQuery = '';
+        this.kbFilterFavorites = false;
+        this.kbFilterLocked = false;
+        this.kbFilterOwner = '';
+        const searchInput = document.getElementById('kb-library-search-input');
+        if (searchInput) searchInput.value = '';
+        const favChk = document.getElementById('kb-filter-favorites-chk');
+        if (favChk) favChk.checked = false;
+        const lockChk = document.getElementById('kb-filter-locked-chk');
+        if (lockChk) lockChk.checked = false;
+        const ownerSel = document.getElementById('kb-filter-owner-select');
+        if (ownerSel) ownerSel.value = '';
+        document.querySelectorAll('.kb-shelf-pill').forEach((p, idx) => {
+          p.classList.toggle('active', idx === 0);
+          p.classList.toggle('bg-indigo-600', idx === 0);
+          p.classList.toggle('text-white', idx === 0);
+          p.classList.toggle('font-semibold', idx === 0);
+          p.classList.toggle('bg-zinc-900', idx !== 0);
+          p.classList.toggle('text-zinc-400', idx !== 0);
+        });
+        document.querySelectorAll('.kb-access-tab-btn').forEach(btn => {
+          const isPub = btn.getAttribute('data-page-access-tab') === 'public';
+          btn.classList.toggle('active', isPub);
+          btn.classList.toggle('border-indigo-500', isPub);
+          btn.classList.toggle('text-zinc-100', isPub);
+          btn.classList.toggle('font-semibold', isPub);
+          btn.classList.toggle('border-transparent', !isPub);
+          btn.classList.toggle('text-zinc-400', !isPub);
+        });
+        document.getElementById('kb-filters-popover')?.classList.add('hidden');
+        this.applyLibraryFiltersAndSort();
+        return;
+      }
+
+      // Mostrar / Ocultar menú contextual (...) de una fila de página
+      const rowMenuBtn = e.target.closest('[data-action="toggle-page-row-menu"]');
+      if (rowMenuBtn) {
+        e.stopPropagation();
+        const pageId = rowMenuBtn.getAttribute('data-page-id');
+        const targetMenu = document.getElementById(`page-row-menu-${pageId}`);
+        document.querySelectorAll('.plane-row-actions-menu').forEach(m => {
+          if (m !== targetMenu) m.classList.add('hidden');
+        });
+        if (targetMenu) targetMenu.classList.toggle('hidden');
+        return;
+      }
+
+      // Cerrar menús contextuales abiertos al hacer clic fuera
+      if (!e.target.closest('.plane-row-actions-menu') && !e.target.closest('#kb-filters-popover')) {
+        document.querySelectorAll('.plane-row-actions-menu').forEach(m => m.classList.add('hidden'));
+      }
+
+      // Alternar Visibilidad de Página Plane: Public (0) <-> Private (1) según BR-PAGE-01 y BR-PAGE-04
+      const accessPageBtn = e.target.closest('[data-action="toggle-page-access"]');
+      if (accessPageBtn) {
+        const pageId = accessPageBtn.getAttribute('data-page-id');
+        const pd = store.getState().planeData || {};
+        const pages = pd.pages || [];
+        const target = pages.find(p => p.id === pageId);
+        if (target && target.archived_at) return;
+        const nextAccess = target ? (Number(target.access || 0) === 1 ? 0 : 1) : 1;
+        if (target) target.access = nextAccess;
+        await api.updatePlanePage(pageId, { access: nextAccess });
+        store.setState({ planeData: { ...pd, pages: [...pages] } });
+        return;
+      }
+
+      // Archivar / Restaurar Página Plane según BR-PAGE-03 (auto-unfavorite al archivar)
+      const archivePageBtn = e.target.closest('[data-action="toggle-page-archive"]');
+      if (archivePageBtn) {
+        const pageId = archivePageBtn.getAttribute('data-page-id');
+        const pd = store.getState().planeData || {};
+        const pages = pd.pages || [];
+        const target = pages.find(p => p.id === pageId);
+        const willArchive = !(target && target.archived_at);
+        if (target) {
+          target.archived_at = willArchive ? new Date().toISOString() : null;
+          if (willArchive) target.is_favorite = 0;
+        }
+        await api.updatePlanePage(pageId, { archived: willArchive });
+        store.setState({ planeData: { ...pd, pages: [...pages] } });
+        return;
+      }
+
+      // Duplicar Página Plane (Make a copy) según BR-PAGE-05
+      const dupPageBtn = e.target.closest('[data-action="duplicate-page"]');
+      if (dupPageBtn) {
+        const pageId = dupPageBtn.getAttribute('data-page-id');
+        if (pageId) {
+          await api.updatePlanePage(pageId, { duplicate: true });
+          await this.refreshData();
+        }
+        return;
+      }
+
+      // Copiar Enlace Directo de Página
+      const copyLinkBtn = e.target.closest('[data-action="copy-page-link"]');
+      if (copyLinkBtn) {
+        const docKey = copyLinkBtn.getAttribute('data-doc-key') || this.currentActiveDocKey || 'c4-model.md';
+        const url = `${window.location.origin}${window.location.pathname}#pages?doc=${encodeURIComponent(docKey)}`;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).catch(() => {});
+        }
+        document.querySelectorAll('.plane-row-actions-menu').forEach(m => m.classList.add('hidden'));
+        return;
+      }
+
+      // Abrir / Cerrar / Confirmar Modal de Exportación de Página (Plane ExportPageModal)
+      const openExportModalBtn = e.target.closest('[data-action="open-export-page-modal"]');
+      if (openExportModalBtn) {
+        this.exportTargetDocKey = openExportModalBtn.getAttribute('data-doc-key') || this.currentActiveDocKey || 'c4-model.md';
+        const modal = document.getElementById('export-page-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+        document.querySelectorAll('.plane-row-actions-menu').forEach(m => m.classList.add('hidden'));
+        return;
+      }
+      if (e.target.closest('[data-action="close-export-page-modal"]')) {
+        const modal = document.getElementById('export-page-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
+      if (e.target.closest('[data-action="confirm-export-page"]')) {
+        const scope = document.getElementById('export-page-scope')?.value || 'active';
+        const format = document.getElementById('export-page-format')?.value || 'md';
+        const includeAssets = document.getElementById('export-page-include-assets')?.checked !== false;
+        const docs = store.getState().knowledgeIndex?.docs || {};
+        const docKey = scope === 'all' ? 'MASTER-PROJECT-KNOWLEDGE.md' : (this.exportTargetDocKey || this.currentActiveDocKey || 'c4-model.md');
+        let rawMd = docs[docKey] || Object.values(docs).join('\n\n---\n\n') || '# Exported Page';
+        if (!includeAssets) {
+          rawMd = rawMd.replace(/```mermaid[\s\S]*?```/gi, '_[Diagram omitted in text-only export]_');
+        }
+        const blobContent = format === 'html'
+          ? `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${docKey}</title><style>body{font-family:system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;background:#09090b;color:#f4f4f5;line-height:1.6}pre,code{background:#18181b;padding:0.2rem 0.4rem;border-radius:4px}</style></head><body>${renderMarkdown(rawMd)}</body></html>`
+          : rawMd;
+        const mime = format === 'html' ? 'text/html;charset=utf-8' : 'text/markdown;charset=utf-8';
+        const ext = format === 'html' ? '.html' : '.md';
+        const blob = new Blob([blobContent], { type: mime });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = docKey.replace(/\.md$/i, '') + ext;
+        link.click();
+        const modal = document.getElementById('export-page-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
         return;
       }
 
@@ -1018,14 +1199,8 @@ class App {
       }
 
       if (e.target.id === 'kb-library-search-input') {
-        const q = (e.target.value || '').trim().toLowerCase();
-        document.querySelectorAll('#kb-shelves-container .kb-shelf-doc-card').forEach(row => {
-          const title = (row.getAttribute('data-doc-title') || '').toLowerCase();
-          const key = (row.getAttribute('data-doc-key') || '').toLowerCase();
-          const mod = (row.getAttribute('data-doc-module') || '').toLowerCase();
-          const match = !q || title.includes(q) || key.includes(q) || mod.includes(q);
-          row.classList.toggle('hidden', !match);
-        });
+        this.kbSearchQuery = (e.target.value || '').trim().toLowerCase();
+        this.applyLibraryFiltersAndSort();
         return;
       }
 
@@ -1063,6 +1238,26 @@ class App {
       }
       if (e.target.id === 'plane-group-by') {
         store.setState({ planeGroupBy: e.target.value });
+        return;
+      }
+      if (e.target.id === 'kb-sort-by-select') {
+        this.kbSortBy = e.target.value || 'updated_at';
+        this.applyLibraryFiltersAndSort();
+        return;
+      }
+      if (e.target.id === 'kb-filter-favorites-chk') {
+        this.kbFilterFavorites = Boolean(e.target.checked);
+        this.applyLibraryFiltersAndSort();
+        return;
+      }
+      if (e.target.id === 'kb-filter-locked-chk') {
+        this.kbFilterLocked = Boolean(e.target.checked);
+        this.applyLibraryFiltersAndSort();
+        return;
+      }
+      if (e.target.id === 'kb-filter-owner-select') {
+        this.kbFilterOwner = e.target.value || '';
+        this.applyLibraryFiltersAndSort();
         return;
       }
       if (e.target.id === 'kb-rules-module-filter') {
@@ -1115,6 +1310,177 @@ class App {
         }
       }
     });
+
+    // 5. Creación de nueva página en Plane Library (#new-doc-form)
+    document.addEventListener('submit', async (e) => {
+      if (e.target.id === 'new-doc-form') {
+        e.preventDefault();
+        const titleInput = document.getElementById('new-doc-title');
+        const shelfSelect = document.getElementById('new-doc-shelf');
+        const accessSelect = document.getElementById('new-doc-access');
+        const pathInput = document.getElementById('new-doc-path');
+        const contentInput = document.getElementById('new-doc-content');
+
+        const rawTitle = (titleInput?.value || '').trim();
+        const safeTitle = rawTitle.length > 0 ? rawTitle : 'Untitled';
+        const shelf = shelfSelect?.value || 'architecture';
+        const access = Number(accessSelect?.value || 0);
+        const rawPath = (pathInput?.value || '').trim() || `${safeTitle.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')}.md`;
+        const cleanDocKey = rawPath.endsWith('.md') ? rawPath : `${rawPath}.md`;
+        const content = (contentInput?.value || '').trim() || `# ${safeTitle}\n\n> [!NOTE] Nueva página creada en Plane Library.\n`;
+
+        store.saveDoc(cleanDocKey, content);
+        await api.createPlanePage({
+          title: safeTitle,
+          shelf,
+          access,
+          file_path: `knowledge/${cleanDocKey}`,
+          content_markdown: content
+        });
+
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        await this.refreshData();
+        this.openArticleView(cleanDocKey, false);
+      }
+    });
+  }
+
+  /**
+   * Motor de Filtrado y Ordenamiento de Páginas al estilo Plane (BR-PAGE-06)
+   * Implementa shouldFilterPage (Public / Private / Archived + Favorites + Locked + Created By + Shelf + Search)
+   * y sortBy / orderBy (updated_at, created_at, name en asc / desc), además de PageAppliedFiltersList.
+   */
+  applyLibraryFiltersAndSort() {
+    const accessTab = this.kbAccessTab || 'public';
+    const shelfFilter = this.kbActiveShelfFilter || '';
+    const query = (this.kbSearchQuery || '').trim().toLowerCase();
+    const filterFav = Boolean(this.kbFilterFavorites);
+    const filterLocked = Boolean(this.kbFilterLocked);
+    const filterOwner = this.kbFilterOwner || '';
+    const sortBy = this.kbSortBy || 'updated_at';
+    const sortDir = this.kbSortDir || 'desc';
+
+    let totalVisible = 0;
+
+    document.querySelectorAll('#kb-shelves-container .kb-shelf-section').forEach(section => {
+      const shelfId = section.getAttribute('data-shelf-id') || '';
+      const rowsContainer = section.querySelector('.kb-shelf-rows-list');
+      const cards = Array.from(section.querySelectorAll('.kb-shelf-doc-card'));
+
+      // Ordenar tarjetas dentro del estante según sortBy y sortDir
+      cards.sort((a, b) => {
+        if (sortBy === 'name') {
+          const nameA = (a.getAttribute('data-doc-title') || '').toLowerCase();
+          const nameB = (b.getAttribute('data-doc-title') || '').toLowerCase();
+          return sortDir === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        }
+        if (sortBy === 'created_at') {
+          const cA = new Date(a.getAttribute('data-page-created') || 0).getTime();
+          const cB = new Date(b.getAttribute('data-page-created') || 0).getTime();
+          return sortDir === 'asc' ? cA - cB : cB - cA;
+        }
+        const uA = new Date(a.getAttribute('data-page-updated') || 0).getTime();
+        const uB = new Date(b.getAttribute('data-page-updated') || 0).getTime();
+        return sortDir === 'asc' ? uA - uB : uB - uA;
+      });
+
+      if (rowsContainer) {
+        cards.forEach(card => rowsContainer.appendChild(card));
+      }
+
+      let shelfVisible = 0;
+      cards.forEach(card => {
+        const isArchived = card.getAttribute('data-page-archived') === '1';
+        const isPrivate = card.getAttribute('data-page-access') === '1';
+        const isFav = card.getAttribute('data-page-favorite') === '1';
+        const isLock = card.getAttribute('data-page-locked') === '1';
+        const owner = card.getAttribute('data-page-owner') || '';
+        const title = (card.getAttribute('data-doc-title') || '').toLowerCase();
+        const key = (card.getAttribute('data-doc-key') || '').toLowerCase();
+        const mod = (card.getAttribute('data-doc-module') || '').toLowerCase();
+
+        let visible = true;
+        // 1. Filtro por pestaña Plane (Public / Private / Archived)
+        if (accessTab === 'archived') {
+          if (!isArchived) visible = false;
+        } else if (accessTab === 'private') {
+          if (isArchived || !isPrivate) visible = false;
+        } else if (accessTab === 'public') {
+          if (isArchived || isPrivate) visible = false;
+        }
+
+        // 2. Filtro por Estante (Shelf)
+        if (visible && shelfFilter && shelfId !== shelfFilter) {
+          visible = false;
+        }
+
+        // 3. Filtros de Popover Plane (Favorites / Locked / Created by)
+        if (visible && filterFav && !isFav) visible = false;
+        if (visible && filterLocked && !isLock) visible = false;
+        if (visible && filterOwner && owner !== filterOwner) visible = false;
+
+        // 4. Búsqueda textual
+        if (visible && query) {
+          if (!title.includes(query) && !key.includes(query) && !mod.includes(query) && !shelfId.toLowerCase().includes(query)) {
+            visible = false;
+          }
+        }
+
+        card.classList.toggle('hidden', !visible);
+        if (visible) {
+          shelfVisible++;
+          totalVisible++;
+        }
+      });
+
+      const countBadge = section.querySelector('.kb-shelf-visible-count');
+      if (countBadge) countBadge.textContent = String(shelfVisible);
+      section.classList.toggle('hidden', shelfVisible === 0);
+    });
+
+    // Ocultar franja de favoritos fijados cuando se está en Private o Archived o con búsqueda activa
+    const pinnedStrip = document.getElementById('kb-pinned-featured-strip');
+    if (pinnedStrip) {
+      pinnedStrip.classList.toggle('hidden', accessTab !== 'public' || Boolean(query) || Boolean(shelfFilter));
+    }
+
+    // Mostrar estado vacío Plane cuando no hay coincidencias
+    const emptyState = document.getElementById('kb-empty-filter-state');
+    if (emptyState) {
+      emptyState.classList.toggle('hidden', totalVisible > 0);
+      emptyState.classList.toggle('flex', totalVisible === 0);
+    }
+
+    // Actualizar barra de filtros aplicados (PageAppliedFiltersList)
+    const appliedBar = document.getElementById('kb-applied-filters-bar');
+    const chipsContainer = document.getElementById('kb-applied-filters-chips');
+    const activeChips = [];
+    if (accessTab !== 'public') activeChips.push(`Tab: ${accessTab.toUpperCase()}`);
+    if (shelfFilter) activeChips.push(`Shelf: ${shelfFilter}`);
+    if (filterFav) activeChips.push('Favorite: Yes');
+    if (filterLocked) activeChips.push('Locked: Yes');
+    if (filterOwner) activeChips.push(`Created by: ${filterOwner}`);
+    if (query) activeChips.push(`Query: "${query}"`);
+
+    if (appliedBar && chipsContainer) {
+      if (activeChips.length > 0) {
+        appliedBar.classList.remove('hidden');
+        appliedBar.classList.add('flex');
+        chipsContainer.innerHTML = activeChips.map(c => `
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 font-mono text-[10px]">
+            ${escapeHtml(c)}
+          </span>
+        `).join('');
+      } else {
+        appliedBar.classList.add('hidden');
+        appliedBar.classList.remove('flex');
+        chipsContainer.innerHTML = '';
+      }
+    }
   }
 
   openArticleView(docKey, openInEditor = false, skipScroll = false) {
@@ -1138,7 +1504,9 @@ class App {
       word_count: meta.wordCount || 400,
       reading_time_min: meta.readingTime || 3,
       is_locked: 1,
-      is_favorite: docKey === 'c4-model.md' ? 1 : 0
+      is_favorite: docKey === 'c4-model.md' ? 1 : 0,
+      access: 0,
+      archived_at: null
     };
     const content = docs[docKey] || matchedPlanePage.content_markdown || '# Documento no disponible';
 
@@ -1154,6 +1522,8 @@ class App {
     const rfEl = document.getElementById('article-meta-rf');
     const headerActionsEl = document.getElementById('article-plane-header-actions');
     const inspectorEl = document.getElementById('article-plane-inspector-container');
+    const statusBannerEl = document.getElementById('article-status-banner');
+    const floatingOutlineEl = document.getElementById('article-floating-outline-wrapper');
 
     const readerContainer = document.getElementById('doc-reader-view-container');
     const editorContainer = document.getElementById('doc-editor-view-container');
@@ -1181,6 +1551,15 @@ class App {
         showNavigationPane: state.planePageShowNavPane !== false,
         showAiMenu: Boolean(state.planePageShowAiMenu)
       });
+    }
+    if (statusBannerEl) {
+      const isLocked = Boolean(matchedPlanePage.is_locked);
+      const isArchived = Boolean(matchedPlanePage.archived_at);
+      statusBannerEl.classList.toggle('hidden', !isLocked && !isArchived);
+      statusBannerEl.classList.toggle('flex', isLocked || isArchived);
+    }
+    if (floatingOutlineEl) {
+      floatingOutlineEl.innerHTML = state.planePageShowNavPane === false ? renderFloatingOutlineBars(toc) : '';
     }
     if (inspectorEl) {
       inspectorEl.innerHTML = PageNavigationPane({

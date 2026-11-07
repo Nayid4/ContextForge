@@ -11,6 +11,14 @@ export const initialPageState = {
   editorMode: 'reader', // 'reader' | 'editor'
   activeShelf: 'all',
   filterTab: 'all', // 'all' | 'favorites' | 'locked' | 'modules'
+  navigationTab: 'public', // Plane TPageNavigationTabs: 'public' | 'private' | 'archived' | 'all'
+  orderBy: 'updated_at', // Plane TPageOrderBy: 'updated_at' | 'created_at' | 'name'
+  sortBy: 'desc', // Plane TPageSortBy: 'asc' | 'desc'
+  filters: {
+    favorites: false,
+    locked: false,
+    created_by: []
+  },
   isFullWidth: false,
   showNavigationPane: true,
   activeNavTab: 'outline', // 'outline' | 'info' | 'assets' | 'version_history'
@@ -19,7 +27,10 @@ export const initialPageState = {
 
 export class PageStore {
   constructor(initialState = initialPageState) {
-    this.state = { ...initialState };
+    this.state = {
+      ...initialState,
+      filters: { ...(initialState.filters || { favorites: false, locked: false, created_by: [] }) }
+    };
     this.listeners = new Set();
   }
 
@@ -57,6 +68,11 @@ export class PageStore {
   }
 
   setEditorMode(mode) {
+    const activePage = this.state.pages.find(p => p.id === this.state.activePageId);
+    // Plane BR-PAGE-02: Locked or archived pages cannot enter editable mode
+    if (mode === 'editor' && activePage && (activePage.is_locked || activePage.archived_at)) {
+      return;
+    }
     this.setState({ editorMode: mode });
   }
 
@@ -66,6 +82,40 @@ export class PageStore {
 
   setFilterTab(filterTab) {
     this.setState({ filterTab });
+  }
+
+  setNavigationTab(navigationTab) {
+    this.setState({ navigationTab });
+  }
+
+  setOrderBy(orderBy) {
+    this.setState({ orderBy });
+  }
+
+  setSortBy(sortBy) {
+    this.setState({ sortBy });
+  }
+
+  setFilters(partialFilters = {}) {
+    this.setState({
+      filters: {
+        ...this.state.filters,
+        ...partialFilters
+      }
+    });
+  }
+
+  clearAllFilters() {
+    this.setState({
+      searchQuery: '',
+      activeShelf: 'all',
+      filterTab: 'all',
+      filters: {
+        favorites: false,
+        locked: false,
+        created_by: []
+      }
+    });
   }
 
   setFullWidth(isFullWidth) {
@@ -87,23 +137,92 @@ export class PageStore {
   togglePageProperty(pageId, propKey) {
     const updatedPages = this.state.pages.map(p => {
       if (p.id !== pageId) return p;
+      // Plane BR-PAGE-04: Access cannot be changed when archived
+      if (propKey === 'access' && p.archived_at) return p;
       return { ...p, [propKey]: p[propKey] ? 0 : 1 };
     });
     this.setState({ pages: updatedPages });
   }
 
+  archivePage(pageId) {
+    const nowIso = new Date().toISOString();
+    const updatedPages = this.state.pages.map(p => {
+      if (p.id !== pageId) return p;
+      // Plane BR-PAGE-03: Archiving automatically removes page from Favorites
+      return { ...p, archived_at: nowIso, is_favorite: 0 };
+    });
+    this.setState({ pages: updatedPages });
+  }
+
+  restorePage(pageId) {
+    const updatedPages = this.state.pages.map(p => {
+      if (p.id !== pageId) return p;
+      return { ...p, archived_at: null };
+    });
+    this.setState({ pages: updatedPages });
+  }
+
   getFilteredPages() {
-    const { pages, searchQuery, activeShelf } = this.state;
-    return pages.filter(p => {
+    const { pages, searchQuery, activeShelf, navigationTab, orderBy, sortBy, filters } = this.state;
+
+    const filtered = pages.filter(p => {
+      // 1. Navigation Tab (Public / Private / Archived / All)
+      if (navigationTab === 'archived') {
+        if (!p.archived_at) return false;
+      } else if (navigationTab === 'private') {
+        if (p.archived_at || Number(p.access || 0) !== 1) return false;
+      } else if (navigationTab === 'public') {
+        if (p.archived_at || Number(p.access || 0) !== 0) return false;
+      } else if (navigationTab === 'all') {
+        if (p.archived_at) return false;
+      }
+
+      // 2. Shelf filter
       if (activeShelf !== 'all' && p.shelf !== activeShelf) return false;
+
+      // 3. Property filters (favorites, locked, created_by)
+      if (filters?.favorites && !p.is_favorite) return false;
+      if (filters?.locked && !p.is_locked) return false;
+      if (Array.isArray(filters?.created_by) && filters.created_by.length > 0) {
+        if (!filters.created_by.includes(p.owned_by_role) && !filters.created_by.includes(p.owned_by_id)) {
+          return false;
+        }
+      }
+
+      // 4. Search query
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
       return (p.title || '').toLowerCase().includes(q) || (p.file_path && p.file_path.toLowerCase().includes(q));
     });
+
+    // 5. Plane OrderBy & SortBy (name, created_at, updated_at)
+    const dir = sortBy === 'asc' ? 1 : -1;
+    return filtered.sort((a, b) => {
+      if (orderBy === 'name') {
+        const nameA = (a.title || 'Untitled').toLowerCase();
+        const nameB = (b.title || 'Untitled').toLowerCase();
+        return nameA.localeCompare(nameB) * dir;
+      }
+      if (orderBy === 'created_at') {
+        const tA = new Date(a.created_at || a.updated_at || 0).getTime();
+        const tB = new Date(b.created_at || b.updated_at || 0).getTime();
+        return (tA - tB) * dir;
+      }
+      const uA = new Date(a.updated_at || 0).getTime();
+      const uB = new Date(b.updated_at || 0).getTime();
+      return (uA - uB) * dir;
+    });
+  }
+
+  getFilteredAndSortedPages() {
+    return this.getFilteredPages();
   }
 
   reset() {
-    this.state = { ...initialPageState };
+    this.state = {
+      ...initialPageState,
+      filters: { ...initialPageState.filters }
+    };
     this.notify();
   }
 }

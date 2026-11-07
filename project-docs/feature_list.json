@@ -1493,6 +1493,126 @@
           "project-docs/specs/017_plane_pages_knowledge_graph_ai/evidence/04-plane-pages-docs.png"
         ]
       }
+    },
+    {
+      "id": 18,
+      "type": "feature",
+      "name": "plane_library_ui_ux_refactor",
+      "title": "Refactorizacion de Navegacion Lateral Library, Favoritos Fijados y Listas Compactas al Estilo Plane",
+      "description": "Renombrado del menu lateral de Pages a Library con seccion dinamica Favorites en Sidebar.js y rediseño inicial de KnowledgeBase.js al formato de listas compactas y oscuras de Plane.",
+      "module": "Knowledge Engine",
+      "priority": "P0",
+      "weight": 100,
+      "depends_on": [
+        17
+      ],
+      "branch": "feature/INT-018/plane_library_ui_ux_refactor",
+      "spec_folder": "project-docs/specs/018_plane_library_ui_ux_refactor",
+      "status": "done",
+      "acceptance": [
+        "El menu lateral principal muestra Library e incluye la seccion Favorites con acceso directo a paginas favoritas.",
+        "KnowledgeBase.js utiliza la paleta oscura bg-zinc-950 y filas compactas inspiradas en Plane."
+      ],
+      "user_story": {
+        "as_a": "Arquitecto de Software y Desarrollador",
+        "i_want": "que la navegacion lateral se llame Library como en Plane y muestre las paginas favoritas",
+        "so_that": "la experiencia visual sea coherente con Plane"
+      },
+      "subtasks": [
+        {
+          "id": "INT-018-DEV",
+          "type": "development",
+          "title": "Actualizacion de Sidebar.js con Library y Favorites y refactorizacion de KnowledgeBase.js",
+          "assignee": "implementer",
+          "status": "done"
+        },
+        {
+          "id": "INT-018-QA",
+          "type": "qa",
+          "title": "Verificacion E2E Playwright y unitaria en 9 niveles",
+          "assignee": "reviewer",
+          "status": "done"
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T20:45:00.000Z",
+        "dev_summary": "Sidebar actualizado a Library con seccion Favorites y rediseño de KnowledgeBase.js en filas compactas.",
+        "verification_report": "project-docs/specs/017_plane_pages_knowledge_graph_ai/verification-report.md"
+      }
+    },
+    {
+      "id": 19,
+      "type": "feature",
+      "name": "plane_library_flows_and_ux_refinement",
+      "title": "Paridad 1:1 de Reglas de Negocio (BR-PAGE-01..06), Flujos Interactivos, UI/UX de Plane Library y Evolucion de project-knowledge",
+      "description": "Implementacion integral de las reglas de negocio de Plane Library (base-page.ts y project-page.store.ts): BR-PAGE-01 (Untitled fallback), BR-PAGE-02 (Lock & Archive read-only guard con banner interactivo), BR-PAGE-03 (auto-unfavorite al archivar pagina), BR-PAGE-04 (bloqueo de cambio de visibilidad Public/Private en paginas archivadas), BR-PAGE-05 (Make a copy / duplicacion de pagina en SQLite y disco .md) y BR-PAGE-06 (motor de filtrado por pestañas Public, Private y Archived, ordenamiento por Date modified, Date created y Name en asc/desc, popover de filtros Favorites/Locked/Created by y barra de chips PageAppliedFiltersList). Rediseño de las filas de Library con BlockItemAction y menu contextual (...), ExportPageModal y actualizacion de la skill /project-knowledge.",
+      "module": "Knowledge Engine",
+      "priority": "P0",
+      "weight": 100,
+      "depends_on": [
+        18
+      ],
+      "branch": "feature/INT-019/plane_library_flows_and_ux_refinement",
+      "spec_folder": "project-docs/specs/019_plane_library_flows_and_ux_refinement",
+      "status": "done",
+      "acceptance": [
+        "Reglas de negocio BR-PAGE-01 a BR-PAGE-06 implementadas en sqlite-sync.js, serve.js, cli.js, page.service.js, page.store.js y main.js.",
+        "Barra de navegacion de Library con pestañas Public, Private y Archived, selector OrderBy (Date modified, Date created, Name asc/desc), popover Filters y barra PageAppliedFiltersList.",
+        "Filas de pagina (PageListBlock) con BlockItemAction en hover (Visibilidad Globe/Lock, Lock/Unlock, Avatar de Agente Bot, Favorite Star y menu contextual '...' con Open, Copy markdown, Copy link, Make a copy, Lock/Unlock, Make public/private, Export y Archive/Restore).",
+        "Banner interactivo de proteccion Lock/Archive (#article-status-banner) y lienzo centrado de 720px (o 1152px en Full Width) con barras flotantes de Outline cuando el panel derecho se oculta.",
+        "Skill /project-knowledge actualizada y sincronizada en triple espejo (.opencode/skills/, .github/skills/, .agents/skills/) organizando los documentos generados bajo el modelo Public/Private/Locked/Favorite de Plane Library."
+      ],
+      "user_story": {
+        "as_a": "Arquitecto de Software, Desarrollador y Agente de IA",
+        "i_want": "que la seccion Library replique 1:1 las reglas de negocio, los flujos interactivos, la organizacion de datos y la UI/UX de Plane Library",
+        "so_that": "la base de conocimiento del proyecto se gestione con la misma precision, gobierno documental y fluidez que en Plane"
+      },
+      "subtasks": [
+        {
+          "id": "INT-019-DEV",
+          "type": "development",
+          "title": "Implementacion de BR-PAGE-01..06 en SQLite/CLI/Store, refinamiento UI/UX de Library y evolucion de project-knowledge",
+          "assignee": "implementer",
+          "status": "done",
+          "tasks": [
+            "Implementar reglas BR-PAGE-01..06 en db.js, sqlite-sync.js, serve.js, cli.js, page.service.js y page.store.js",
+            "Refactorizar KnowledgeBase.js, PagesPage.js y main.js con pestañas Public/Private/Archived, OrderBy, Filters, BlockItemAction, menu contextual y ExportPageModal",
+            "Actualizar .opencode/skills/project-knowledge/SKILL.md y sincronizar hacia .github/skills/ y .agents/skills/"
+          ]
+        },
+        {
+          "id": "INT-019-QA",
+          "type": "qa",
+          "title": "Suite de pruebas unitarias de BR-PAGE-01..06, pruebas E2E Playwright y verificacion en 9 niveles",
+          "assignee": "reviewer",
+          "status": "done",
+          "test_cases": [
+            {
+              "id": "TC-01",
+              "title": "Validar BR-PAGE-01..06 en PageService, PageStore y renderKnowledgeBase en pages.test.js",
+              "status": "passed"
+            },
+            {
+              "id": "TC-02",
+              "title": "Validar paridad triple de las 21 skills incluyendo project-knowledge",
+              "status": "passed"
+            },
+            {
+              "id": "TC-03",
+              "title": "Ejecutar verify.sh en sus 9 niveles (unit, whitebox, blackbox, system, load, Playwright E2E, anti-emoji, icon-a11y, root cleanliness)",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "completed_at": "2026-11-07T21:55:00.000Z",
+        "dev_summary": "Implementadas las 6 reglas de negocio de Plane Library (BR-PAGE-01..06), los flujos de visibilidad Public/Private/Archived, duplicacion de paginas, ordenamiento y filtros avanzados, menu contextual por fila, modal de exportacion, banner de bloqueo/archivo y actualizacion de la skill /project-knowledge.",
+        "verification_report": "project-docs/specs/019_plane_library_flows_and_ux_refinement/verification-report.md",
+        "qa_screenshots": [
+          "project-docs/specs/017_plane_pages_knowledge_graph_ai/evidence/04-plane-pages-docs.png"
+        ]
+      }
     }
   ]
 }

@@ -4,6 +4,10 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 
 | ID Ejecucion | Fecha | Rol Agente | Skill Invocada | Tarea / Pagina | Tipo | Estado | Resumen |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `airun-INT-019-verify` | 2026-11-07 21:50:48 | `reviewer` | `/verify-spec` | `INT-019` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-019 |
+| `airun-INT-019-spec` | 2026-11-07 21:50:48 | `spec-author` | `/generate-spec` | `INT-019` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-019: Paridad 1:1 de Reglas de Negocio (BR-PAGE-01..06), Flujos Interactivos, UI/UX de Plane Library y Evolucion de project-knowledge |
+| `airun-INT-018-verify` | 2026-11-07 21:50:48 | `reviewer` | `/verify-spec` | `INT-018` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-018 |
+| `airun-INT-018-spec` | 2026-11-07 21:50:48 | `spec-author` | `/generate-spec` | `INT-018` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-018: Refactorizacion de Navegacion Lateral Library, Favoritos Fijados y Listas Compactas al Estilo Plane |
 | `airun-1794082644735-al8j` | 2026-11-07 20:17:24 | `implementer` | `/project-knowledge` | `INT-017` | `PLANE_PAGES_EVOLUTION` | **COMPLETED** | Extension a 28 tablas SQLite (page_logs, page_labels), PageNavigationPane de 4 pestañas, Smart Entity Chips y skill project-knowledge |
 | `airun-INT-017-verify` | 2026-11-07 20:17:23 | `reviewer` | `/verify-spec` | `INT-017` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-017 |
 | `airun-INT-017-spec` | 2026-11-07 20:17:23 | `spec-author` | `/generate-spec` | `INT-017` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-017: Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA |
@@ -42,6 +46,30 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 | `airun-1794080183826-5kpr` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD |
 
 ## Detalle de Artefactos y Reportes Generados por IA
+
+### [airun-INT-019-verify] /verify-spec (reviewer) -> INT-019
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-019
+- **Resultado / Hallazgos:** Implementadas las 6 reglas de negocio de Plane Library (BR-PAGE-01..06), los flujos de visibilidad Public/Private/Archived, duplicacion de paginas, ordenamiento y filtros avanzados, menu contextual por fila, modal de exportacion, banner de bloqueo/archivo y actualizacion de la skill /project-knowledge.
+- **Artefactos Sincronizados:** `project-docs/specs/019_plane_library_flows_and_ux_refinement/verification-report.md`
+
+### [airun-INT-019-spec] /generate-spec (spec-author) -> INT-019
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-019: Paridad 1:1 de Reglas de Negocio (BR-PAGE-01..06), Flujos Interactivos, UI/UX de Plane Library y Evolucion de project-knowledge
+- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/019_plane_library_flows_and_ux_refinement` con historia de usuario Scrum y subtareas DEV/QA.
+- **Artefactos Sincronizados:** `project-docs/specs/019_plane_library_flows_and_ux_refinement/requirements.md`, `project-docs/specs/019_plane_library_flows_and_ux_refinement/design.md`, `project-docs/specs/019_plane_library_flows_and_ux_refinement/tasks.md`
+
+### [airun-INT-018-verify] /verify-spec (reviewer) -> INT-018
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-018
+- **Resultado / Hallazgos:** Sidebar actualizado a Library con seccion Favorites y rediseño de KnowledgeBase.js en filas compactas.
+- **Artefactos Sincronizados:** `project-docs/specs/017_plane_pages_knowledge_graph_ai/verification-report.md`
+
+### [airun-INT-018-spec] /generate-spec (spec-author) -> INT-018
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-018: Refactorizacion de Navegacion Lateral Library, Favoritos Fijados y Listas Compactas al Estilo Plane
+- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/018_plane_library_ui_ux_refactor` con historia de usuario Scrum y subtareas DEV/QA.
+- **Artefactos Sincronizados:** `project-docs/specs/018_plane_library_ui_ux_refactor/requirements.md`, `project-docs/specs/018_plane_library_ui_ux_refactor/design.md`, `project-docs/specs/018_plane_library_ui_ux_refactor/tasks.md`
 
 ### [airun-1794082644735-al8j] /project-knowledge (implementer) -> INT-017
 - **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
@@ -167,27 +195,3 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 - **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright
 - **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/008_playwright_acceptance_testing` con historia de usuario Scrum y subtareas DEV/QA.
 - **Artefactos Sincronizados:** `project-docs/specs/008_playwright_acceptance_testing/requirements.md`, `project-docs/specs/008_playwright_acceptance_testing/design.md`, `project-docs/specs/008_playwright_acceptance_testing/tasks.md`
-
-### [airun-INT-007-verify] /verify-spec (reviewer) -> INT-007
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-007
-- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.
-- **Artefactos Sincronizados:** `project-docs/specs/007_automated_unit_testing_suite/verification-report.md`
-
-### [airun-INT-007-spec] /generate-spec (spec-author) -> INT-007
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés
-- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/007_automated_unit_testing_suite` con historia de usuario Scrum y subtareas DEV/QA.
-- **Artefactos Sincronizados:** `project-docs/specs/007_automated_unit_testing_suite/requirements.md`, `project-docs/specs/007_automated_unit_testing_suite/design.md`, `project-docs/specs/007_automated_unit_testing_suite/tasks.md`
-
-### [airun-INT-006-verify] /verify-spec (reviewer) -> INT-006
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-006
-- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.
-- **Artefactos Sincronizados:** `project-docs/specs/006_omnibox_global_search/verification-report.md`
-
-### [airun-INT-006-spec] /generate-spec (spec-author) -> INT-006
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado
-- **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/006_omnibox_global_search` con historia de usuario Scrum y subtareas DEV/QA.
-- **Artefactos Sincronizados:** `project-docs/specs/006_omnibox_global_search/requirements.md`, `project-docs/specs/006_omnibox_global_search/design.md`, `project-docs/specs/006_omnibox_global_search/tasks.md`

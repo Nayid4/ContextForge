@@ -1028,7 +1028,12 @@
     lock: createIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'),
     unlock: createIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>'),
     history: createIcon('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'),
-    sidebarRight: createIcon('<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="15" y1="3" x2="15" y2="21"/>')
+    sidebarRight: createIcon('<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="15" y1="3" x2="15" y2="21"/>'),
+    globe: createIcon('<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'),
+    archive: createIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>'),
+    archiveRestore: createIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><polyline points="9 14 12 11 15 14"/><line x1="12" y1="11" x2="12" y2="17"/>'),
+    arrowUpDown: createIcon('<path d="M7 15l5 5 5-5"/><path d="M7 9l5-5 5 5"/>'),
+    link: createIcon('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>')
   };
 
   // project-docs/src/shared/utils/renderList.js
@@ -3382,13 +3387,58 @@
       return this.client.updatePlanePage(pageId, markdownContent);
     }
     /**
-     * Actualiza propiedades de una página estilo Plane (is_favorite, is_locked, full_width, restore_version_id).
+     * Actualiza propiedades de una página estilo Plane (access, is_favorite, is_locked, archived, duplicate, full_width, restore_version_id).
      * @param {string} pageId
      * @param {Record<string, any>} props
      * @returns {Promise<any>}
      */
     async updatePageProperties(pageId, props = {}) {
       return this.client.updatePlanePage(pageId, props);
+    }
+    /**
+     * Alterna visibilidad de la página entre Public (0) y Private (1) según BR-PAGE-04 de Plane.
+     * @param {string} pageId
+     * @param {number} access 0 = Public, 1 = Private
+     */
+    async updateAccess(pageId, access = 0) {
+      return this.client.updatePlanePage(pageId, { access: Number(access) === 1 ? 1 : 0 });
+    }
+    /**
+     * Archiva una página (establece archived_at y desmarca is_favorite según BR-PAGE-03 de Plane).
+     * @param {string} pageId
+     */
+    async archivePage(pageId) {
+      return this.client.updatePlanePage(pageId, { archived: true });
+    }
+    /**
+     * Restaura una página archivada (archived_at = null).
+     * @param {string} pageId
+     */
+    async restorePage(pageId) {
+      return this.client.updatePlanePage(pageId, { archived: false });
+    }
+    /**
+     * Duplica una página (Make a copy) en SQLite y disco (.md) según BR-PAGE-05 de Plane.
+     * @param {string} pageId
+     */
+    async duplicatePage(pageId) {
+      return this.client.updatePlanePage(pageId, { duplicate: true });
+    }
+    /**
+     * Devuelve el título normalizado o 'Untitled' si está vacío (Plane getPageName).
+     * @param {string} [title]
+     * @returns {string}
+     */
+    getPageName(title = "") {
+      return !title || !String(title).trim() ? "Untitled" : String(title).trim();
+    }
+    /**
+     * Evalúa si una página es editable en el editor según Plane base-page.ts (isContentEditable).
+     * @param {Record<string, any>} page
+     * @returns {boolean}
+     */
+    isContentEditable(page = {}) {
+      return !page.is_locked && !page.archived_at;
     }
     /**
      * Determina el estante canónico a partir de la ruta del archivo.
@@ -3430,6 +3480,17 @@
     activeShelf: "all",
     filterTab: "all",
     // 'all' | 'favorites' | 'locked' | 'modules'
+    navigationTab: "public",
+    // Plane TPageNavigationTabs: 'public' | 'private' | 'archived' | 'all'
+    orderBy: "updated_at",
+    // Plane TPageOrderBy: 'updated_at' | 'created_at' | 'name'
+    sortBy: "desc",
+    // Plane TPageSortBy: 'asc' | 'desc'
+    filters: {
+      favorites: false,
+      locked: false,
+      created_by: []
+    },
     isFullWidth: false,
     showNavigationPane: true,
     activeNavTab: "outline",
@@ -3438,7 +3499,10 @@
   };
   var PageStore = class {
     constructor(initialState = initialPageState) {
-      this.state = { ...initialState };
+      this.state = {
+        ...initialState,
+        filters: { ...initialState.filters || { favorites: false, locked: false, created_by: [] } }
+      };
       this.listeners = /* @__PURE__ */ new Set();
     }
     getState() {
@@ -3469,6 +3533,10 @@
       this.setState({ activePageId: pageId, activePageContent: content });
     }
     setEditorMode(mode) {
+      const activePage = this.state.pages.find((p) => p.id === this.state.activePageId);
+      if (mode === "editor" && activePage && (activePage.is_locked || activePage.archived_at)) {
+        return;
+      }
       this.setState({ editorMode: mode });
     }
     setSearchQuery(searchQuery) {
@@ -3476,6 +3544,35 @@
     }
     setFilterTab(filterTab) {
       this.setState({ filterTab });
+    }
+    setNavigationTab(navigationTab) {
+      this.setState({ navigationTab });
+    }
+    setOrderBy(orderBy) {
+      this.setState({ orderBy });
+    }
+    setSortBy(sortBy) {
+      this.setState({ sortBy });
+    }
+    setFilters(partialFilters = {}) {
+      this.setState({
+        filters: {
+          ...this.state.filters,
+          ...partialFilters
+        }
+      });
+    }
+    clearAllFilters() {
+      this.setState({
+        searchQuery: "",
+        activeShelf: "all",
+        filterTab: "all",
+        filters: {
+          favorites: false,
+          locked: false,
+          created_by: []
+        }
+      });
     }
     setFullWidth(isFullWidth) {
       this.setState({ isFullWidth });
@@ -3492,21 +3589,75 @@
     togglePageProperty(pageId, propKey) {
       const updatedPages = this.state.pages.map((p) => {
         if (p.id !== pageId) return p;
+        if (propKey === "access" && p.archived_at) return p;
         return { ...p, [propKey]: p[propKey] ? 0 : 1 };
       });
       this.setState({ pages: updatedPages });
     }
+    archivePage(pageId) {
+      const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+      const updatedPages = this.state.pages.map((p) => {
+        if (p.id !== pageId) return p;
+        return { ...p, archived_at: nowIso, is_favorite: 0 };
+      });
+      this.setState({ pages: updatedPages });
+    }
+    restorePage(pageId) {
+      const updatedPages = this.state.pages.map((p) => {
+        if (p.id !== pageId) return p;
+        return { ...p, archived_at: null };
+      });
+      this.setState({ pages: updatedPages });
+    }
     getFilteredPages() {
-      const { pages, searchQuery, activeShelf } = this.state;
-      return pages.filter((p) => {
+      const { pages, searchQuery, activeShelf, navigationTab, orderBy, sortBy, filters } = this.state;
+      const filtered = pages.filter((p) => {
+        if (navigationTab === "archived") {
+          if (!p.archived_at) return false;
+        } else if (navigationTab === "private") {
+          if (p.archived_at || Number(p.access || 0) !== 1) return false;
+        } else if (navigationTab === "public") {
+          if (p.archived_at || Number(p.access || 0) !== 0) return false;
+        } else if (navigationTab === "all") {
+          if (p.archived_at) return false;
+        }
         if (activeShelf !== "all" && p.shelf !== activeShelf) return false;
+        if (filters?.favorites && !p.is_favorite) return false;
+        if (filters?.locked && !p.is_locked) return false;
+        if (Array.isArray(filters?.created_by) && filters.created_by.length > 0) {
+          if (!filters.created_by.includes(p.owned_by_role) && !filters.created_by.includes(p.owned_by_id)) {
+            return false;
+          }
+        }
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (p.title || "").toLowerCase().includes(q) || p.file_path && p.file_path.toLowerCase().includes(q);
       });
+      const dir = sortBy === "asc" ? 1 : -1;
+      return filtered.sort((a, b) => {
+        if (orderBy === "name") {
+          const nameA = (a.title || "Untitled").toLowerCase();
+          const nameB = (b.title || "Untitled").toLowerCase();
+          return nameA.localeCompare(nameB) * dir;
+        }
+        if (orderBy === "created_at") {
+          const tA = new Date(a.created_at || a.updated_at || 0).getTime();
+          const tB = new Date(b.created_at || b.updated_at || 0).getTime();
+          return (tA - tB) * dir;
+        }
+        const uA = new Date(a.updated_at || 0).getTime();
+        const uB = new Date(b.updated_at || 0).getTime();
+        return (uA - uB) * dir;
+      });
+    }
+    getFilteredAndSortedPages() {
+      return this.getFilteredPages();
     }
     reset() {
-      this.state = { ...initialPageState };
+      this.state = {
+        ...initialPageState,
+        filters: { ...initialPageState.filters }
+      };
       this.notify();
     }
   };
@@ -4779,6 +4930,8 @@
   } = {}) {
     const isFavorite = Boolean(activePage.is_favorite);
     const isLocked = Boolean(activePage.is_locked);
+    const isArchived = Boolean(activePage.archived_at);
+    const isPrivate = Number(activePage.access || 0) === 1;
     const pageId = activePage.id || "page-default";
     const logs = Array.isArray(activePage.logs) ? activePage.logs : [];
     const issueLinks = logs.filter((l) => l.entity_name === "issue" || l.entity_name === "forward_issue");
@@ -4795,16 +4948,31 @@
         <span>SQLite + .md Synced</span>
       </span>
 
-      <!-- Favorite Toggle (is_favorite) -->
+      <!-- Access Toggle: Public (0) vs Private (1) per Plane BR-PAGE-01 & BR-PAGE-04 -->
       <button
         type="button"
-        data-action="toggle-page-favorite"
+        data-action="toggle-page-access"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${isFavorite ? "bg-amber-500/15 border-amber-500/40 text-amber-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
-        title="${isFavorite ? "Quitar de Favoritas" : "Marcar como P\xE1gina Favorita"}"
+        ${isArchived ? "disabled" : ""}
+        class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold transition-colors ${isArchived ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-not-allowed" : isPrivate ? "bg-violet-500/15 border-violet-500/40 text-violet-300 cursor-pointer hover:bg-violet-500/25" : "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 cursor-pointer"}"
+        title="${isArchived ? "Restaura la p\xE1gina para cambiar el acceso" : isPrivate ? "P\xE1gina Privada (Clic para hacer P\xFAblica)" : "P\xE1gina P\xFAblica (Clic para hacer Privada)"}"
       >
-        ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? "fill-amber-400" : ""}`)}
+        ${isPrivate ? Icons.lock("w-3 h-3") : Icons.globe("w-3 h-3 text-indigo-400")}
+        <span>${isPrivate ? "Private" : "Public"}</span>
       </button>
+
+      <!-- Favorite Toggle (is_favorite) - Hidden when archived per Plane BR-PAGE-03 -->
+      ${!isArchived ? `
+        <button
+          type="button"
+          data-action="toggle-page-favorite"
+          data-page-id="${pageId}"
+          class="p-1.5 rounded-lg border transition-colors cursor-pointer ${isFavorite ? "bg-amber-500/15 border-amber-500/40 text-amber-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
+          title="${isFavorite ? "Quitar de Favoritas" : "Marcar como P\xE1gina Favorita"}"
+        >
+          ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? "fill-amber-400" : ""}`)}
+        </button>
+      ` : ""}
 
       <!-- Lock / Unlock Toggle (is_locked) -->
       <button
@@ -4837,6 +5005,39 @@
         title="Copiar c\xF3digo Markdown al portapapeles"
       >
         ${Icons.copy("w-3.5 h-3.5")}
+      </button>
+
+      <!-- Duplicate Page (Make a copy per Plane BR-PAGE-05) -->
+      <button
+        type="button"
+        data-action="duplicate-page"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        title="Hacer una copia de la p\xE1gina (Make a copy)"
+      >
+        ${Icons.plus("w-3.5 h-3.5")}
+      </button>
+
+      <!-- Archive / Restore Page (Plane BR-PAGE-03) -->
+      <button
+        type="button"
+        data-action="toggle-page-archive"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${isArchived ? "bg-rose-500/15 border-rose-500/40 text-rose-300" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"}"
+        title="${isArchived ? "Restaurar p\xE1gina archivada (Restore)" : "Archivar p\xE1gina (Archive)"}"
+      >
+        ${isArchived ? Icons.archiveRestore("w-3.5 h-3.5") : Icons.archive("w-3.5 h-3.5")}
+      </button>
+
+      <!-- Export Page Modal Trigger -->
+      <button
+        type="button"
+        data-action="open-export-page-modal"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        title="Exportar p\xE1gina (Markdown / HTML Report)"
+      >
+        ${Icons.download("w-3.5 h-3.5")}
       </button>
 
       <!-- Ask Harness AI Assistant Button (Plane AskPiMenu / EditorAIMenu) -->
@@ -5073,6 +5274,9 @@
   }
 
   // project-docs/src/modules/Pages/components/KnowledgeBase.js
+  function getPageName(title = "") {
+    return !title || !String(title).trim() ? "Untitled" : String(title).trim();
+  }
   function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = [], planePages = [], planePageState = {} }) {
     const kData = knowledgeIndex || getFallbackKnowledge();
     const rules = kData.business_rules || [];
@@ -5115,16 +5319,27 @@
     const findPlanePage = (docKey, meta = {}) => {
       return planePages.find((p) => (p.file_path || "").endsWith(docKey) || p.file_path === `knowledge/${docKey}`) || {
         id: `page-kb-${String(docKey).replace(/[^a-zA-Z0-9_-]/g, "_")}`,
-        title: meta.title || docKey,
+        title: getPageName(meta.title || docKey),
         file_path: `knowledge/${docKey}`,
         word_count: meta.wordCount || 450,
         reading_time_min: meta.readingTime || 3,
         diagrams_count: meta.diagramsCount || 0,
         owned_by_role: "spec-author",
+        access: 0,
         is_locked: 1,
-        is_favorite: docKey === "c4-model.md" ? 1 : 0
+        is_favorite: docKey === "c4-model.md" ? 1 : 0,
+        archived_at: null,
+        created_at: "2026-11-01T10:00:00Z",
+        updated_at: "2026-11-07T15:00:00Z"
       };
     };
+    const resolvedRows = docKeys.map((k) => findPlanePage(k, docMetadata[k] || {}));
+    const publicCount = resolvedRows.filter((p) => !p.archived_at && Number(p.access || 0) === 0).length;
+    const privateCount = resolvedRows.filter((p) => !p.archived_at && Number(p.access || 0) === 1).length;
+    const archivedCount = resolvedRows.filter((p) => Boolean(p.archived_at)).length;
+    const activePlanePage = findPlanePage(activeDocKey, activeDocMeta);
+    const isActiveLocked = Boolean(activePlanePage.is_locked);
+    const isActiveArchived = Boolean(activePlanePage.archived_at);
     return `
     <div class="flex flex-col flex-1 min-h-0 bg-zinc-950 text-zinc-100 select-none" id="kb-container">
 
@@ -5133,24 +5348,51 @@
       <!-- ============================================================== -->
       <div id="kb-view-library" class="flex flex-col flex-1 min-h-0">
 
-        <!-- 1.1 Plane PagesListHeaderRoot: Tabs Underline + Search + Quick Actions -->
-        <div class="min-h-11 px-5 border-b border-zinc-800/80 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
-          <!-- Left: Plane PageTabNavigation (Underline Tabs) -->
+        <!-- 1.1 Plane PagesListHeaderRoot: Access/Lifecycle Tabs + Perspectives + Search/Sort/Filter + Actions -->
+        <div class="min-h-11 px-5 border-b border-zinc-800/80 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20">
+          <!-- Left: Plane PageTabNavigation (Public, Private, Archived | Modules, Master, Split, Governance) -->
           <div class="flex items-center gap-1 overflow-x-auto" id="kb-perspective-nav">
+            <!-- Plane Primary Access Tabs (TPageNavigationTabs) -->
             <button
               type="button"
               data-kb-perspective="global"
-              class="kb-perspective-btn active h-11 px-3 inline-flex items-center gap-2 text-xs font-semibold text-zinc-100 border-b-2 border-indigo-500 transition-all cursor-pointer shrink-0"
+              data-page-access-tab="public"
+              class="kb-perspective-btn kb-access-tab-btn active h-11 px-3 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-100 border-b-2 border-indigo-500 transition-all cursor-pointer shrink-0"
             >
-              ${Icons.page("w-3.5 h-3.5 text-indigo-400")}
-              <span>Public / All</span>
-              <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300">${docKeys.length}</span>
+              ${Icons.globe("w-3.5 h-3.5 text-indigo-400")}
+              <span>Public</span>
+              <span id="kb-tab-count-public" class="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300">${publicCount}</span>
             </button>
 
             <button
               type="button"
+              data-kb-perspective="global"
+              data-page-access-tab="private"
+              class="kb-perspective-btn kb-access-tab-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.lock("w-3.5 h-3.5")}
+              <span>Private</span>
+              <span id="kb-tab-count-private" class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">${privateCount}</span>
+            </button>
+
+            <button
+              type="button"
+              data-kb-perspective="global"
+              data-page-access-tab="archived"
+              class="kb-perspective-btn kb-access-tab-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.archive("w-3.5 h-3.5")}
+              <span>Archived</span>
+              <span id="kb-tab-count-archived" class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">${archivedCount}</span>
+            </button>
+
+            <span class="h-4 w-px bg-zinc-800 mx-1 shrink-0" aria-hidden="true"></span>
+
+            <!-- Harness Domain Perspectives -->
+            <button
+              type="button"
               data-kb-perspective="modules"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.folder("w-3.5 h-3.5")}
               <span>Modules (DDD)</span>
@@ -5160,7 +5402,7 @@
             <button
               type="button"
               data-kb-perspective="master"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.fileText("w-3.5 h-3.5")}
               <span>Master Bundle</span>
@@ -5170,7 +5412,7 @@
             <button
               type="button"
               data-kb-perspective="plane-workspace"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.bookOpen("w-3.5 h-3.5")}
               <span>Split Workspace</span>
@@ -5180,7 +5422,7 @@
             <button
               type="button"
               data-kb-perspective="governance"
-              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+              class="kb-perspective-btn h-11 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
             >
               ${Icons.scale("w-3.5 h-3.5")}
               <span>Rules & Contracts</span>
@@ -5188,21 +5430,105 @@
             </button>
           </div>
 
-          <!-- Right: Plane PageHeaderFilters & Actions -->
-          <div class="flex flex-wrap items-center gap-2 py-1.5">
-            <!-- Inline Search -->
+          <!-- Right: Plane PageHeaderFilters (Search, OrderBy, Filters) & Actions -->
+          <div class="flex flex-wrap items-center gap-1.5 py-1.5">
+            <!-- 1. Plane Search Input -->
             <div class="relative">
               <input
                 type="text"
                 id="kb-library-search-input"
                 placeholder="Search pages (title, module, BR-*)..."
-                class="h-7 w-48 sm:w-60 pl-7 pr-2.5 rounded-md text-xs bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono transition-colors"
+                class="h-7 w-44 sm:w-56 pl-7 pr-2.5 rounded-md text-xs bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono transition-colors"
               />
               <span class="absolute left-2 top-1.5 text-zinc-500 pointer-events-none">
                 ${Icons.search("w-3.5 h-3.5")}
               </span>
             </div>
 
+            <!-- 2. Plane PageOrderByDropdown (Sort by Name / Updated / Created + Asc/Desc) -->
+            <div class="inline-flex items-center rounded-md bg-zinc-900 border border-zinc-800 h-7 px-1.5 gap-1">
+              <span class="text-zinc-500">${Icons.arrowUpDown("w-3 h-3")}</span>
+              <select
+                id="kb-sort-by-select"
+                aria-label="Ordenar p\xE1ginas por"
+                class="bg-transparent text-zinc-300 text-[11px] font-mono focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="updated_at" class="bg-zinc-900 text-zinc-200">Date modified</option>
+                <option value="created_at" class="bg-zinc-900 text-zinc-200">Date created</option>
+                <option value="name" class="bg-zinc-900 text-zinc-200">Name (A-Z)</option>
+              </select>
+              <button
+                type="button"
+                id="kb-sort-dir-btn"
+                data-action="toggle-kb-sort-dir"
+                data-sort-dir="desc"
+                class="px-1 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-mono text-indigo-300 cursor-pointer"
+                title="Alternar orden Ascendente / Descendente"
+              >
+                DESC
+              </button>
+            </div>
+
+            <!-- 3. Plane PageFiltersSelection Popover -->
+            <div class="relative">
+              <button
+                type="button"
+                data-action="toggle-kb-filters-popover"
+                class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+                title="Filtrar p\xE1ginas por Favoritas, Normativas (Locked) o Agente Creador"
+              >
+                ${Icons.filter("w-3 h-3 text-zinc-400")}
+                <span>Filters</span>
+              </button>
+
+              <div
+                id="kb-filters-popover"
+                class="hidden absolute right-0 top-8 z-40 w-64 p-3 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl space-y-3 text-xs"
+              >
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                  <span class="font-semibold text-zinc-200">Plane Page Filters</span>
+                  <button
+                    type="button"
+                    data-action="clear-kb-filters"
+                    class="text-[10px] font-mono text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <label class="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-zinc-800/60 cursor-pointer">
+                  <span class="flex items-center gap-2 text-zinc-300">
+                    ${Icons.star("w-3.5 h-3.5 text-amber-400")}
+                    <span>Favorites only</span>
+                  </span>
+                  <input type="checkbox" id="kb-filter-favorites-chk" class="accent-indigo-500 rounded cursor-pointer" />
+                </label>
+
+                <label class="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-zinc-800/60 cursor-pointer">
+                  <span class="flex items-center gap-2 text-zinc-300">
+                    ${Icons.lock("w-3.5 h-3.5 text-amber-400")}
+                    <span>Locked (Normative)</span>
+                  </span>
+                  <input type="checkbox" id="kb-filter-locked-chk" class="accent-indigo-500 rounded cursor-pointer" />
+                </label>
+
+                <div class="space-y-1 pt-1 border-t border-zinc-800/80">
+                  <span class="text-[10px] font-mono uppercase text-zinc-400">Created by (Bot Agent)</span>
+                  <select
+                    id="kb-filter-owner-select"
+                    class="w-full h-7 px-2 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-xs font-mono focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">All Agents</option>
+                    <option value="spec-author">spec-author (BOT)</option>
+                    <option value="leader">leader (BOT)</option>
+                    <option value="reviewer">reviewer (BOT)</option>
+                    <option value="implementer">implementer (BOT)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Ask AI Context -->
             <button
               type="button"
               data-action="open-ai-context-modal"
@@ -5210,30 +5536,32 @@
               title="Generar System Prompt Anti-Sesgo para IA"
             >
               ${Icons.sparkles("w-3.5 h-3.5")}
-              <span class="hidden sm:inline">Ask AI Context</span>
+              <span class="hidden xl:inline">AI Context</span>
             </button>
 
+            <!-- 5. Import & Export -->
             <button
               type="button"
               data-action="trigger-import-doc"
-              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+              class="h-7 inline-flex items-center gap-1.5 px-2 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
               title="Importar archivo Markdown (.md)"
             >
               ${Icons.upload("w-3.5 h-3.5")}
-              <span class="hidden md:inline">Import</span>
+              <span class="hidden xl:inline">Import</span>
             </button>
             <input type="file" id="import-doc-file-input" accept=".md,.markdown" class="hidden" />
 
             <button
               type="button"
-              data-action="export-all-knowledge"
-              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
-              title="Exportar toda la base de conocimiento consolidada en formato Markdown (.md)"
+              data-action="open-export-page-modal"
+              class="h-7 inline-flex items-center gap-1.5 px-2 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+              title="Exportar p\xE1ginas (Plane Export Modal: Markdown / Reporte)"
             >
               ${Icons.download("w-3.5 h-3.5")}
-              <span class="hidden md:inline">Export (.md)</span>
+              <span class="hidden xl:inline">Export</span>
             </button>
 
+            <!-- 6. Add Page -->
             <button
               type="button"
               data-action="open-new-doc-modal"
@@ -5245,7 +5573,7 @@
           </div>
         </div>
 
-        <!-- 1.2 Plane Secondary Filter & Telemetry Sub-bar -->
+        <!-- 1.2 Plane Secondary Shelf Filter Pills & Sovereign Telemetry Bar -->
         <div class="px-5 py-2 border-b border-zinc-800/60 bg-zinc-900/25 flex flex-wrap items-center justify-between gap-3 text-xs">
           <!-- Shelf Filter Pills -->
           <div class="flex items-center gap-1 overflow-x-auto font-mono" id="kb-shelf-filter-pills">
@@ -5279,14 +5607,29 @@
           </div>
         </div>
 
+        <!-- 1.2b Plane PageAppliedFiltersList (Active Filter Chips + Clear All) -->
+        <div
+          id="kb-applied-filters-bar"
+          class="hidden px-5 py-1.5 border-b border-zinc-800/60 bg-indigo-950/15 flex-wrap items-center justify-between gap-2 text-[11px] font-mono"
+        >
+          <div class="flex flex-wrap items-center gap-1.5" id="kb-applied-filters-chips"></div>
+          <button
+            type="button"
+            data-action="clear-kb-filters"
+            class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[10px] cursor-pointer"
+          >
+            Clear all filters
+          </button>
+        </div>
+
         <!-- ============================================================== -->
-        <!-- PANEL TIER 1: PLANE PAGES LIST (Public / All Pages)            -->
+        <!-- PANEL TIER 1: PLANE PAGES LIST (Public / Private / Archived)   -->
         <!-- ============================================================== -->
         <div id="kb-perspective-panel-global" class="kb-perspective-panel flex-1 flex flex-col">
 
           <!-- Pinned Featured Row (c4-model.md) + IEEE 830 / DeepWiki Quick Rows -->
           ${heroDocKey ? `
-            <div class="border-b border-zinc-800/80 bg-indigo-950/10">
+            <div id="kb-pinned-featured-strip" class="border-b border-zinc-800/80 bg-indigo-950/10">
               <div class="px-5 py-1.5 border-b border-zinc-800/60 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-indigo-300/90">
                 <span class="flex items-center gap-1.5">
                   ${Icons.star("w-3 h-3 fill-amber-400 text-amber-400")}
@@ -5298,8 +5641,10 @@
               <!-- Featured C4 Model Row (First open-article-read & open-article-edit in DOM for E2E contracts) -->
               <div class="group flex flex-wrap items-center justify-between gap-3 px-5 py-2.5 hover:bg-zinc-900/75 border-b border-zinc-800/40 transition-colors">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <span class="text-indigo-400 shrink-0">${Icons.page("w-4 h-4")}</span>
-                  <span class="text-xs font-semibold text-zinc-100 truncate">${escapeHtml3(heroDocMeta.title || heroDocKey)}</span>
+                  <span class="w-6 h-6 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                    ${Icons.page("w-3.5 h-3.5")}
+                  </span>
+                  <span class="text-xs font-semibold text-zinc-100 truncate">${escapeHtml3(getPageName(heroDocMeta.title || heroDocKey))}</span>
                   <code class="text-[11px] font-mono text-indigo-400 bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-500/20 hidden sm:inline">${heroDocKey}</code>
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-950/60 text-amber-300 border border-amber-500/30">Pinned</span>
                 </div>
@@ -5362,6 +5707,24 @@
             </div>
           ` : ""}
 
+          <!-- Empty State for Filtered / Private / Archived Views -->
+          <div id="kb-empty-filter-state" class="hidden p-12 text-center space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+              ${Icons.page("w-5 h-5")}
+            </div>
+            <div class="text-sm font-semibold text-zinc-200">No pages match the selected Library view or filter</div>
+            <p class="text-xs text-zinc-500 max-w-md mx-auto">
+              You can switch back to the Public tab, clear active filters, or toggle any page's visibility (Public / Private) or Archive status from its row actions.
+            </p>
+            <button
+              type="button"
+              data-action="clear-kb-filters"
+              class="h-7 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium cursor-pointer"
+            >
+              Show all Public pages
+            </button>
+          </div>
+
           <!-- 1.3 Plane Pages List Groups (#kb-shelves-container) -->
           <div class="divide-y divide-zinc-800/70" id="kb-shelves-container">
             ${Object.values(shelvesData).map((sh) => {
@@ -5377,15 +5740,15 @@
                       <h3 class="text-xs font-semibold text-zinc-200 tracking-tight">
                         ${escapeHtml3(sh.title)}
                       </h3>
-                      <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
+                      <span class="kb-shelf-visible-count text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
                         ${sh.docs.length}
                       </span>
                     </div>
-                    <span class="text-[10px] font-mono text-zinc-500 hidden sm:inline">Public \xB7 Docs-as-Code</span>
+                    <span class="text-[10px] font-mono text-zinc-500 hidden sm:inline">Plane Library \xB7 Docs-as-Code</span>
                   </div>
 
                   <!-- Plane PageListBlock Rows -->
-                  <div class="divide-y divide-zinc-800/50">
+                  <div class="kb-shelf-rows-list divide-y divide-zinc-800/50">
                     ${sh.docs.map((key) => {
         const meta = docMetadata[key] || {
           title: key,
@@ -5399,33 +5762,61 @@
         const matchedPage = findPlanePage(key, meta);
         const isFav = Boolean(matchedPage.is_favorite);
         const isLocked = Boolean(matchedPage.is_locked);
+        const isArchived = Boolean(matchedPage.archived_at);
+        const isPrivate = Number(matchedPage.access || 0) === 1;
         const ownerRole = matchedPage.owned_by_role || "spec-author";
-        const avatarInitials = ownerRole === "reviewer" ? "RV" : ownerRole === "leader" ? "LD" : "SA";
+        const avatarInitials = ownerRole === "reviewer" ? "RV" : ownerRole === "leader" ? "LD" : ownerRole === "implementer" ? "IM" : "SA";
+        const displayTitle = getPageName(meta.title || matchedPage.title);
+        const updatedDateShort = String(matchedPage.updated_at || "2026-11-07").slice(0, 10);
         return `
                         <div
                           class="kb-shelf-doc-card plane-page-item group relative flex items-center justify-between gap-3 px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900/75 transition-colors"
+                          data-page-id="${matchedPage.id}"
                           data-doc-key="${escapeAttr2(key)}"
                           data-doc-shelf="${escapeAttr2(sh.id)}"
-                          data-doc-title="${escapeAttr2(meta.title)}"
+                          data-doc-title="${escapeAttr2(displayTitle)}"
                           data-doc-module="${escapeAttr2(meta.moduleName || "")}"
+                          data-page-access="${isPrivate ? "1" : "0"}"
+                          data-page-archived="${isArchived ? "1" : "0"}"
+                          data-page-favorite="${isFav ? "1" : "0"}"
+                          data-page-locked="${isLocked ? "1" : "0"}"
+                          data-page-owner="${escapeAttr2(ownerRole)}"
+                          data-page-words="${meta.wordCount || 300}"
+                          data-page-updated="${escapeAttr2(matchedPage.updated_at || "2026-11-07T15:00:00Z")}"
+                          data-page-created="${escapeAttr2(matchedPage.created_at || "2026-11-01T10:00:00Z")}"
                         >
-                          <!-- Left: Page Icon + Title + Path + Telemetry Chips -->
+                          <!-- Left: Page Icon Box + Clickable Title + Path + Telemetry Chips -->
                           <div class="flex items-center gap-3 min-w-0 flex-1">
-                            <span class="text-zinc-400 group-hover:text-indigo-400 transition-colors shrink-0">
-                              ${Icons.page("w-4 h-4")}
+                            <span class="w-6 h-6 rounded-md bg-zinc-900 border border-zinc-800/90 group-hover:border-indigo-500/30 flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 transition-colors shrink-0">
+                              ${Icons.page("w-3.5 h-3.5")}
                             </span>
 
                             <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                              <span class="text-xs font-medium text-zinc-100 group-hover:text-white truncate">
-                                ${escapeHtml3(meta.title)}
-                              </span>
+                              <button
+                                type="button"
+                                data-action="open-article-read"
+                                data-doc-key="${escapeAttr2(key)}"
+                                class="text-xs font-medium text-zinc-100 group-hover:text-indigo-300 truncate text-left cursor-pointer transition-colors"
+                              >
+                                ${escapeHtml3(displayTitle)}
+                              </button>
                               <span class="text-[11px] font-mono text-zinc-500 truncate hidden lg:inline">
                                 ${escapeHtml3(key)}
                               </span>
                             </div>
 
-                            <!-- Plane Row Badges (Module, BR, RF, ADR) -->
+                            <!-- Plane Row Badges (Access, Archived, Module, BR, RF, ADR) -->
                             <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+                              ${isArchived ? `
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-rose-950/70 text-rose-300 border border-rose-500/30">
+                                  Archived
+                                </span>
+                              ` : ""}
+                              ${isPrivate ? `
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-violet-950/70 text-violet-300 border border-violet-500/30">
+                                  Private
+                                </span>
+                              ` : ""}
                               ${meta.moduleName ? `
                                 <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-purple-950/60 text-purple-300 border border-purple-500/30">
                                   ${escapeHtml3(meta.moduleName)}
@@ -5449,44 +5840,61 @@
                             </div>
                           </div>
 
-                          <!-- Right: Plane BlockItemAction (Access/Lock, Owner Avatar, Reading Time, Favorite Star, Open/Edit) -->
-                          <div class="flex items-center gap-2 shrink-0">
-                            <!-- Lock / Access Status -->
+                          <!-- Right: Plane BlockItemAction (Access, Lock, Owner Avatar, Info Tooltip, Favorite Star, Open/Edit, ... Menu) -->
+                          <div class="flex items-center gap-1.5 shrink-0">
+                            <!-- 1. Access Indicator & Toggle (Public Globe vs Private Lock per BR-PAGE-01 & BR-PAGE-04) -->
+                            <button
+                              type="button"
+                              data-action="toggle-page-access"
+                              data-page-id="${matchedPage.id}"
+                              ${isArchived ? "disabled" : ""}
+                              class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
+                              title="${isArchived ? "Archived page (restore to change access)" : isPrivate ? "Private page (click to make Public)" : "Public page (click to make Private)"}"
+                            >
+                              ${isPrivate ? Icons.lock("w-3.5 h-3.5 text-violet-400") : Icons.globe("w-3.5 h-3.5 text-zinc-500 group-hover:text-indigo-400")}
+                            </button>
+
+                            <!-- 2. Lock / Normative Protection Toggle -->
                             <button
                               type="button"
                               data-action="toggle-page-lock"
                               data-page-id="${matchedPage.id}"
                               class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
-                              title="${isLocked ? "Locked normative page" : "Unlocked page"}"
+                              title="${isLocked ? "Locked normative page (click to unlock)" : "Unlocked page (click to lock)"}"
                             >
-                              ${isLocked ? Icons.lock("w-3.5 h-3.5 text-amber-400/80") : Icons.unlock("w-3.5 h-3.5")}
+                              ${isLocked ? Icons.lock("w-3.5 h-3.5 text-amber-400/85") : Icons.unlock("w-3.5 h-3.5")}
                             </button>
 
-                            <!-- Owner Bot Avatar -->
+                            <!-- 3. Owner Bot Avatar -->
                             <div
                               class="w-5 h-5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-[9px] font-mono font-bold text-indigo-300 flex items-center justify-center"
-                              title="Owned by: ${ownerRole} (BOT)"
+                              title="Owned by: ${ownerRole} (BOT) \xB7 Updated ${updatedDateShort}"
                             >
                               ${avatarInitials}
                             </div>
 
-                            <!-- Reading time -->
-                            <span class="text-[11px] font-mono text-zinc-500 w-10 text-right hidden md:inline">
+                            <!-- 4. Info & Reading time -->
+                            <span
+                              class="text-[11px] font-mono text-zinc-500 w-10 text-right hidden md:inline"
+                              title="Updated ${updatedDateShort} \xB7 ${meta.wordCount || 300} words \xB7 ${meta.readingTime} min read"
+                            >
                               ${meta.readingTime}m
                             </span>
 
-                            <!-- Favorite Star -->
-                            <button
-                              type="button"
-                              data-action="toggle-page-favorite"
-                              data-page-id="${matchedPage.id}"
-                              class="w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${isFav ? "text-amber-400" : "text-zinc-500 hover:text-zinc-300"}"
-                              title="${isFav ? "Remove from favorites" : "Add to favorites"}"
-                            >
-                              ${Icons.star(`w-3.5 h-3.5 ${isFav ? "fill-amber-400" : ""}`)}
-                            </button>
+                            <!-- 5. Favorite Star (Hidden when archived per Plane BR-PAGE-03) -->
+                            ${!isArchived ? `
+                              <button
+                                type="button"
+                                data-action="toggle-page-favorite"
+                                data-page-id="${matchedPage.id}"
+                                class="w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${isFav ? "text-amber-400" : "text-zinc-500 hover:text-zinc-300"}"
+                                title="${isFav ? "Remove from favorites" : "Add to favorites"}"
+                              >
+                                ${Icons.star(`w-3.5 h-3.5 ${isFav ? "fill-amber-400" : ""}`)}
+                              </button>
+                            ` : ""}
 
-                            <!-- Open & Edit Buttons -->
+                            <!-- 6. Open & Edit Buttons -->
                             <button
                               type="button"
                               data-action="open-article-read"
@@ -5506,6 +5914,107 @@
                             >
                               ${Icons.edit("w-3 h-3")}
                             </button>
+
+                            <!-- 7. Plane Row Quick Actions Dropdown (...) -->
+                            <div class="relative">
+                              <button
+                                type="button"
+                                data-action="toggle-page-row-menu"
+                                data-page-id="${matchedPage.id}"
+                                class="h-6 w-6 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 border border-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+                                title="More page actions (Plane PageActions)"
+                              >
+                                ${Icons.dotsHorizontal("w-3.5 h-3.5")}
+                              </button>
+
+                              <div
+                                id="page-row-menu-${matchedPage.id}"
+                                class="plane-row-actions-menu hidden absolute right-0 top-7 z-40 w-48 py-1 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl text-xs font-sans"
+                              >
+                                <button
+                                  type="button"
+                                  data-action="open-article-read"
+                                  data-doc-key="${escapeAttr2(key)}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.bookOpen("w-3.5 h-3.5 text-indigo-400")}
+                                  <span>Open page</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-action="copy-page-markdown"
+                                  data-page-id="${matchedPage.id}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.copy("w-3.5 h-3.5 text-zinc-400")}
+                                  <span>Copy markdown</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-action="copy-page-link"
+                                  data-doc-key="${escapeAttr2(key)}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.link("w-3.5 h-3.5 text-zinc-400")}
+                                  <span>Copy page link</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-action="duplicate-page"
+                                  data-page-id="${matchedPage.id}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.plus("w-3.5 h-3.5 text-emerald-400")}
+                                  <span>Make a copy</span>
+                                </button>
+
+                                <div class="my-1 border-t border-zinc-800"></div>
+
+                                ${!isArchived ? `
+                                  <button
+                                    type="button"
+                                    data-action="toggle-page-lock"
+                                    data-page-id="${matchedPage.id}"
+                                    class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                  >
+                                    ${isLocked ? Icons.unlock("w-3.5 h-3.5 text-amber-400") : Icons.lock("w-3.5 h-3.5 text-amber-400")}
+                                    <span>${isLocked ? "Unlock page" : "Lock page"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    data-action="toggle-page-access"
+                                    data-page-id="${matchedPage.id}"
+                                    class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                  >
+                                    ${isPrivate ? Icons.globe("w-3.5 h-3.5 text-indigo-400") : Icons.lock("w-3.5 h-3.5 text-violet-400")}
+                                    <span>${isPrivate ? "Make public" : "Make private"}</span>
+                                  </button>
+                                ` : ""}
+
+                                <button
+                                  type="button"
+                                  data-action="open-export-page-modal"
+                                  data-page-id="${matchedPage.id}"
+                                  data-doc-key="${escapeAttr2(key)}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 text-zinc-200 hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${Icons.download("w-3.5 h-3.5 text-cyan-400")}
+                                  <span>Export page</span>
+                                </button>
+
+                                <div class="my-1 border-t border-zinc-800"></div>
+
+                                <button
+                                  type="button"
+                                  data-action="toggle-page-archive"
+                                  data-page-id="${matchedPage.id}"
+                                  class="w-full px-3 py-1.5 flex items-center gap-2 ${isArchived ? "text-emerald-400" : "text-rose-400"} hover:bg-zinc-800 text-left cursor-pointer"
+                                >
+                                  ${isArchived ? Icons.archiveRestore("w-3.5 h-3.5") : Icons.archive("w-3.5 h-3.5")}
+                                  <span>${isArchived ? "Restore page" : "Archive page"}</span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       `;
@@ -5892,7 +6401,7 @@
           <div class="flex flex-wrap items-center gap-1.5">
             <div id="article-plane-header-actions">
               ${renderPageHeaderActions({
-      activePage: findPlanePage(activeDocKey, activeDocMeta),
+      activePage: activePlanePage,
       isFullWidth: Boolean(planePageState.isFullWidth),
       showNavigationPane: planePageState.showNavigationPane !== false,
       showAiMenu: Boolean(planePageState.showAiMenu)
@@ -5942,14 +6451,53 @@
           </div>
         </div>
 
-        <!-- 2.2 Plane PageEditorBody + Right Docked PageNavigationPane -->
-        <div id="doc-reader-view-container" class="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-96px)] bg-zinc-950">
+        <!-- 2.1b Plane Lock / Archive Read-Only Protection Banner (BR-PAGE-02) -->
+        <div
+          id="article-status-banner"
+          class="${isActiveLocked || isActiveArchived ? "flex" : "hidden"} px-5 py-2 border-b ${isActiveArchived ? "bg-rose-950/25 border-rose-500/30 text-rose-200" : "bg-amber-950/20 border-amber-500/30 text-amber-200"} items-center justify-between gap-3 text-xs"
+        >
+          <div class="flex items-center gap-2">
+            ${isActiveArchived ? Icons.archive("w-3.5 h-3.5 text-rose-400") : Icons.lock("w-3.5 h-3.5 text-amber-400")}
+            <span id="article-status-banner-text">
+              ${isActiveArchived ? "This page is archived in Plane Library (read-only). Restore it to make changes." : "Normative page locked against accidental edits (Plane Lock active). You can still open Dual Editor or unlock below."}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            ${isActiveArchived ? `
+              <button
+                type="button"
+                data-action="toggle-page-archive"
+                data-page-id="${activePlanePage.id}"
+                class="px-2.5 py-1 rounded bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/40 text-rose-200 text-[11px] font-mono font-semibold cursor-pointer"
+              >
+                Restore page
+              </button>
+            ` : `
+              <button
+                type="button"
+                data-action="toggle-page-lock"
+                data-page-id="${activePlanePage.id}"
+                class="px-2.5 py-1 rounded bg-amber-600/20 hover:bg-amber-600/35 border border-amber-500/40 text-amber-200 text-[11px] font-mono font-semibold cursor-pointer"
+              >
+                Unlock page
+              </button>
+            `}
+          </div>
+        </div>
 
-          <!-- Center Document Canvas (Distraction-Free Plane Page Canvas) -->
+        <!-- 2.2 Plane PageEditorBody + Right Docked PageNavigationPane -->
+        <div id="doc-reader-view-container" class="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-96px)] bg-zinc-950 relative">
+
+          <!-- Center Document Canvas (Distraction-Free Plane Page Canvas: max-w-[720px] or max-w-[1152px] Full Width) -->
           <div id="doc-reader-main-col" class="flex-1 overflow-y-auto px-6 sm:px-14 py-8 bg-zinc-950">
-            <!-- Plane Page Telemetry Subtitle Bar -->
-            <div class="${planePageState.isFullWidth ? "max-w-none w-full" : "max-w-3xl mx-auto"} mb-6 pb-3 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-400">
+            <!-- Plane PageEditorHeaderRoot & Telemetry Subtitle Bar -->
+            <div class="${planePageState.isFullWidth ? "max-w-[1152px]" : "max-w-[720px]"} mx-auto mb-6 pb-3 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-400">
               <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1 text-indigo-300">
+                  ${Icons.bot("w-3.5 h-3.5")}
+                  <span>${activePlanePage.owned_by_role || "spec-author"}</span>
+                </span>
+                <span>\xB7</span>
                 <span>Words: <strong id="article-meta-words" class="text-zinc-200">${activeDocMeta.wordCount || 0}</strong></span>
                 <span>Rules BR: <strong id="article-meta-br" class="text-amber-400">${activeDocMeta.ruleCount || 0}</strong></span>
                 <span>Reqs RF: <strong id="article-meta-rf" class="text-emerald-400">${activeDocMeta.reqCount || 0}</strong></span>
@@ -5957,16 +6505,21 @@
               <span class="text-zinc-500">Smart Chips Active (INT-* / BR-* / RF-*)</span>
             </div>
 
-            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? "max-w-none w-full" : "max-w-3xl mx-auto"} text-zinc-200 leading-relaxed text-sm">
+            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? "max-w-[1152px]" : "max-w-[720px]"} mx-auto text-zinc-200 leading-relaxed text-sm">
               ${enrichMarkdownWithSmartChips(renderMarkdown2(activeDocContent), features)}
             </article>
+          </div>
+
+          <!-- Floating Outline Mini-Bars when PageNavigationPane is collapsed -->
+          <div id="article-floating-outline-wrapper" class="${planePageState.showNavigationPane === false ? "block" : "hidden"}">
+            ${renderFloatingOutlineBars(activeDocToc)}
           </div>
 
           <!-- Right Docked Plane PageNavigationPane (4 Tabs: Outline, Info, Assets, Historial) -->
           <div id="doc-reader-right-col" class="${planePageState.showNavigationPane === false ? "hidden" : "w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-zinc-800 bg-zinc-950 shrink-0 flex flex-col"}">
             <div id="article-plane-inspector-container" class="flex-1 flex flex-col">
               ${PageNavigationPane({
-      page: findPlanePage(activeDocKey, activeDocMeta),
+      page: activePlanePage,
       content: activeDocContent,
       toc: activeDocToc,
       activeTab: planePageState.activeNavTab || "outline",
@@ -6077,7 +6630,7 @@
       </div>
 
       <!-- ============================================================== -->
-      <!-- MODAL: CREAR NUEVA P\xC1GINA EN LIBRARY                           -->
+      <!-- MODAL: CREAR NUEVA P\xC1GINA EN LIBRARY (Plane CreatePageModal)   -->
       <!-- ============================================================== -->
       <div id="new-doc-modal" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
         <div class="w-full max-w-xl bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl p-5 space-y-4">
@@ -6091,9 +6644,18 @@
           </div>
 
           <form id="new-doc-form" class="space-y-3 text-xs">
-            <div>
-              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>
-              <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none" required />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>
+                <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none" required />
+              </div>
+              <div>
+                <label class="block font-mono text-[11px] text-zinc-400 mb-1">Page Access (Plane Visibility):</label>
+                <select id="new-doc-access" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none">
+                  <option value="0">Public (Visible in Library)</option>
+                  <option value="1">Private (Personal / Draft)</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -6115,6 +6677,59 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- MODAL: EXPORTAR P\xC1GINA (Plane ExportPageModal)                 -->
+      <!-- ============================================================== -->
+      <div id="export-page-modal" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="w-full max-w-md bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl p-5 space-y-4 text-xs">
+          <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h3 class="text-xs font-bold text-zinc-100 flex items-center gap-2">
+              ${Icons.download("w-4 h-4 text-indigo-400")} <span>Export Page (Plane Library Exporter)</span>
+            </h3>
+            <button type="button" data-action="close-export-page-modal" class="w-6 h-6 rounded bg-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center justify-center cursor-pointer">
+              ${Icons.close("w-3.5 h-3.5")}
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Export Scope:</label>
+              <select id="export-page-scope" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="active">Active / Selected Page</option>
+                <option value="all">Full Sovereign Library Bundle (All Pages)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Format:</label>
+              <select id="export-page-format" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="md">Markdown (.md)</option>
+                <option value="html">Standalone HTML Report (.html)</option>
+              </select>
+            </div>
+
+            <label class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 cursor-pointer">
+              <span class="text-zinc-300">Include Mermaid Diagrams & Assets</span>
+              <input type="checkbox" id="export-page-include-assets" checked class="accent-indigo-500 rounded cursor-pointer" />
+            </label>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+            <button type="button" data-action="close-export-page-modal" class="h-7 px-3 rounded-md text-zinc-400 hover:bg-zinc-800 font-medium cursor-pointer">
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-action="confirm-export-page"
+              class="h-7 px-3.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+              ${Icons.download("w-3.5 h-3.5")}
+              <span>Export</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -9607,21 +10222,15 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }
         const shelfPill = e.target.closest(".kb-shelf-pill");
         if (shelfPill) {
-          const targetShelf = shelfPill.getAttribute("data-shelf-filter");
+          const targetShelf = shelfPill.getAttribute("data-shelf-filter") || "";
+          this.kbActiveShelfFilter = targetShelf;
           document.querySelectorAll(".kb-shelf-pill").forEach((p) => {
             p.classList.remove("active", "bg-indigo-600", "text-white", "font-semibold");
             p.classList.add("bg-zinc-900", "text-zinc-400");
           });
           shelfPill.classList.add("active", "bg-indigo-600", "text-white", "font-semibold");
           shelfPill.classList.remove("bg-zinc-900", "text-zinc-400");
-          document.querySelectorAll(".kb-shelf-section").forEach((sec) => {
-            const sId = sec.getAttribute("data-shelf-id");
-            if (!targetShelf || sId === targetShelf) {
-              sec.classList.remove("hidden");
-            } else {
-              sec.classList.add("hidden");
-            }
-          });
+          this.applyLibraryFiltersAndSort();
           return;
         }
         const modTabBtn = e.target.closest("[data-module-tab]");
@@ -9656,7 +10265,11 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         const perspectiveBtn = e.target.closest("[data-kb-perspective]");
         if (perspectiveBtn) {
           const targetPersp = perspectiveBtn.getAttribute("data-kb-perspective");
+          const accessTab = perspectiveBtn.getAttribute("data-page-access-tab");
           this.activeKbPerspective = targetPersp || "global";
+          if (accessTab) {
+            this.kbAccessTab = accessTab;
+          }
           document.querySelectorAll(".kb-perspective-btn").forEach((btn) => {
             btn.classList.remove("active", "border-indigo-500", "text-zinc-100", "font-semibold");
             btn.classList.add("border-transparent", "text-zinc-400", "font-medium");
@@ -9670,7 +10283,169 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           if (targetPanel) {
             targetPanel.classList.remove("hidden");
           }
+          if (targetPersp === "global") {
+            this.applyLibraryFiltersAndSort();
+          }
           this.initMermaidDiagrams();
+          return;
+        }
+        const sortDirBtn = e.target.closest('[data-action="toggle-kb-sort-dir"]');
+        if (sortDirBtn) {
+          const curr = sortDirBtn.getAttribute("data-sort-dir") || "desc";
+          const next = curr === "desc" ? "asc" : "desc";
+          sortDirBtn.setAttribute("data-sort-dir", next);
+          sortDirBtn.textContent = next.toUpperCase();
+          this.kbSortDir = next;
+          this.applyLibraryFiltersAndSort();
+          return;
+        }
+        const toggleFiltersPopoverBtn = e.target.closest('[data-action="toggle-kb-filters-popover"]');
+        if (toggleFiltersPopoverBtn) {
+          const pop = document.getElementById("kb-filters-popover");
+          if (pop) pop.classList.toggle("hidden");
+          return;
+        }
+        const clearKbFiltersBtn = e.target.closest('[data-action="clear-kb-filters"]');
+        if (clearKbFiltersBtn) {
+          this.kbAccessTab = "public";
+          this.kbActiveShelfFilter = "";
+          this.kbSearchQuery = "";
+          this.kbFilterFavorites = false;
+          this.kbFilterLocked = false;
+          this.kbFilterOwner = "";
+          const searchInput = document.getElementById("kb-library-search-input");
+          if (searchInput) searchInput.value = "";
+          const favChk = document.getElementById("kb-filter-favorites-chk");
+          if (favChk) favChk.checked = false;
+          const lockChk = document.getElementById("kb-filter-locked-chk");
+          if (lockChk) lockChk.checked = false;
+          const ownerSel = document.getElementById("kb-filter-owner-select");
+          if (ownerSel) ownerSel.value = "";
+          document.querySelectorAll(".kb-shelf-pill").forEach((p, idx) => {
+            p.classList.toggle("active", idx === 0);
+            p.classList.toggle("bg-indigo-600", idx === 0);
+            p.classList.toggle("text-white", idx === 0);
+            p.classList.toggle("font-semibold", idx === 0);
+            p.classList.toggle("bg-zinc-900", idx !== 0);
+            p.classList.toggle("text-zinc-400", idx !== 0);
+          });
+          document.querySelectorAll(".kb-access-tab-btn").forEach((btn) => {
+            const isPub = btn.getAttribute("data-page-access-tab") === "public";
+            btn.classList.toggle("active", isPub);
+            btn.classList.toggle("border-indigo-500", isPub);
+            btn.classList.toggle("text-zinc-100", isPub);
+            btn.classList.toggle("font-semibold", isPub);
+            btn.classList.toggle("border-transparent", !isPub);
+            btn.classList.toggle("text-zinc-400", !isPub);
+          });
+          document.getElementById("kb-filters-popover")?.classList.add("hidden");
+          this.applyLibraryFiltersAndSort();
+          return;
+        }
+        const rowMenuBtn = e.target.closest('[data-action="toggle-page-row-menu"]');
+        if (rowMenuBtn) {
+          e.stopPropagation();
+          const pageId = rowMenuBtn.getAttribute("data-page-id");
+          const targetMenu = document.getElementById(`page-row-menu-${pageId}`);
+          document.querySelectorAll(".plane-row-actions-menu").forEach((m) => {
+            if (m !== targetMenu) m.classList.add("hidden");
+          });
+          if (targetMenu) targetMenu.classList.toggle("hidden");
+          return;
+        }
+        if (!e.target.closest(".plane-row-actions-menu") && !e.target.closest("#kb-filters-popover")) {
+          document.querySelectorAll(".plane-row-actions-menu").forEach((m) => m.classList.add("hidden"));
+        }
+        const accessPageBtn = e.target.closest('[data-action="toggle-page-access"]');
+        if (accessPageBtn) {
+          const pageId = accessPageBtn.getAttribute("data-page-id");
+          const pd = store.getState().planeData || {};
+          const pages = pd.pages || [];
+          const target = pages.find((p) => p.id === pageId);
+          if (target && target.archived_at) return;
+          const nextAccess = target ? Number(target.access || 0) === 1 ? 0 : 1 : 1;
+          if (target) target.access = nextAccess;
+          await api.updatePlanePage(pageId, { access: nextAccess });
+          store.setState({ planeData: { ...pd, pages: [...pages] } });
+          return;
+        }
+        const archivePageBtn = e.target.closest('[data-action="toggle-page-archive"]');
+        if (archivePageBtn) {
+          const pageId = archivePageBtn.getAttribute("data-page-id");
+          const pd = store.getState().planeData || {};
+          const pages = pd.pages || [];
+          const target = pages.find((p) => p.id === pageId);
+          const willArchive = !(target && target.archived_at);
+          if (target) {
+            target.archived_at = willArchive ? (/* @__PURE__ */ new Date()).toISOString() : null;
+            if (willArchive) target.is_favorite = 0;
+          }
+          await api.updatePlanePage(pageId, { archived: willArchive });
+          store.setState({ planeData: { ...pd, pages: [...pages] } });
+          return;
+        }
+        const dupPageBtn = e.target.closest('[data-action="duplicate-page"]');
+        if (dupPageBtn) {
+          const pageId = dupPageBtn.getAttribute("data-page-id");
+          if (pageId) {
+            await api.updatePlanePage(pageId, { duplicate: true });
+            await this.refreshData();
+          }
+          return;
+        }
+        const copyLinkBtn = e.target.closest('[data-action="copy-page-link"]');
+        if (copyLinkBtn) {
+          const docKey = copyLinkBtn.getAttribute("data-doc-key") || this.currentActiveDocKey || "c4-model.md";
+          const url = `${window.location.origin}${window.location.pathname}#pages?doc=${encodeURIComponent(docKey)}`;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).catch(() => {
+            });
+          }
+          document.querySelectorAll(".plane-row-actions-menu").forEach((m) => m.classList.add("hidden"));
+          return;
+        }
+        const openExportModalBtn = e.target.closest('[data-action="open-export-page-modal"]');
+        if (openExportModalBtn) {
+          this.exportTargetDocKey = openExportModalBtn.getAttribute("data-doc-key") || this.currentActiveDocKey || "c4-model.md";
+          const modal = document.getElementById("export-page-modal");
+          if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+          }
+          document.querySelectorAll(".plane-row-actions-menu").forEach((m) => m.classList.add("hidden"));
+          return;
+        }
+        if (e.target.closest('[data-action="close-export-page-modal"]')) {
+          const modal = document.getElementById("export-page-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          return;
+        }
+        if (e.target.closest('[data-action="confirm-export-page"]')) {
+          const scope = document.getElementById("export-page-scope")?.value || "active";
+          const format = document.getElementById("export-page-format")?.value || "md";
+          const includeAssets = document.getElementById("export-page-include-assets")?.checked !== false;
+          const docs = store.getState().knowledgeIndex?.docs || {};
+          const docKey = scope === "all" ? "MASTER-PROJECT-KNOWLEDGE.md" : this.exportTargetDocKey || this.currentActiveDocKey || "c4-model.md";
+          let rawMd = docs[docKey] || Object.values(docs).join("\n\n---\n\n") || "# Exported Page";
+          if (!includeAssets) {
+            rawMd = rawMd.replace(/```mermaid[\s\S]*?```/gi, "_[Diagram omitted in text-only export]_");
+          }
+          const blobContent = format === "html" ? `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${docKey}</title><style>body{font-family:system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;background:#09090b;color:#f4f4f5;line-height:1.6}pre,code{background:#18181b;padding:0.2rem 0.4rem;border-radius:4px}</style></head><body>${renderMarkdown2(rawMd)}</body></html>` : rawMd;
+          const mime = format === "html" ? "text/html;charset=utf-8" : "text/markdown;charset=utf-8";
+          const ext = format === "html" ? ".html" : ".md";
+          const blob = new Blob([blobContent], { type: mime });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = docKey.replace(/\.md$/i, "") + ext;
+          link.click();
+          const modal = document.getElementById("export-page-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
           return;
         }
         const pageFilterBtn = e.target.closest('[data-action="set-page-tree-filter"]');
@@ -9894,14 +10669,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           return;
         }
         if (e.target.id === "kb-library-search-input") {
-          const q = (e.target.value || "").trim().toLowerCase();
-          document.querySelectorAll("#kb-shelves-container .kb-shelf-doc-card").forEach((row) => {
-            const title = (row.getAttribute("data-doc-title") || "").toLowerCase();
-            const key = (row.getAttribute("data-doc-key") || "").toLowerCase();
-            const mod = (row.getAttribute("data-doc-module") || "").toLowerCase();
-            const match = !q || title.includes(q) || key.includes(q) || mod.includes(q);
-            row.classList.toggle("hidden", !match);
-          });
+          this.kbSearchQuery = (e.target.value || "").trim().toLowerCase();
+          this.applyLibraryFiltersAndSort();
           return;
         }
         if (e.target.id === "plane-page-search" || e.target.id === "plane-pages-search") {
@@ -9934,6 +10703,26 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }
         if (e.target.id === "plane-group-by") {
           store.setState({ planeGroupBy: e.target.value });
+          return;
+        }
+        if (e.target.id === "kb-sort-by-select") {
+          this.kbSortBy = e.target.value || "updated_at";
+          this.applyLibraryFiltersAndSort();
+          return;
+        }
+        if (e.target.id === "kb-filter-favorites-chk") {
+          this.kbFilterFavorites = Boolean(e.target.checked);
+          this.applyLibraryFiltersAndSort();
+          return;
+        }
+        if (e.target.id === "kb-filter-locked-chk") {
+          this.kbFilterLocked = Boolean(e.target.checked);
+          this.applyLibraryFiltersAndSort();
+          return;
+        }
+        if (e.target.id === "kb-filter-owner-select") {
+          this.kbFilterOwner = e.target.value || "";
+          this.applyLibraryFiltersAndSort();
           return;
         }
         if (e.target.id === "kb-rules-module-filter") {
@@ -9979,6 +10768,151 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           }
         }
       });
+      document.addEventListener("submit", async (e) => {
+        if (e.target.id === "new-doc-form") {
+          e.preventDefault();
+          const titleInput = document.getElementById("new-doc-title");
+          const shelfSelect = document.getElementById("new-doc-shelf");
+          const accessSelect = document.getElementById("new-doc-access");
+          const pathInput = document.getElementById("new-doc-path");
+          const contentInput = document.getElementById("new-doc-content");
+          const rawTitle = (titleInput?.value || "").trim();
+          const safeTitle = rawTitle.length > 0 ? rawTitle : "Untitled";
+          const shelf = shelfSelect?.value || "architecture";
+          const access = Number(accessSelect?.value || 0);
+          const rawPath = (pathInput?.value || "").trim() || `${safeTitle.toLowerCase().replace(/[^a-z0-9_-]+/g, "-")}.md`;
+          const cleanDocKey = rawPath.endsWith(".md") ? rawPath : `${rawPath}.md`;
+          const content = (contentInput?.value || "").trim() || `# ${safeTitle}
+
+> [!NOTE] Nueva p\xE1gina creada en Plane Library.
+`;
+          store.saveDoc(cleanDocKey, content);
+          await api.createPlanePage({
+            title: safeTitle,
+            shelf,
+            access,
+            file_path: `knowledge/${cleanDocKey}`,
+            content_markdown: content
+          });
+          const modal = document.getElementById("new-doc-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          await this.refreshData();
+          this.openArticleView(cleanDocKey, false);
+        }
+      });
+    }
+    /**
+     * Motor de Filtrado y Ordenamiento de Páginas al estilo Plane (BR-PAGE-06)
+     * Implementa shouldFilterPage (Public / Private / Archived + Favorites + Locked + Created By + Shelf + Search)
+     * y sortBy / orderBy (updated_at, created_at, name en asc / desc), además de PageAppliedFiltersList.
+     */
+    applyLibraryFiltersAndSort() {
+      const accessTab = this.kbAccessTab || "public";
+      const shelfFilter = this.kbActiveShelfFilter || "";
+      const query = (this.kbSearchQuery || "").trim().toLowerCase();
+      const filterFav = Boolean(this.kbFilterFavorites);
+      const filterLocked = Boolean(this.kbFilterLocked);
+      const filterOwner = this.kbFilterOwner || "";
+      const sortBy = this.kbSortBy || "updated_at";
+      const sortDir = this.kbSortDir || "desc";
+      let totalVisible = 0;
+      document.querySelectorAll("#kb-shelves-container .kb-shelf-section").forEach((section) => {
+        const shelfId = section.getAttribute("data-shelf-id") || "";
+        const rowsContainer = section.querySelector(".kb-shelf-rows-list");
+        const cards = Array.from(section.querySelectorAll(".kb-shelf-doc-card"));
+        cards.sort((a, b) => {
+          if (sortBy === "name") {
+            const nameA = (a.getAttribute("data-doc-title") || "").toLowerCase();
+            const nameB = (b.getAttribute("data-doc-title") || "").toLowerCase();
+            return sortDir === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+          }
+          if (sortBy === "created_at") {
+            const cA = new Date(a.getAttribute("data-page-created") || 0).getTime();
+            const cB = new Date(b.getAttribute("data-page-created") || 0).getTime();
+            return sortDir === "asc" ? cA - cB : cB - cA;
+          }
+          const uA = new Date(a.getAttribute("data-page-updated") || 0).getTime();
+          const uB = new Date(b.getAttribute("data-page-updated") || 0).getTime();
+          return sortDir === "asc" ? uA - uB : uB - uA;
+        });
+        if (rowsContainer) {
+          cards.forEach((card) => rowsContainer.appendChild(card));
+        }
+        let shelfVisible = 0;
+        cards.forEach((card) => {
+          const isArchived = card.getAttribute("data-page-archived") === "1";
+          const isPrivate = card.getAttribute("data-page-access") === "1";
+          const isFav = card.getAttribute("data-page-favorite") === "1";
+          const isLock = card.getAttribute("data-page-locked") === "1";
+          const owner = card.getAttribute("data-page-owner") || "";
+          const title = (card.getAttribute("data-doc-title") || "").toLowerCase();
+          const key = (card.getAttribute("data-doc-key") || "").toLowerCase();
+          const mod = (card.getAttribute("data-doc-module") || "").toLowerCase();
+          let visible = true;
+          if (accessTab === "archived") {
+            if (!isArchived) visible = false;
+          } else if (accessTab === "private") {
+            if (isArchived || !isPrivate) visible = false;
+          } else if (accessTab === "public") {
+            if (isArchived || isPrivate) visible = false;
+          }
+          if (visible && shelfFilter && shelfId !== shelfFilter) {
+            visible = false;
+          }
+          if (visible && filterFav && !isFav) visible = false;
+          if (visible && filterLocked && !isLock) visible = false;
+          if (visible && filterOwner && owner !== filterOwner) visible = false;
+          if (visible && query) {
+            if (!title.includes(query) && !key.includes(query) && !mod.includes(query) && !shelfId.toLowerCase().includes(query)) {
+              visible = false;
+            }
+          }
+          card.classList.toggle("hidden", !visible);
+          if (visible) {
+            shelfVisible++;
+            totalVisible++;
+          }
+        });
+        const countBadge = section.querySelector(".kb-shelf-visible-count");
+        if (countBadge) countBadge.textContent = String(shelfVisible);
+        section.classList.toggle("hidden", shelfVisible === 0);
+      });
+      const pinnedStrip = document.getElementById("kb-pinned-featured-strip");
+      if (pinnedStrip) {
+        pinnedStrip.classList.toggle("hidden", accessTab !== "public" || Boolean(query) || Boolean(shelfFilter));
+      }
+      const emptyState = document.getElementById("kb-empty-filter-state");
+      if (emptyState) {
+        emptyState.classList.toggle("hidden", totalVisible > 0);
+        emptyState.classList.toggle("flex", totalVisible === 0);
+      }
+      const appliedBar = document.getElementById("kb-applied-filters-bar");
+      const chipsContainer = document.getElementById("kb-applied-filters-chips");
+      const activeChips = [];
+      if (accessTab !== "public") activeChips.push(`Tab: ${accessTab.toUpperCase()}`);
+      if (shelfFilter) activeChips.push(`Shelf: ${shelfFilter}`);
+      if (filterFav) activeChips.push("Favorite: Yes");
+      if (filterLocked) activeChips.push("Locked: Yes");
+      if (filterOwner) activeChips.push(`Created by: ${filterOwner}`);
+      if (query) activeChips.push(`Query: "${query}"`);
+      if (appliedBar && chipsContainer) {
+        if (activeChips.length > 0) {
+          appliedBar.classList.remove("hidden");
+          appliedBar.classList.add("flex");
+          chipsContainer.innerHTML = activeChips.map((c) => `
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 font-mono text-[10px]">
+            ${escapeHtml7(c)}
+          </span>
+        `).join("");
+        } else {
+          appliedBar.classList.add("hidden");
+          appliedBar.classList.remove("flex");
+          chipsContainer.innerHTML = "";
+        }
+      }
     }
     openArticleView(docKey, openInEditor = false, skipScroll = false) {
       this.currentActiveDocKey = docKey;
@@ -10001,7 +10935,9 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         word_count: meta.wordCount || 400,
         reading_time_min: meta.readingTime || 3,
         is_locked: 1,
-        is_favorite: docKey === "c4-model.md" ? 1 : 0
+        is_favorite: docKey === "c4-model.md" ? 1 : 0,
+        access: 0,
+        archived_at: null
       };
       const content = docs[docKey] || matchedPlanePage.content_markdown || "# Documento no disponible";
       const libView = document.getElementById("kb-view-library");
@@ -10016,6 +10952,8 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       const rfEl = document.getElementById("article-meta-rf");
       const headerActionsEl = document.getElementById("article-plane-header-actions");
       const inspectorEl = document.getElementById("article-plane-inspector-container");
+      const statusBannerEl = document.getElementById("article-status-banner");
+      const floatingOutlineEl = document.getElementById("article-floating-outline-wrapper");
       const readerContainer = document.getElementById("doc-reader-view-container");
       const editorContainer = document.getElementById("doc-editor-view-container");
       const btnText = document.getElementById("btn-toggle-doc-text");
@@ -10040,6 +10978,15 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           showNavigationPane: state.planePageShowNavPane !== false,
           showAiMenu: Boolean(state.planePageShowAiMenu)
         });
+      }
+      if (statusBannerEl) {
+        const isLocked = Boolean(matchedPlanePage.is_locked);
+        const isArchived = Boolean(matchedPlanePage.archived_at);
+        statusBannerEl.classList.toggle("hidden", !isLocked && !isArchived);
+        statusBannerEl.classList.toggle("flex", isLocked || isArchived);
+      }
+      if (floatingOutlineEl) {
+        floatingOutlineEl.innerHTML = state.planePageShowNavPane === false ? renderFloatingOutlineBars(toc) : "";
       }
       if (inspectorEl) {
         inspectorEl.innerHTML = PageNavigationPane({

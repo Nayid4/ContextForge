@@ -65,13 +65,64 @@ export class PageService {
   }
 
   /**
-   * Actualiza propiedades de una página estilo Plane (is_favorite, is_locked, full_width, restore_version_id).
+   * Actualiza propiedades de una página estilo Plane (access, is_favorite, is_locked, archived, duplicate, full_width, restore_version_id).
    * @param {string} pageId
    * @param {Record<string, any>} props
    * @returns {Promise<any>}
    */
   async updatePageProperties(pageId, props = {}) {
     return this.client.updatePlanePage(pageId, props);
+  }
+
+  /**
+   * Alterna visibilidad de la página entre Public (0) y Private (1) según BR-PAGE-04 de Plane.
+   * @param {string} pageId
+   * @param {number} access 0 = Public, 1 = Private
+   */
+  async updateAccess(pageId, access = 0) {
+    return this.client.updatePlanePage(pageId, { access: Number(access) === 1 ? 1 : 0 });
+  }
+
+  /**
+   * Archiva una página (establece archived_at y desmarca is_favorite según BR-PAGE-03 de Plane).
+   * @param {string} pageId
+   */
+  async archivePage(pageId) {
+    return this.client.updatePlanePage(pageId, { archived: true });
+  }
+
+  /**
+   * Restaura una página archivada (archived_at = null).
+   * @param {string} pageId
+   */
+  async restorePage(pageId) {
+    return this.client.updatePlanePage(pageId, { archived: false });
+  }
+
+  /**
+   * Duplica una página (Make a copy) en SQLite y disco (.md) según BR-PAGE-05 de Plane.
+   * @param {string} pageId
+   */
+  async duplicatePage(pageId) {
+    return this.client.updatePlanePage(pageId, { duplicate: true });
+  }
+
+  /**
+   * Devuelve el título normalizado o 'Untitled' si está vacío (Plane getPageName).
+   * @param {string} [title]
+   * @returns {string}
+   */
+  getPageName(title = '') {
+    return (!title || !String(title).trim()) ? 'Untitled' : String(title).trim();
+  }
+
+  /**
+   * Evalúa si una página es editable en el editor según Plane base-page.ts (isContentEditable).
+   * @param {Record<string, any>} page
+   * @returns {boolean}
+   */
+  isContentEditable(page = {}) {
+    return !page.is_locked && !page.archived_at;
   }
 
   /**

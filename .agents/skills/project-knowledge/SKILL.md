@@ -206,21 +206,37 @@ Cubre rigurosamente toda la estructura del estándar IEEE 830 Sección 3:
 
 ---
 
-### Paso 6: Compilación del Megadocumento Único (`MASTER-PROJECT-KNOWLEDGE.md`) y Sincronización
+### Paso 6: Compilación del Megadocumento Único (`MASTER-PROJECT-KNOWLEDGE.md`), Organización en Plane Library y Sincronización
 
 1. **Generación de `MASTER-PROJECT-KNOWLEDGE.md`**:
    - Ensambla en un único archivo Markdown maestro (con Tabla de Contenidos navegable) la totalidad de los documentos `01` al `12` más el contenido íntegro de todos los módulos en `modules/{modulo}/*`.
    - Prohibido resumir o recortar diagramas o tablas al crear el archivo maestro; debe funcionar como el *gemelo cognitivo* completo del software en un solo archivo.
-2. **Actualización de `knowledge-index.json` e Ingesta en el Modelo Relacional Plane (`pages`, `page_versions`, `page_logs`, `page_labels`, `ai_runs`)**:
+
+2. **Taxonomía y Reglas de Negocio de Plane Library (`BR-PAGE-01`..`BR-PAGE-06`)**:
+   Cada documento generado en `project-docs/knowledge/` debe organizarse siguiendo exactamente el modelo operativo de **Library (Pages)** de Plane:
+   - **Visibilidad (`access`: `0` Public vs `1` Private — `BR-PAGE-01`, `BR-PAGE-04`)**:
+     * **Public (`--access public`, `access = 0`)**: Documentos canónicos compartidos con todo el proyecto y los subagentes (`c4-model.md`, `uml-diagrams.md`, `business-rules.md`, `coding-standards.md`, `external-services.md`, `MASTER-PROJECT-KNOWLEDGE.md` y especificaciones de módulos `modules/{modulo}/*`).
+     * **Private (`--access private`, `access = 1`)**: Borradores de exploración forense, notas de deuda técnica en curso o borradores de refactorización antes de convertirse en ADRs públicos.
+     * **Archived (`archived_at`)**: Documentos históricos o deprecados que se conservan por auditoría mediante `node project-docs/cli.js page archive <slug>`. Archivar una página desmarca automáticamente `is_favorite = 0` (`BR-PAGE-03`) e impide cambiar su visibilidad o editar su contenido hasta restaurarla (`BR-PAGE-02`, `BR-PAGE-04`).
+   - **Bloqueo Normativo (`is_locked` — `BR-PAGE-02`)**:
+     * Los documentos de gobierno arquitectónico (`c4-model.md`, `business-rules.md`, `coding-standards.md`, `MASTER-PROJECT-KNOWLEDGE.md`) se registran con `--locked` (`is_locked = 1`) para impedir ediciones accidentales en el editor sin desbloqueo explícito.
+   - **Favoritos Fijados (`is_favorite`) y Ancho Completo (`full_width`)**:
+     * Los documentos de consulta permanente se marcan con `--favorite` para aparecer fijados en la barra lateral de Plane (`Favorites`) y en la franja superior de Library.
+     * Los pliegos con diagramas C4, UML o mapas mentales Mermaid se marcan con `--full-width` para expandir el lienzo de lectura de `720px` a `1152px`.
+   - **Estantes Canónicos (`shelf`) y Etiquetas (`page_labels`)**:
+     * Clasifica cada página en su estante correspondiente (`architecture`, `business_rules`, `requirements`, `adrs`, `standards`, `modules`, `specs`) y asigna etiquetas semánticas (`ieee-830`, `c4-model`, `uml-2.5`, `ddd`, `deepwiki`, `invariants`, `erd`).
+
+3. **Actualización de `knowledge-index.json` e Ingesta en el Modelo Relacional Plane (`pages`, `page_versions`, `page_logs`, `page_labels`, `ai_runs`)**:
    - Actualiza `project-docs/knowledge/knowledge-index.json` con todos los documentos, conteos reales y el grafo de relaciones.
-   - Al escribir los documentos Markdown, utiliza menciones explícitas a tareas (`INT-001`..`INT-NNN`), reglas (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`) y capacidades (`CAP-XXX`) para que el motor Plane SQLite construya automáticamente el grafo bidireccional en `page_logs` y los renderice como **Smart Entity Chips** interactivos en `PageReader.js` y en la pestaña **Info / Assets / Historial** de `PageNavigationPane.js`.
-   - Registra las páginas clave con sus metadatos Plane (`--locked` para páginas normativas bloqueadas contra edición accidental, `--favorite` para documentos estrella, `--full-width` para pliegos con diagramas anchos, `--labels` para `page_labels` y `--module` para vincular al módulo DDD) y ejecuta la sincronización completa:
+   - Al escribir los documentos Markdown, utiliza menciones explícitas a tareas (`INT-001`..`INT-NNN`), reglas (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`) y capacidades (`CAP-XXX`) para que el motor Plane SQLite construya automáticamente el grafo bidireccional en `page_logs` y los renderice como **Smart Entity Chips** interactivos en `PageReader.js` y en las 4 pestañas (**Outline / Info / Assets / Historial**) de `PageNavigationPane.js`.
+   - Registra las páginas clave con sus metadatos Plane (`--access public|private`, `--locked`, `--favorite`, `--full-width`, `--labels`, `--module`) y ejecuta la sincronización completa:
      ```bash
-     node project-docs/cli.js page upsert --id "page-kb-c4-model_md" --title "Modelo de Arquitectura C4 (C1-C4)" --shelf "architecture" --file "project-docs/knowledge/c4-model.md" --locked --favorite --full-width --labels "c4-model,architecture,mermaid"
-     node project-docs/cli.js page upsert --id "page-kb-business-rules_md" --title "Catalogo de Reglas de Negocio (BR-*)" --shelf "business_rules" --file "project-docs/knowledge/business-rules.md" --locked --favorite --labels "business-rules,invariants,ddd"
-     node project-docs/cli.js page upsert --id "page-kb-MASTER-PROJECT-KNOWLEDGE_md" --title "Dossier Maestro Consolidado (Single-File Context)" --shelf "architecture" --file "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md" --locked --favorite --full-width --labels "master-bundle,ieee-830,c4-model,deepwiki"
+     node project-docs/cli.js page upsert --id "page-kb-c4-model_md" --title "Modelo de Arquitectura C4 (C1-C4)" --shelf "architecture" --access public --file "project-docs/knowledge/c4-model.md" --locked --favorite --full-width --labels "c4-model,architecture,mermaid"
+     node project-docs/cli.js page upsert --id "page-kb-business-rules_md" --title "Catalogo de Reglas de Negocio (BR-*)" --shelf "business_rules" --access public --file "project-docs/knowledge/business-rules.md" --locked --favorite --labels "business-rules,invariants,ddd"
+     node project-docs/cli.js page upsert --id "page-kb-coding-standards_md" --title "Estandares de Codigo y Guardrails Anti-Sesgo" --shelf "standards" --access public --file "project-docs/knowledge/coding-standards.md" --locked --labels "coding-standards,guardrails,clean-code"
+     node project-docs/cli.js page upsert --id "page-kb-MASTER-PROJECT-KNOWLEDGE_md" --title "Dossier Maestro Consolidado (Single-File Context)" --shelf "architecture" --access public --file "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md" --locked --favorite --full-width --labels "master-bundle,ieee-830,c4-model,deepwiki"
      node project-docs/cli.js sync
-     node project-docs/cli.js ai log --skill project-knowledge --role spec-author --type KNOWLEDGE_EXTRACTION --summary "Extraccion de base de conocimiento soberana C4, UML, reglas BR-*, grafo page_logs y etiquetas page_labels" --artifacts "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md,project-docs/knowledge/knowledge-index.json"
+     node project-docs/cli.js ai log --skill project-knowledge --role spec-author --type KNOWLEDGE_EXTRACTION --summary "Extraccion de base de conocimiento soberana C4, UML, reglas BR-*, organizacion Plane Library (Public/Private/Archived) y grafo page_logs" --artifacts "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md,project-docs/knowledge/knowledge-index.json"
      node project-docs/sync-data.js
      ```
 
@@ -235,4 +251,4 @@ Antes de finalizar, verifica obligatoriamente:
 - [ ] **Doble Salida Completa**: Existen todos los archivos divididos en `project-docs/knowledge/` **Y** existe el megadocumento unificado `project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`.
 - [ ] **Módulos Profundos (5 archivos + 6 diagramas por módulo)**: Cada módulo en `modules/{modulo}/` cuenta con `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md` y `technical-debt-refactoring.md`.
 - [ ] **12 Tipos de Diagramas con Geometría Exacta**: Todos los diagramas Mermaid usan las formas geométricas correctas (cilindros, hexágonos, subrutinas, banderas, rombos) y tienen IDs alfanuméricos limpios con etiquetas entrecomilladas.
-- [ ] **Grafo Relacional Plane (`page_logs`, `page_labels`, `page_versions`)**: `node project-docs/cli.js sync` y `node project-docs/sync-data.js` se ejecutaron poblando telemetría documental (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`), etiquetas semánticas y vínculos cruzados hacia `INT-*`, `BR-*`, `RF-*`, `ADR-*` y `CAP-*`.
+- [ ] **Organización Plane Library y Grafo Relacional (`pages`, `page_logs`, `page_labels`, `page_versions`)**: Cada página tiene asignado su `shelf`, `access` (`public` o `private`), `is_locked`, `is_favorite`, `full_width`, `page_labels` y vínculos cruzados `page_logs` hacia `INT-*`, `BR-*`, `RF-*`, `ADR-*` y `CAP-*`, sincronizados con `node project-docs/cli.js sync` y `node project-docs/sync-data.js`.

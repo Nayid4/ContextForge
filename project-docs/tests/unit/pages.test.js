@@ -14,7 +14,8 @@ import {
   DualMarkdownEditor,
   PagesPage,
   renderPageHeaderActions,
-  renderPlanePagesView
+  renderPlanePagesView,
+  renderKnowledgeBase
 } from '../../src/modules/Pages/index.js';
 
 test('PageService Suite: getPages y resolveShelf clasifican estantes correctamente', async () => {
@@ -181,4 +182,89 @@ test('Plane Pages Evolution Suite: PageNavigationPane (4 pestañas), Smart Entit
 
   const floatingHtml = renderFloatingOutlineBars([{ id: 'c4', text: 'C4', level: 1 }]);
   assert.ok(floatingHtml.includes('toggle-page-nav-pane'));
+});
+
+test('Plane Library Business Rules Suite (BR-PAGE-01..06): PageService y PageStore', () => {
+  // BR-PAGE-01: Untitled fallback
+  assert.equal(pageService.getPageName(''), 'Untitled');
+  assert.equal(pageService.getPageName('   '), 'Untitled');
+  assert.equal(pageService.getPageName('Arquitectura C4'), 'Arquitectura C4');
+
+  // BR-PAGE-02: isContentEditable Lock & Archive Guard
+  assert.equal(pageService.isContentEditable({ is_locked: 0, archived_at: null }), true);
+  assert.equal(pageService.isContentEditable({ is_locked: 1, archived_at: null }), false);
+  assert.equal(pageService.isContentEditable({ is_locked: 0, archived_at: '2026-11-07T10:00:00Z' }), false);
+
+  const store = new PageStore();
+  store.setPages([
+    { id: 'p-pub', title: 'Beta Public', access: 0, is_favorite: 1, is_locked: 0, archived_at: null, updated_at: '2026-11-07T12:00:00Z', created_at: '2026-11-01T10:00:00Z', owned_by_role: 'spec-author' },
+    { id: 'p-priv', title: 'Alpha Private', access: 1, is_favorite: 0, is_locked: 1, archived_at: null, updated_at: '2026-11-07T14:00:00Z', created_at: '2026-11-02T10:00:00Z', owned_by_role: 'reviewer' },
+    { id: 'p-arch', title: 'Gamma Archived', access: 0, is_favorite: 0, is_locked: 0, archived_at: '2026-11-05T10:00:00Z', updated_at: '2026-11-05T10:00:00Z', created_at: '2026-10-20T10:00:00Z', owned_by_role: 'leader' }
+  ]);
+
+  // BR-PAGE-06: Filtrado por pestañas Public / Private / Archived
+  store.setNavigationTab('public');
+  assert.equal(store.getFilteredAndSortedPages().length, 1);
+  assert.equal(store.getFilteredAndSortedPages()[0].id, 'p-pub');
+
+  store.setNavigationTab('private');
+  assert.equal(store.getFilteredAndSortedPages().length, 1);
+  assert.equal(store.getFilteredAndSortedPages()[0].id, 'p-priv');
+
+  store.setNavigationTab('archived');
+  assert.equal(store.getFilteredAndSortedPages().length, 1);
+  assert.equal(store.getFilteredAndSortedPages()[0].id, 'p-arch');
+
+  // Ordenamiento por nombre ascendente/descendente
+  store.setNavigationTab('all');
+  store.setOrderBy('name');
+  store.setSortBy('asc');
+  assert.equal(store.getFilteredAndSortedPages()[0].id, 'p-priv'); // Alpha Private
+  store.setSortBy('desc');
+  assert.equal(store.getFilteredAndSortedPages()[0].id, 'p-pub'); // Beta Public
+
+  // BR-PAGE-02: Bloqueo impide activar editor
+  store.selectPage('p-priv', '# Private Locked');
+  store.setEditorMode('editor');
+  assert.equal(store.getState().editorMode, 'reader');
+
+  // BR-PAGE-03: Archivar una página limpia automáticamente is_favorite = 0
+  store.archivePage('p-pub');
+  const archivedPub = store.getState().pages.find(p => p.id === 'p-pub');
+  assert.ok(archivedPub.archived_at);
+  assert.equal(archivedPub.is_favorite, 0);
+
+  // BR-PAGE-04: No se puede alternar access mientras está archivada
+  store.togglePageProperty('p-pub', 'access');
+  assert.equal(store.getState().pages.find(p => p.id === 'p-pub').access, 0);
+
+  // Restaurar página archivada y alternar access a Private (1)
+  store.restorePage('p-pub');
+  assert.equal(store.getState().pages.find(p => p.id === 'p-pub').archived_at, null);
+  store.togglePageProperty('p-pub', 'access');
+  assert.equal(store.getState().pages.find(p => p.id === 'p-pub').access, 1);
+});
+
+test('Plane Library UI/UX Suite: renderKnowledgeBase incluye pestañas Public/Private/Archived, OrderBy, Filters y ExportPageModal', () => {
+  const html = renderKnowledgeBase({
+    knowledgeIndex: {
+      docs: { 'c4-model.md': '# C4 Model\nCumple INT-016 y BR-001.' },
+      docMetadata: { 'c4-model.md': { title: 'C4 Architecture', shelf: 'architecture', wordCount: 250, readingTime: 2 } },
+      shelves: [{ id: 'architecture', title: 'Architecture', docs: ['c4-model.md'] }]
+    },
+    planePages: [
+      { id: 'page-kb-c4-model_md', title: 'C4 Architecture', file_path: 'knowledge/c4-model.md', access: 0, is_favorite: 1, is_locked: 1 }
+    ],
+    features: [{ id: 'INT-016', title: 'Plane Model', state_id: 'state-done' }]
+  });
+
+  assert.ok(html.includes('data-page-access-tab="public"'));
+  assert.ok(html.includes('data-page-access-tab="private"'));
+  assert.ok(html.includes('data-page-access-tab="archived"'));
+  assert.ok(html.includes('kb-sort-by-select'));
+  assert.ok(html.includes('kb-filters-popover'));
+  assert.ok(html.includes('export-page-modal'));
+  assert.ok(html.includes('toggle-page-access'));
+  assert.ok(html.includes('toggle-page-archive'));
+  assert.ok(html.includes('duplicate-page'));
 });

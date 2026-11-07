@@ -269,13 +269,17 @@ async function handlePlaneApi(req, res, database) {
       return;
     }
 
-    // 13. PUT / PATCH /api/plane/pages/:id - Actualizar markdown, propiedades (is_favorite, is_locked, full_width) o restaurar version
+    // 13. PUT / PATCH /api/plane/pages/:id - Actualizar markdown, propiedades (access, is_favorite, is_locked, archived, duplicate, full_width) o restaurar version
     if (pageMatch && (method === 'PUT' || method === 'PATCH')) {
       const pageId = decodeURIComponent(pageMatch[1]);
       const body = await parseJsonBody(req);
       const updatedPage = updatePagePropertiesInSQLite(database, pageId, {
+        access: body.access,
         is_favorite: body.is_favorite,
         is_locked: body.is_locked,
+        archived: body.archived,
+        archived_at: body.archived_at,
+        duplicate: body.duplicate,
         full_width: body.full_width,
         restore_version_id: body.restore_version_id,
         content_markdown: body.content_markdown,

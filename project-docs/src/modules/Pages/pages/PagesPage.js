@@ -21,6 +21,8 @@ export function renderPageHeaderActions({
 } = {}) {
   const isFavorite = Boolean(activePage.is_favorite);
   const isLocked = Boolean(activePage.is_locked);
+  const isArchived = Boolean(activePage.archived_at);
+  const isPrivate = Number(activePage.access || 0) === 1;
   const pageId = activePage.id || 'page-default';
   const logs = Array.isArray(activePage.logs) ? activePage.logs : [];
   const issueLinks = logs.filter(l => l.entity_name === 'issue' || l.entity_name === 'forward_issue');
@@ -38,20 +40,41 @@ export function renderPageHeaderActions({
         <span>SQLite + .md Synced</span>
       </span>
 
-      <!-- Favorite Toggle (is_favorite) -->
+      <!-- Access Toggle: Public (0) vs Private (1) per Plane BR-PAGE-01 & BR-PAGE-04 -->
       <button
         type="button"
-        data-action="toggle-page-favorite"
+        data-action="toggle-page-access"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
-          isFavorite
-            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+        ${isArchived ? 'disabled' : ''}
+        class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold transition-colors ${
+          isArchived
+            ? 'bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-not-allowed'
+            : isPrivate
+              ? 'bg-violet-500/15 border-violet-500/40 text-violet-300 cursor-pointer hover:bg-violet-500/25'
+              : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 cursor-pointer'
         }"
-        title="${isFavorite ? 'Quitar de Favoritas' : 'Marcar como Página Favorita'}"
+        title="${isArchived ? 'Restaura la página para cambiar el acceso' : isPrivate ? 'Página Privada (Clic para hacer Pública)' : 'Página Pública (Clic para hacer Privada)'}"
       >
-        ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400' : ''}`)}
+        ${isPrivate ? Icons.lock('w-3 h-3') : Icons.globe('w-3 h-3 text-indigo-400')}
+        <span>${isPrivate ? 'Private' : 'Public'}</span>
       </button>
+
+      <!-- Favorite Toggle (is_favorite) - Hidden when archived per Plane BR-PAGE-03 -->
+      ${!isArchived ? `
+        <button
+          type="button"
+          data-action="toggle-page-favorite"
+          data-page-id="${pageId}"
+          class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+            isFavorite
+              ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+          }"
+          title="${isFavorite ? 'Quitar de Favoritas' : 'Marcar como Página Favorita'}"
+        >
+          ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400' : ''}`)}
+        </button>
+      ` : ''}
 
       <!-- Lock / Unlock Toggle (is_locked) -->
       <button
@@ -92,6 +115,43 @@ export function renderPageHeaderActions({
         title="Copiar código Markdown al portapapeles"
       >
         ${Icons.copy('w-3.5 h-3.5')}
+      </button>
+
+      <!-- Duplicate Page (Make a copy per Plane BR-PAGE-05) -->
+      <button
+        type="button"
+        data-action="duplicate-page"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        title="Hacer una copia de la página (Make a copy)"
+      >
+        ${Icons.plus('w-3.5 h-3.5')}
+      </button>
+
+      <!-- Archive / Restore Page (Plane BR-PAGE-03) -->
+      <button
+        type="button"
+        data-action="toggle-page-archive"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+          isArchived
+            ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+        }"
+        title="${isArchived ? 'Restaurar página archivada (Restore)' : 'Archivar página (Archive)'}"
+      >
+        ${isArchived ? Icons.archiveRestore('w-3.5 h-3.5') : Icons.archive('w-3.5 h-3.5')}
+      </button>
+
+      <!-- Export Page Modal Trigger -->
+      <button
+        type="button"
+        data-action="open-export-page-modal"
+        data-page-id="${pageId}"
+        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        title="Exportar página (Markdown / HTML Report)"
+      >
+        ${Icons.download('w-3.5 h-3.5')}
       </button>
 
       <!-- Ask Harness AI Assistant Button (Plane AskPiMenu / EditorAIMenu) -->

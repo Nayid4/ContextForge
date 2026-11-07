@@ -488,12 +488,14 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       is_locked INTEGER NOT NULL DEFAULT 0,
       is_favorite INTEGER NOT NULL DEFAULT 0,
       view_props TEXT DEFAULT '{"full_width":false}',
+      logo_props TEXT DEFAULT '{"in_use":"icon","icon":{"name":"file-text","color":"#6366f1"}}',
       archived_at DATETIME,
       word_count INTEGER NOT NULL DEFAULT 0,
       char_count INTEGER NOT NULL DEFAULT 0,
       paragraph_count INTEGER NOT NULL DEFAULT 0,
       diagrams_count INTEGER NOT NULL DEFAULT 0,
       reading_time_min INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES projects(id)
     );
@@ -509,11 +511,13 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
   ensureColumn(db, 'pages', 'is_locked', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'is_favorite', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'view_props', `TEXT DEFAULT '{"full_width":false}'`);
+  ensureColumn(db, 'pages', 'logo_props', `TEXT DEFAULT '{"in_use":"icon","icon":{"name":"file-text","color":"#6366f1"}}'`);
   ensureColumn(db, 'pages', 'archived_at', 'DATETIME');
   ensureColumn(db, 'pages', 'word_count', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'char_count', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'paragraph_count', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'diagrams_count', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
 
   // 23. Page Versions (Plane PageVersion Historical Snapshot Model)
   db.exec(`

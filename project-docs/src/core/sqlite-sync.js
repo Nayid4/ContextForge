@@ -1351,29 +1351,42 @@ export function createIssueInSQLite(db, {
   return db.prepare('SELECT * FROM issues WHERE id = ?').get(issueId);
 }
 
+export function getPageName(title = '') {
+  return (!title || !String(title).trim()) ? 'Untitled' : String(title).trim();
+}
+
 export function upsertPageInSQLite(db, {
   file_path,
   title,
   shelf = 'standards',
   content_markdown = '',
   owned_by_role = 'spec-author',
+  access = null,
   is_locked = null,
   is_favorite = null,
+  archived_at = undefined,
   full_width = null,
   labels = [],
   module_id = null
 } = {}) {
   const cleanRelPath = file_path.replace(/^project-docs[\\/]/, '').replace(/\\/g, '/');
   const pageId = `page-${cleanRelPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const safeTitle = getPageName(title);
   const telemetry = extractPageTelemetryAndLogs(content_markdown, cleanRelPath);
   const summary = content_markdown
     .split(/\r?\n/)
     .map(l => l.trim())
-    .find(l => l && !l.startsWith('#') && !l.startsWith('>')) || title;
+    .find(l => l && !l.startsWith('#') && !l.startsWith('>')) || safeTitle;
 
-  const finalLocked = is_locked !== null ? (is_locked ? 1 : 0) : telemetry.isLocked;
-  const finalFav = is_favorite !== null ? (is_favorite ? 1 : 0) : telemetry.isFavorite;
-  const finalFullWidth = full_width !== null ? Boolean(full_width) : telemetry.isFullWidth;
+  const finalAccess = access !== null && access !== undefined ? (Number(access) === 1 ? 1 : 0) : 0;
+  const finalLocked = is_locked !== null && is_locked !== undefined ? (is_locked ? 1 : 0) : telemetry.isLocked;
+  let finalFav = is_favorite !== null && is_favorite !== undefined ? (is_favorite ? 1 : 0) : telemetry.isFavorite;
+  const finalArchivedAt = archived_at !== undefined ? archived_at : null;
+  // Plane Business Rule BR-PAGE-03: Archiving a page automatically removes it from Favorites
+  if (finalArchivedAt) {
+    finalFav = 0;
+  }
+  const finalFullWidth = full_width !== null && full_width !== undefined ? Boolean(full_width) : telemetry.isFullWidth;
   const finalModuleId = module_id ? mapModuleId(module_id) : telemetry.moduleId;
   const viewPropsJson = JSON.stringify({ full_width: finalFullWidth, assets: telemetry.assets });
   const ownerId = mapRoleToUserId(owned_by_role);
@@ -1382,9 +1395,9 @@ export function upsertPageInSQLite(db, {
     INSERT INTO pages (
       id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
       file_path, title, summary, shelf, content_markdown, description_stripped,
-      is_locked, is_favorite, view_props,
+      access, is_locked, is_favorite, archived_at, view_props,
       word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
-    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       summary = excluded.summary,
@@ -1393,8 +1406,10 @@ export function upsertPageInSQLite(db, {
       module_id = excluded.module_id,
       content_markdown = excluded.content_markdown,
       description_stripped = excluded.description_stripped,
+      access = excluded.access,
       is_locked = excluded.is_locked,
       is_favorite = excluded.is_favorite,
+      archived_at = excluded.archived_at,
       view_props = excluded.view_props,
       word_count = excluded.word_count,
       char_count = excluded.char_count,
@@ -1409,13 +1424,15 @@ export function upsertPageInSQLite(db, {
     ownerId,
     finalModuleId,
     cleanRelPath,
-    title,
+    safeTitle,
     summary.slice(0, 160),
     shelf,
     content_markdown,
     summary.slice(0, 160),
+    finalAccess,
     finalLocked,
     finalFav,
+    finalArchivedAt,
     viewPropsJson,
     telemetry.words,
     telemetry.chars,
@@ -1472,9 +1489,35 @@ export function upsertPageInSQLite(db, {
   return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
 }
 
+export function duplicatePageInSQLite(db, pageId, actorRole = 'spec-author') {
+  const page = db.prepare('SELECT * FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
+  if (!page) return null;
+
+  const baseFile = page.file_path.replace(/\.md$/i, '');
+  const copyRelPath = `${baseFile}-copy-${Date.now().toString(36).slice(-4)}.md`;
+  const copyTitle = `${getPageName(page.title)} (Copy)`;
+
+  return upsertPageInSQLite(db, {
+    file_path: copyRelPath,
+    title: copyTitle,
+    shelf: page.shelf,
+    content_markdown: page.content_markdown,
+    owned_by_role: actorRole || page.owned_by_role || 'spec-author',
+    access: page.access || 0,
+    is_locked: 0,
+    is_favorite: 0,
+    archived_at: null,
+    module_id: page.module_id
+  });
+}
+
 export function updatePagePropertiesInSQLite(db, pageId, {
+  access,
   is_favorite,
   is_locked,
+  archived,
+  archived_at,
+  duplicate,
   full_width,
   restore_version_id,
   content_markdown,
@@ -1485,12 +1528,37 @@ export function updatePagePropertiesInSQLite(db, pageId, {
 
   const targetId = page.id;
 
+  if (duplicate) {
+    return duplicatePageInSQLite(db, targetId, actor_role);
+  }
+
   if (restore_version_id) {
     const ver = db.prepare('SELECT * FROM page_versions WHERE id = ? AND page_id = ?').get(restore_version_id, targetId);
     if (ver) {
       content_markdown = ver.content_markdown;
     }
   }
+
+  let nextArchivedAt = page.archived_at || null;
+  if (archived !== undefined) {
+    nextArchivedAt = archived ? new Date().toISOString() : null;
+  } else if (archived_at !== undefined) {
+    nextArchivedAt = archived_at;
+  }
+
+  // Plane Business Rule BR-PAGE-04: Access can only be changed when page is NOT archived
+  let nextAccess = page.access || 0;
+  if (access !== undefined && !nextArchivedAt) {
+    nextAccess = Number(access) === 1 ? 1 : 0;
+  }
+
+  // Plane Business Rule BR-PAGE-03: Archiving a page automatically removes it from Favorites
+  let nextFav = is_favorite !== undefined ? (is_favorite ? 1 : 0) : page.is_favorite;
+  if (nextArchivedAt) {
+    nextFav = 0;
+  }
+
+  const nextLock = is_locked !== undefined ? (is_locked ? 1 : 0) : page.is_locked;
 
   if (typeof content_markdown === 'string') {
     return upsertPageInSQLite(db, {
@@ -1499,14 +1567,14 @@ export function updatePagePropertiesInSQLite(db, pageId, {
       shelf: page.shelf,
       content_markdown,
       owned_by_role: actor_role,
-      is_locked: is_locked !== undefined ? is_locked : page.is_locked,
-      is_favorite: is_favorite !== undefined ? is_favorite : page.is_favorite,
+      access: nextAccess,
+      is_locked: nextLock,
+      is_favorite: nextFav,
+      archived_at: nextArchivedAt,
       full_width
     });
   }
 
-  const newFav = is_favorite !== undefined ? (is_favorite ? 1 : 0) : page.is_favorite;
-  const newLock = is_locked !== undefined ? (is_locked ? 1 : 0) : page.is_locked;
   let vp = { full_width: false, assets: [] };
   try {
     vp = JSON.parse(page.view_props || '{"full_width":false}');
@@ -1517,9 +1585,9 @@ export function updatePagePropertiesInSQLite(db, pageId, {
 
   db.prepare(`
     UPDATE pages
-    SET is_favorite = ?, is_locked = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
+    SET access = ?, is_favorite = ?, is_locked = ?, archived_at = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(newFav, newLock, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
+  `).run(nextAccess, nextFav, nextLock, nextArchivedAt, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
 
   return db.prepare('SELECT * FROM pages WHERE id = ?').get(targetId);
 }
@@ -1570,8 +1638,10 @@ export function getPlaneData(db) {
 
   const pages = db.prepare(`
     SELECT id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
-           file_path, title, summary, shelf, content_markdown, is_locked, is_favorite, view_props,
-           word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
+           file_path, title, summary, shelf, content_markdown, access, is_locked, is_favorite,
+           archived_at, view_props, logo_props,
+           word_count, char_count, paragraph_count, diagrams_count, reading_time_min,
+           created_at, updated_at
     FROM pages
     ORDER BY is_favorite DESC, title ASC
   `).all();
