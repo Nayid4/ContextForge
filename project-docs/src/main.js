@@ -188,16 +188,16 @@ class App {
 
     // 3. Resolver Título de la Vista
     const viewTitles = {
-      issues: 'Tareas (Work Items)',
-      cycles: 'Ciclos de Desarrollo (Sprints)',
-      modules: 'Módulos de Arquitectura (Epics)',
-      pages: 'Páginas & Base de Conocimiento (Docs / IA)',
-      architecture: 'Arquitectura C4 & Stack Tecnológico',
-      graph: 'Grafo & Árbol de Dependencias',
-      tree: 'Árbol Jerárquico de Requerimientos',
-      constellation: 'Constelación Piramidal 3D',
-      analytics: 'Analítica, Velocidad & Rendimiento',
-      harness: 'Orquestación de Agentes & Gobernanza SDD'
+      issues: 'Work items (Tareas)',
+      cycles: 'Ciclos de Desarrollo (Cycles)',
+      modules: 'Modules (Epics)',
+      pages: 'Library · Base de Conocimiento (Docs / IA)',
+      architecture: 'Architecture C4 & Tech Stack',
+      graph: 'Views · Grafo de Dependencias',
+      tree: 'Views · Árbol Jerárquico',
+      constellation: 'Views · Constelación 3D',
+      analytics: 'Analytics & Velocity',
+      harness: 'Intake & Orquestación de Agentes IA'
     };
     const viewTitle = viewTitles[currentView] || 'Tareas';
 
@@ -248,7 +248,7 @@ class App {
       `;
     } else if (currentView === 'pages') {
       mainContentHtml = `
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+        <div class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-zinc-950">
           ${renderKnowledgeBase({
             knowledgeIndex: state.knowledgeIndex || planeData.knowledgeIndex,
             projectSpec: state.projectSpec || planeData.projectSpec,
@@ -335,6 +335,7 @@ class App {
         cycleCount: cycles.length,
         moduleCount: modules.length,
         pageCount: pages.length,
+        favoritePages: pages.filter(p => p.is_favorite),
         isCollapsed: state.isSidebarCollapsed || false
       },
       topBarProps: {
@@ -380,10 +381,11 @@ class App {
         document.querySelectorAll('.kb-perspective-btn').forEach(btn => {
           const isMatch = btn.getAttribute('data-kb-perspective') === this.activeKbPerspective;
           btn.classList.toggle('active', isMatch);
-          btn.classList.toggle('bg-indigo-600', isMatch);
-          btn.classList.toggle('text-white', isMatch);
-          btn.classList.toggle('font-bold', isMatch);
-          btn.classList.toggle('shadow-xs', isMatch);
+          btn.classList.toggle('border-indigo-500', isMatch);
+          btn.classList.toggle('text-zinc-100', isMatch);
+          btn.classList.toggle('font-semibold', isMatch);
+          btn.classList.toggle('border-transparent', !isMatch);
+          btn.classList.toggle('text-zinc-400', !isMatch);
         });
         document.querySelectorAll('.kb-perspective-panel').forEach(panel => {
           panel.classList.add('hidden');
@@ -678,11 +680,11 @@ class App {
       if (shelfPill) {
         const targetShelf = shelfPill.getAttribute('data-shelf-filter');
         document.querySelectorAll('.kb-shelf-pill').forEach(p => {
-          p.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
-          p.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+          p.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-semibold');
+          p.classList.add('bg-zinc-900', 'text-zinc-400');
         });
-        shelfPill.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
-        shelfPill.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+        shelfPill.classList.add('active', 'bg-indigo-600', 'text-white', 'font-semibold');
+        shelfPill.classList.remove('bg-zinc-900', 'text-zinc-400');
 
         document.querySelectorAll('.kb-shelf-section').forEach(sec => {
           const sId = sec.getAttribute('data-shelf-id');
@@ -695,17 +697,50 @@ class App {
         return;
       }
 
-      // Conmutar entre Niveles de Perspectiva (Global / Módulos / Dossier Maestro / Plane Workspace)
+      // Conmutar entre pestañas de Módulos DDD en Library
+      const modTabBtn = e.target.closest('[data-module-tab]');
+      if (modTabBtn) {
+        const targetMod = modTabBtn.getAttribute('data-module-tab');
+        document.querySelectorAll('.kb-module-tab-btn').forEach(b => {
+          const isMatch = b.getAttribute('data-module-tab') === targetMod;
+          b.classList.toggle('active', isMatch);
+          b.classList.toggle('bg-indigo-600', isMatch);
+          b.classList.toggle('text-white', isMatch);
+          b.classList.toggle('font-semibold', isMatch);
+          b.classList.toggle('bg-zinc-900', !isMatch);
+          b.classList.toggle('text-zinc-400', !isMatch);
+        });
+        document.querySelectorAll('.kb-module-content-panel').forEach(panel => {
+          panel.classList.toggle('hidden', panel.id !== `kb-module-content-${targetMod}`);
+        });
+        return;
+      }
+
+      // Abrir página favorita directamente desde la sección Favorites del Sidebar de Plane
+      const favSidebarBtn = e.target.closest('[data-action="sidebar-open-favorite-page"]');
+      if (favSidebarBtn) {
+        const docKey = favSidebarBtn.getAttribute('data-doc-key') || 'c4-model.md';
+        this.currentActiveDocKey = docKey;
+        this.isArticleOpen = true;
+        if (store.getState().planeView !== 'pages') {
+          router.navigate('pages');
+        } else {
+          this.openArticleView(docKey, false);
+        }
+        return;
+      }
+
+      // Conmutar entre Niveles de Perspectiva (Global / Módulos / Dossier Maestro / Plane Workspace / Governance)
       const perspectiveBtn = e.target.closest('[data-kb-perspective]');
       if (perspectiveBtn) {
         const targetPersp = perspectiveBtn.getAttribute('data-kb-perspective');
         this.activeKbPerspective = targetPersp || 'global';
         document.querySelectorAll('.kb-perspective-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
-          btn.classList.add('text-slate-600', 'dark:text-slate-400', 'font-medium');
+          btn.classList.remove('active', 'border-indigo-500', 'text-zinc-100', 'font-semibold');
+          btn.classList.add('border-transparent', 'text-zinc-400', 'font-medium');
         });
-        perspectiveBtn.classList.add('active', 'bg-indigo-600', 'text-white', 'font-bold', 'shadow-xs');
-        perspectiveBtn.classList.remove('text-slate-600', 'dark:text-slate-400', 'font-medium');
+        perspectiveBtn.classList.add('active', 'border-indigo-500', 'text-zinc-100', 'font-semibold');
+        perspectiveBtn.classList.remove('border-transparent', 'text-zinc-400', 'font-medium');
 
         document.querySelectorAll('.kb-perspective-panel').forEach(panel => {
           panel.classList.add('hidden');
@@ -903,7 +938,7 @@ class App {
       }
 
       // Abrir Omnibox (Ctrl+K)
-      if (e.target.closest('#plane-omnibox-trigger') || e.target.closest('[data-action="open-omnibox"]')) {
+      if (e.target.closest('#plane-omnibox-trigger') || e.target.closest('#sidebar-omnibox-trigger') || e.target.closest('[data-action="open-omnibox"]')) {
         store.setState({ isOmniboxOpen: true, omniboxQuery: '' });
         return;
       }
@@ -936,6 +971,40 @@ class App {
         router.navigate('pages');
         return;
       }
+
+      // Modales de Library (New Page & AI Context)
+      if (e.target.closest('[data-action="open-new-doc-modal"]')) {
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+        return;
+      }
+      if (e.target.closest('[data-action="close-new-doc-modal"]')) {
+        const modal = document.getElementById('new-doc-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
+      if (e.target.closest('[data-action="open-ai-context-modal"]')) {
+        const modal = document.getElementById('ai-context-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+        return;
+      }
+      if (e.target.closest('[data-action="close-ai-context-modal"]')) {
+        const modal = document.getElementById('ai-context-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        return;
+      }
     });
 
     // 2. Delegación de inputs (Búsqueda y filtros)
@@ -945,6 +1014,18 @@ class App {
         this.searchDebounceTimer = setTimeout(() => {
           store.setState({ planeSearchQuery: e.target.value });
         }, 150);
+        return;
+      }
+
+      if (e.target.id === 'kb-library-search-input') {
+        const q = (e.target.value || '').trim().toLowerCase();
+        document.querySelectorAll('#kb-shelves-container .kb-shelf-doc-card').forEach(row => {
+          const title = (row.getAttribute('data-doc-title') || '').toLowerCase();
+          const key = (row.getAttribute('data-doc-key') || '').toLowerCase();
+          const mod = (row.getAttribute('data-doc-module') || '').toLowerCase();
+          const match = !q || title.includes(q) || key.includes(q) || mod.includes(q);
+          row.classList.toggle('hidden', !match);
+        });
         return;
       }
 
@@ -982,6 +1063,14 @@ class App {
       }
       if (e.target.id === 'plane-group-by') {
         store.setState({ planeGroupBy: e.target.value });
+        return;
+      }
+      if (e.target.id === 'kb-rules-module-filter') {
+        const mod = (e.target.value || '').trim();
+        document.querySelectorAll('#kb-rules-list [data-rule-module]').forEach(row => {
+          const rMod = row.getAttribute('data-rule-module') || '';
+          row.classList.toggle('hidden', Boolean(mod && rMod !== mod));
+        });
         return;
       }
 

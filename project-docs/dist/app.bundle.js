@@ -1053,101 +1053,191 @@
   function renderPlaneSidebar({
     currentView = "issues",
     activeWorkspace = "Harness Engineering",
-    activeProject = "Arn\xE9s de Ingenier\xEDa SDD",
+    activeProject = "Arn\xE9s SDD Multi-Agente",
     issueCount = 0,
     cycleCount = 0,
     moduleCount = 0,
     pageCount = 0,
+    favoritePages = [],
     isCollapsed = false
   } = {}) {
-    const navItems = [
-      { id: "issues", legacyTab: "features", label: "Tareas (Issues)", icon: "kanban", count: issueCount },
-      { id: "cycles", legacyTab: "history", label: "Ciclos (Cycles)", icon: "cycle", count: cycleCount },
-      { id: "modules", label: "M\xF3dulos (Epics)", icon: "moduleIcon", count: moduleCount },
-      { id: "pages", legacyTab: "knowledge", label: "P\xE1ginas (Docs / IA)", icon: "page", count: pageCount },
-      { id: "architecture", legacyTab: "architecture", label: "Arquitectura C4", icon: "layers" },
-      { id: "graph", legacyTab: "graph", label: "Grafo de Dependencias", icon: "gitTree" },
-      { id: "tree", legacyTab: "tree", label: "\xC1rbol Jer\xE1rquico", icon: "gitTree" },
-      { id: "constellation", legacyTab: "three", label: "Constelaci\xF3n 3D", icon: "cube" },
-      { id: "analytics", label: "M\xE9tricas & Burn-down", icon: "activity" },
-      { id: "harness", label: "Agentes & Gobernanza", icon: "bot" }
+    const projectNavItems = [
+      { id: "issues", legacyTab: "features", label: "Work items", icon: "kanban", count: issueCount },
+      { id: "cycles", legacyTab: "history", label: "Cycles", icon: "cycle", count: cycleCount },
+      { id: "modules", label: "Modules", icon: "moduleIcon", count: moduleCount },
+      { id: "pages", legacyTab: "knowledge", label: "Library", icon: "page", count: pageCount },
+      { id: "harness", label: "Intake & AI Runs", icon: "bot" }
+    ];
+    const workspaceNavItems = [
+      { id: "architecture", legacyTab: "architecture", label: "Architecture C4", icon: "layers" },
+      { id: "graph", legacyTab: "graph", label: "Views \xB7 Dependency DAG", icon: "gitTree" },
+      { id: "tree", legacyTab: "tree", label: "Views \xB7 Hierarchy Tree", icon: "gitTree" },
+      { id: "constellation", legacyTab: "three", label: "Views \xB7 3D Constellation", icon: "cube" },
+      { id: "analytics", label: "Analytics", icon: "activity" }
     ];
     const renderNavItem = (item) => {
       const isActive = currentView === item.id;
       const iconFn = Icons[item.icon] || Icons.terminal;
       const tabAttr = item.legacyTab ? `data-tab="${item.legacyTab}"` : "";
       return `
-      <button data-plane-nav="${item.id}" ${tabAttr} class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${isActive ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/25 shadow-xs font-semibold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 border border-transparent"}">
-        ${iconFn("w-4 h-4 shrink-0")}
+      <button
+        type="button"
+        data-plane-nav="${item.id}"
+        ${tabAttr}
+        class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${isActive ? "bg-indigo-600/15 text-indigo-300 font-semibold" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80"}"
+        title="${item.label}"
+      >
+        ${iconFn(`w-4 h-4 shrink-0 ${isActive ? "text-indigo-400" : "text-zinc-400"}`)}
         ${!isCollapsed ? `
           <span class="flex-1 text-left truncate">${item.label}</span>
-          ${item.count !== void 0 && item.count !== null ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 font-mono font-medium">${item.count}</span>` : ""}
+          ${item.count !== void 0 && item.count !== null ? `<span class="text-[10px] px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">${item.count}</span>` : ""}
         ` : ""}
       </button>
     `;
     };
+    const renderFavoriteItem = (fav) => {
+      const docKey = (fav.file_path || "c4-model.md").replace(/^knowledge\//, "");
+      return `
+      <button
+        type="button"
+        data-action="sidebar-open-favorite-page"
+        data-page-id="${fav.id || ""}"
+        data-doc-key="${docKey}"
+        class="w-full flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 transition-colors cursor-pointer group"
+        title="${fav.title || docKey}"
+      >
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          ${Icons.page("w-3.5 h-3.5 shrink-0 text-zinc-400 group-hover:text-indigo-400")}
+          ${!isCollapsed ? `<span class="truncate text-left">${fav.title || docKey}</span>` : ""}
+        </div>
+        ${!isCollapsed ? `<span class="text-amber-400 shrink-0">${Icons.star("w-3 h-3 fill-amber-400")}</span>` : ""}
+      </button>
+    `;
+    };
     return `
-    <aside id="plane-sidebar" class="${isCollapsed ? "w-16" : "w-64"} bg-zinc-950 border-r border-zinc-800/80 flex flex-col shrink-0 transition-all duration-200 select-none h-screen sticky top-0 z-30">
-      <!-- Workspace Switcher Header -->
-      <div class="h-14 px-4 border-b border-zinc-800/80 flex items-center justify-between gap-2">
-        <div class="flex items-center gap-3 overflow-hidden">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md">
+    <aside id="plane-sidebar" class="${isCollapsed ? "w-14" : "w-[250px]"} bg-zinc-950 border-r border-zinc-800/80 flex flex-col shrink-0 transition-all duration-200 select-none h-screen sticky top-0 z-30">
+      <!-- 1. Plane AppSidebarHeader: Workspace Switcher & User Menu -->
+      <div class="h-12 px-3 border-b border-zinc-800/80 flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2.5 overflow-hidden">
+          <div class="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center text-white font-bold text-[11px] shrink-0 shadow-xs">
             HE
           </div>
           ${!isCollapsed ? `
-            <div class="flex flex-col min-w-0">
-              <span class="text-xs font-semibold text-zinc-100 truncate tracking-tight">${activeWorkspace}</span>
-              <span class="text-[10px] text-zinc-400 truncate">Plane Edition \xB7 Screaming</span>
+            <div class="flex items-center gap-1 min-w-0">
+              <span class="text-[13px] font-semibold text-zinc-100 truncate tracking-tight">${activeWorkspace}</span>
+              ${Icons.chevronDown("w-3.5 h-3.5 text-zinc-500 shrink-0")}
             </div>
           ` : ""}
         </div>
-        ${!isCollapsed ? `
-          <button id="toggle-sidebar-collapse" class="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded transition-colors" title="Colapsar barra lateral">
-            ${Icons.chevronLeft("w-4 h-4")}
-          </button>
-        ` : `
-          <button id="toggle-sidebar-collapse" class="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded transition-colors" title="Expandir barra lateral">
-            ${Icons.chevronRight("w-4 h-4")}
-          </button>
-        `}
-      </div>
-
-      <!-- Project Selector Pill -->
-      <div class="px-3 py-3 border-b border-zinc-800/50">
-        <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-800/80 text-zinc-200">
-          <div class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></div>
+        <div class="flex items-center gap-1 shrink-0">
           ${!isCollapsed ? `
-            <span class="text-xs font-medium truncate flex-1">${activeProject}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">SDD</span>
+            <div class="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-mono font-bold text-indigo-300" title="Agente Activo: Leader / Spec-Author">
+              AI
+            </div>
           ` : ""}
+          <button
+            type="button"
+            id="toggle-sidebar-collapse"
+            class="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded transition-colors cursor-pointer"
+            title="${isCollapsed ? "Expand sidebar" : "Collapse sidebar"}"
+          >
+            ${isCollapsed ? Icons.chevronRight("w-4 h-4") : Icons.chevronLeft("w-4 h-4")}
+          </button>
         </div>
       </div>
 
-      <!-- Main Navigation Menu (Screaming Domains) -->
-      <nav class="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
-        <div class="px-2 py-1 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase ${isCollapsed ? "text-center" : ""}">
-          ${!isCollapsed ? "Dominio del Negocio" : "\u2022\u2022\u2022"}
+      <!-- 2. Plane SidebarQuickActions: New Work Item + Search (Ctrl+K) -->
+      <div class="px-3 pt-2.5 pb-1.5 flex items-center gap-1.5 shrink-0">
+        ${!isCollapsed ? `
+          <button
+            type="button"
+            data-action="open-new-doc-modal"
+            class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800/90 border border-zinc-800 text-xs font-medium text-zinc-200 transition-colors shadow-2xs cursor-pointer"
+            title="Crear nueva p\xE1gina o documento en Library"
+          >
+            ${Icons.plus("w-3.5 h-3.5 text-zinc-400")}
+            <span class="truncate">New page / item</span>
+          </button>
+        ` : ""}
+        <button
+          type="button"
+          id="sidebar-omnibox-trigger"
+          class="p-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer ${isCollapsed ? "w-full flex justify-center" : ""}"
+          title="Search work items & library pages (Ctrl+K)"
+        >
+          ${Icons.search("w-3.5 h-3.5")}
+        </button>
+      </div>
+
+      <!-- 3. Plane Main Navigation Menu (Favorites, Projects, Workspace) -->
+      <nav class="flex-1 px-2.5 py-2 space-y-4 overflow-y-auto">
+        <!-- Favorites Section -->
+        ${!isCollapsed && favoritePages.length > 0 ? `
+          <div class="space-y-1">
+            <div class="px-2 py-0.5 text-[11px] font-semibold text-zinc-500 flex items-center justify-between">
+              <span>Favorites</span>
+              <span class="text-[10px] font-mono text-zinc-600">${favoritePages.length}</span>
+            </div>
+            <div class="space-y-0.5">
+              ${renderList(favoritePages.slice(0, 5), renderFavoriteItem)}
+            </div>
+          </div>
+        ` : ""}
+
+        <!-- Projects Accordion Section -->
+        <div class="space-y-1">
+          ${!isCollapsed ? `
+            <div class="px-2 py-0.5 text-[11px] font-semibold text-zinc-500 flex items-center justify-between">
+              <span>Projects</span>
+              <span class="text-[10px] font-mono text-zinc-600">1</span>
+            </div>
+            <!-- Active Project Item -->
+            <div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-zinc-900/60 text-zinc-200">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-4 h-4 rounded bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center text-[9px] font-mono font-bold shrink-0">
+                  P
+                </span>
+                <span class="text-xs font-semibold truncate">${activeProject}</span>
+              </div>
+              ${Icons.chevronDown("w-3.5 h-3.5 text-zinc-500 shrink-0")}
+            </div>
+            <!-- Project Nested Tree Navigation (Work items, Cycles, Modules, Library, Intake) -->
+            <div class="relative mt-1 mb-1.5 flex flex-col gap-0.5 pl-4">
+              <div class="absolute top-0 bottom-1 left-[11px] w-[1px] bg-zinc-800/90"></div>
+              ${renderList(projectNavItems, renderNavItem)}
+            </div>
+          ` : `
+            <div class="space-y-1">
+              ${renderList(projectNavItems, renderNavItem)}
+            </div>
+          `}
         </div>
 
-        ${renderList(navItems, renderNavItem)}
+        <!-- Workspace Section (Architecture, Views, Analytics) -->
+        <div class="space-y-1">
+          ${!isCollapsed ? `
+            <div class="px-2 py-0.5 text-[11px] font-semibold text-zinc-500 flex items-center justify-between">
+              <span>Workspace</span>
+            </div>
+          ` : ""}
+          <div class="flex flex-col gap-0.5">
+            ${renderList(workspaceNavItems, renderNavItem)}
+          </div>
+        </div>
       </nav>
 
-      <!-- Footer: Agentes & SQLite State -->
-      <div class="p-3 border-t border-zinc-800/80 bg-zinc-950/80 space-y-2">
+      <!-- 4. Plane Sidebar Footer: SQLite WAL & Markdown Dual Sync Status -->
+      <div class="px-3 py-2.5 border-t border-zinc-800/80 bg-zinc-950 shrink-0">
         ${!isCollapsed ? `
           <div class="flex items-center justify-between text-[11px] text-zinc-400">
-            <span class="flex items-center gap-1.5 font-medium">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              SQLite Relacional
+            <span class="flex items-center gap-1.5 font-medium text-zinc-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>SQLite + .md Sync</span>
             </span>
-            <span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-mono">WAL</span>
-          </div>
-          <div class="text-[10px] text-zinc-400 flex items-center justify-between">
-            <span>Dual Sync: Markdown</span>
-            <span class="text-emerald-400 font-mono">100% OK</span>
+            <span class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400 font-mono">WAL</span>
           </div>
         ` : `
-          <div class="flex justify-center" title="SQLite Conectado">
+          <div class="flex justify-center" title="SQLite + Markdown Synced">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
         `}
@@ -1159,37 +1249,74 @@
   // project-docs/src/shared/ui/PlaneTopBar.js
   function renderPlaneTopBar({
     currentView = "issues",
-    viewTitle = "Tareas (Work Items)",
+    viewTitle = "Work items",
     activeProject = "Arn\xE9s SDD Multi-Agente",
     theme = "dark"
   } = {}) {
+    const viewIconMap = {
+      issues: Icons.kanban,
+      cycles: Icons.cycle,
+      modules: Icons.moduleIcon,
+      pages: Icons.page,
+      architecture: Icons.layers,
+      graph: Icons.gitTree,
+      tree: Icons.gitTree,
+      constellation: Icons.cube,
+      analytics: Icons.activity,
+      harness: Icons.bot
+    };
+    const activeIconFn = viewIconMap[currentView] || Icons.kanban;
     return `
-    <header class="h-14 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-6 flex items-center justify-between gap-4 sticky top-0 z-20 select-none">
-      <!-- Breadcrumbs -->
-      <div class="flex items-center gap-2 text-xs">
-        <span class="text-zinc-400 font-medium">${activeProject}</span>
+    <header class="h-12 border-b border-zinc-800/80 bg-zinc-950 px-5 flex items-center justify-between gap-4 sticky top-0 z-20 select-none shrink-0">
+      <!-- Left: Plane Breadcrumbs -->
+      <div class="flex items-center gap-2 text-xs min-w-0">
+        <div class="flex items-center gap-1.5 text-zinc-400 font-medium truncate">
+          <span class="w-4 h-4 rounded bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center text-[9px] font-mono font-bold shrink-0">
+            P
+          </span>
+          <span class="truncate hidden sm:inline">${activeProject}</span>
+        </div>
         <span class="text-zinc-600">/</span>
-        <h1 class="text-zinc-100 font-bold tracking-tight text-sm">${viewTitle}</h1>
+        <div class="flex items-center gap-1.5 text-zinc-100 min-w-0">
+          <span class="text-zinc-400 shrink-0">${activeIconFn("w-3.5 h-3.5")}</span>
+          <h1 class="text-zinc-100 font-semibold tracking-tight text-xs sm:text-sm truncate">${viewTitle}</h1>
+        </div>
       </div>
 
-      <!-- Action Tools -->
-      <div class="flex items-center gap-3">
+      <!-- Right: Plane Header Actions -->
+      <div class="flex items-center gap-2 shrink-0">
         <!-- Quick Search / Omnibox Trigger (Ctrl+K) -->
-        <button id="plane-omnibox-trigger" data-action="open-omnibox" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 text-xs transition-colors shadow-inner" title="Buscar tareas y documentos (Ctrl+K)">
+        <button
+          type="button"
+          id="plane-omnibox-trigger"
+          data-action="open-omnibox"
+          class="h-7 flex items-center gap-2 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs transition-colors cursor-pointer"
+          title="Search work items and library pages (Ctrl+K)"
+        >
           ${Icons.search("w-3.5 h-3.5")}
-          <span class="hidden sm:inline">Buscar tareas o docs...</span>
-          <kbd class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">Ctrl K</kbd>
+          <span class="hidden md:inline text-[11px]">Search...</span>
+          <kbd class="hidden md:inline-block px-1 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400">Ctrl K</kbd>
         </button>
 
         <!-- Sync SQLite Button -->
-        <button id="plane-manual-sync-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-xs font-medium transition-colors" title="Sincronizar SQLite con Markdown">
-          ${Icons.refresh("w-3.5 h-3.5")}
-          <span class="hidden sm:inline">Sincronizar</span>
+        <button
+          type="button"
+          id="plane-manual-sync-btn"
+          class="h-7 flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+          title="Sincronizar SQLite con archivos Markdown (.md)"
+        >
+          ${Icons.refresh("w-3.5 h-3.5 text-indigo-400")}
+          <span class="hidden sm:inline text-[11px]">Sync</span>
         </button>
 
         <!-- Theme Toggle -->
-        <button id="plane-theme-toggle" class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors" title="Cambiar tema claro/oscuro">
-          ${theme === "dark" ? Icons.sun("w-4 h-4") : Icons.moon("w-4 h-4")}
+        <button
+          type="button"
+          id="plane-theme-toggle"
+          class="h-7 w-7 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 flex items-center justify-center transition-colors cursor-pointer"
+          title="Cambiar tema claro/oscuro"
+        >
+          ${theme === "dark" ? Icons.sun("w-3.5 h-3.5") : Icons.moon("w-3.5 h-3.5")}
         </button>
       </div>
     </header>
@@ -4985,384 +5112,401 @@
     };
     const activeDocToc = extractTableOfContents2(activeDocContent);
     const dynamicAiPrompt = buildAiSystemPrompt({ projectSpec, kData, rules, services, guardrails, naming });
+    const findPlanePage = (docKey, meta = {}) => {
+      return planePages.find((p) => (p.file_path || "").endsWith(docKey) || p.file_path === `knowledge/${docKey}`) || {
+        id: `page-kb-${String(docKey).replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+        title: meta.title || docKey,
+        file_path: `knowledge/${docKey}`,
+        word_count: meta.wordCount || 450,
+        reading_time_min: meta.readingTime || 3,
+        diagrams_count: meta.diagramsCount || 0,
+        owned_by_role: "spec-author",
+        is_locked: 1,
+        is_favorite: docKey === "c4-model.md" ? 1 : 0
+      };
+    };
     return `
-    <div class="space-y-10" id="kb-container">
-      
+    <div class="flex flex-col flex-1 min-h-0 bg-zinc-950 text-zinc-100 select-none" id="kb-container">
+
       <!-- ============================================================== -->
-      <!-- VISTA 1: BIBLIOTECA EDITORIAL (HUB POR ESTANTES)               -->
+      <!-- VISTA 1: PLANE LIBRARY LIST VIEW (PagesListView)               -->
       <!-- ============================================================== -->
-      <div id="kb-view-library" class="space-y-8">
-        
-        <!-- 1.1 Header Hero de la Biblioteca -->
-        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-          <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-            <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  Docs-as-Code
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-100 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-                  v4.1 DeepWiki Pattern
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  Anti-Bias Context
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                  100% Offline Compatible
-                </span>
-              </div>
-              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <span class="text-indigo-600 dark:text-indigo-400">${Icons.book("w-7 h-7")}</span>
-                <span>Base de Conocimiento de Ingenier\xEDa Soberana</span>
-              </h2>
-              <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-                Repositorio can\xF3nico de arquitectura (C4/UML), requerimientos (IEEE 830/INVEST), mapa mental de funcionalidades (DeepWiki), 
-                reglas de negocio (BR-*), decisiones t\xE9cnicas (ADR) y bounded contexts. Permite auditar, crear, editar y exportar documentaci\xF3n viva en Markdown (.md).
-              </p>
-            </div>
+      <div id="kb-view-library" class="flex flex-col flex-1 min-h-0">
 
-            <!-- Botones de Acci\xF3n Globales -->
-            <div class="flex flex-wrap items-center gap-2.5">
-              <button type="button" 
-                      data-action="open-new-doc-modal"
-                      class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
-                ${Icons.plus} <span>Nuevo Doc</span>
-              </button>
+        <!-- 1.1 Plane PagesListHeaderRoot: Tabs Underline + Search + Quick Actions -->
+        <div class="min-h-11 px-5 border-b border-zinc-800/80 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
+          <!-- Left: Plane PageTabNavigation (Underline Tabs) -->
+          <div class="flex items-center gap-1 overflow-x-auto" id="kb-perspective-nav">
+            <button
+              type="button"
+              data-kb-perspective="global"
+              class="kb-perspective-btn active h-11 px-3 inline-flex items-center gap-2 text-xs font-semibold text-zinc-100 border-b-2 border-indigo-500 transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.page("w-3.5 h-3.5 text-indigo-400")}
+              <span>Public / All</span>
+              <span class="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300">${docKeys.length}</span>
+            </button>
 
-              <button type="button" 
-                      data-action="trigger-import-doc"
-                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
-                      title="Importar archivo Markdown (.md)">
-                ${Icons.upload} <span>Importar</span>
-              </button>
-              <input type="file" id="import-doc-file-input" accept=".md,.markdown" class="hidden" />
+            <button
+              type="button"
+              data-kb-perspective="modules"
+              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.folder("w-3.5 h-3.5")}
+              <span>Modules (DDD)</span>
+              <span class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">${moduleNames.length}</span>
+            </button>
 
-              <button type="button" 
-                      data-action="export-all-knowledge"
-                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition-all cursor-pointer shadow-xs"
-                      title="Exportar toda la base de conocimiento consolidada en formato Markdown (.md)">
-                ${Icons.download} <span>Exportar (.md)</span>
-              </button>
+            <button
+              type="button"
+              data-kb-perspective="master"
+              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.fileText("w-3.5 h-3.5")}
+              <span>Master Bundle</span>
+              <span class="px-1.5 py-0.2 rounded bg-purple-950/80 border border-purple-500/30 text-[10px] font-mono text-purple-300">MASTER</span>
+            </button>
 
-              <button type="button" 
-                      data-action="open-ai-context-modal" 
-                      class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all cursor-pointer">
-                ${Icons.bot} <span>Contexto IA</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              data-kb-perspective="plane-workspace"
+              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.bookOpen("w-3.5 h-3.5")}
+              <span>Split Workspace</span>
+              <span class="px-1.5 py-0.2 rounded bg-emerald-950/80 border border-emerald-500/30 text-[10px] font-mono text-emerald-300">Graph</span>
+            </button>
+
+            <button
+              type="button"
+              data-kb-perspective="governance"
+              class="kb-perspective-btn h-11 px-3 inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent transition-all cursor-pointer shrink-0"
+            >
+              ${Icons.scale("w-3.5 h-3.5")}
+              <span>Rules & Contracts</span>
+              <span class="px-1.5 py-0.2 rounded bg-amber-950/80 border border-amber-500/30 text-[10px] font-mono text-amber-300">${rules.length} BR</span>
+            </button>
           </div>
 
-          <!-- M\xE9tricas Din\xE1micas Reales -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
-            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-              <div class="text-[10px] font-mono text-slate-400 uppercase">Documentos Vivos</div>
-              <div class="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">${docKeys.length} indexados</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Docs-as-Code (.md)</div>
+          <!-- Right: Plane PageHeaderFilters & Actions -->
+          <div class="flex flex-wrap items-center gap-2 py-1.5">
+            <!-- Inline Search -->
+            <div class="relative">
+              <input
+                type="text"
+                id="kb-library-search-input"
+                placeholder="Search pages (title, module, BR-*)..."
+                class="h-7 w-48 sm:w-60 pl-7 pr-2.5 rounded-md text-xs bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono transition-colors"
+              />
+              <span class="absolute left-2 top-1.5 text-zinc-500 pointer-events-none">
+                ${Icons.search("w-3.5 h-3.5")}
+              </span>
             </div>
-            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-              <div class="text-[10px] font-mono text-slate-400 uppercase">Bounded Contexts</div>
-              <div class="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">${moduleNames.length} m\xF3dulos</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Estrat\xE9gicos DDD</div>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-              <div class="text-[10px] font-mono text-slate-400 uppercase">Reglas de Negocio</div>
-              <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-0.5">${rules.length} catalogadas</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Invariantes BR-*</div>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-              <div class="text-[10px] font-mono text-slate-400 uppercase">Servicios Externos</div>
-              <div class="text-xl font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">${services.length} contratos</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Integraciones auditadas</div>
-            </div>
+
+            <button
+              type="button"
+              data-action="open-ai-context-modal"
+              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors cursor-pointer"
+              title="Generar System Prompt Anti-Sesgo para IA"
+            >
+              ${Icons.sparkles("w-3.5 h-3.5")}
+              <span class="hidden sm:inline">Ask AI Context</span>
+            </button>
+
+            <button
+              type="button"
+              data-action="trigger-import-doc"
+              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+              title="Importar archivo Markdown (.md)"
+            >
+              ${Icons.upload("w-3.5 h-3.5")}
+              <span class="hidden md:inline">Import</span>
+            </button>
+            <input type="file" id="import-doc-file-input" accept=".md,.markdown" class="hidden" />
+
+            <button
+              type="button"
+              data-action="export-all-knowledge"
+              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+              title="Exportar toda la base de conocimiento consolidada en formato Markdown (.md)"
+            >
+              ${Icons.download("w-3.5 h-3.5")}
+              <span class="hidden md:inline">Export (.md)</span>
+            </button>
+
+            <button
+              type="button"
+              data-action="open-new-doc-modal"
+              class="h-7 inline-flex items-center gap-1.5 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-2xs transition-colors cursor-pointer"
+            >
+              ${Icons.plus("w-3.5 h-3.5")}
+              <span>Add page</span>
+            </button>
           </div>
-        </section>
+        </div>
 
-        <!-- 1.2 CONMUTADOR DE PERSPECTIVA (3 Tiers de Navegaci\xF3n Editorial) -->
-        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-2 shadow-xs">
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2" id="kb-perspective-nav">
-            <div class="flex flex-wrap items-center gap-1.5 flex-1">
-              
-              <!-- Tier 1: Visi\xF3n Global -->
-              <button type="button" 
-                      data-kb-perspective="global"
-                      class="kb-perspective-btn active flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs transition-all cursor-pointer">
-                ${Icons.architecture("w-4 h-4")}
-                <span>1. Visi\xF3n Global & Arquitectura</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white">Can\xF3nicos</span>
+        <!-- 1.2 Plane Secondary Filter & Telemetry Sub-bar -->
+        <div class="px-5 py-2 border-b border-zinc-800/60 bg-zinc-900/25 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <!-- Shelf Filter Pills -->
+          <div class="flex items-center gap-1 overflow-x-auto font-mono" id="kb-shelf-filter-pills">
+            <button
+              type="button"
+              data-shelf-filter=""
+              class="kb-shelf-pill active h-6 px-2.5 rounded-md bg-indigo-600 text-white text-[11px] font-semibold transition-colors cursor-pointer shrink-0"
+            >
+              All (${docKeys.length})
+            </button>
+            ${Object.values(shelvesData).map((sh) => `
+              <button
+                type="button"
+                data-shelf-filter="${sh.id}"
+                class="kb-shelf-pill h-6 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-400 hover:text-zinc-200 text-[11px] font-medium transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5"
+              >
+                ${getShelfIconSvg(sh.id, "w-3 h-3")}
+                <span>${sh.title.split(" ")[0]}</span>
+                <span class="text-[10px] text-zinc-500">${sh.docs.length}</span>
               </button>
-
-              <!-- Tier 2: M\xF3dulos & Bounded Contexts -->
-              <button type="button" 
-                      data-kb-perspective="modules"
-                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-                ${Icons.folder("w-4 h-4")}
-                <span>2. M\xF3dulos & Bounded Contexts</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${moduleNames.length} Contextos</span>
-              </button>
-
-              <!-- Tier 3: Megadocumento Maestro -->
-              <button type="button" 
-                      data-kb-perspective="master"
-                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-                ${Icons.fileText("w-4 h-4")}
-                <span>3. Dossier Maestro Consolidado</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">MASTER-*.md</span>
-              </button>
-
-              <!-- Tier 4: Plane Pages Workspace & Knowledge Graph -->
-              <button type="button" 
-                      data-kb-perspective="plane-workspace"
-                      class="kb-perspective-btn flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-                ${Icons.bookOpen("w-4 h-4")}
-                <span>4. Plane Pages Workspace & Graph</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">SQLite + IA</span>
-              </button>
-
-            </div>
-
-            <!-- Ayuda Contextual de Perspectiva -->
-            <div class="hidden xl:flex items-center gap-2 text-[11px] font-mono text-slate-400 px-3 py-1">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Navegaci\xF3n en 4 Niveles (Global $\\to$ Modular $\\to$ Dossier $\\to$ Plane Graph)</span>
-            </div>
+            `).join("")}
           </div>
-        </section>
+
+          <!-- Compact Sovereign Knowledge Telemetry -->
+          <div class="flex items-center gap-3 text-[11px] text-zinc-400 font-mono">
+            <span class="hidden lg:inline text-zinc-300 font-sans font-medium">Library \xB7 Base de Conocimiento de Ingenier\xEDa Soberana</span>
+            <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-indigo-300">${docKeys.length} pages</span>
+            <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-purple-300">${moduleNames.length} modules</span>
+            <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-amber-300">${rules.length} BR-*</span>
+            <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-cyan-300">${services.length} services</span>
+          </div>
+        </div>
 
         <!-- ============================================================== -->
-        <!-- PANEL TIER 1: VISI\xD3N GLOBAL & ARQUITECTURA DEL SISTEMA         -->
+        <!-- PANEL TIER 1: PLANE PAGES LIST (Public / All Pages)            -->
         <!-- ============================================================== -->
-        <div id="kb-perspective-panel-global" class="kb-perspective-panel space-y-8">
-          
-          <!-- 1.3 Hero Featured Card (Art\xEDculo Destacado de la Biblioteca: Modelo C4) -->
+        <div id="kb-perspective-panel-global" class="kb-perspective-panel flex-1 flex flex-col">
+
+          <!-- Pinned Featured Row (c4-model.md) + IEEE 830 / DeepWiki Quick Rows -->
           ${heroDocKey ? `
-            <section class="rounded-3xl border border-indigo-200/60 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden shadow-sm">
-              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div class="space-y-3 max-w-3xl">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-600 text-white shadow-xs">
-                      ${Icons.star("w-3 h-3")} <span>Documento Destacado</span>
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      ${Icons.clock("w-3 h-3")} <span>${heroDocMeta.readingTime} min de lectura</span>
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      ${Icons.fileText("w-3 h-3")} <span>${heroDocMeta.wordCount} palabras</span>
-                    </span>
-                    ${heroDocMeta.ruleCount ? `
-                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                        ${Icons.scale("w-3 h-3")} <span>${heroDocMeta.ruleCount} Reglas BR</span>
-                      </span>
-                    ` : ""}
-                  </div>
+            <div class="border-b border-zinc-800/80 bg-indigo-950/10">
+              <div class="px-5 py-1.5 border-b border-zinc-800/60 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-indigo-300/90">
+                <span class="flex items-center gap-1.5">
+                  ${Icons.star("w-3 h-3 fill-amber-400 text-amber-400")}
+                  <span>Pinned Canonical Architecture & Quick Access</span>
+                </span>
+                <span>SQLite + .md Synced</span>
+              </div>
 
-                  <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    ${escapeHtml3(heroDocMeta.title || heroDocKey)}
-                  </h3>
-                  <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    ${escapeHtml3(heroDocMeta.summary || "Especificaci\xF3n formal del sistema con diagramas de contexto, contenedores y componentes.")}
-                  </p>
-                  <div class="font-mono text-[11px] text-slate-400">
-                    Ruta can\xF3nica: <code class="text-indigo-600 dark:text-indigo-400 font-bold">${heroDocKey}</code>
-                  </div>
+              <!-- Featured C4 Model Row (First open-article-read & open-article-edit in DOM for E2E contracts) -->
+              <div class="group flex flex-wrap items-center justify-between gap-3 px-5 py-2.5 hover:bg-zinc-900/75 border-b border-zinc-800/40 transition-colors">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <span class="text-indigo-400 shrink-0">${Icons.page("w-4 h-4")}</span>
+                  <span class="text-xs font-semibold text-zinc-100 truncate">${escapeHtml3(heroDocMeta.title || heroDocKey)}</span>
+                  <code class="text-[11px] font-mono text-indigo-400 bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-500/20 hidden sm:inline">${heroDocKey}</code>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-950/60 text-amber-300 border border-amber-500/30">Pinned</span>
                 </div>
-
-                <div class="flex sm:flex-col items-stretch gap-2.5 shrink-0 w-full sm:w-auto">
-                  <button type="button" 
-                          data-action="open-article-read"
-                          data-doc-key="${escapeAttr2(heroDocKey)}"
-                          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer">
-                    ${Icons.bookOpen} <span>Leer Art\xEDculo Completo</span>
+                <div class="flex items-center gap-2 shrink-0 text-[11px] font-mono text-zinc-400">
+                  <span class="hidden md:inline">${heroDocMeta.wordCount} words \xB7 ${heroDocMeta.readingTime}m</span>
+                  <button
+                    type="button"
+                    data-action="open-article-read"
+                    data-doc-key="${escapeAttr2(heroDocKey)}"
+                    class="h-6 px-2.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-sans font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    ${Icons.bookOpen("w-3 h-3")}
+                    <span>Open</span>
                   </button>
-                  <button type="button" 
-                          data-action="open-article-edit"
-                          data-doc-key="${escapeAttr2(heroDocKey)}"
-                          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                    ${Icons.edit} <span>Editar en Vivo</span>
+                  <button
+                    type="button"
+                    data-action="open-article-edit"
+                    data-doc-key="${escapeAttr2(heroDocKey)}"
+                    class="h-6 px-2 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[11px] font-sans font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    ${Icons.edit("w-3 h-3")}
+                    <span>Edit</span>
                   </button>
                 </div>
               </div>
-            </section>
+
+              <!-- Quick Access Row: IEEE 830 & DeepWiki Capabilities -->
+              <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-800/50 bg-zinc-950/60">
+                <div class="flex items-center justify-between gap-3 px-5 py-2 hover:bg-zinc-900/60 transition-colors">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-indigo-400 shrink-0">${Icons.info("w-3.5 h-3.5")}</span>
+                    <span class="text-xs text-zinc-200 font-medium truncate">Business Problem & Scope (IEEE 830)</span>
+                    <code class="text-[10px] font-mono text-zinc-500 hidden xl:inline">01-project-overview-and-business.md</code>
+                  </div>
+                  <button
+                    type="button"
+                    data-action="open-article-read"
+                    data-doc-key="01-project-overview-and-business.md"
+                    class="h-6 px-2 rounded bg-zinc-900 hover:bg-indigo-600 text-zinc-300 hover:text-white border border-zinc-800 text-[11px] font-medium shrink-0 transition-colors cursor-pointer"
+                  >
+                    Open IEEE 830
+                  </button>
+                </div>
+                <div class="flex items-center justify-between gap-3 px-5 py-2 hover:bg-zinc-900/60 transition-colors">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-purple-400 shrink-0">${Icons.grid("w-3.5 h-3.5")}</span>
+                    <span class="text-xs text-zinc-200 font-medium truncate">Capabilities Catalog & DeepWiki Mindmap</span>
+                    <code class="text-[10px] font-mono text-zinc-500 hidden xl:inline">03-capabilities-and-features.md</code>
+                  </div>
+                  <button
+                    type="button"
+                    data-action="open-article-read"
+                    data-doc-key="03-capabilities-and-features.md"
+                    class="h-6 px-2 rounded bg-zinc-900 hover:bg-purple-600 text-zinc-300 hover:text-white border border-zinc-800 text-[11px] font-medium shrink-0 transition-colors cursor-pointer"
+                  >
+                    Open DeepWiki
+                  </button>
+                </div>
+              </div>
+            </div>
           ` : ""}
 
-          <!-- Grid de Accesos R\xE1pidos: IEEE 830 & Desglose Funcional DeepWiki -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <!-- Tarjeta 1: Visi\xF3n del Producto IEEE 830 -->
-            <section class="rounded-3xl border border-indigo-200/70 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-transparent dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-transparent p-5 backdrop-blur-xl flex flex-col justify-between gap-4">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                  ${Icons.info("w-4 h-4")} <span>\xBFDe qu\xE9 trata este software?</span>
-                </div>
-                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Problema de Negocio & Alcance (IEEE 830)</h4>
-                <p class="text-xs text-slate-600 dark:text-slate-300">
-                  Definici\xF3n formal del prop\xF3sito, usuarios directos/indirectos, matriz RACI y l\xEDmites funcionales.
-                </p>
-              </div>
-              <div class="pt-2">
-                <button type="button" 
-                        data-action="open-article-read"
-                        data-doc-key="01-project-overview-and-business.md"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
-                  ${Icons.bookOpen("w-3.5 h-3.5")} <span>Ver Resumen IEEE 830</span>
-                </button>
-              </div>
-            </section>
-
-            <!-- Tarjeta 2: Desglose Funcional & Mindmap DeepWiki -->
-            <section class="rounded-3xl border border-purple-200/70 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/60 via-indigo-50/40 to-transparent dark:from-purple-950/30 dark:via-indigo-950/20 dark:to-transparent p-5 backdrop-blur-xl flex flex-col justify-between gap-4">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 text-xs font-mono font-bold text-purple-600 dark:text-purple-400">
-                  ${Icons.grid("w-4 h-4")} <span>Patr\xF3n DeepWiki / OpenDeepWiki</span>
-                </div>
-                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Cat\xE1logo de Capacidades & Mapa Mental</h4>
-                <p class="text-xs text-slate-600 dark:text-slate-300">
-                  Desglose jer\xE1rquico de capacidades $\\to$ features, User Journeys y deep linking directo a c\xF3digo fuente.
-                </p>
-              </div>
-              <div class="pt-2">
-                <button type="button" 
-                        data-action="open-article-read"
-                        data-doc-key="03-capabilities-and-features.md"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
-                  ${Icons.bookOpen("w-3.5 h-3.5")} <span>Ver Cat\xE1logo DeepWiki</span>
-                </button>
-              </div>
-            </section>
-
-          </div>
-
-          <!-- 1.4 Barra de Filtros por Estante Tem\xE1tico y Buscador con Debouncing -->
-          <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-5 shadow-sm space-y-4">
-            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-              
-              <!-- P\xEDldoras de Filtro por Estante -->
-              <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono" id="kb-shelf-filter-pills">
-                <button type="button" 
-                        data-shelf-filter="" 
-                        class="kb-shelf-pill active px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold transition-all cursor-pointer shrink-0 shadow-xs">
-                  Todos (${docKeys.length})
-                </button>
-                ${Object.values(shelvesData).map((sh) => `
-                  <button type="button" 
-                          data-shelf-filter="${sh.id}" 
-                          class="kb-shelf-pill px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 font-medium inline-flex items-center gap-1.5">
-                    ${getShelfIconSvg(sh.id)} <span>${sh.title.split(" ")[0]}</span> <span>(${sh.docs.length})</span>
-                  </button>
-                `).join("")}
-              </div>
-
-              <!-- Buscador con Debouncing -->
-              <div class="relative min-w-[280px]">
-                <input type="text" 
-                       id="kb-library-search-input" 
-                       placeholder="Buscar en la biblioteca (t\xEDtulo, m\xF3dulo, BR-*)..." 
-                       class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono shadow-xs" />
-                <span class="absolute left-3 top-2.5 text-slate-400 pointer-events-none text-xs">
-                  ${Icons.search("w-3.5 h-3.5")}
-                </span>
-              </div>
-
-            </div>
-          </section>
-
-          <!-- 1.5 Estantes Tem\xE1ticos (Shelves Grid) -->
-          <div class="space-y-10" id="kb-shelves-container">
+          <!-- 1.3 Plane Pages List Groups (#kb-shelves-container) -->
+          <div class="divide-y divide-zinc-800/70" id="kb-shelves-container">
             ${Object.values(shelvesData).map((sh) => {
       if (!sh.docs || sh.docs.length === 0) return "";
       return `
-                <section class="space-y-4 kb-shelf-section" data-shelf-id="${sh.id}">
-                  <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center gap-2.5">
-                      <span class="p-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                        ${getShelfIconSvg(sh.id, "w-5 h-5")}
+                <section class="kb-shelf-section" data-shelf-id="${sh.id}">
+                  <!-- Plane Group Header -->
+                  <div class="px-5 py-2 bg-zinc-900/45 border-b border-zinc-800/70 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="text-indigo-400">
+                        ${getShelfIconSvg(sh.id, "w-3.5 h-3.5")}
                       </span>
-                      <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                      <h3 class="text-xs font-semibold text-zinc-200 tracking-tight">
                         ${escapeHtml3(sh.title)}
                       </h3>
+                      <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
+                        ${sh.docs.length}
+                      </span>
                     </div>
-                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      ${sh.docs.length} documentos
-                    </span>
+                    <span class="text-[10px] font-mono text-zinc-500 hidden sm:inline">Public \xB7 Docs-as-Code</span>
                   </div>
 
-                  <!-- Cuadr\xEDcula de Tarjetas de Documentos -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <!-- Plane PageListBlock Rows -->
+                  <div class="divide-y divide-zinc-800/50">
                     ${sh.docs.map((key) => {
         const meta = docMetadata[key] || {
           title: key,
           summary: "Documento t\xE9cnico.",
           readingTime: 2,
+          wordCount: 300,
           ruleCount: 0,
           reqCount: 0,
           adrCount: 0
         };
+        const matchedPage = findPlanePage(key, meta);
+        const isFav = Boolean(matchedPage.is_favorite);
+        const isLocked = Boolean(matchedPage.is_locked);
+        const ownerRole = matchedPage.owned_by_role || "spec-author";
+        const avatarInitials = ownerRole === "reviewer" ? "RV" : ownerRole === "leader" ? "LD" : "SA";
         return `
-                        <div class="kb-shelf-doc-card plane-page-item rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500 transition-all flex flex-col justify-between group"
-                             data-doc-key="${escapeAttr2(key)}"
-                             data-doc-shelf="${escapeAttr2(sh.id)}"
-                             data-doc-title="${escapeAttr2(meta.title)}"
-                             data-doc-module="${escapeAttr2(meta.moduleName || "")}">
-                          
-                          <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-2">
-                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${meta.moduleName ? "bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"} truncate">
-                                ${meta.moduleName ? `${Icons.folder("w-3 h-3")} <span>${meta.moduleName}</span>` : `${getShelfIconSvg(sh.id, "w-3 h-3")} <span>${sh.title.split(" ")[0]}</span>`}
-                              </span>
-                              <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
-                                ${Icons.clock("w-3 h-3")} <span>${meta.readingTime} min</span>
-                              </span>
-                            </div>
+                        <div
+                          class="kb-shelf-doc-card plane-page-item group relative flex items-center justify-between gap-3 px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900/75 transition-colors"
+                          data-doc-key="${escapeAttr2(key)}"
+                          data-doc-shelf="${escapeAttr2(sh.id)}"
+                          data-doc-title="${escapeAttr2(meta.title)}"
+                          data-doc-module="${escapeAttr2(meta.moduleName || "")}"
+                        >
+                          <!-- Left: Page Icon + Title + Path + Telemetry Chips -->
+                          <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <span class="text-zinc-400 group-hover:text-indigo-400 transition-colors shrink-0">
+                              ${Icons.page("w-4 h-4")}
+                            </span>
 
-                            <div>
-                              <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                              <span class="text-xs font-medium text-zinc-100 group-hover:text-white truncate">
                                 ${escapeHtml3(meta.title)}
-                              </h4>
-                              <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
+                              </span>
+                              <span class="text-[11px] font-mono text-zinc-500 truncate hidden lg:inline">
                                 ${escapeHtml3(key)}
-                              </div>
+                              </span>
                             </div>
 
-                            <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              ${escapeHtml3(meta.summary)}
-                            </p>
-                          </div>
-
-                          <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-1.5">
+                            <!-- Plane Row Badges (Module, BR, RF, ADR) -->
+                            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+                              ${meta.moduleName ? `
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-purple-950/60 text-purple-300 border border-purple-500/30">
+                                  ${escapeHtml3(meta.moduleName)}
+                                </span>
+                              ` : ""}
                               ${meta.ruleCount ? `
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="${meta.ruleCount} Reglas de negocio catalogadas">
-                                  ${Icons.scale("w-3 h-3")} <span>${meta.ruleCount} BR</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-amber-950/60 text-amber-300 border border-amber-500/30" title="${meta.ruleCount} Reglas BR">
+                                  ${meta.ruleCount} BR
                                 </span>
                               ` : ""}
                               ${meta.reqCount ? `
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="${meta.reqCount} Requerimientos funcionales">
-                                  ${Icons.fileText("w-3 h-3")} <span>${meta.reqCount} RF</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-500/30" title="${meta.reqCount} Requisitos RF">
+                                  ${meta.reqCount} RF
                                 </span>
                               ` : ""}
                               ${meta.adrCount ? `
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800" title="${meta.adrCount} Decisiones de arquitectura">
-                                  ${Icons.cube("w-3 h-3")} <span>${meta.adrCount} ADR</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-cyan-950/60 text-cyan-300 border border-cyan-500/30" title="${meta.adrCount} ADRs">
+                                  ${meta.adrCount} ADR
                                 </span>
                               ` : ""}
                             </div>
-
-                            <div class="flex items-center gap-1.5">
-                              <button type="button" 
-                                      data-action="open-article-read"
-                                      data-doc-key="${escapeAttr2(key)}"
-                                      class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
-                                ${Icons.bookOpen("w-3.5 h-3.5")} <span>Leer</span>
-                              </button>
-                              <button type="button" 
-                                      data-action="open-article-edit"
-                                      data-doc-key="${escapeAttr2(key)}"
-                                      class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                                      title="Editar directamente este documento">
-                                ${Icons.edit("w-3.5 h-3.5")}
-                              </button>
-                            </div>
                           </div>
 
+                          <!-- Right: Plane BlockItemAction (Access/Lock, Owner Avatar, Reading Time, Favorite Star, Open/Edit) -->
+                          <div class="flex items-center gap-2 shrink-0">
+                            <!-- Lock / Access Status -->
+                            <button
+                              type="button"
+                              data-action="toggle-page-lock"
+                              data-page-id="${matchedPage.id}"
+                              class="w-6 h-6 rounded flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
+                              title="${isLocked ? "Locked normative page" : "Unlocked page"}"
+                            >
+                              ${isLocked ? Icons.lock("w-3.5 h-3.5 text-amber-400/80") : Icons.unlock("w-3.5 h-3.5")}
+                            </button>
+
+                            <!-- Owner Bot Avatar -->
+                            <div
+                              class="w-5 h-5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-[9px] font-mono font-bold text-indigo-300 flex items-center justify-center"
+                              title="Owned by: ${ownerRole} (BOT)"
+                            >
+                              ${avatarInitials}
+                            </div>
+
+                            <!-- Reading time -->
+                            <span class="text-[11px] font-mono text-zinc-500 w-10 text-right hidden md:inline">
+                              ${meta.readingTime}m
+                            </span>
+
+                            <!-- Favorite Star -->
+                            <button
+                              type="button"
+                              data-action="toggle-page-favorite"
+                              data-page-id="${matchedPage.id}"
+                              class="w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${isFav ? "text-amber-400" : "text-zinc-500 hover:text-zinc-300"}"
+                              title="${isFav ? "Remove from favorites" : "Add to favorites"}"
+                            >
+                              ${Icons.star(`w-3.5 h-3.5 ${isFav ? "fill-amber-400" : ""}`)}
+                            </button>
+
+                            <!-- Open & Edit Buttons -->
+                            <button
+                              type="button"
+                              data-action="open-article-read"
+                              data-doc-key="${escapeAttr2(key)}"
+                              class="h-6 px-2.5 rounded bg-zinc-900 hover:bg-indigo-600 text-zinc-200 hover:text-white border border-zinc-800 hover:border-indigo-500 text-[11px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1"
+                            >
+                              ${Icons.bookOpen("w-3 h-3")}
+                              <span>Leer</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              data-action="open-article-edit"
+                              data-doc-key="${escapeAttr2(key)}"
+                              class="h-6 w-6 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 border border-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+                              title="Editar documento"
+                            >
+                              ${Icons.edit("w-3 h-3")}
+                            </button>
+                          </div>
                         </div>
                       `;
       }).join("")}
@@ -5371,154 +5515,91 @@
               `;
     }).join("")}
           </div>
-
         </div>
 
         <!-- ============================================================== -->
-        <!-- PANEL TIER 2: M\xD3DULOS & BOUNDED CONTEXTS GRANULARES            -->
+        <!-- PANEL TIER 2: M\xD3DULOS & BOUNDED CONTEXTS (Plane List Format)   -->
         <!-- ============================================================== -->
-        <div id="kb-perspective-panel-modules" class="kb-perspective-panel hidden space-y-8">
-          
-          <!-- Introducci\xF3n a la Arquitectura por Bounded Contexts -->
-          <section class="rounded-3xl border border-purple-200/70 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/50 via-indigo-50/30 to-transparent dark:from-purple-950/30 dark:via-indigo-950/20 dark:to-transparent p-6 sm:p-8 backdrop-blur-xl">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div class="space-y-2 max-w-3xl">
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                    Domain-Driven Design (DDD)
-                  </span>
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    5 Artefactos Especializados por M\xF3dulo
-                  </span>
-                </div>
-                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  Explorador de Bounded Contexts Granulares
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Cada m\xF3dulo representa un subdominio estrat\xE9gico aislado con sus propias reglas invariantes, contratos transaccionales, 
-                  tarjetas CRC y suite de 6 diagramas visuales en Mermaid.
-                </p>
-              </div>
-
-              <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-xs font-mono space-y-1 shrink-0">
-                <div class="text-[10px] uppercase font-bold text-slate-400">Artefactos por M\xF3dulo</div>
-                <div class="text-purple-600 dark:text-purple-400 font-bold">1. module-spec.md (CRC)</div>
-                <div class="text-amber-600 dark:text-amber-400 font-bold">2. requirements-and-rules.md</div>
-                <div class="text-emerald-600 dark:text-emerald-400 font-bold">3. data-and-transactions.md</div>
-                <div class="text-indigo-600 dark:text-indigo-400 font-bold">4. diagrams.md (6 Diagramas)</div>
-                <div class="text-rose-600 dark:text-rose-400 font-bold">5. technical-debt-refactoring.md</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Barra de Navegaci\xF3n por M\xF3dulo (Tabs Horizontales) -->
-          <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/80 p-3 shadow-xs">
-            <div class="flex items-center gap-2 overflow-x-auto pb-1" id="kb-module-tab-bar">
+        <div id="kb-perspective-panel-modules" class="kb-perspective-panel hidden flex-1 flex flex-col">
+          <!-- Module Selector Sub-bar -->
+          <div class="px-5 py-2.5 border-b border-zinc-800/80 bg-zinc-900/40 flex items-center justify-between gap-4 overflow-x-auto" id="kb-module-tab-bar">
+            <div class="flex items-center gap-1.5">
               ${Object.keys(modulesData).map((modId, index) => {
       const mod = modulesData[modId];
       const isActive = index === 0;
       return `
-                  <button type="button" 
-                          data-module-tab="${escapeAttr2(modId)}"
-                          class="kb-module-tab-btn ${isActive ? "active bg-purple-600 text-white font-bold shadow-xs" : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium"} px-4 py-2 rounded-2xl text-xs font-mono transition-all cursor-pointer shrink-0 inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    data-module-tab="${escapeAttr2(modId)}"
+                    class="kb-module-tab-btn ${isActive ? "active bg-indigo-600 text-white font-semibold" : "bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800"} h-7 px-3 rounded-md text-xs font-mono transition-colors cursor-pointer shrink-0 inline-flex items-center gap-2"
+                  >
                     ${Icons.folder("w-3.5 h-3.5")}
                     <span>${escapeHtml3(mod.title || modId)}</span>
-                    <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/25 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}">${mod.docs?.length || 5}</span>
+                    <span class="text-[10px] px-1.5 rounded ${isActive ? "bg-white/20 text-white" : "bg-zinc-800 text-zinc-400"}">${mod.docs?.length || 5}</span>
                   </button>
                 `;
     }).join("")}
             </div>
-          </section>
+            <span class="text-[11px] font-mono text-zinc-500 shrink-0 hidden md:inline">5 Artefactos DDD por Bounded Context</span>
+          </div>
 
-          <!-- Paneles de Contenido Modular -->
-          <div id="kb-module-contents-container">
+          <!-- Module Pages List -->
+          <div id="kb-module-contents-container" class="flex-1">
             ${Object.keys(modulesData).map((modId, index) => {
       const mod = modulesData[modId];
       const isHidden = index !== 0;
-      const modDocs = mod.docs || [];
       const modMetaMap = mod.docMetadata || {};
       const specializedSpecs = [
         {
           filename: "module-spec.md",
           title: "Especificaci\xF3n de Alcance & Tarjetas CRC",
-          desc: "Delimitaci\xF3n del bounded context, lenguaje ubicuo de dominio y matriz de tarjetas CRC (Clase, Responsabilidades y Colaboradores).",
-          color: "border-purple-200 dark:border-purple-800 hover:border-purple-500",
-          badge: "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
+          desc: "Delimitaci\xF3n del bounded context, lenguaje ubicuo de dominio y matriz de tarjetas CRC.",
+          badge: "bg-purple-950/70 text-purple-300 border-purple-500/30",
           icon: Icons.shield
         },
         {
           filename: "requirements-and-rules.md",
           title: "Requerimientos & Invariantes de Negocio",
-          desc: "Matriz exhaustiva de requerimientos funcionales (RF-*), reglas de negocio inviolables (BR-*), historias de usuario (HU-*) y tareas t\xE9cnicas (TI-*).",
-          color: "border-amber-200 dark:border-amber-800 hover:border-amber-500",
-          badge: "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
+          desc: "Matriz exhaustiva de requerimientos funcionales (RF-*), reglas BR-* e historias HU-*.",
+          badge: "bg-amber-950/70 text-amber-300 border-amber-500/30",
           icon: Icons.scale
         },
         {
           filename: "data-and-transactions.md",
           title: "Persistencia, Entidades & Transacciones",
-          desc: "Estructura de persistencia, entidades, estrategias de concurrencia optimista/pesimista, aislamiento de transacciones e invariantes ACID.",
-          color: "border-emerald-200 dark:border-emerald-800 hover:border-emerald-500",
-          badge: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+          desc: "Estructura de persistencia, entidades, concurrencia e invariantes ACID.",
+          badge: "bg-emerald-950/70 text-emerald-300 border-emerald-500/30",
           icon: Icons.database
         },
         {
           filename: "diagrams.md",
           title: "Suite de 6 Diagramas Dedicados (Mermaid)",
-          desc: "6 diagramas visuales generados para el m\xF3dulo: Contexto C4, Contenedores, Componentes, Diagrama de Secuencia, Diagrama de Estado y Modelo ERD.",
-          color: "border-indigo-200 dark:border-indigo-800 hover:border-indigo-500",
-          badge: "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300",
+          desc: "Contexto C4, Contenedores, Componentes, Secuencia, Estado y Modelo ERD.",
+          badge: "bg-indigo-950/70 text-indigo-300 border-indigo-500/30",
           icon: Icons.architecture
         },
         {
           filename: "technical-debt-refactoring.md",
           title: "Deuda T\xE9cnica & Plan de Refactorizaci\xF3n",
-          desc: "Diagn\xF3stico forense de deuda t\xE9cnica, olores de c\xF3digo, brechas de pruebas unitarias/integraci\xF3n y hoja de ruta de remediaci\xF3n.",
-          color: "border-rose-200 dark:border-rose-800 hover:border-rose-500",
-          badge: "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
+          desc: "Diagn\xF3stico forense de deuda t\xE9cnica, brechas de pruebas y hoja de ruta.",
+          badge: "bg-rose-950/70 text-rose-300 border-rose-500/30",
           icon: Icons.alertTriangle
         }
       ];
       return `
-                <div id="kb-module-content-${escapeAttr2(modId)}" class="kb-module-content-panel space-y-6 ${isHidden ? "hidden" : ""}">
-                  
-                  <!-- Cabecera del M\xF3dulo -->
-                  <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                          ${mod.status || "COMPLETAMENTE CUBIERTO"}
-                        </span>
-                        <span class="text-xs font-mono text-slate-400">Ruta: <code>project-docs/knowledge/modules/${modId}/</code></span>
-                      </div>
-                      <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <span class="text-purple-600 dark:text-purple-400">${Icons.folder("w-6 h-6")}</span>
-                        <span>${escapeHtml3(mod.title || modId)}</span>
-                      </h3>
-                      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
-                        Bounded Context auditado con 5 artefactos formales de ingenier\xEDa para garantizar contexto 100% libre de alucinaciones en agentes de IA y desarrolladores.
-                      </p>
+                <div id="kb-module-content-${escapeAttr2(modId)}" class="kb-module-content-panel ${isHidden ? "hidden" : ""}">
+                  <div class="px-5 py-2.5 bg-zinc-900/30 border-b border-zinc-800/70 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-purple-400">${Icons.folder("w-4 h-4")}</span>
+                      <span class="text-xs font-semibold text-zinc-100">${escapeHtml3(mod.title || modId)}</span>
+                      <code class="text-[11px] font-mono text-zinc-500">project-docs/knowledge/modules/${modId}/</code>
                     </div>
-
-                    <!-- M\xE9tricas R\xE1pidas del M\xF3dulo -->
-                    <div class="flex items-center gap-2 text-xs font-mono shrink-0">
-                      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                        <div class="text-[10px] text-slate-400 uppercase">Documentos</div>
-                        <div class="text-base font-bold text-purple-600 dark:text-purple-400">${modDocs.length}</div>
-                      </div>
-                      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                        <div class="text-[10px] text-slate-400 uppercase">Diagramas</div>
-                        <div class="text-base font-bold text-indigo-600 dark:text-indigo-400">6</div>
-                      </div>
-                      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                        <div class="text-[10px] text-slate-400 uppercase">Cobertura</div>
-                        <div class="text-base font-bold text-emerald-600 dark:text-emerald-400">100%</div>
-                      </div>
-                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
+                      ${mod.status || "100% COVERED"}
+                    </span>
                   </div>
 
-                  <!-- Grid de los 5 Archivos Especializados -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div class="divide-y divide-zinc-800/50">
                     ${specializedSpecs.map((spec) => {
         const docKey = `modules/${modId}/${spec.filename}`;
         const meta = modMetaMap[spec.filename] || docMetadata[docKey] || {
@@ -5530,214 +5611,145 @@
           reqCount: 0
         };
         return `
-                        <div class="kb-shelf-doc-card plane-page-item rounded-2xl border ${spec.color} bg-white dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
-                             data-doc-key="${escapeAttr2(docKey)}"
-                             data-doc-shelf="modules"
-                             data-doc-title="${escapeAttr2(spec.title)}"
-                             data-doc-module="${escapeAttr2(modId)}">
-                          
-                          <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-2">
-                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold ${spec.badge}">
-                                ${spec.icon("w-3 h-3")} <span>${spec.filename}</span>
-                              </span>
-                              <span class="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 shrink-0">
-                                ${Icons.clock("w-3 h-3")} <span>${meta.readingTime || 2} min</span>
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                                ${escapeHtml3(spec.title)}
-                              </h4>
-                              <div class="text-[10px] font-mono text-slate-400 truncate mt-1">
-                                ${escapeHtml3(docKey)}
+                        <div
+                          class="kb-shelf-doc-card plane-page-item group flex items-center justify-between gap-4 px-5 py-3 bg-zinc-950 hover:bg-zinc-900/75 transition-colors"
+                          data-doc-key="${escapeAttr2(docKey)}"
+                          data-doc-shelf="modules"
+                          data-doc-title="${escapeAttr2(spec.title)}"
+                          data-doc-module="${escapeAttr2(modId)}"
+                        >
+                          <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <span class="text-zinc-400 group-hover:text-indigo-400 shrink-0">${spec.icon("w-4 h-4")}</span>
+                            <div class="min-w-0 flex-1">
+                              <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-zinc-100 truncate">${escapeHtml3(spec.title)}</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono border ${spec.badge}">${spec.filename}</span>
                               </div>
-                            </div>
-
-                            <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              ${escapeHtml3(spec.desc)}
-                            </p>
-                          </div>
-
-                          <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-1.5">
-                              ${meta.ruleCount ? `
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                                  ${Icons.scale("w-3 h-3")} <span>${meta.ruleCount} BR</span>
-                                </span>
-                              ` : ""}
-                              ${meta.reqCount ? `
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                                  ${Icons.fileText("w-3 h-3")} <span>${meta.reqCount} RF</span>
-                                </span>
-                              ` : ""}
-                            </div>
-
-                            <div class="flex items-center gap-1.5">
-                              <button type="button" 
-                                      data-action="open-article-read"
-                                      data-doc-key="${escapeAttr2(docKey)}"
-                                      class="px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1">
-                                ${Icons.bookOpen("w-3.5 h-3.5")} <span>Leer</span>
-                              </button>
-                              <button type="button" 
-                                      data-action="open-article-edit"
-                                      data-doc-key="${escapeAttr2(docKey)}"
-                                      class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                                      title="Editar este archivo">
-                                ${Icons.edit("w-3.5 h-3.5")}
-                              </button>
+                              <p class="text-[11px] text-zinc-500 truncate mt-0.5">${escapeHtml3(spec.desc)}</p>
                             </div>
                           </div>
 
+                          <div class="flex items-center gap-2 shrink-0">
+                            ${meta.ruleCount ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-amber-950/60 text-amber-300 border border-amber-500/30">${meta.ruleCount} BR</span>` : ""}
+                            ${meta.reqCount ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">${meta.reqCount} RF</span>` : ""}
+                            <span class="text-[11px] font-mono text-zinc-500 hidden sm:inline">${meta.readingTime || 2}m</span>
+                            <button
+                              type="button"
+                              data-action="open-article-read"
+                              data-doc-key="${escapeAttr2(docKey)}"
+                              class="h-6 px-2.5 rounded bg-zinc-900 hover:bg-indigo-600 text-zinc-200 hover:text-white border border-zinc-800 text-[11px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1"
+                            >
+                              ${Icons.bookOpen("w-3 h-3")}
+                              <span>Leer</span>
+                            </button>
+                            <button
+                              type="button"
+                              data-action="open-article-edit"
+                              data-doc-key="${escapeAttr2(docKey)}"
+                              class="h-6 w-6 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 border border-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+                            >
+                              ${Icons.edit("w-3 h-3")}
+                            </button>
+                          </div>
                         </div>
                       `;
       }).join("")}
                   </div>
-
                 </div>
               `;
     }).join("")}
           </div>
-
         </div>
 
         <!-- ============================================================== -->
-        <!-- PANEL TIER 3: MEGADOCUMENTO MAESTRO CONSOLIDADO                -->
+        <!-- PANEL TIER 3: MASTER BUNDLE (Plane List Format)                -->
         <!-- ============================================================== -->
-        <div id="kb-perspective-panel-master" class="kb-perspective-panel hidden space-y-8">
-          
-          <!-- Hero Card del Dossier Maestro -->
-          <section class="rounded-3xl border border-purple-200/80 dark:border-purple-900/60 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-slate-900/5 p-6 sm:p-10 backdrop-blur-xl relative overflow-hidden shadow-sm">
-            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-              <div class="space-y-4 max-w-3xl">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-purple-600 text-white shadow-xs">
-                    ${Icons.fileText("w-3.5 h-3.5")} <span>Single-File Context Bundle</span>
-                  </span>
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                    ${Icons.shield("w-3.5 h-3.5")} <span>Anti-Bias Context for AI</span>
-                  </span>
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    ${Icons.checkCircle("w-3.5 h-3.5")} <span>Docs-as-Code Soberano</span>
-                  </span>
+        <div id="kb-perspective-panel-master" class="kb-perspective-panel hidden flex-1 flex flex-col">
+          <!-- Master Bundle Top Bar -->
+          <div class="px-5 py-3 bg-zinc-900/40 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <span class="p-1.5 rounded bg-purple-500/15 border border-purple-500/30 text-purple-300">
+                ${Icons.fileText("w-4 h-4")}
+              </span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-xs font-bold text-zinc-100">MASTER-PROJECT-KNOWLEDGE.md</h3>
+                  <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-500/30">Single-File AI Bundle</span>
                 </div>
-
-                <h3 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                  MASTER-PROJECT-KNOWLEDGE.md
-                </h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Compendio unificado de ingenier\xEDa inversa que consolida en un \xFAnico archivo la visi\xF3n de negocio (IEEE 830), 
-                  arquitectura AS-IS (Screaming Architecture), modelado C4, tarjetas CRC, requerimientos INVEST, diccionario de datos con ERD, 
-                  invariantes BR-*, matriz de servicios externos y trazabilidad RTM. Dise\xF1ado para alimentar a modelos LLM con contexto 100% libre 
-                  de alucinaciones en un solo prompt.
-                </p>
-
-                <!-- Grid de M\xE9tricas del Megadocumento -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 font-mono text-xs">
-                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-                    <div class="text-[10px] text-slate-400 uppercase">Extensi\xF3n Total</div>
-                    <div class="text-base font-bold text-purple-600 dark:text-purple-400 mt-0.5">~${masterDocMeta.wordCount || 8200} palabras</div>
-                  </div>
-                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-                    <div class="text-[10px] text-slate-400 uppercase">Cap\xEDtulos</div>
-                    <div class="text-base font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">9 Cap\xEDtulos</div>
-                  </div>
-                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-                    <div class="text-[10px] text-slate-400 uppercase">Diagramas</div>
-                    <div class="text-base font-bold text-cyan-600 dark:text-cyan-400 mt-0.5">12 Diagramas</div>
-                  </div>
-                  <div class="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-                    <div class="text-[10px] text-slate-400 uppercase">Contextos DDD</div>
-                    <div class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${moduleNames.length} Bounded Contexts</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Botones de Acci\xF3n del Megadocumento -->
-              <div class="flex flex-col sm:flex-row lg:flex-col items-stretch gap-3 shrink-0 w-full lg:w-auto">
-                <button type="button" 
-                        data-action="open-article-read"
-                        data-doc-key="${escapeAttr2(masterDocKey)}"
-                        class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/25 transition-all cursor-pointer">
-                  ${Icons.bookOpen} <span>Leer Megadocumento Completo</span>
-                </button>
-
-                <button type="button" 
-                        data-action="copy-master-doc"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all cursor-pointer">
-                  ${Icons.copy} <span>Copiar Markdown Completo</span>
-                </button>
-
-                <button type="button" 
-                        data-action="download-master-doc"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer">
-                  ${Icons.download} <span>Descargar .md</span>
-                </button>
+                <p class="text-[11px] text-zinc-400">~${masterDocMeta.wordCount || 8200} palabras \xB7 9 Cap\xEDtulos Can\xF3nicos \xB7 12 Diagramas Mermaid \xB7 ${moduleNames.length} Bounded Contexts</p>
               </div>
             </div>
-          </section>
 
-          <!-- \xCDndice de Cap\xEDtulos del Megadocumento Maestro -->
-          <section class="space-y-4">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-              <h4 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span class="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
-                  ${Icons.fileText}
-                </span>
-                <span>Estructura & Cap\xEDtulos del Dossier Maestro</span>
-              </h4>
-              <span class="text-xs font-mono text-slate-400">9 Cap\xEDtulos Estructurados</span>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                data-action="open-article-read"
+                data-doc-key="${escapeAttr2(masterDocKey)}"
+                class="h-7 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                ${Icons.bookOpen("w-3.5 h-3.5")}
+                <span>Open Master Document</span>
+              </button>
+              <button
+                type="button"
+                data-action="copy-master-doc"
+                class="h-7 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                ${Icons.copy("w-3.5 h-3.5")}
+                <span>Copy Markdown</span>
+              </button>
+              <button
+                type="button"
+                data-action="download-master-doc"
+                class="h-7 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                ${Icons.download("w-3.5 h-3.5")}
+                <span>Download .md</span>
+              </button>
             </div>
+          </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              ${[
+          <!-- 9 Chapters as Plane List Rows -->
+          <div class="divide-y divide-zinc-800/50">
+            ${[
       { num: "01", title: "Resumen Ejecutivo & Problema de Negocio (IEEE 830)", desc: "Definici\xF3n formal del problema, usuarios del sistema, objetivos cuantificables y matriz RACI." },
       { num: "02", title: "Arquitectura General & Screaming Architecture", desc: "Topolog\xEDa AS-IS, patrones arquitect\xF3nicos, estilo hexagonal y flujo de datos." },
       { num: "03", title: "Modelado C4 & Diagramas Globales (Mermaid)", desc: "Contexto C1, Contenedores C2, Componentes C3, Diagramas de Secuencia y Clases de Dominio." },
       { num: "04", title: "Bounded Contexts & Tarjetas CRC (DDD T\xE1ctico)", desc: "Lenguaje ubicuo de negocio, responsabilidades por bounded context y colaboradores." },
-      { num: "05", title: "Requerimientos Funcionales & No Funcionales (INVEST)", desc: "Matriz RF-*, historias de usuario y requerimientos no funcionales (rendimiento, seguridad, offline)." },
-      { num: "06", title: "Diccionario de Datos & Modelo Entidad-Relaci\xF3n (ERD)", desc: "Modelo relacional, entidades, llaves compuestas, \xEDndices y restricciones transaccionales." },
+      { num: "05", title: "Requerimientos Funcionales & No Funcionales (INVEST)", desc: "Matriz RF-*, historias de usuario y requerimientos no funcionales." },
+      { num: "06", title: "Diccionario de Datos & Modelo Entidad-Relaci\xF3n (ERD)", desc: "Modelo relacional SQLite (28 tablas), entidades, llaves for\xE1neas e \xEDndices." },
       { num: "07", title: "Cat\xE1logo de Invariantes & Reglas de Negocio (BR-*)", desc: "Invariantes de dominio de estricto cumplimiento para evitar alucinaciones." },
       { num: "08", title: "Servicios Externos & Contratos de Integraci\xF3n", desc: "Protocolos de red, variables de entorno, mecanismos de autenticaci\xF3n y contingencia failover." },
-      { num: "09", title: "Matriz de Trazabilidad RTM & Guardrails Anti-Sesgo", desc: "Trazabilidad Requerimiento $\\leftrightarrow$ C\xF3digo $\\leftrightarrow$ Tests y directrices de c\xF3digo." }
+      { num: "09", title: "Matriz de Trazabilidad RTM & Guardrails Anti-Sesgo", desc: "Trazabilidad Requerimiento <-> C\xF3digo <-> Tests y directrices de c\xF3digo." }
     ].map((ch) => `
-                <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 space-y-2.5 hover:border-purple-400 dark:hover:border-purple-600 transition-all flex flex-col justify-between">
-                  <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                      <span class="px-2 py-0.5 rounded-md font-mono text-xs font-black bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
-                        Cap\xEDtulo ${ch.num}
-                      </span>
-                      <span class="text-[10px] font-mono text-slate-400">Can\xF3nico</span>
-                    </div>
-                    <h5 class="font-bold text-xs text-slate-900 dark:text-white leading-snug">
-                      ${escapeHtml3(ch.title)}
-                    </h5>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      ${escapeHtml3(ch.desc)}
-                    </p>
-                  </div>
-
-                  <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <button type="button" 
-                            data-action="open-article-read"
-                            data-doc-key="${escapeAttr2(masterDocKey)}"
-                            class="text-xs font-mono font-bold text-purple-600 dark:text-purple-400 hover:text-purple-500 flex items-center gap-1 cursor-pointer">
-                      <span>Ir al dossier</span> ${Icons.arrowRight("w-3 h-3")}
-                    </button>
+              <div class="flex items-center justify-between gap-4 px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900/75 transition-colors">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-purple-950/80 text-purple-300 border border-purple-500/30 shrink-0">
+                    CH-${ch.num}
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xs font-medium text-zinc-100 truncate">${escapeHtml3(ch.title)}</div>
+                    <div class="text-[11px] text-zinc-500 truncate">${escapeHtml3(ch.desc)}</div>
                   </div>
                 </div>
-              `).join("")}
-            </div>
-          </section>
-
+                <button
+                  type="button"
+                  data-action="open-article-read"
+                  data-doc-key="${escapeAttr2(masterDocKey)}"
+                  class="h-6 px-2.5 rounded bg-zinc-900 hover:bg-purple-600 text-zinc-300 hover:text-white border border-zinc-800 text-[11px] font-medium shrink-0 transition-colors cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>Open Chapter</span>
+                  ${Icons.arrowRight("w-3 h-3")}
+                </button>
+              </div>
+            `).join("")}
+          </div>
         </div>
 
         <!-- ============================================================== -->
-        <!-- PANEL TIER 4: PLANE PAGES WORKSPACE & KNOWLEDGE GRAPH          -->
+        <!-- PANEL TIER 4: PLANE PAGES SPLIT WORKSPACE & KNOWLEDGE GRAPH    -->
         <!-- ============================================================== -->
-        <div id="kb-perspective-panel-plane-workspace" class="kb-perspective-panel hidden rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
+        <div id="kb-perspective-panel-plane-workspace" class="kb-perspective-panel hidden flex-1 overflow-hidden">
           ${PagesPage({
       pages: planePages,
       issues: features,
@@ -5753,117 +5765,208 @@
     })}
         </div>
 
+        <!-- ============================================================== -->
+        <!-- PANEL TIER 5: RULES, EXTERNAL SERVICES & GUARDRAILS            -->
+        <!-- ============================================================== -->
+        <div id="kb-perspective-panel-governance" class="kb-perspective-panel hidden flex-1 divide-y divide-zinc-800">
+          <!-- Business Rules Section -->
+          <div>
+            <div class="px-5 py-2.5 bg-zinc-900/45 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-amber-400">${Icons.scale("w-4 h-4")}</span>
+                <h3 class="text-xs font-semibold text-zinc-100">Cat\xE1logo de Reglas de Negocio (Invariantes BR-*)</h3>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="text-zinc-500 font-mono text-[11px]">Module:</span>
+                <select
+                  id="kb-rules-module-filter"
+                  class="h-7 px-2.5 rounded-md border border-zinc-800 bg-zinc-900 text-zinc-200 text-xs font-mono focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">All Modules (${rules.length})</option>
+                  ${moduleNames.map((m) => `<option value="${escapeAttr2(m)}">${m}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <div class="divide-y divide-zinc-800/50" id="kb-rules-list">
+              ${rules.map((rule) => {
+      const isCritical = rule.severity === "Cr\xEDtica" || rule.severity === "Critica" || rule.severity === "Alta";
+      const sevBadge = isCritical ? "bg-rose-950/70 text-rose-300 border-rose-500/30" : "bg-amber-950/70 text-amber-300 border-amber-500/30";
+      return `
+                  <div
+                    data-rule-module="${escapeAttr2(rule.module || "general")}"
+                    class="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-colors"
+                  >
+                    <div class="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                      <span class="font-mono text-[11px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 shrink-0">
+                        ${rule.id}
+                      </span>
+                      <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 shrink-0">
+                        ${rule.module || "general"}
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <span class="text-xs font-semibold text-zinc-100">${escapeHtml3(rule.title)}</span>
+                        <span class="text-xs text-zinc-400 ml-2">${escapeHtml3(rule.description)}</span>
+                      </div>
+                    </div>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded border shrink-0 ${sevBadge}">
+                      ${rule.severity || "Normal"}
+                    </span>
+                  </div>
+                `;
+    }).join("")}
+            </div>
+          </div>
+
+          <!-- External Services & Anti-Bias Guardrails -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800">
+            <div class="p-5 space-y-3">
+              <div class="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+                <span class="text-cyan-400">${Icons.server("w-4 h-4")}</span>
+                <span>External Services & Integration Contracts (${services.length})</span>
+              </div>
+              <div class="space-y-2">
+                ${services.map((svc) => `
+                  <div class="p-3 rounded-lg border border-zinc-800 bg-zinc-900/50 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                      <div class="font-semibold text-zinc-100">${escapeHtml3(svc.name)} <span class="text-[10px] font-mono text-cyan-400">(${escapeHtml3(svc.type)})</span></div>
+                      <div class="text-[11px] text-zinc-400 font-mono">Protocol: ${escapeHtml3(svc.protocol)} \xB7 Auth: ${escapeHtml3(svc.auth)}</div>
+                    </div>
+                    <code class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-indigo-300">${escapeHtml3(svc.env_var)}</code>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+
+            <div class="p-5 space-y-3">
+              <div class="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+                <span class="text-rose-400">${Icons.shield("w-4 h-4")}</span>
+                <span>Anti-Hallucination Guardrails & Naming Conventions</span>
+              </div>
+              <ul class="space-y-1.5 text-xs text-zinc-300">
+                ${(guardrails.length > 0 ? guardrails : [
+      "Prohibido instalar paquetes o bibliotecas redundantes no can\xF3nicas.",
+      "Toda regla de negocio BR-* debe implementarse con tests automatizados.",
+      "Inversi\xF3n de dependencias obligatoria en controladores y servicios."
+    ]).map((g) => `
+                  <li class="flex items-start gap-2">
+                    <span class="text-rose-400 font-mono font-bold shrink-0">\u2022</span>
+                    <span>${escapeHtml3(g)}</span>
+                  </li>
+                `).join("")}
+              </ul>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============================================================== -->
-      <!-- VISTA 2: LECTOR & EDITOR EDITORIAL (ARTICLE MODE)              -->
+      <!-- VISTA 2: PLANE PAGE ROOT CANVAS (Full-Screen Reader / Editor)  -->
       <!-- ============================================================== -->
-      <div id="kb-view-article" class="hidden space-y-6">
-        
-        <!-- 2.1 Breadcrumb de Navegaci\xF3n & Barra de Herramientas Flotante -->
-        <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 shadow-sm sticky top-20 z-20 transition-all">
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            
-            <!-- Breadcrumbs -->
-            <div class="flex items-center gap-2 text-xs font-mono">
-              <button type="button" 
-                      data-action="back-to-library"
-                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold transition-all cursor-pointer">
-                ${Icons.arrowLeft} <span>Biblioteca</span>
-              </button>
-              <span class="text-slate-300 dark:text-slate-700">/</span>
-              <span id="article-shelf-badge" class="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
-                ${activeDocMeta.shelf || "Can\xF3nico"}
-              </span>
-              <span class="text-slate-300 dark:text-slate-700">/</span>
-              <span id="doc-active-path" class="text-indigo-600 dark:text-indigo-400 font-bold px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 truncate max-w-xs sm:max-w-md">
-                ${activeDocKey}
-              </span>
-            </div>
+      <div id="kb-view-article" class="hidden flex-1 flex flex-col min-h-0 bg-zinc-950">
 
-            <!-- Acciones del Documento + Plane PageHeaderActions -->
-            <div class="flex flex-wrap items-center gap-2">
-              <div id="article-plane-header-actions">
-                ${renderPageHeaderActions({
-      activePage: planePages.find((p) => (p.file_path || "").endsWith(activeDocKey)) || planePages[0] || {
-        id: `page-kb-${activeDocKey.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
-        title: activeDocMeta.title || activeDocKey,
-        file_path: `knowledge/${activeDocKey}`,
-        word_count: activeDocMeta.wordCount || 450,
-        reading_time_min: activeDocMeta.readingTime || 3,
-        is_locked: 1,
-        is_favorite: activeDocKey === "c4-model.md" ? 1 : 0
-      },
+        <!-- 2.1 Plane PageEditorToolbarRoot (Sticky Top Header Bar h-11) -->
+        <div class="min-h-11 px-5 py-1.5 border-b border-zinc-800 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shrink-0">
+          <!-- Left: Breadcrumb Library / Shelf / Active Page -->
+          <div class="flex items-center gap-2 text-xs font-mono min-w-0">
+            <button
+              type="button"
+              data-action="back-to-library"
+              class="h-7 inline-flex items-center gap-1.5 px-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 font-sans font-medium transition-colors cursor-pointer"
+            >
+              ${Icons.arrowLeft("w-3.5 h-3.5 text-zinc-400")}
+              <span>Library</span>
+            </button>
+            <span class="text-zinc-600">/</span>
+            <span id="article-shelf-badge" class="px-2 py-0.5 rounded text-[11px] bg-zinc-900 border border-zinc-800 text-zinc-400">
+              ${activeDocMeta.shelf || "Can\xF3nico"}
+            </span>
+            <span class="text-zinc-600">/</span>
+            <span id="doc-active-path" class="text-indigo-300 font-semibold px-2 py-0.5 rounded bg-indigo-950/50 border border-indigo-500/25 truncate max-w-xs sm:max-w-md">
+              ${activeDocKey}
+            </span>
+          </div>
+
+          <!-- Right: Plane PageHeaderActions + Mode Switcher -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <div id="article-plane-header-actions">
+              ${renderPageHeaderActions({
+      activePage: findPlanePage(activeDocKey, activeDocMeta),
       isFullWidth: Boolean(planePageState.isFullWidth),
       showNavigationPane: planePageState.showNavigationPane !== false,
       showAiMenu: Boolean(planePageState.showAiMenu)
     })}
-              </div>
-
-              <span id="article-reading-time-badge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
-                ${Icons.clock("w-3.5 h-3.5")} <span>${activeDocMeta.readingTime} min</span>
-              </span>
-
-              <!-- Bot\xF3n Conmutar Modo Edici\xF3n / Lectura -->
-              <button type="button" 
-                      id="btn-toggle-doc-editor" 
-                      class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5"
-                      title="Alternar entre Lector Editorial y Editor Dual">
-                <span id="btn-toggle-doc-icon">${Icons.edit}</span>
-                <span id="btn-toggle-doc-text">Modo Editor</span>
-              </button>
-
-              <!-- Bot\xF3n Copiar Markdown -->
-              <button type="button" 
-                      id="copy-active-doc-btn" 
-                      class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                      title="Copiar contenido Markdown completo">
-                ${Icons.copy}
-              </button>
-
-              <!-- Bot\xF3n Descargar Archivo .md -->
-              <button type="button" 
-                      data-action="download-active-doc" 
-                      class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                      title="Descargar este archivo .md a tu equipo">
-                ${Icons.download}
-              </button>
-
-              <!-- Bot\xF3n Eliminar Documento -->
-              <button type="button" 
-                      data-action="delete-active-doc" 
-                      class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
-                      title="Eliminar este documento de la Base de Conocimiento">
-                ${Icons.trash}
-              </button>
             </div>
 
-          </div>
-        </section>
+            <span id="article-reading-time-badge" class="hidden xl:inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400">
+              ${Icons.clock("w-3 h-3")} <span>${activeDocMeta.readingTime} min</span>
+            </span>
 
-        <!-- 2.2 MODO LECTOR EDITORIAL (Columna centrada o Full-Width + Inspector Plane 4 Pesta\xF1as) -->
-        <div id="doc-reader-view-container" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          <!-- Contenido Principal del Art\xEDculo (Columna de Lectura con Smart Entity Chips) -->
-          <div id="doc-reader-main-col" class="${planePageState.showNavigationPane === false ? "lg:col-span-12" : "lg:col-span-8"} rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-12 shadow-sm min-h-[600px] transition-all">
-            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? "max-w-none w-full" : "max-w-3xl mx-auto"} text-slate-800 dark:text-slate-200 leading-relaxed text-sm">
+            <button
+              type="button"
+              id="btn-toggle-doc-editor"
+              class="h-7 px-2.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-sans text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Alternar entre Lector y Editor Dual"
+            >
+              <span id="btn-toggle-doc-icon">${Icons.edit("w-3.5 h-3.5")}</span>
+              <span id="btn-toggle-doc-text">Modo Editor</span>
+            </button>
+
+            <button
+              type="button"
+              id="copy-active-doc-btn"
+              class="h-7 w-7 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+              title="Copiar Markdown completo"
+            >
+              ${Icons.copy("w-3.5 h-3.5")}
+            </button>
+
+            <button
+              type="button"
+              data-action="download-active-doc"
+              class="h-7 w-7 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 flex items-center justify-center transition-colors cursor-pointer"
+              title="Descargar archivo .md"
+            >
+              ${Icons.download("w-3.5 h-3.5")}
+            </button>
+
+            <button
+              type="button"
+              data-action="delete-active-doc"
+              class="h-7 w-7 rounded-md bg-zinc-900 hover:bg-rose-950/60 text-zinc-400 hover:text-rose-400 border border-zinc-800 hover:border-rose-500/30 flex items-center justify-center transition-colors cursor-pointer"
+              title="Eliminar documento"
+            >
+              ${Icons.trash("w-3.5 h-3.5")}
+            </button>
+          </div>
+        </div>
+
+        <!-- 2.2 Plane PageEditorBody + Right Docked PageNavigationPane -->
+        <div id="doc-reader-view-container" class="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-96px)] bg-zinc-950">
+
+          <!-- Center Document Canvas (Distraction-Free Plane Page Canvas) -->
+          <div id="doc-reader-main-col" class="flex-1 overflow-y-auto px-6 sm:px-14 py-8 bg-zinc-950">
+            <!-- Plane Page Telemetry Subtitle Bar -->
+            <div class="${planePageState.isFullWidth ? "max-w-none w-full" : "max-w-3xl mx-auto"} mb-6 pb-3 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-400">
+              <div class="flex items-center gap-3">
+                <span>Words: <strong id="article-meta-words" class="text-zinc-200">${activeDocMeta.wordCount || 0}</strong></span>
+                <span>Rules BR: <strong id="article-meta-br" class="text-amber-400">${activeDocMeta.ruleCount || 0}</strong></span>
+                <span>Reqs RF: <strong id="article-meta-rf" class="text-emerald-400">${activeDocMeta.reqCount || 0}</strong></span>
+              </div>
+              <span class="text-zinc-500">Smart Chips Active (INT-* / BR-* / RF-*)</span>
+            </div>
+
+            <article id="doc-active-body" class="prose dark:prose-invert ${planePageState.isFullWidth ? "max-w-none w-full" : "max-w-3xl mx-auto"} text-zinc-200 leading-relaxed text-sm">
               ${enrichMarkdownWithSmartChips(renderMarkdown2(activeDocContent), features)}
             </article>
           </div>
 
-          <!-- Barra Lateral Derecha: Inspector Plane de 4 Pesta\xF1as (Outline, Info, Assets, Historial) + TOC Can\xF3nico -->
-          <div id="doc-reader-right-col" class="${planePageState.showNavigationPane === false ? "hidden" : "hidden lg:block lg:col-span-4"} sticky top-36 space-y-4">
-            <div id="article-plane-inspector-container" class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md">
+          <!-- Right Docked Plane PageNavigationPane (4 Tabs: Outline, Info, Assets, Historial) -->
+          <div id="doc-reader-right-col" class="${planePageState.showNavigationPane === false ? "hidden" : "w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-zinc-800 bg-zinc-950 shrink-0 flex flex-col"}">
+            <div id="article-plane-inspector-container" class="flex-1 flex flex-col">
               ${PageNavigationPane({
-      page: planePages.find((p) => (p.file_path || "").endsWith(activeDocKey)) || planePages[0] || {
-        id: `page-kb-${activeDocKey.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
-        title: activeDocMeta.title || activeDocKey,
-        file_path: `knowledge/${activeDocKey}`,
-        word_count: activeDocMeta.wordCount || 450,
-        reading_time_min: activeDocMeta.readingTime || 3,
-        is_locked: 1,
-        is_favorite: activeDocKey === "c4-model.md" ? 1 : 0
-      },
+      page: findPlanePage(activeDocKey, activeDocMeta),
       content: activeDocContent,
       toc: activeDocToc,
       activeTab: planePageState.activeNavTab || "outline",
@@ -5872,368 +5975,143 @@
     })}
             </div>
 
-            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 p-4 backdrop-blur-md">
-              <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
-                ${Icons.fileText} <span>En esta p\xE1gina</span>
+            <!-- Canonical TOC Container for direct DOM lookup -->
+            <div class="px-4 py-3 border-t border-zinc-800/80 bg-zinc-950/90">
+              <div class="text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-500 pb-1.5 flex items-center gap-1.5">
+                ${Icons.fileText("w-3 h-3")} <span>On this page</span>
               </div>
-              <div id="doc-active-toc" class="max-h-[260px] overflow-y-auto pr-1">
+              <div id="doc-active-toc" class="max-h-40 overflow-y-auto pr-1">
                 ${renderTableOfContentsHtml(activeDocToc)}
-              </div>
-            </div>
-
-            <!-- Meta Box -->
-            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-[11px] font-mono text-slate-500 space-y-1.5">
-              <div class="flex items-center justify-between">
-                <span>Palabras:</span>
-                <strong id="article-meta-words" class="text-slate-800 dark:text-slate-200">${activeDocMeta.wordCount || 0}</strong>
-              </div>
-              <div class="flex items-center justify-between">
-                <span>Invariantes BR:</span>
-                <strong id="article-meta-br" class="text-amber-600 dark:text-amber-400">${activeDocMeta.ruleCount || 0}</strong>
-              </div>
-              <div class="flex items-center justify-between">
-                <span>Requerimientos RF:</span>
-                <strong id="article-meta-rf" class="text-emerald-600 dark:text-emerald-400">${activeDocMeta.reqCount || 0}</strong>
               </div>
             </div>
           </div>
 
         </div>
 
-        <!-- 2.3 MODO EDITOR DUAL (Markdown vs Bloques Visuales con Scroll Sincronizado) -->
-        <div id="doc-editor-view-container" class="hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-6 sm:p-8 shadow-sm space-y-6">
-          
-          <!-- Barra de Control del Editor Dual -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <!-- 2.3 Plane Dual Editor Mode (Markdown + Live Preview / Visual Blocks) -->
+        <div id="doc-editor-view-container" class="hidden flex-1 flex flex-col bg-zinc-950 p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-zinc-800">
             <div class="flex items-center gap-2">
-              <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
-                <button type="button" 
-                        id="btn-editor-mode-md" 
-                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">
+              <div class="flex items-center bg-zinc-900 rounded-lg p-0.5 border border-zinc-800">
+                <button
+                  type="button"
+                  id="btn-editor-mode-md"
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-semibold bg-indigo-600 text-white cursor-pointer transition-all"
+                >
                   ${Icons.code("w-3.5 h-3.5")} <span>Modo Markdown</span>
                 </button>
-                <button type="button" 
-                        id="btn-editor-mode-blocks" 
-                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all">
+                <button
+                  type="button"
+                  id="btn-editor-mode-blocks"
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-medium text-zinc-400 hover:text-zinc-100 cursor-pointer transition-all"
+                >
                   ${Icons.grid("w-3.5 h-3.5")} <span>Modo Bloques Visuales</span>
                 </button>
               </div>
-
-              <span id="editor-sync-indicator" class="text-xs text-slate-500 font-mono hidden sm:inline">
-                Sincronizaci\xF3n activa (Docs-as-Code)
+              <span id="editor-sync-indicator" class="text-xs text-zinc-500 font-mono hidden sm:inline">
+                Sincronizaci\xF3n activa (SQLite + .md)
               </span>
             </div>
 
-            <!-- Botones Guardar / Cancelar -->
             <div class="flex items-center gap-2">
-              <button type="button" 
-                      id="btn-cancel-doc-edit" 
-                      class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+              <button
+                type="button"
+                id="btn-cancel-doc-edit"
+                class="h-7 px-3 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer"
+              >
                 Cancelar
               </button>
-              <button type="button" 
-                      id="btn-save-doc-edit" 
-                      class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-1.5">
-                ${Icons.save} <span>Guardar Cambios</span>
+              <button
+                type="button"
+                id="btn-save-doc-edit"
+                class="h-7 px-3.5 rounded-md text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                ${Icons.save("w-3.5 h-3.5")} <span>Guardar Cambios</span>
               </button>
             </div>
           </div>
 
-          <!-- PANEL 1: MODO MARKDOWN CON SCROLL SINCRONIZADO -->
-          <div id="editor-pane-markdown" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            <div class="space-y-2">
-              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
-                <span>C\xF3digo Fuente Markdown (.md)</span>
-                <span>Atajos: Alertas GitHub, Tablas, Mermaid</span>
+          <!-- Markdown Split Editor -->
+          <div id="editor-pane-markdown" class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
+            <div class="flex flex-col space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400 px-1">
+                <span>Markdown Source (.md)</span>
+                <span>GitHub Alerts, Tables, Mermaid</span>
               </div>
-              <textarea id="doc-editor-textarea" 
-                        rows="24" 
-                        class="w-full p-4 font-mono text-xs rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed h-[560px] overflow-y-auto">${escapeHtml3(activeDocContent)}</textarea>
+              <textarea
+                id="doc-editor-textarea"
+                rows="24"
+                class="w-full p-4 font-mono text-xs rounded-lg border border-zinc-800 bg-zinc-900/70 text-zinc-100 resize-none focus:outline-none focus:border-indigo-500 leading-relaxed h-[560px] overflow-y-auto"
+              >${escapeHtml3(activeDocContent)}</textarea>
             </div>
 
-            <div class="space-y-2">
-              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
-                <span>Previsualizaci\xF3n Renderizada en Vivo</span>
-                <span class="text-emerald-500 font-semibold">\u25CF Scroll Sincronizado</span>
+            <div class="flex flex-col space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400 px-1">
+                <span>Live Preview</span>
+                <span class="text-emerald-400">\u25CF Synchronized Scroll</span>
               </div>
-              <div id="doc-editor-live-preview" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 overflow-y-auto h-[560px] prose dark:prose-invert max-w-none text-xs">
+              <div id="doc-editor-live-preview" class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 overflow-y-auto h-[560px] prose dark:prose-invert max-w-none text-xs">
                 ${renderMarkdown2(activeDocContent)}
               </div>
             </div>
-
           </div>
 
-          <!-- PANEL 2: MODO BLOQUES VISUALES (ESTILO CONTEXTFORGE) -->
+          <!-- Visual Blocks Editor -->
           <div id="editor-pane-blocks" class="hidden space-y-4">
-            
-            <!-- Barra para Agregar Bloques Nuevos -->
-            <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono">
-              <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                ${Icons.grid} <span>A\xF1adir Bloque Visual:</span>
+            <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono">
+              <span class="font-semibold text-zinc-300 flex items-center gap-1.5">
+                ${Icons.grid("w-3.5 h-3.5")} <span>Add Block:</span>
               </span>
               <div class="flex flex-wrap items-center gap-1.5">
-                <button type="button" data-add-block="header" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
-                  ${Icons.plus("w-3 h-3")} <span>Encabezado</span>
-                </button>
-                <button type="button" data-add-block="paragraph" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer font-semibold">
-                  ${Icons.plus("w-3 h-3")} <span>P\xE1rrafo</span>
-                </button>
-                <button type="button" data-add-block="business_rule" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:text-amber-600 transition-all cursor-pointer font-semibold">
-                  ${Icons.plus("w-3 h-3")} <span>Regla BR</span>
-                </button>
-                <button type="button" data-add-block="callout" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition-all cursor-pointer font-semibold">
-                  ${Icons.plus("w-3 h-3")} <span>Alerta/Callout</span>
-                </button>
-                <button type="button" data-add-block="code" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:text-purple-600 transition-all cursor-pointer font-semibold">
-                  ${Icons.plus("w-3 h-3")} <span>Diagrama/C\xF3digo</span>
-                </button>
-                <button type="button" data-add-block="divider" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-all cursor-pointer font-semibold">
-                  ${Icons.plus("w-3 h-3")} <span>Separador</span>
-                </button>
+                <button type="button" data-add-block="header" class="h-6 px-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-indigo-500 text-zinc-200 cursor-pointer">Header</button>
+                <button type="button" data-add-block="paragraph" class="h-6 px-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-indigo-500 text-zinc-200 cursor-pointer">Paragraph</button>
+                <button type="button" data-add-block="business_rule" class="h-6 px-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-amber-500 text-zinc-200 cursor-pointer">Rule BR</button>
+                <button type="button" data-add-block="callout" class="h-6 px-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-cyan-500 text-zinc-200 cursor-pointer">Callout</button>
+                <button type="button" data-add-block="code" class="h-6 px-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-purple-500 text-zinc-200 cursor-pointer">Mermaid / Code</button>
               </div>
             </div>
-
-            <!-- Lista de Bloques Visuales Editables -->
-            <div id="doc-editor-blocks-container" class="space-y-4 max-h-[580px] overflow-y-auto pr-1">
-              <!-- Renderizado din\xE1micamente con parseMarkdownToBlocks -->
-            </div>
-
+            <div id="doc-editor-blocks-container" class="space-y-3 max-h-[560px] overflow-y-auto pr-1"></div>
           </div>
-
         </div>
 
       </div>
 
       <!-- ============================================================== -->
-      <!-- 3. CAT\xC1LOGO DIN\xC1MICO DE REGLAS DE NEGOCIO (INVARIANTES BR-*)   -->
+      <!-- MODAL: CREAR NUEVA P\xC1GINA EN LIBRARY                           -->
       <!-- ============================================================== -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                ${Icons.scale}
-              </span>
-              <span>Cat\xE1logo de Reglas de Negocio (Invariantes de Dominio)</span>
+      <div id="new-doc-modal" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h3 class="text-xs font-bold text-zinc-100 flex items-center gap-2">
+              ${Icons.page("w-4 h-4 text-indigo-400")} <span>Create New Library Page (.md + SQLite)</span>
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Invariantes de estricto cumplimiento para evitar alucinaciones, fallos contables y vulnerabilidades
-            </p>
-          </div>
-
-          <!-- Selector de Filtro de M\xF3dulo Din\xE1mico -->
-          <div class="flex items-center gap-2 text-xs">
-            <span class="text-slate-400 font-mono text-[11px]">Filtrar por M\xF3dulo:</span>
-            <select id="kb-rules-module-filter" 
-                    class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500">
-              <option value="">Todos los M\xF3dulos (${rules.length})</option>
-              ${moduleNames.map((m) => `
-                <option value="${escapeAttr2(m)}">${m}</option>
-              `).join("")}
-            </select>
-          </div>
-        </div>
-
-        ${rules.length > 0 ? `
-          <div class="space-y-3" id="kb-rules-list">
-            ${rules.map((rule) => {
-      const isCritical = rule.severity === "Cr\xEDtica" || rule.severity === "Critica" || rule.severity === "Alta";
-      const sevBadge = isCritical ? "bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800" : "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
-      return `
-                <div data-rule-module="${escapeAttr2(rule.module || "general")}" 
-                     class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all space-y-2">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                      <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/60">
-                        ${rule.id}
-                      </span>
-                      <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
-                        [${rule.module || "general"}]
-                      </span>
-                      <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">
-                        ${escapeHtml3(rule.title)}
-                      </h4>
-                    </div>
-                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${sevBadge}">
-                      ${rule.severity || "Normal"}
-                    </span>
-                  </div>
-                  <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-1">
-                    ${escapeHtml3(rule.description)}
-                  </p>
-                </div>
-              `;
-    }).join("")}
-          </div>
-        ` : `
-          <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
-              ${Icons.scale("w-5 h-5")}
-            </div>
-            <div class="text-sm font-bold text-slate-700 dark:text-slate-300">No hay reglas de negocio registradas a\xFAn</div>
-            <p class="text-xs text-slate-500 max-w-md mx-auto">
-              Ejecuta la skill <code class="font-mono text-indigo-500">/project-knowledge</code> para extraer autom\xE1ticamente las reglas e invariantes de tu proyecto.
-            </p>
-          </div>
-        `}
-      </section>
-
-      <!-- ============================================================== -->
-      <!-- 4. MATRIZ DE SERVICIOS EXTERNOS & CONTRATOS                   -->
-      <!-- ============================================================== -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="mb-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
-              ${Icons.server}
-            </span>
-            <span>Matriz de Servicios Externos & Protocolos</span>
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Contratos, protocolos de red, esquemas de autenticaci\xF3n y pol\xEDticas de contingencia
-          </p>
-        </div>
-
-        ${services.length > 0 ? `
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            ${services.map((svc) => `
-              <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-2.5">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml3(svc.name)}</span>
-                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 dark:cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold">
-                    ${escapeHtml3(svc.type)}
-                  </span>
-                </div>
-                <div class="space-y-1 text-[11px] font-mono">
-                  <div class="text-slate-500 dark:text-slate-400">
-                    Protocolo: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml3(svc.protocol)}</span>
-                  </div>
-                  <div class="text-slate-500 dark:text-slate-400">
-                    Autenticaci\xF3n: <span class="text-slate-800 dark:text-slate-200 font-semibold">${escapeHtml3(svc.auth)}</span>
-                  </div>
-                  <div class="text-slate-500 dark:text-slate-400">
-                    Variable: <code class="text-indigo-600 dark:text-indigo-400">${escapeHtml3(svc.env_var)}</code>
-                  </div>
-                </div>
-                <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[10px] text-slate-600 dark:text-slate-400">
-                  <strong class="text-slate-700 dark:text-slate-300">Failover:</strong> ${escapeHtml3(svc.failover)}
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        ` : `
-          <div class="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <div class="w-10 h-10 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
-              ${Icons.network("w-5 h-5")}
-            </div>
-            <div class="text-sm font-bold text-slate-700 dark:text-slate-300">Sin integraciones externas documentadas</div>
-            <p class="text-xs text-slate-500 max-w-md mx-auto">
-              Si tu sistema consume APIs externas, bases de datos o brokers de mensajer\xEDa, documenta sus contratos para auditar su contingencia.
-            </p>
-          </div>
-        `}
-      </section>
-
-      <!-- ============================================================== -->
-      <!-- 5. GUARDRAILS ANTI-SESGO & DIRECTRICES DE C\xD3DIGO               -->
-      <!-- ============================================================== -->
-      <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-sm">
-        <div class="mb-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-              ${Icons.code}
-            </span>
-            <span>Directrices Anti-Sesgo & Convenciones de Ingenier\xEDa</span>
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Reglas de oro para asegurar que agentes de IA y desarrolladores respeten la arquitectura del proyecto
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Guardrails Anti-Alucinaci\xF3n -->
-          <div class="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/15 space-y-3">
-            <h4 class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              ${Icons.shield} <span>Guardrails de No-Alucinaci\xF3n (Inviolables)</span>
-            </h4>
-            <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
-              ${(guardrails.length > 0 ? guardrails : [
-      "Prohibido instalar paquetes o bibliotecas redundantes no can\xF3nicas.",
-      "Toda regla de negocio BR-* debe implementarse con tests automatizados.",
-      "Inversi\xF3n de dependencias obligatoria en controladores y servicios."
-    ]).map((g) => `
-                <li class="flex items-start gap-2">
-                  <span class="text-rose-500 font-bold shrink-0 mt-0.5">&times;</span>
-                  <span>${escapeHtml3(g)}</span>
-                </li>
-              `).join("")}
-            </ul>
-          </div>
-
-          <!-- Convenciones de Nomenclatura -->
-          <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 space-y-3">
-            <h4 class="text-xs font-bold font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              ${Icons.tag} <span>Convenciones de Nomenclatura & Control de Versiones</span>
-            </h4>
-            <div class="space-y-2 text-xs font-mono">
-              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span class="text-slate-400">Archivos:</span>
-                <span class="text-slate-800 dark:text-slate-200 font-semibold">${naming.files || "kebab-case"}</span>
-              </div>
-              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span class="text-slate-400">Clases / Tipos:</span>
-                <span class="text-slate-800 dark:text-slate-200 font-semibold">${naming.classes || "PascalCase"}</span>
-              </div>
-              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span class="text-slate-400">Ramas Git:</span>
-                <code class="text-indigo-600 dark:text-indigo-400 font-bold">{type}/INT-{id}/{name} (\u226480c)</code>
-              </div>
-              <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span class="text-slate-400">Commits:</span>
-                <code class="text-indigo-600 dark:text-indigo-400 font-bold">feat(scope): desc / fix(...)</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============================================================== -->
-      <!-- MODAL: CREAR NUEVO DOCUMENTO                                   -->
-      <!-- ============================================================== -->
-      <div id="new-doc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              ${Icons.fileText} <span>Crear Nuevo Documento T\xE9cnico</span>
-            </h3>
-            <button type="button" data-action="close-new-doc-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+            <button type="button" data-action="close-new-doc-modal" class="w-6 h-6 rounded bg-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center justify-center cursor-pointer">
               ${Icons.close("w-3.5 h-3.5")}
             </button>
           </div>
-          
+
           <form id="new-doc-form" class="space-y-3 text-xs">
             <div>
-              <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">M\xF3dulo o Categor\xEDa:</label>
-              <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>
+              <input type="text" id="new-doc-module" placeholder="general, backend, billing, infra..." value="general" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none" required />
             </div>
 
             <div>
-              <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">Nombre del Archivo (.md):</label>
-              <input type="text" id="new-doc-filename" placeholder="mi-especificacion.md" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" required />
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Filename (.md):</label>
+              <input type="text" id="new-doc-filename" placeholder="my-specification.md" class="w-full px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-indigo-500 focus:outline-none" required />
             </div>
 
             <div>
-              <label class="block font-mono text-[11px] text-slate-500 dark:text-slate-400 mb-1">Contenido Markdown Inicial:</label>
-              <textarea id="new-doc-content" rows="8" placeholder="# T\xEDtulo del Documento&#10;&#10;Descripci\xF3n y requerimientos..." class="w-full p-3 font-mono text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 resize-none focus:ring-1 focus:ring-indigo-500 focus:outline-none" required></textarea>
+              <label class="block font-mono text-[11px] text-zinc-400 mb-1">Initial Markdown Content:</label>
+              <textarea id="new-doc-content" rows="8" placeholder="# Page Title&#10;&#10;Specification and requirements..." class="w-full p-3 font-mono text-xs rounded-md bg-zinc-950 border border-zinc-800 text-zinc-200 resize-none focus:border-indigo-500 focus:outline-none" required></textarea>
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-2">
-              <button type="button" data-action="close-new-doc-modal" class="px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold cursor-pointer">
-                Cancelar
+              <button type="button" data-action="close-new-doc-modal" class="h-7 px-3 rounded-md text-zinc-400 hover:bg-zinc-800 font-medium cursor-pointer">
+                Cancel
               </button>
-              <button type="submit" class="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md transition-colors cursor-pointer">
-                Crear Documento
+              <button type="submit" class="h-7 px-3.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors cursor-pointer">
+                Create Page
               </button>
             </div>
           </form>
@@ -6243,27 +6121,29 @@
       <!-- ============================================================== -->
       <!-- MODAL: PROMPT BUNDLER DIN\xC1MICO PARA IA (SYSTEM PROMPT)          -->
       <!-- ============================================================== -->
-      <div id="ai-context-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              ${Icons.bot} <span>Contexto Can\xF3nico para alimentar a la IA (System Prompt)</span>
+      <div id="ai-context-modal" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h3 class="text-xs font-bold text-zinc-100 flex items-center gap-2">
+              ${Icons.sparkles("w-4 h-4 text-indigo-400")} <span>Canonical AI System Prompt (Zero-Bias Context)</span>
             </h3>
-            <button type="button" data-action="close-ai-context-modal" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+            <button type="button" data-action="close-ai-context-modal" class="w-6 h-6 rounded bg-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center justify-center cursor-pointer">
               ${Icons.close("w-3.5 h-3.5")}
             </button>
           </div>
-          <p class="text-xs text-slate-600 dark:text-slate-400">
-            Copia estas instrucciones generadas en vivo desde los metadatos reales del arn\xE9s para inicializar cualquier modelo (Claude, Gemini, ChatGPT, Codex) sin sesgo:
+          <p class="text-xs text-zinc-400">
+            Copy this live-generated context from the harness SQLite + Markdown Library to initialize any LLM agent without bias:
           </p>
           <div class="relative">
-            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 resize-none focus:outline-none leading-relaxed">${escapeHtml3(dynamicAiPrompt)}</textarea>
+            <textarea id="ai-context-prompt-text" readonly rows="13" class="w-full p-3.5 font-mono text-[11px] rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-200 resize-none focus:outline-none leading-relaxed">${escapeHtml3(dynamicAiPrompt)}</textarea>
           </div>
-          <div class="flex items-center justify-end gap-3 pt-2">
-            <button type="button" 
-                    id="copy-context-btn" 
-                    class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-colors cursor-pointer">
-              Copiar al Portapapeles
+          <div class="flex items-center justify-end gap-3 pt-1">
+            <button
+              type="button"
+              id="copy-context-btn"
+              class="h-7 px-3.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors cursor-pointer"
+            >
+              Copy to Clipboard
             </button>
           </div>
         </div>
@@ -6272,19 +6152,18 @@
       <!-- ============================================================== -->
       <!-- MODAL: EXPANDIR DIAGRAMAS A PANTALLA COMPLETA                   -->
       <!-- ============================================================== -->
-      <div id="diagram-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
-        <div class="w-full max-w-6xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div id="diagram-modal" class="fixed inset-0 z-50 bg-zinc-950/85 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="w-full max-w-6xl max-h-[92vh] bg-zinc-900 rounded-xl border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
+          <div class="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="text-indigo-600 dark:text-indigo-400">${Icons.architecture}</span>
-              <h3 id="diagram-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Diagrama Ampliado</h3>
+              <span class="text-indigo-400">${Icons.architecture("w-4 h-4")}</span>
+              <h3 id="diagram-modal-title" class="font-bold text-xs text-zinc-100">Expanded Diagram</h3>
             </div>
-            <button type="button" data-action="close-diagram-modal" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer">
+            <button type="button" data-action="close-diagram-modal" class="w-6 h-6 rounded bg-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center justify-center cursor-pointer">
               ${Icons.close("w-3.5 h-3.5")}
             </button>
           </div>
-          <div id="diagram-modal-content" class="p-6 overflow-auto flex-1 flex justify-center items-center bg-slate-50 dark:bg-slate-950">
-          </div>
+          <div id="diagram-modal-content" class="p-6 overflow-auto flex-1 flex justify-center items-center bg-zinc-950"></div>
         </div>
       </div>
 
@@ -6311,13 +6190,13 @@
   }
   function renderTableOfContentsHtml(toc = []) {
     if (!toc || toc.length === 0) {
-      return `<div class="text-[11px] text-slate-400 italic py-2">Sin encabezados en este documento.</div>`;
+      return `<div class="text-[11px] text-zinc-500 italic py-1">No headings in this page.</div>`;
     }
     return `
-    <nav class="space-y-1 text-xs font-mono">
+    <nav class="space-y-0.5 text-xs font-mono">
       ${toc.map((item) => `
-        <a href="#${item.id}" 
-           class="block py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate text-slate-600 dark:text-slate-400 ${item.level === 1 ? "font-bold text-slate-900 dark:text-slate-100" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
+        <a href="#${item.id}"
+           class="block py-1 px-2 rounded hover:bg-zinc-900 hover:text-indigo-300 transition-colors truncate text-zinc-400 ${item.level === 1 ? "font-bold text-zinc-200" : item.level === 2 ? "pl-3" : "pl-5 text-[11px]"}"
            title="${escapeAttr2(item.text)}">
           ${escapeHtml3(item.text)}
         </a>
@@ -9298,16 +9177,16 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         return true;
       });
       const viewTitles = {
-        issues: "Tareas (Work Items)",
-        cycles: "Ciclos de Desarrollo (Sprints)",
-        modules: "M\xF3dulos de Arquitectura (Epics)",
-        pages: "P\xE1ginas & Base de Conocimiento (Docs / IA)",
-        architecture: "Arquitectura C4 & Stack Tecnol\xF3gico",
-        graph: "Grafo & \xC1rbol de Dependencias",
-        tree: "\xC1rbol Jer\xE1rquico de Requerimientos",
-        constellation: "Constelaci\xF3n Piramidal 3D",
-        analytics: "Anal\xEDtica, Velocidad & Rendimiento",
-        harness: "Orquestaci\xF3n de Agentes & Gobernanza SDD"
+        issues: "Work items (Tareas)",
+        cycles: "Ciclos de Desarrollo (Cycles)",
+        modules: "Modules (Epics)",
+        pages: "Library \xB7 Base de Conocimiento (Docs / IA)",
+        architecture: "Architecture C4 & Tech Stack",
+        graph: "Views \xB7 Grafo de Dependencias",
+        tree: "Views \xB7 \xC1rbol Jer\xE1rquico",
+        constellation: "Views \xB7 Constelaci\xF3n 3D",
+        analytics: "Analytics & Velocity",
+        harness: "Intake & Orquestaci\xF3n de Agentes IA"
       };
       const viewTitle = viewTitles[currentView] || "Tareas";
       let mainContentHtml = "";
@@ -9353,7 +9232,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       `;
       } else if (currentView === "pages") {
         mainContentHtml = `
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+        <div class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-zinc-950">
           ${renderKnowledgeBase({
           knowledgeIndex: state.knowledgeIndex || planeData.knowledgeIndex,
           projectSpec: state.projectSpec || planeData.projectSpec,
@@ -9436,6 +9315,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           cycleCount: cycles.length,
           moduleCount: modules.length,
           pageCount: pages.length,
+          favoritePages: pages.filter((p) => p.is_favorite),
           isCollapsed: state.isSidebarCollapsed || false
         },
         topBarProps: {
@@ -9479,10 +9359,11 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           document.querySelectorAll(".kb-perspective-btn").forEach((btn) => {
             const isMatch = btn.getAttribute("data-kb-perspective") === this.activeKbPerspective;
             btn.classList.toggle("active", isMatch);
-            btn.classList.toggle("bg-indigo-600", isMatch);
-            btn.classList.toggle("text-white", isMatch);
-            btn.classList.toggle("font-bold", isMatch);
-            btn.classList.toggle("shadow-xs", isMatch);
+            btn.classList.toggle("border-indigo-500", isMatch);
+            btn.classList.toggle("text-zinc-100", isMatch);
+            btn.classList.toggle("font-semibold", isMatch);
+            btn.classList.toggle("border-transparent", !isMatch);
+            btn.classList.toggle("text-zinc-400", !isMatch);
           });
           document.querySelectorAll(".kb-perspective-panel").forEach((panel) => {
             panel.classList.add("hidden");
@@ -9728,11 +9609,11 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         if (shelfPill) {
           const targetShelf = shelfPill.getAttribute("data-shelf-filter");
           document.querySelectorAll(".kb-shelf-pill").forEach((p) => {
-            p.classList.remove("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
-            p.classList.add("bg-slate-100", "dark:bg-slate-800", "text-slate-600", "dark:text-slate-400");
+            p.classList.remove("active", "bg-indigo-600", "text-white", "font-semibold");
+            p.classList.add("bg-zinc-900", "text-zinc-400");
           });
-          shelfPill.classList.add("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
-          shelfPill.classList.remove("bg-slate-100", "dark:bg-slate-800", "text-slate-600", "dark:text-slate-400");
+          shelfPill.classList.add("active", "bg-indigo-600", "text-white", "font-semibold");
+          shelfPill.classList.remove("bg-zinc-900", "text-zinc-400");
           document.querySelectorAll(".kb-shelf-section").forEach((sec) => {
             const sId = sec.getAttribute("data-shelf-id");
             if (!targetShelf || sId === targetShelf) {
@@ -9743,16 +9624,45 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           });
           return;
         }
+        const modTabBtn = e.target.closest("[data-module-tab]");
+        if (modTabBtn) {
+          const targetMod = modTabBtn.getAttribute("data-module-tab");
+          document.querySelectorAll(".kb-module-tab-btn").forEach((b) => {
+            const isMatch = b.getAttribute("data-module-tab") === targetMod;
+            b.classList.toggle("active", isMatch);
+            b.classList.toggle("bg-indigo-600", isMatch);
+            b.classList.toggle("text-white", isMatch);
+            b.classList.toggle("font-semibold", isMatch);
+            b.classList.toggle("bg-zinc-900", !isMatch);
+            b.classList.toggle("text-zinc-400", !isMatch);
+          });
+          document.querySelectorAll(".kb-module-content-panel").forEach((panel) => {
+            panel.classList.toggle("hidden", panel.id !== `kb-module-content-${targetMod}`);
+          });
+          return;
+        }
+        const favSidebarBtn = e.target.closest('[data-action="sidebar-open-favorite-page"]');
+        if (favSidebarBtn) {
+          const docKey = favSidebarBtn.getAttribute("data-doc-key") || "c4-model.md";
+          this.currentActiveDocKey = docKey;
+          this.isArticleOpen = true;
+          if (store.getState().planeView !== "pages") {
+            router.navigate("pages");
+          } else {
+            this.openArticleView(docKey, false);
+          }
+          return;
+        }
         const perspectiveBtn = e.target.closest("[data-kb-perspective]");
         if (perspectiveBtn) {
           const targetPersp = perspectiveBtn.getAttribute("data-kb-perspective");
           this.activeKbPerspective = targetPersp || "global";
           document.querySelectorAll(".kb-perspective-btn").forEach((btn) => {
-            btn.classList.remove("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
-            btn.classList.add("text-slate-600", "dark:text-slate-400", "font-medium");
+            btn.classList.remove("active", "border-indigo-500", "text-zinc-100", "font-semibold");
+            btn.classList.add("border-transparent", "text-zinc-400", "font-medium");
           });
-          perspectiveBtn.classList.add("active", "bg-indigo-600", "text-white", "font-bold", "shadow-xs");
-          perspectiveBtn.classList.remove("text-slate-600", "dark:text-slate-400", "font-medium");
+          perspectiveBtn.classList.add("active", "border-indigo-500", "text-zinc-100", "font-semibold");
+          perspectiveBtn.classList.remove("border-transparent", "text-zinc-400", "font-medium");
           document.querySelectorAll(".kb-perspective-panel").forEach((panel) => {
             panel.classList.add("hidden");
           });
@@ -9914,7 +9824,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           store.toggleTheme();
           return;
         }
-        if (e.target.closest("#plane-omnibox-trigger") || e.target.closest('[data-action="open-omnibox"]')) {
+        if (e.target.closest("#plane-omnibox-trigger") || e.target.closest("#sidebar-omnibox-trigger") || e.target.closest('[data-action="open-omnibox"]')) {
           store.setState({ isOmniboxOpen: true, omniboxQuery: "" });
           return;
         }
@@ -9942,6 +9852,38 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           router.navigate("pages");
           return;
         }
+        if (e.target.closest('[data-action="open-new-doc-modal"]')) {
+          const modal = document.getElementById("new-doc-modal");
+          if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+          }
+          return;
+        }
+        if (e.target.closest('[data-action="close-new-doc-modal"]')) {
+          const modal = document.getElementById("new-doc-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          return;
+        }
+        if (e.target.closest('[data-action="open-ai-context-modal"]')) {
+          const modal = document.getElementById("ai-context-modal");
+          if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+          }
+          return;
+        }
+        if (e.target.closest('[data-action="close-ai-context-modal"]')) {
+          const modal = document.getElementById("ai-context-modal");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          return;
+        }
       });
       document.addEventListener("input", (e) => {
         if (e.target.id === "plane-issue-search") {
@@ -9949,6 +9891,17 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
           this.searchDebounceTimer = setTimeout(() => {
             store.setState({ planeSearchQuery: e.target.value });
           }, 150);
+          return;
+        }
+        if (e.target.id === "kb-library-search-input") {
+          const q = (e.target.value || "").trim().toLowerCase();
+          document.querySelectorAll("#kb-shelves-container .kb-shelf-doc-card").forEach((row) => {
+            const title = (row.getAttribute("data-doc-title") || "").toLowerCase();
+            const key = (row.getAttribute("data-doc-key") || "").toLowerCase();
+            const mod = (row.getAttribute("data-doc-module") || "").toLowerCase();
+            const match = !q || title.includes(q) || key.includes(q) || mod.includes(q);
+            row.classList.toggle("hidden", !match);
+          });
           return;
         }
         if (e.target.id === "plane-page-search" || e.target.id === "plane-pages-search") {
@@ -9981,6 +9934,14 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         }
         if (e.target.id === "plane-group-by") {
           store.setState({ planeGroupBy: e.target.value });
+          return;
+        }
+        if (e.target.id === "kb-rules-module-filter") {
+          const mod = (e.target.value || "").trim();
+          document.querySelectorAll("#kb-rules-list [data-rule-module]").forEach((row) => {
+            const rMod = row.getAttribute("data-rule-module") || "";
+            row.classList.toggle("hidden", Boolean(mod && rMod !== mod));
+          });
           return;
         }
         if (e.target.id === "modal-state-select") {
