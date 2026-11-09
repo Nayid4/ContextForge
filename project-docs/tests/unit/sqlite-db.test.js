@@ -299,17 +299,34 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
 
       // Auto-paternidad prohibida
       assert.throws(() => {
-        movePageInSQLite(db, 'p-parent', 'engineering', 'p-parent');
+        movePageInSQLite(db, 'p-parent', 'engineering', 'p-parent', { actor: { id: 'user-human-lead' } });
       }, /BR-PAGE-08 Violation: A page cannot be its own parent/);
 
+      // Actor obligatorio en operaciones de ciclo de vida
+      assert.throws(() => {
+        movePageInSQLite(db, 'p-child', 'engineering', 'p-parent');
+      }, /BR-PAGE-02 Violation: Actor required for operation/);
+      assert.throws(() => {
+        archivePageCascadeInSQLite(db, 'p-parent');
+      }, /BR-PAGE-02 Violation: Actor required for operation/);
+      assert.throws(() => {
+        restorePageVersionInSQLite(db, 'p-parent', 1);
+      }, /BR-PAGE-02 Violation: Actor required for operation/);
+      assert.throws(() => {
+        unlockPageInSQLite(db, 'p-parent');
+      }, /BR-PAGE-02 Violation: Actor required for operation/);
+      assert.throws(() => {
+        lockPageInSQLite(db, 'p-parent');
+      }, /BR-PAGE-02 Violation: Actor required for operation/);
+
       // Establecer hijo válido
-      movePageInSQLite(db, 'p-child', 'engineering', 'p-parent');
+      movePageInSQLite(db, 'p-child', 'engineering', 'p-parent', { actor: { id: 'user-human-lead' } });
       const child = db.prepare('SELECT * FROM pages WHERE id = ?').get('p-child');
       assert.strictEqual(child.parent_id, 'p-parent');
 
       // Intento de ciclo: hacer a p-parent hijo de p-child
       assert.throws(() => {
-        movePageInSQLite(db, 'p-parent', 'engineering', 'p-child');
+        movePageInSQLite(db, 'p-parent', 'engineering', 'p-child', { actor: { id: 'user-human-lead' } });
       }, /BR-PAGE-08 Violation: Cyclic hierarchy detected/);
 
       // 3b. BR-PAGE-08: Límite de profundidad en el borde (depth 4 permitido, depth 5 rechazado)
@@ -322,19 +339,37 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
                ('p-d5', 'proj-harness', 'engineering', 'knowledge/d5.md', 'L5', 'standards', '# L5')
       `).run();
 
-      movePageInSQLite(db, 'p-d2', 'engineering', 'p-d1');
-      movePageInSQLite(db, 'p-d3', 'engineering', 'p-d2');
-      movePageInSQLite(db, 'p-d4', 'engineering', 'p-d3');
+      movePageInSQLite(db, 'p-d2', 'engineering', 'p-d1', { actor: { id: 'user-human-lead' } });
+      movePageInSQLite(db, 'p-d3', 'engineering', 'p-d2', { actor: { id: 'user-human-lead' } });
+      movePageInSQLite(db, 'p-d4', 'engineering', 'p-d3', { actor: { id: 'user-human-lead' } });
       const pageD4 = db.prepare('SELECT depth FROM pages WHERE id = ?').get('p-d4');
       assert.strictEqual(pageD4.depth, 4, 'Nivel 4 de anidación debe ser permitido');
 
       // Intentar mover p-d5 bajo p-d4 intentaría crear profundidad 5 (debe lanzar excepción)
       assert.throws(() => {
-        movePageInSQLite(db, 'p-d5', 'engineering', 'p-d4');
+        movePageInSQLite(db, 'p-d5', 'engineering', 'p-d4', { actor: { id: 'user-human-lead' } });
       }, /BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded/);
 
+      // 3c. Validación de altura de subárbol en movePageInSQLite
+      db.prepare(`
+        INSERT INTO pages (id, project_id, collection_id, file_path, title, shelf, content_markdown)
+        VALUES ('p-sub-root', 'proj-harness', 'engineering', 'tests-temp/sub1-unique.md', 'SubRoot', 'standards', '# SR'),
+               ('p-sub-leaf', 'proj-harness', 'engineering', 'tests-temp/sub2-unique.md', 'SubLeaf', 'standards', '# SL')
+      `).run();
+      movePageInSQLite(db, 'p-sub-leaf', 'engineering', 'p-sub-root', { actor: { id: 'user-human-lead' } });
+
+      // Mover p-sub-root bajo p-d3 (depth 3): profundidad resultante 3 + 2 = 5 > 4 (debe ser rechazado)
+      assert.throws(() => {
+        movePageInSQLite(db, 'p-sub-root', 'engineering', 'p-d3', { actor: { id: 'user-human-lead' } });
+      }, /BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded/);
+
+      // Mover p-sub-root bajo p-d2 (depth 2): profundidad resultante 2 + 2 = 4 <= 4 (permitido)
+      movePageInSQLite(db, 'p-sub-root', 'engineering', 'p-d2', { actor: { id: 'user-human-lead' } });
+      const subLeaf = db.prepare('SELECT depth FROM pages WHERE id = ?').get('p-sub-leaf');
+      assert.strictEqual(subLeaf.depth, 4, 'Hijo de subárbol debe tener profundidad recalculada a 4');
+
       // 4. BR-PAGE-09: Cascade Archive de jerarquía
-      archivePageCascadeInSQLite(db, 'p-parent');
+      archivePageCascadeInSQLite(db, 'p-parent', { actor: { id: 'user-human-lead' } });
       const archParent = db.prepare('SELECT archived_at, is_favorite FROM pages WHERE id = ?').get('p-parent');
       const archChild = db.prepare('SELECT archived_at, is_favorite FROM pages WHERE id = ?').get('p-child');
       assert.ok(archParent.archived_at);
@@ -349,7 +384,8 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
       assert.strictEqual(unarchParent.archived_at, null, 'El padre debe estar desarchivado');
       assert.ok(stillArchChild.archived_at, 'El hijo debe permanecer archivado cuando restoreSubtree=false');
 
-      // Desarchivar con restoreSubtree: true desarchiva la rama completa
+      // Desarchivar con restoreSubtree: true desarchiva la rama completa cuando fueron archivados juntos
+      db.prepare('UPDATE pages SET archived_at = NULL WHERE id = ?').run('p-child');
       archivePageCascadeInSQLite(db, 'p-parent', { actor: { id: 'user-human-lead' } });
       unarchivePageInSQLite(db, 'p-parent', { restoreSubtree: true, actor: { id: 'user-human-lead' } });
       const fullUnarchParent = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-parent');
@@ -357,20 +393,51 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
       assert.strictEqual(fullUnarchParent.archived_at, null);
       assert.strictEqual(fullUnarchChild.archived_at, null, 'El hijo debe desarchivarse cuando restoreSubtree=true');
 
+      // 4c. BR-PAGE-09: Cascade Archive omite hijos previamente archivados (preservando su timestamp original)
+      db.prepare(`
+        INSERT INTO pages (id, project_id, collection_id, file_path, title, shelf, content_markdown)
+        VALUES ('p-hier-parent', 'proj-harness', 'engineering', 'tests-temp/hp-unique.md', 'HP', 'standards', '# HP'),
+               ('p-hier-child-a', 'proj-harness', 'engineering', 'tests-temp/hca-unique.md', 'HCA', 'standards', '# HCA'),
+               ('p-hier-child-b', 'proj-harness', 'engineering', 'tests-temp/hcb-unique.md', 'HCB', 'standards', '# HCB')
+      `).run();
+      movePageInSQLite(db, 'p-hier-child-a', 'engineering', 'p-hier-parent', { actor: { id: 'user-human-lead' } });
+      movePageInSQLite(db, 'p-hier-child-b', 'engineering', 'p-hier-parent', { actor: { id: 'user-human-lead' } });
+
+      const earlyTimestamp = '2025-01-01T00:00:00.000Z';
+      db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0 WHERE id = ?').run(earlyTimestamp, 'p-hier-child-b');
+
+      archivePageCascadeInSQLite(db, 'p-hier-parent', { actor: { id: 'user-human-lead' } });
+      const parentArch = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-hier-parent');
+      const childAArch = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-hier-child-a');
+      const childBArch = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-hier-child-b');
+
+      assert.strictEqual(childAArch.archived_at, parentArch.archived_at, 'Hijo activo recibe el timestamp del padre');
+      assert.strictEqual(childBArch.archived_at, earlyTimestamp, 'Hijo previamente archivado preserva su timestamp original');
+
+      // Desarchivar con restoreSubtree: true restaura al padre y child-a, pero deja child-b archivado
+      unarchivePageInSQLite(db, 'p-hier-parent', { restoreSubtree: true, actor: { id: 'user-human-lead' } });
+      const parentRestored = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-hier-parent');
+      const childARestored = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-hier-child-a');
+      const childBStillArch = db.prepare('SELECT archived_at FROM pages WHERE id = ?').get('p-hier-child-b');
+
+      assert.strictEqual(parentRestored.archived_at, null);
+      assert.strictEqual(childARestored.archived_at, null, 'Hijo sincronizado se desarchiva');
+      assert.strictEqual(childBStillArch.archived_at, earlyTimestamp, 'Hijo previamente archivado permanece archivado');
+
       // 5. BR-PAGE-02 Guard: Restauración de Versiones rechazada en página archivada
-      archivePageCascadeInSQLite(db, 'p-parent');
+      archivePageCascadeInSQLite(db, 'p-parent', { actor: { id: 'user-human-lead' } });
       db.prepare(`
         INSERT INTO page_versions (id, page_id, version_number, content_markdown)
         VALUES ('pv-1', 'p-parent', 1, '# Versión Original')
       `).run();
 
       assert.throws(() => {
-        restorePageVersionInSQLite(db, 'p-parent', 1);
+        restorePageVersionInSQLite(db, 'p-parent', 1, { actor: { id: 'user-human-lead' } });
       }, /BR-PAGE-02 Violation: Cannot restore version on archived page/);
 
       // Tras desarchivar la página con unarchivePageInSQLite, se permite restaurar y genera snapshot previo
       unarchivePageInSQLite(db, 'p-parent', { restoreSubtree: false, actor: { id: 'user-human-lead' } });
-      const restored = restorePageVersionInSQLite(db, 'p-parent', 1);
+      const restored = restorePageVersionInSQLite(db, 'p-parent', 1, { actor: { id: 'user-human-lead' } });
       assert.strictEqual(restored.content_markdown, '# Versión Original');
 
       const versions = db.prepare('SELECT * FROM page_versions WHERE page_id = ? ORDER BY version_number ASC').all('p-parent');
@@ -551,8 +618,8 @@ Contenido inicial de prueba.
       assert.strictEqual(initialRow.is_locked, 0);
 
       // 2. Mutar propiedades en SQLite (Mover de colección y bloquear)
-      movePageInSQLite(db, 'page-knowledge_test-roundtrip-safe_md', 'product');
-      lockPageInSQLite(db, 'page-knowledge_test-roundtrip-safe_md', { actorRole: 'lead-architect', reason: 'Prueba roundtrip' });
+      movePageInSQLite(db, 'page-knowledge_test-roundtrip-safe_md', 'product', null, { actor: { id: 'user-human-lead' } });
+      lockPageInSQLite(db, 'page-knowledge_test-roundtrip-safe_md', { actor: { id: 'user-human-lead' }, reason: 'Prueba roundtrip' });
 
       // 3. Comprobar que el archivo en disco fue reescrito de forma síncrona
       const diskContent = fs.readFileSync(testMdPath, 'utf8');
@@ -691,6 +758,10 @@ Contenido inicial de prueba.
     const tempTestDir = path.resolve(__dirname, '../../test');
     if (fs.existsSync(tempTestDir)) {
       fs.rmSync(tempTestDir, { recursive: true, force: true });
+    }
+    const tempTestsDir = path.resolve(__dirname, '../../tests-temp');
+    if (fs.existsSync(tempTestsDir)) {
+      fs.rmSync(tempTestsDir, { recursive: true, force: true });
     }
   });
 

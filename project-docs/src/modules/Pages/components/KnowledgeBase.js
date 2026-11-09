@@ -332,11 +332,11 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               </div>
               <div class="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 shadow-2xs">
                 <div class="text-xs font-medium text-gray-500 dark:text-zinc-400">Invariantes de Negocio</div>
-                <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">${rules.length || 11} BR</div>
+                <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">${rules.length} BR</div>
               </div>
               <div class="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 shadow-2xs">
                 <div class="text-xs font-medium text-gray-500 dark:text-zinc-400">Servicios e Integraciones</div>
-                <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">${services.length || 4} API</div>
+                <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">${services.length} API</div>
               </div>
             </div>
 

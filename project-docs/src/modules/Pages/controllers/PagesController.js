@@ -145,14 +145,17 @@ export class PagesController {
     const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
     if (openNewDocBtn) {
       const template = openNewDocBtn.getAttribute('data-template') || 'blank';
+      const parentId = openNewDocBtn.getAttribute('data-parent-id') || '';
       const modal = document.getElementById('new-doc-modal');
       const moduleInput = document.getElementById('new-doc-module');
       const filenameInput = document.getElementById('new-doc-filename');
       const contentInput = document.getElementById('new-doc-content');
+      const parentInput = document.getElementById('new-doc-parent-id');
       document.getElementById('new-doc-options-menu')?.classList.add('hidden');
 
       if (moduleInput) moduleInput.value = this.activeCollection || 'general';
       if (filenameInput) filenameInput.value = '';
+      if (parentInput) parentInput.value = parentId;
 
       let templateContent = '# New Document\n\nWrite your specification here...';
       if (template === 'prd') {

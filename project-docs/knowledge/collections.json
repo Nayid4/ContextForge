@@ -160,5 +160,41 @@
     "color": "#6b7280",
     "is_private": 0,
     "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8toxj1",
+    "name": "SecOps mw8toxj1",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8u5qw3",
+    "name": "SecOps mw8u5qw3",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8u9xi8",
+    "name": "SecOps mw8u9xi8",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8uoqjw",
+    "name": "SecOps mw8uoqjw",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
   }
 ]

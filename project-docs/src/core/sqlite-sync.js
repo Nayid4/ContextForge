@@ -1388,6 +1388,23 @@ export function syncAiRunsToMarkdownFile(db) {
       fs.mkdirSync(KNOWLEDGE_DIR, { recursive: true });
     }
     const lines = [
+      '---',
+      'id: "DOC-AI-RUNS-LOG_MD"',
+      'title: "ai runs log"',
+      'collection: "general"',
+      'parent: null',
+      'owner: "leader"',
+      'status: "Publicado"',
+      'version: "4.0.0"',
+      'access: "public"',
+      'is_locked: false',
+      'is_favorite: false',
+      'full_width: false',
+      'last_updated: "2026-11-09"',
+      'tags: []',
+      'labels: ["general"]',
+      '---',
+      '',
       '# Registro Soberano de Ejecuciones IA y Skills SDD (Plane AI Audit Log)',
       '',
       'Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y reporte emitido por las skills y subagentes del arnes.',
@@ -2013,6 +2030,7 @@ export function updatePagePropertiesInSQLite(db, pageId, {
   full_width,
   restore_version_id,
   content_markdown,
+  is_locked,
   actor_role = 'spec-author'
 } = {}) {
   const page = db.prepare('SELECT * FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
@@ -2032,7 +2050,7 @@ export function updatePagePropertiesInSQLite(db, pageId, {
   }
 
   // Server-side enforcement of BR-PAGE-02 for archived pages
-  if (page.archived_at) {
+  if (page.archived_at && (content_markdown !== undefined || title !== undefined)) {
     throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of archived page '${targetId}'. Restore page first.`);
   }
 
@@ -2326,10 +2344,25 @@ export function archiveCollectionInSQLite(db, collectionId) {
  * Enforces maximum nesting depth of 4 levels (root = 1, subpage = 2, sub-subpage = 3, max = 4).
  * Enforces BR-PAGE-10: Checks for slug collision in target collection and suffixes -2, -3.
  */
-export function movePageInSQLite(db, pageId, targetCollectionId = null, targetParentId = null) {
+export function movePageInSQLite(db, pageId, targetCollectionId = null, targetParentId = null, { actor } = {}) {
   return runInTransaction(db, () => {
     const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
     if (!page) throw new Error(`Page not found: ${pageId}`);
+
+    const resolvedActor = resolveActor(db, actor);
+
+    function getSubtreeHeight(rootId) {
+      const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(rootId);
+      if (children.length === 0) return 1;
+      let maxHeight = 0;
+      for (const ch of children) {
+        const h = getSubtreeHeight(ch.id);
+        if (h > maxHeight) maxHeight = h;
+      }
+      return 1 + maxHeight;
+    }
+
+    const subtreeHeight = getSubtreeHeight(pageId);
 
     if (targetParentId) {
       if (targetParentId === pageId) {
@@ -2351,23 +2384,14 @@ export function movePageInSQLite(db, pageId, targetCollectionId = null, targetPa
         curr = db.prepare('SELECT * FROM pages WHERE id = ?').get(curr.parent_id);
       }
 
-      // Calculate subtree height of pageId
-      function getSubtreeHeight(rootId) {
-        const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(rootId);
-        if (children.length === 0) return 1;
-        let maxHeight = 0;
-        for (const ch of children) {
-          const h = getSubtreeHeight(ch.id);
-          if (h > maxHeight) maxHeight = h;
-        }
-        return 1 + maxHeight;
-      }
-
-      const subtreeHeight = getSubtreeHeight(pageId);
       const targetParentDepth = targetParent.depth || 1;
 
       if (targetParentDepth + subtreeHeight > 4) {
         throw new Error(`BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded (attempted depth: ${targetParentDepth + subtreeHeight}).`);
+      }
+    } else {
+      if (subtreeHeight > 4) {
+        throw new Error(`BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded (attempted depth: ${subtreeHeight}).`);
       }
     }
 
@@ -2404,13 +2428,21 @@ export function movePageInSQLite(db, pageId, targetCollectionId = null, targetPa
     function updateDescendants(parentId, colId, currentDepth) {
       const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(parentId);
       for (const ch of children) {
-        const chDepth = Math.min(4, currentDepth + 1);
+        const chDepth = currentDepth + 1;
         db.prepare('UPDATE pages SET collection_id = ?, depth = ? WHERE id = ?').run(colId, chDepth, ch.id);
         updateDescendants(ch.id, colId, chDepth);
         rewritePageFileWithFrontmatter(db, ch.id);
       }
     }
     updateDescendants(pageId, nextColId, newPageDepth);
+
+    logPageAudit(db, {
+      pageId,
+      action: 'moved',
+      actor: resolvedActor,
+      reason: `Página movida a colección '${nextColId}' y padre '${targetParentId || 'root'}' por [${resolvedActor.type}:${resolvedActor.role}]`,
+      metadata: { targetCollectionId: nextColId, targetParentId, depth: newPageDepth }
+    });
 
     rewritePageFileWithFrontmatter(db, pageId);
     return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
@@ -2422,7 +2454,7 @@ export function movePageInSQLite(db, pageId, targetCollectionId = null, targetPa
  * Archiving a parent cascades archived_at and clears is_favorite for all descendants.
  * Audited strictly in page_audit.
  */
-export function archivePageCascadeInSQLite(db, pageId, { actor = { id: 'user-human-lead' } } = {}) {
+export function archivePageCascadeInSQLite(db, pageId, { actor } = {}) {
   return runInTransaction(db, () => {
     const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
     if (!page) throw new Error(`Page not found: ${pageId}`);
@@ -2434,7 +2466,7 @@ export function archivePageCascadeInSQLite(db, pageId, { actor = { id: 'user-hum
 
     let cascadeCount = 0;
     function cascadeArchive(parentId) {
-      const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(parentId);
+      const children = db.prepare('SELECT id FROM pages WHERE parent_id = ? AND archived_at IS NULL').all(parentId);
       for (const ch of children) {
         cascadeCount++;
         db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, ch.id);
@@ -2567,7 +2599,7 @@ export function unarchivePageInSQLite(db, pageId, { restoreSubtree = false, acto
  * Saves a pre-restore snapshot of the current state before applying the restored version.
  * Audited strictly in page_audit.
  */
-export function restorePageVersionInSQLite(db, pageId, versionNumber, { actor = { id: 'user-human-lead' } } = {}) {
+export function restorePageVersionInSQLite(db, pageId, versionNumber, { actor } = {}) {
   const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
   if (!page) throw new Error(`Page not found: ${pageId}`);
 
@@ -2641,7 +2673,7 @@ export function restorePageVersionInSQLite(db, pageId, versionNumber, { actor = 
 /**
  * Operación separada de Desbloqueo (Auditada estrictamente en page_audit)
  */
-export function unlockPageInSQLite(db, pageId, { actor = { id: 'user-human-lead' }, reason = 'Manual unlock confirmation' } = {}) {
+export function unlockPageInSQLite(db, pageId, { actor, reason = 'Manual unlock confirmation' } = {}) {
   const page = db.prepare('SELECT id, is_locked, title FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
   if (!page) throw new Error(`Page ${pageId} not found`);
 
@@ -2670,7 +2702,7 @@ export function unlockPageInSQLite(db, pageId, { actor = { id: 'user-human-lead'
 /**
  * Operación separada de Bloqueo (Auditada estrictamente en page_audit)
  */
-export function lockPageInSQLite(db, pageId, { actor = { id: 'user-human-lead' }, reason = 'Normative lock' } = {}) {
+export function lockPageInSQLite(db, pageId, { actor, reason = 'Normative lock' } = {}) {
   const page = db.prepare('SELECT id, is_locked, title FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
   if (!page) throw new Error(`Page ${pageId} not found`);
 

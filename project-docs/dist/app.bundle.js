@@ -5800,6 +5800,7 @@ ${children}
         </div>
 
         <form id="new-doc-form" class="space-y-3 text-xs">
+          <input type="hidden" id="new-doc-parent-id" value="" />
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>
@@ -6717,11 +6718,11 @@ ${children}
               </div>
               <div class="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 shadow-2xs">
                 <div class="text-xs font-medium text-gray-500 dark:text-zinc-400">Invariantes de Negocio</div>
-                <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">${rules.length || 11} BR</div>
+                <div class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">${rules.length} BR</div>
               </div>
               <div class="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 shadow-2xs">
                 <div class="text-xs font-medium text-gray-500 dark:text-zinc-400">Servicios e Integraciones</div>
-                <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">${services.length || 4} API</div>
+                <div class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">${services.length} API</div>
               </div>
             </div>
 
@@ -7275,13 +7276,16 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
       const openNewDocBtn = e.target.closest('[data-action="open-new-doc-modal"]');
       if (openNewDocBtn) {
         const template = openNewDocBtn.getAttribute("data-template") || "blank";
+        const parentId = openNewDocBtn.getAttribute("data-parent-id") || "";
         const modal = document.getElementById("new-doc-modal");
         const moduleInput = document.getElementById("new-doc-module");
         const filenameInput = document.getElementById("new-doc-filename");
         const contentInput = document.getElementById("new-doc-content");
+        const parentInput = document.getElementById("new-doc-parent-id");
         document.getElementById("new-doc-options-menu")?.classList.add("hidden");
         if (moduleInput) moduleInput.value = this.activeCollection || "general";
         if (filenameInput) filenameInput.value = "";
+        if (parentInput) parentInput.value = parentId;
         let templateContent = "# New Document\n\nWrite your specification here...";
         if (template === "prd") {
           templateContent = "# Product Requirements Document (PRD)\n\n## 1. Problem Statement\n\n## 2. Target Audience\n\n## 3. Key Capabilities & Scope\n\n## 4. Acceptance Criteria";

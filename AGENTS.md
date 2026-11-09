@@ -177,3 +177,6 @@ Antes de dar por concluido cualquier bloque o feature:
 3. `npm --prefix project-docs run test:acceptance`: Pruebas de aceptación Playwright ejecutadas y en verde.
 4. `node project-docs/sync-data.js`: Sincronización de datos para modo offline (`file:///`) y servidor.
 5. Commit semántico (`feat`, `fix`) en la rama `{feature|bugfix}/INT-{num}/{name}` (≤ 80 caracteres).
+
+### 7. Integridad de Evidencias, Auditoría y Transparencia
+Declara toda edición a tests, benchmarks o documentos usados como evidencia; no marques un punto como resuelto sin salida literal de un comando; los informes muestran diffs reales, no código reescrito.

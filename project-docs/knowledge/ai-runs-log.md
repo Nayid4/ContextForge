@@ -21,44 +21,46 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 
 | ID Ejecucion | Fecha | Rol Agente | Skill Invocada | Tarea / Pagina | Tipo | Estado | Resumen |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `airun-INT-019-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-019` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-019 |
-| `airun-INT-019-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-019` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-019: Paridad 1:1 de Reglas de Negocio (BR-PAGE-01..06), Flujos Interactivos, UI/UX de Plane Library y Evolucion de project-knowledge |
-| `airun-INT-018-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-018` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-018 |
-| `airun-INT-018-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-018` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-018: Refactorizacion de Navegacion Lateral Library, Favoritos Fijados y Listas Compactas al Estilo Plane |
-| `airun-INT-017-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-017` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-017 |
-| `airun-INT-017-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-017` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-017: Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA |
-| `airun-INT-016-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-016 |
-| `airun-INT-016-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-016` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD |
-| `airun-INT-015-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-015` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-015 |
-| `airun-INT-015-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-015` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane |
-| `airun-INT-014-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-014` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-014 |
-| `airun-INT-014-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-014` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence |
-| `airun-INT-013-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-013` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-013 |
-| `airun-INT-013-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-013` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana |
-| `airun-INT-012-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-012` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-012 |
-| `airun-INT-012-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-012` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-012: Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown |
-| `airun-INT-011-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-011` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-011 |
-| `airun-INT-011-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-011` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-011: Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/ |
-| `airun-INT-010-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-010` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-010 |
-| `airun-INT-010-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-010` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-010: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés |
-| `airun-INT-009-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-009` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-009 |
-| `airun-INT-009-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-009` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-009: Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON |
-| `airun-INT-008-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-008` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-008 |
-| `airun-INT-008-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-008` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright |
-| `airun-INT-007-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-007` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-007 |
-| `airun-INT-007-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-007` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés |
-| `airun-INT-006-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-006` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-006 |
-| `airun-INT-006-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-006` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado |
-| `airun-INT-005-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-005` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-005 |
-| `airun-INT-005-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-005` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js |
-| `airun-INT-004-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-004` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-004 |
-| `airun-INT-004-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-004` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-004: Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis |
-| `airun-INT-003-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-003` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-003 |
-| `airun-INT-003-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-003` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-003: Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento |
-| `airun-INT-002-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-002` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-002 |
-| `airun-INT-002-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-002` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-002: Motor de Sincronización Triple de Skills |
-| `airun-INT-001-verify` | 2026-11-09 05:08:24 | `reviewer` | `/verify-spec` | `INT-001` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-001 |
-| `airun-INT-001-spec` | 2026-11-09 05:08:24 | `spec-author` | `/generate-spec` | `INT-001` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-001: Refactorización Integral y Desacoplamiento Agnóstico del Arnés |
+| `airun-INT-019-verify` | 2026-11-07 21:50:48 | `reviewer` | `/verify-spec` | `INT-019` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-019 |
+| `airun-INT-019-spec` | 2026-11-07 21:50:48 | `spec-author` | `/generate-spec` | `INT-019` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-019: Paridad 1:1 de Reglas de Negocio (BR-PAGE-01..06), Flujos Interactivos, UI/UX de Plane Library y Evolucion de project-knowledge |
+| `airun-INT-018-verify` | 2026-11-07 21:50:48 | `reviewer` | `/verify-spec` | `INT-018` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-018 |
+| `airun-INT-018-spec` | 2026-11-07 21:50:48 | `spec-author` | `/generate-spec` | `INT-018` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-018: Refactorizacion de Navegacion Lateral Library, Favoritos Fijados y Listas Compactas al Estilo Plane |
+| `airun-1794082644735-al8j` | 2026-11-07 20:17:24 | `implementer` | `/project-knowledge` | `INT-017` | `PLANE_PAGES_EVOLUTION` | **COMPLETED** | Extension a 28 tablas SQLite (page_logs, page_labels), PageNavigationPane de 4 pestañas, Smart Entity Chips y skill project-knowledge |
+| `airun-INT-017-verify` | 2026-11-07 20:17:23 | `reviewer` | `/verify-spec` | `INT-017` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-017 |
+| `airun-INT-017-spec` | 2026-11-07 20:17:23 | `spec-author` | `/generate-spec` | `INT-017` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-017: Evolucion de la Base de Conocimiento al Patron Plane Pages, Grafo Relacional (page_logs, page_labels) y Asistente IA |
+| `airun-INT-016-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-016 |
+| `airun-INT-016-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-016` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-016: Modelo de Datos Relacional Completo de Plane (26 Tablas), Integracion IA y Conexion con 21 Skills SDD |
+| `airun-INT-015-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-015` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-015 |
+| `airun-INT-015-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-015` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-015: Eliminacion Total de Features y Consolidacion Screaming en Modules con Diseno Plane |
+| `airun-INT-014-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-014` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-014 |
+| `airun-INT-014-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-014` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-014: Screaming Architecture Modular en Modules, Core y Shared con Store Pub/Sub y Dual Persistence |
+| `airun-INT-013-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-013` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-013 |
+| `airun-INT-013-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-013` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-013: Screaming Architecture & Refactor Unificado Estilo Plane con CLI de Consulta Soberana |
+| `airun-INT-012-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-012` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-012 |
+| `airun-INT-012-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-012` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-012: Ingenieria Inversa Plane: Gestion de Tareas Multi-Vista, Base de Conocimiento y SQLite con Copia Markdown |
+| `airun-INT-011-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-011` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-011 |
+| `airun-INT-011-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-011` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-011: Encapsulamiento de specs/, verify.sh y project-spec.yaml en project-docs/ |
+| `airun-INT-010-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-010` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-010 |
+| `airun-INT-010-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-010` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-010: Encapsulamiento de Archivos y Limpieza de Raíz para Adopción Limpia del Arnés |
+| `airun-INT-009-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-009` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-009 |
+| `airun-INT-009-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-009` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-009: Documentación Scrum en Specs, Subtareas Jira DEV/QA y Cierre con Evidencias JSON |
+| `airun-INT-008-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-008` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-008 |
+| `airun-INT-008-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-008` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright |
+| `airun-INT-007-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-007` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-007 |
+| `airun-INT-007-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-007` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-007: Suite de Pruebas Unitarias para Motores del Arnés |
+| `airun-INT-006-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-006` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-006 |
+| `airun-INT-006-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-006` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-006: Búsqueda Global Omnibox con Atajo de Teclado |
+| `airun-INT-005-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-005` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-005 |
+| `airun-INT-005-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-005` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-005: Constelación 3D en Jerarquía Piramidal Three.js |
+| `airun-INT-004-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-004` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-004 |
+| `airun-INT-004-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-004` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-004: Tablero Editorial Vectorial con Lector ContextForge, Editor Dual y Zero-Emojis |
+| `airun-INT-003-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-003` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-003 |
+| `airun-INT-003-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-003` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-003: Motor de Base de Conocimiento Anti-Sesgo y Protocolo de Descubrimiento |
+| `airun-INT-002-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-002` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-002 |
+| `airun-INT-002-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-002` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-002: Motor de Sincronización Triple de Skills |
+| `airun-INT-001-verify` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-001` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Auditoria de cierre SDD y verificacion de 9 niveles para INT-001 |
+| `airun-INT-001-spec` | 2026-11-07 19:36:23 | `spec-author` | `/generate-spec` | `INT-001` | `SPEC_GENERATION` | **COMPLETED** | Generacion de especificacion formal SDD y criterios EARS para INT-001: Refactorización Integral y Desacoplamiento Agnóstico del Arnés |
+| `airun-1794080183826-5kpr` | 2026-11-07 19:36:23 | `reviewer` | `/verify-spec` | `INT-016` | `QA_VERIFICATION_CLOSURE` | **COMPLETED** | Implementacion de las 26 tablas de Plane + IA y conexion con las 21 skills SDD |
 
 ## Detalle de Artefactos y Reportes Generados por IA
 
@@ -85,6 +87,11 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 - **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-018: Refactorizacion de Navegacion Lateral Library, Favoritos Fijados y Listas Compactas al Estilo Plane
 - **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/018_plane_library_ui_ux_refactor` con historia de usuario Scrum y subtareas DEV/QA.
 - **Artefactos Sincronizados:** `project-docs/specs/018_plane_library_ui_ux_refactor/requirements.md`, `project-docs/specs/018_plane_library_ui_ux_refactor/design.md`, `project-docs/specs/018_plane_library_ui_ux_refactor/tasks.md`
+
+### [airun-1794082644735-al8j] /project-knowledge (implementer) -> INT-017
+- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
+- **Resumen de Tarea:** Extension a 28 tablas SQLite (page_logs, page_labels), PageNavigationPane de 4 pestañas, Smart Entity Chips y skill project-knowledge
+- **Artefactos Sincronizados:** `project-docs/src/core/db.js`, `project-docs/src/core/sqlite-sync.js`, `project-docs/src/modules/Pages/components/PageNavigationPane.js`
 
 ### [airun-INT-017-verify] /verify-spec (reviewer) -> INT-017
 - **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
@@ -150,7 +157,7 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 - **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
 - **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-012
 - **Resultado / Hallazgos:** Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.
-- **Artefactos Sincronizados:** `project-docs/specs/012_plane_sqlite_ai_platform/verification-report.md`
+- **Artefactos Sincronizados:** `project-docs/specs/012_plane_style_sqlite_project_management/verification-report.md`
 
 ### [airun-INT-012-spec] /generate-spec (spec-author) -> INT-012
 - **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
@@ -205,9 +212,3 @@ Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs
 - **Resumen de Tarea:** Generacion de especificacion formal SDD y criterios EARS para INT-008: Pruebas de Aceptación End-to-End con Playwright
 - **Resultado / Hallazgos:** Especificacion creada en `project-docs/specs/008_playwright_acceptance_testing` con historia de usuario Scrum y subtareas DEV/QA.
 - **Artefactos Sincronizados:** `project-docs/specs/008_playwright_acceptance_testing/requirements.md`, `project-docs/specs/008_playwright_acceptance_testing/design.md`, `project-docs/specs/008_playwright_acceptance_testing/tasks.md`
-
-### [airun-INT-007-verify] /verify-spec (reviewer) -> INT-007
-- **Proveedor / Modelo:** `antigravity-gemini` / `gemini-2.5-pro`
-- **Resumen de Tarea:** Auditoria de cierre SDD y verificacion de 9 niveles para INT-007
-- **Resultado / Hallazgos:** Implementación y verificación completadas conforme a los criterios de aceptación.
-- **Artefactos Sincronizados:** `project-docs/specs/007_automated_unit_testing_suite/verification-report.md`

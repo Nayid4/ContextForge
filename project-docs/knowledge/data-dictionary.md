@@ -153,11 +153,12 @@ erDiagram
 23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.
 25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.
 
-### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`)
+### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`, `page_audit`)
 26. `collections`: Espacios de conocimiento dinámicos de Plane Wiki (`id`, `project_id`, `workspace_id`, `name`, `description`, `icon`, `color`, `is_private`, `sort_order`, `archived_at`).
 27. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` con claves foráneas `FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT` y `FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL`, jerarquía (`parent_id`, `depth <= 4`), slugs únicos (`idx_pages_collection_slug`), autoría (`owner_name`, `owned_by_id`), telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`) y banderas de acceso/bloqueo (`access = 0` Public / `1` Private, `is_locked = 1`, `is_favorite = 1`, `view_props`).
 28. `page_versions`: Snapshots históricos de versiones (`id`, `page_id`, `version_number`, `content_markdown`, `description_html`, `description_stripped`, `owned_by_role`, `word_count`, `last_saved_at`, `created_at`) con `FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE` y restauración en un clic (`restorePageVersionInSQLite`).
-29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`), auditoría estricta de bloqueo y desbloqueo normativo (`action = 'unlocked' | 'locked'`, `log_message`, `entity_identifier` con actor) y etiquetas semánticas (`page_labels`).
+29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas (`page_labels`).
+30. `page_audit`: Bitácora inmutable de auditoría de ciclo de vida documental (`action = 'created' | 'updated' | 'moved' | 'locked' | 'unlocked' | 'archived' | 'unarchived' | 'version_restored'`, `page_id`, `actor_id`, `actor_role`, `actor_type = 'human' | 'agent'`, `reason`, `created_at`).
 
 ---
 

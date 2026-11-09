@@ -35,6 +35,7 @@ export function renderPageModals({ dynamicAiPrompt = '' }) {
         </div>
 
         <form id="new-doc-form" class="space-y-3 text-xs">
+          <input type="hidden" id="new-doc-parent-id" value="" />
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block font-mono text-[11px] text-zinc-400 mb-1">Module or Shelf:</label>

@@ -334,7 +334,7 @@ async function handlePlaneApi(req, res, database) {
       const pageId = decodeURIComponent(unlockMatch[1]);
       const body = await parseJsonBody(req);
       const unlocked = unlockPageInSQLite(database, pageId, {
-        actorRole: body.actorRole || body.role || 'human',
+        actor: body.actor || { id: body.actorId || 'user-human-lead' },
         reason: body.reason || 'Confirmación explícita de desbloqueo'
       });
       res.writeHead(200);
@@ -348,7 +348,7 @@ async function handlePlaneApi(req, res, database) {
       const pageId = decodeURIComponent(lockMatch[1]);
       const body = await parseJsonBody(req);
       const locked = lockPageInSQLite(database, pageId, {
-        actorRole: body.actorRole || body.role || 'human',
+        actor: body.actor || { id: body.actorId || 'user-human-lead' },
         reason: body.reason || 'Bloqueo normativo'
       });
       res.writeHead(200);
@@ -361,7 +361,9 @@ async function handlePlaneApi(req, res, database) {
     if (moveMatch && method === 'POST') {
       const pageId = decodeURIComponent(moveMatch[1]);
       const body = await parseJsonBody(req);
-      const moved = movePageInSQLite(database, pageId, body.collection_id, body.parent_id);
+      const moved = movePageInSQLite(database, pageId, body.collection_id, body.parent_id, {
+        actor: body.actor || { id: body.actorId || 'user-human-lead' }
+      });
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true, page: moved }));
       return;
@@ -371,7 +373,10 @@ async function handlePlaneApi(req, res, database) {
     const cascadeMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/archive-cascade$/);
     if (cascadeMatch && method === 'POST') {
       const pageId = decodeURIComponent(cascadeMatch[1]);
-      archivePageCascadeInSQLite(database, pageId);
+      const body = await parseJsonBody(req);
+      archivePageCascadeInSQLite(database, pageId, {
+        actor: body.actor || { id: body.actorId || 'user-human-lead' }
+      });
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true, message: `Página ${pageId} y jerarquía archivada` }));
       return;
@@ -381,8 +386,11 @@ async function handlePlaneApi(req, res, database) {
     const unarchiveMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/unarchive$/);
     if (unarchiveMatch && method === 'POST') {
       const pageId = decodeURIComponent(unarchiveMatch[1]);
-      const body = await parseBody(req);
-      unarchivePageInSQLite(database, pageId, { restoreSubtree: Boolean(body?.restoreSubtree) });
+      const body = await parseJsonBody(req);
+      unarchivePageInSQLite(database, pageId, {
+        restoreSubtree: Boolean(body?.restoreSubtree),
+        actor: body.actor || { id: body.actorId || 'user-human-lead' }
+      });
       const updated = database.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true, page: updated, message: `Página ${pageId} desarchivada exitosamente` }));
@@ -394,7 +402,10 @@ async function handlePlaneApi(req, res, database) {
     if (restoreMatch && method === 'POST') {
       const pageId = decodeURIComponent(restoreMatch[1]);
       const verNum = parseInt(restoreMatch[2], 10);
-      const restored = restorePageVersionInSQLite(database, pageId, verNum);
+      const body = await parseJsonBody(req);
+      const restored = restorePageVersionInSQLite(database, pageId, verNum, {
+        actor: body.actor || { id: body.actorId || 'user-human-lead' }
+      });
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true, page: restored }));
       return;

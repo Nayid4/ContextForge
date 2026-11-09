@@ -129,19 +129,33 @@ test.describe('Acceptance Tests: Plane Wiki Interactions & Navigation', () => {
     await expect(sidebarList).toContainText(uniqueColName);
   });
 
-  test('TC-07: Invocación de creación de subpágina', async ({ page }) => {
-    // 1. Localizar primer botón de menú de página en la tabla
-    const menuBtn = page.locator('[data-action="open-row-menu"]').first();
-    if (await menuBtn.isVisible()) {
-      await menuBtn.click();
-      await page.waitForTimeout(200);
+  test('TC-07: Apertura de menú contextual ··· de fila y creación de subpágina con parent prellenado', async ({ page }) => {
+    // 1. Localizar primera fila de la tabla y abrir el menú de acciones de fila
+    const row = page.locator('.kb-table-row:visible').first();
+    await row.hover();
+    const menuBtn = row.locator('button[data-action="toggle-page-row-menu"]');
+    await expect(menuBtn).toBeVisible();
+    await menuBtn.click();
+    await page.waitForTimeout(200);
 
-      // Verificar que se despliega el menú contextual con opción de agregar subpágina o editar
-      const popover = page.locator('.kb-row-popover:visible');
-      if (await popover.count() > 0) {
-        await expect(popover.first()).toBeVisible();
-      }
-    }
+    // 2. Verificar que se despliega el menú contextual con la opción de agregar subpágina
+    const addSubPageBtn = page.locator('button[data-action="open-new-doc-modal"][data-parent-id]:visible').first();
+    await expect(addSubPageBtn).toBeVisible();
+    const parentIdExpected = await addSubPageBtn.getAttribute('data-parent-id');
+    await addSubPageBtn.click();
+    await page.waitForTimeout(200);
+
+    // 3. Verificar que se abre el modal de nueva página con el campo parent prellenado
+    const modal = page.locator('#new-doc-modal');
+    await expect(modal).toBeVisible();
+    const parentInput = page.locator('#new-doc-parent-id');
+    const parentVal = await parentInput.inputValue();
+    expect(parentVal).toBe(parentIdExpected);
+
+    // 4. Cerrar modal de nueva página
+    const cancelBtn = page.locator('button[data-action="close-new-doc-modal"]').first();
+    await cancelBtn.click();
+    await expect(modal).toBeHidden();
   });
 
   test('TC-08: Panel de navegación de página (History y Metadatos)', async ({ page }) => {

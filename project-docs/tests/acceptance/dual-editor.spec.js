@@ -6,15 +6,16 @@ test.describe('Aceptación E2E: Editor Dual ContextForge con Scroll Sincronizado
     await page.goto('/project-docs/index.html#pages');
     await page.waitForSelector('#plane-sidebar', { timeout: 10000 });
 
-    // WHEN: Abre el menú de acciones de la fila y pulsa editar en vivo
-    const rowMenuBtn = page.locator('[data-action="open-row-menu"]').first();
-    await expect(rowMenuBtn).toBeVisible();
-    await rowMenuBtn.click();
-    await page.waitForTimeout(200);
+    // WHEN: Se abre el artículo en modo lector y luego se activa el modo editor
+    const readBtn = page.locator('[data-action="open-article-read"]:visible').first();
+    await expect(readBtn).toBeVisible();
+    await readBtn.click();
+    await page.waitForTimeout(400);
 
-    const editBtn = page.locator('button[data-action="open-article-edit"]').first();
-    await expect(editBtn).toBeVisible();
-    await editBtn.click();
+    const toggleEditBtn = page.locator('#btn-toggle-doc-editor');
+    await expect(toggleEditBtn).toBeVisible();
+    await toggleEditBtn.click();
+    await page.waitForTimeout(300);
 
     // THEN: Se presenta el panel del editor con Textarea y Preview
     const textarea = page.locator('textarea#doc-editor-textarea');

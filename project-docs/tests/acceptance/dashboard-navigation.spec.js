@@ -46,7 +46,7 @@ test.describe('Aceptación E2E: Navegación y Vistas Principales del Dashboard',
     await expect(tabContent).toBeVisible();
 
     // AND: La biblioteca editorial contiene la cabecera de colección y botones de lectura
-    const heroBtn = tabContent.locator('button[data-action="open-article-read"]').first();
+    const heroBtn = tabContent.locator('[data-action="open-article-read"]:visible').first();
     await expect(heroBtn).toBeVisible();
   });
 
