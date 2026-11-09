@@ -16,7 +16,11 @@ import { Icons } from './Icons.js';
 
 export function stripFrontmatter(md = '') {
   if (!md || typeof md !== 'string') return '';
-  return md.trimStart().replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+  let clean = md.trimStart();
+  while (/^---\r?\n[\s\S]*?\r?\n---\r?\n?/.test(clean)) {
+    clean = clean.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trimStart();
+  }
+  return clean;
 }
 
 export function renderMarkdown(content = '') {

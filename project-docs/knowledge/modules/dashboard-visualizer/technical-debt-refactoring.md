@@ -1,11 +1,19 @@
 ---
-id: MOD-DASH-DEBT
+id: "MOD-DASH-DEBT"
 title: "Módulo: dashboard-visualizer — Deuda Técnica & Refactorización"
+collection: "engineering"
+parent: "modules/dashboard-visualizer/module-spec.md"
+owner: "leader"
 module: "dashboard-visualizer"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["technical-debt", "refactoring", "ux-redesign", "clean-code"]
+tags: ["technical-debt","refactoring","ux-redesign","clean-code"]
+labels: ["technical-debt","refactoring","ux-redesign","clean-code","engineering"]
 ---
 
 # Módulo: dashboard-visualizer — Deuda Técnica & Refactorización
@@ -22,3 +30,5 @@ tags: ["technical-debt", "refactoring", "ux-redesign", "clean-code"]
 ## 2. Plan Táctico de Modernización
 1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.
 2. **Paso 2**: Habilitar previsualización y descarga del Megadocumento Maestro.
+
+

@@ -1,3 +1,20 @@
+---
+id: "DOC-BUSINESS-RULES_MD"
+title: "business rules"
+collection: "engineering"
+parent: null
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: true
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["product"]
+---
+
 # Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)
 
 > [!IMPORTANT]
@@ -79,3 +96,49 @@
 - **Severidad**: Alta
 - **Descripción**: Las pruebas unitarias del arnés se ejecutan mediante `node --test` para asegurar tiempos de respuesta inferiores a 500ms y cero dependencias externas en testing.
 - **Comportamiento ante Violación**: Se rechaza la inclusión de dependencias redundantes.
+
+---
+
+## Módulo: knowledge-engine & plane-wiki (Reglas BR-PAGE-*)
+
+### BR-PAGE-01: Visibilidad Dual de Páginas
+- **Severidad**: Media
+- **Descripción**: Todo documento en la biblioteca de Plane Wiki clasifica su visibilidad en `access = 0` (Public, visible en toda la organización) o `access = 1` (Private, borrador personal).
+- **Comportamiento ante Violación**: Por defecto toda página no explícita se indexa como pública (`access: 0`).
+
+### BR-PAGE-02: Bloqueo Normativo e Inmutabilidad de Archivo (Lock Guard)
+- **Severidad**: Crítica
+- **Descripción**: Ninguna página con `is_locked = 1` o con `archived_at IS NOT NULL` permite editar su título o su contenido Markdown sin una operación previa y explícita de desbloqueo (`unlockPageInSQLite`) o restauración.
+- **Comportamiento ante Violación**: SQLite rechaza la mutación lanzando una excepción `BR-PAGE-02 Violation`.
+
+### BR-PAGE-03: Desmarcado Automático de Favoritos al Archivar
+- **Severidad**: Media
+- **Descripción**: Cuando una página es archivada (`archived_at` asignado), el sistema desmarca forzosamente `is_favorite = 0` para eliminarla de accesos directos.
+- **Comportamiento ante Violación**: El motor de persistencia resetea `is_favorite = 0` automáticamente.
+
+### BR-PAGE-04: Inmutabilidad de Visibilidad en Documentos Archivados
+- **Severidad**: Alta
+- **Descripción**: No está permitido alternar la visibilidad (`access`) de una página mientras se encuentre archivada.
+- **Comportamiento ante Violación**: SQLite rechaza la actualización con `BR-PAGE-04 Violation: Cannot change access visibility of archived page`.
+
+### BR-PAGE-07: Herencia de Colección en Páginas Hijas
+- **Severidad**: Alta
+- **Descripción**: Toda subpágina asignada a un `parent_id` hereda obligatoriamente el `collection_id` de su página padre. Al mover un padre a otra colección, la colección se propaga recursivamente a todos sus descendientes.
+- **Comportamiento ante Violación**: La función `movePageInSQLite` sobrescribe el `collection_id` de los hijos para mantener coherencia espacial.
+
+### BR-PAGE-08: Límite Jerárquico de Profundidad (Depth <= 4) y Prevención de Ciclos
+- **Severidad**: Crítica
+- **Descripción**: La jerarquía de anidación de páginas en una colección permite un máximo de 4 niveles de profundidad (`depth <= 4`, donde la raíz de la colección es nivel 0). Está estrictamente prohibido crear referencias circulares directas o indirectas (`A -> B -> A`).
+- **Comportamiento ante Violación**: Si se intenta crear un ciclo, se lanza `Circular hierarchy detected: cannot set parent to self or descendant`. Si se excede el límite de 4 niveles, se lanza `Max page nesting depth exceeded (max 4 levels allowed)`.
+
+### BR-PAGE-09: Archivo en Cascada de Jerarquías
+- **Severidad**: Alta
+- **Descripción**: Archivar una página padre propaga de inmediato el timestamp de archivo (`archived_at`) y el desmarcado de favoritos (`is_favorite = 0`) a todos sus hijos y descendientes en cascada.
+- **Comportamiento ante Violación**: Ejecución automática de `archivePageCascadeInSQLite`.
+
+### BR-PAGE-10: Slugs Únicos por Colección y Backfill de Depth
+- **Severidad**: Alta
+- **Descripción**: Cada página cuenta con un `slug` alfanumérico único dentro de su colección (`idx_pages_collection_slug`). Ante títulos duplicados en la misma colección, el algoritmo aplica sufijos correlativos (`-2`, `-3`).
+- **Comportamiento ante Violación**: El cálculo determinista en `backfillSlugAndDepth` previene colisiones antes de escribir en disco o SQLite.
+
+

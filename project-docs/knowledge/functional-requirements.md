@@ -1,3 +1,20 @@
+---
+id: "DOC-FUNCTIONAL-REQUIREMENTS_MD"
+title: "functional requirements"
+collection: "product"
+parent: null
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: true
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["product"]
+---
+
 # Especificación de Requerimientos del Sistema (SRS IEEE 830 / ISO 29148)
 
 > [!NOTE]
@@ -55,3 +72,5 @@
 ### Supportability (Mantenibilidad & Extensibilidad)
 - **RNF-SUPP-001**: Arquitectura modular Screaming Architecture en Vanilla JS sin dependencias de frameworks pesados de frontend (React, Vue, Angular) en tiempo de ejecución.
 - **RNF-SUPP-002**: Agnóstico al lenguaje: el arnés debe poder auditar e interactuar con proyectos en Node.js, .NET, Python, Go y Rust.
+
+

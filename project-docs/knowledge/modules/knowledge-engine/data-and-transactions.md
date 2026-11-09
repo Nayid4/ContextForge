@@ -1,11 +1,19 @@
 ---
-id: MOD-KNOW-DATA
+id: "MOD-KNOW-DATA"
 title: "Módulo: knowledge-engine — Datos & Transacciones"
+collection: "engineering"
+parent: "modules/knowledge-engine/module-spec.md"
+owner: "leader"
 module: "knowledge-engine"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["data", "transactions", "knowledge-graph", "json-index"]
+tags: ["data","transactions","knowledge-graph","json-index"]
+labels: ["data","transactions","knowledge-graph","json-index","engineering"]
 ---
 
 # Módulo: knowledge-engine — Datos & Transacciones
@@ -25,3 +33,5 @@ El archivo `knowledge-index.json` persiste:
 
 ## 2. Consistencia en Disco
 - La sincronización mediante `sync-data.js` genera escrituras atómicas en `knowledge-index.json` y `data-fallback.js`.
+
+

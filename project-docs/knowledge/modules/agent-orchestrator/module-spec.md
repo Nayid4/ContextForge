@@ -1,11 +1,19 @@
 ---
-id: MOD-ORCH-SPEC
+id: "MOD-ORCH-SPEC"
 title: "Módulo: agent-orchestrator — Especificación & Tarjetas CRC"
+collection: "engineering"
+parent: null
+owner: "leader"
 module: "agent-orchestrator"
 status: "Publicado"
 version: "4.2.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-07"
-tags: ["orchestrator", "subagents", "crc-cards", "branching", "human-gate", "scrum-subtasks", "qa-evidence"]
+tags: ["orchestrator","subagents","crc-cards","branching","human-gate","scrum-subtasks","qa-evidence"]
+labels: ["orchestrator","subagents","crc-cards","branching","human-gate","scrum-subtasks","qa-evidence","engineering"]
 ---
 
 # Módulo: agent-orchestrator — Especificación & Tarjetas CRC
@@ -48,3 +56,5 @@ tags: ["orchestrator", "subagents", "crc-cards", "branching", "human-gate", "scr
 - **Input**: `{ taskId: "INT-009", type: "feature", title: "Scrum Spec Subtasks and QA Evidence", baseBranch: "master" }`
 - **Output**: `{ branch: "feature/INT-009/scrum_spec_subtasks_qa_evidence", length: 47, status: "created", agentDispatched: "spec-author" }`
 - **Invariante**: Si `length > 80`, la operación aborta con excepción inmediata.
+
+

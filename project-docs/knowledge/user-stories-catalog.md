@@ -1,3 +1,20 @@
+---
+id: "DOC-USER-STORIES-CATALOG_MD"
+title: "user stories catalog"
+collection: "product"
+parent: "03-capabilities-and-features.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["product"]
+---
+
 # Catálogo de Historias de Usuario (INVEST, Scrum & XP)
 
 > [!NOTE]
@@ -69,3 +86,5 @@
   - *Dado* que ejecuto `npm test`,
   - *Cuando* se evalúan los tests de serialización, lectura y reglas de ramas,
   - *Entonces* el 100% de las aserciones pasan en verde sin advertencias.
+
+

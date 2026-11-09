@@ -39,9 +39,9 @@ project-docs/knowledge/
 │   └── modules/                            # Radiografía profunda por cada Módulo / Dominio detectado en el proyecto
 │       ├── {modulo_1}/
 │       │   ├── module-spec.md              # Qué hace el módulo, Lenguaje Ubicuo local, Patrones usados, Tarjetas CRC, Endpoints y DTOs
-│       │   ├── requirements-and-rules.md   # RF-*, BR-*, Historias (HU-*) y Tareas de Ingeniería (TI-*) del módulo
+│       │   ├── requirements-and-rules.md   # RF-*, BR-*, Historias (HU-*) y Tareas de Ingeniería (TI-*) del módulo (o rules.md si está modularizado)
 │       │   ├── data-and-transactions.md    # Tablas/Colecciones leídas o escritas, queries, fronteras transaccionales y eventos
-│       │   ├── diagrams.md                 # 6 Diagramas exclusivos del módulo (Arquitectura C3, Clases, Secuencia, Estados, Actividades y sub-ERD)
+│       │   ├── diagrams.md                 # 6 Diagramas exclusivos del módulo (C3, Clases, Secuencia, Estados, Actividades, sub-ERD; o sequence.md)
 │       │   └── technical-debt-refactoring.md # Auditoría de estado (Cubierto / Parcial / Pendiente), code smells y plan de refactorización
 │       └── {modulo_N}/...
 ├── product/                             # Colección Product (DeepWiki, Requisitos SRS, Historias INVEST)
@@ -65,12 +65,12 @@ Todo archivo Markdown generado por esta skill DEBE iniciar con el bloque de meta
 title: "Título Descriptivo de la Página"
 collection: engineering # product | engineering | general | design | customer_support
 parent: "c4-model.md" # Slug/nombre del documento padre para anidación jerárquica en Plane (opcional)
-owner: "Aria" # Nombre del responsable o agente bot (ej. Aria, Marcus, Ana, AI Spec Author)
+owner: "spec-author" # Rol canónico persistido en SQLite (leader, spec-author, reviewer, Lead Architect)
 icon: "architecture" # Identificador vectorial de icono Plane (ej. rocket, fileText, target, clipboard, creditCard, layers, architecture, database, barChart, shield, link, book, palette, tool, page)
-access: public # public (0) | private (1)
-is_locked: true # true para bloqueo normativo (BR-PAGE-02) contra ediciones accidentales
-is_favorite: true # true para fijar en barra lateral Favorites y en cabecera de la Wiki
-full_width: true # true para expandir el lienzo de lectura de 760px a 1152px
+access: public # public | private (persiste como 0 o 1 en SQLite)
+is_locked: false # true solo para estándares normativos congelados (BR-PAGE-02)
+is_favorite: false # true para fijar en barra lateral Favorites y en cabecera de la Wiki
+full_width: false # true para expandir el lienzo de lectura de 760px a 1152px
 labels: [c4-model, architecture, ieee-830] # Etiquetas semánticas para filtrado en Plane
 ---
 ```
@@ -259,6 +259,7 @@ Cubre rigurosamente toda la estructura del estándar IEEE 830 Sección 3:
      * **Archived (`archived_at`)**: Documentos históricos o deprecados. Archivar una página desmarca automáticamente `is_favorite = 0` (`BR-PAGE-03`) e impide cambiar su visibilidad o editar su contenido hasta restaurarla (`BR-PAGE-02`, `BR-PAGE-04`).
    - **Bloqueo Normativo (`is_locked` — `BR-PAGE-02`)**:
      * Los documentos de gobierno arquitectónico (`c4-model.md`, `business-rules.md`, `coding-standards.md`, `MASTER-PROJECT-KNOWLEDGE.md`) se registran con `is_locked: true` para impedir ediciones accidentales en el editor sin desbloqueo explícito.
+     * **Prohibición estricta para la IA**: Los agentes y subagentes de IA tienen terminantemente prohibido llamar a unlockPageInSQLite o desbloquear documentos normativos de forma autónoma sin confirmación explícita previa del usuario humano (mediante sk_question). Cualquier intento de editar directamente un documento bloqueado es rechazado por SQLite lanzando una violación BR-PAGE-02 Violation. Toda operación de desbloqueo o bloqueo queda registrada y auditada con actor, motivo y timestamp en la tabla page_logs.
    - **Favoritos Fijados (`is_favorite`) y Ancho Completo (`full_width`)**:
      * Los documentos de consulta permanente se marcan con `is_favorite: true` para aparecer fijados en la barra lateral de Plane (`Favorites`) y en el filtro rápido superior.
      * Los pliegos con diagramas C4, UML o mapas mentales Mermaid se marcan con `full_width: true` para expandir el lienzo de lectura de `760px` a `1152px`.

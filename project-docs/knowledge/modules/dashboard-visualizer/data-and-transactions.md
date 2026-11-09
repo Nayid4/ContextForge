@@ -1,11 +1,19 @@
 ---
-id: MOD-DASH-DATA
+id: "MOD-DASH-DATA"
 title: "Módulo: dashboard-visualizer — Datos & Transacciones"
+collection: "engineering"
+parent: "modules/dashboard-visualizer/module-spec.md"
+owner: "leader"
 module: "dashboard-visualizer"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["data", "state", "store", "persistence"]
+tags: ["data","state","store","persistence"]
+labels: ["data","state","store","persistence","engineering"]
 ---
 
 # Módulo: dashboard-visualizer — Datos & Transacciones
@@ -25,3 +33,5 @@ tags: ["data", "state", "store", "persistence"]
 ## 2. Bloqueos de Concurrencia y Sincronización
 - **Flags Anti-Bucle en Scroll**: Variables booleanas `isScrollingFromEditor` e `isScrollingFromPreview` con temporizadores de 60ms para evitar que el evento `scroll` de una columna re-dispare recursivamente el de la otra.
 - **Auto-Sync Controlador**: Si se detecta `protocol === 'file:'`, el polling por temporizador se apaga por completo, evitando carreras de datos y saturación de la CPU.
+
+

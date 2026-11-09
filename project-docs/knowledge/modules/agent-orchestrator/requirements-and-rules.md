@@ -1,11 +1,19 @@
 ---
-id: MOD-ORCH-RULES
+id: "MOD-ORCH-RULES"
 title: "Módulo: agent-orchestrator — Requerimientos & Reglas de Negocio"
+collection: "engineering"
+parent: "modules/agent-orchestrator/module-spec.md"
+owner: "leader"
 module: "agent-orchestrator"
 status: "Publicado"
 version: "4.2.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-07"
-tags: ["requirements", "rules", "stories", "tasks", "scrum-subtasks", "qa-evidence"]
+tags: ["requirements","rules","stories","tasks","scrum-subtasks","qa-evidence"]
+labels: ["requirements","rules","stories","tasks","scrum-subtasks","qa-evidence","engineering"]
 ---
 
 # Módulo: agent-orchestrator — Requerimientos & Reglas de Negocio
@@ -60,3 +68,5 @@ tags: ["requirements", "rules", "stories", "tasks", "scrum-subtasks", "qa-eviden
   - `TI-ORCH-03`: Implementar runner de capturas headless en `scripts/capture-evidence.js`.
   - `TI-ORCH-04`: Integrar visualización de subtareas DEV/QA y visor de evidencias en `project-docs/src/shared/Modal.js`.
   - `TI-ORCH-05`: Añadir pruebas E2E con Playwright en `tests/acceptance/scrum-evidence-capture.spec.js`.
+
+

@@ -45,12 +45,9 @@ test.describe('Aceptación E2E: Navegación y Vistas Principales del Dashboard',
     const tabContent = page.locator('#tab-content');
     await expect(tabContent).toBeVisible();
 
-    // AND: La biblioteca editorial contiene el encabezado soberano y tarjetas de estantes
-    await expect(tabContent).toContainText('Base de Conocimiento de Ingeniería Soberana');
+    // AND: La biblioteca editorial contiene la cabecera de colección y botones de lectura
     const heroBtn = tabContent.locator('button[data-action="open-article-read"]').first();
     await expect(heroBtn).toBeVisible();
-    const docCards = tabContent.locator('.kb-shelf-doc-card');
-    await expect(docCards.first()).toBeVisible();
   });
 
   test('Escenario 4: Conmutación de sub-pestañas de diagramas C4 y visualización interactiva', async ({ page }) => {

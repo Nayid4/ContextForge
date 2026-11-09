@@ -1,3 +1,20 @@
+---
+id: "DOC-CODING-STANDARDS_MD"
+title: "coding standards"
+collection: "general"
+parent: null
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: true
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["general"]
+---
+
 # Estándares de Codificación & Guardrails Anti-Sesgo
 
 > [!IMPORTANT]
@@ -33,3 +50,5 @@
 - **Vanilla JS Modular**: Usar ES Modules puros (`import` / `export`) organizados por dominios en `src/features/`.
 - **Separación de Responsabilidades**: Las funciones de renderizado devuelven cadenas HTML puras; los controladores de eventos se enlazan mediante selectores o `data-action`.
 - **Inmutabilidad en el Store**: El estado global (`store.js`) se actualiza mediante acciones atómicas notificando a los suscriptores.
+
+

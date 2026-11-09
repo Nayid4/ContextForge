@@ -1,11 +1,19 @@
 ---
-id: MOD-TEST-SPEC
+id: "MOD-TEST-SPEC"
 title: "Módulo: testing-qa-suite — Especificación & Tarjetas CRC"
+collection: "engineering"
+parent: null
+owner: "leader"
 module: "testing-qa-suite"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["testing", "qa", "verification", "crc-cards", "playwright"]
+tags: ["testing","qa","verification","crc-cards","playwright"]
+labels: ["testing","qa","verification","crc-cards","playwright","engineering"]
 ---
 
 # Módulo: testing-qa-suite — Especificación & Tarjetas CRC
@@ -33,3 +41,5 @@ tags: ["testing", "qa", "verification", "crc-cards", "playwright"]
 ## 3. Contratos de Entrada y Salida
 - **Comando Canónico**: `bash project-docs/verify.sh` o `npm run test:all`
 - **Output**: 56 pruebas pasando (16 Unit, 5 ATDD Smoke, 12 Whitebox, 8 Blackbox, 7 System, 1 Load, 7 Acceptance E2E).
+
+

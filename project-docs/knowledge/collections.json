@@ -1,0 +1,164 @@
+[
+  {
+    "id": "general",
+    "name": "General",
+    "description": "Contexto de negocio, visión, estándares y glosario transversal",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 10
+  },
+  {
+    "id": "engineering",
+    "name": "Engineering",
+    "description": "Arquitectura AS-IS, modelo C4, diagramas UML, base de datos y contratos de integración",
+    "icon": "flag",
+    "color": "#f59e0b",
+    "is_private": 0,
+    "sort_order": 20
+  },
+  {
+    "id": "product",
+    "name": "Product",
+    "description": "Visión del producto, especificaciones funcionales (SRS), epics y user stories",
+    "icon": "monitor",
+    "color": "#f97316",
+    "is_private": 1,
+    "sort_order": 30
+  },
+  {
+    "id": "design",
+    "name": "Design",
+    "description": "Sistema de diseño, tokens UI, especificaciones UX y maquetación de componentes",
+    "icon": "palette",
+    "color": "#a855f7",
+    "is_private": 0,
+    "sort_order": 40
+  },
+  {
+    "id": "customer_support",
+    "name": "Customer support",
+    "description": "Guías de soporte, procedimientos de despliegue, troubleshooting e incidentes",
+    "icon": "messageSquare",
+    "color": "#10b981",
+    "is_private": 0,
+    "sort_order": 50
+  },
+  {
+    "id": "secops_mw8pd3n2",
+    "name": "SecOps mw8pd3n2",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8pfbop",
+    "name": "SecOps mw8pfbop",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8pk19s",
+    "name": "SecOps mw8pk19s",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8pnbni",
+    "name": "SecOps mw8pnbni",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8prith",
+    "name": "SecOps mw8prith",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8r57pd",
+    "name": "SecOps mw8r57pd",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8rpifi",
+    "name": "SecOps mw8rpifi",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8sao58",
+    "name": "SecOps mw8sao58",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8seban",
+    "name": "SecOps mw8seban",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8sn3u6",
+    "name": "SecOps mw8sn3u6",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8sp8dd",
+    "name": "SecOps mw8sp8dd",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8sr252",
+    "name": "SecOps mw8sr252",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  },
+  {
+    "id": "secops_mw8sudkn",
+    "name": "SecOps mw8sudkn",
+    "description": "Espacio de seguridad y auditoría",
+    "icon": "folder",
+    "color": "#6b7280",
+    "is_private": 0,
+    "sort_order": 1000
+  }
+]

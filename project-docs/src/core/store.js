@@ -55,7 +55,7 @@ export const defaultInitialState = {
   planeActivePageContent: '',
   planePageEditorMode: 'reader', // 'reader' | 'editor'
   planeSelectedIssueId: null,
-  isSidebarCollapsed: false,
+  isSidebarCollapsed: typeof localStorage !== 'undefined' && localStorage.getItem('plane-sidebar-collapsed') === 'true',
   isOmniboxOpen: false,
   omniboxQuery: '',
   graphMode: 'graph' // 'graph' | 'tree'

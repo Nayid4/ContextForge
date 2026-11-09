@@ -1,11 +1,19 @@
 ---
-id: MOD-TEST-DIAG
+id: "MOD-TEST-DIAG"
 title: "Módulo: testing-qa-suite — Suite de 6 Diagramas"
+collection: "engineering"
+parent: "modules/testing-qa-suite/module-spec.md"
+owner: "leader"
 module: "testing-qa-suite"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
 last_updated: "2026-11-03"
-tags: ["c3", "class", "sequence", "state", "activity", "erd"]
+tags: ["c3","class","sequence","state","activity","erd"]
+labels: ["c3","class","sequence","state","activity","erd","engineering"]
 ---
 
 # Módulo: testing-qa-suite — Suite de 6 Diagramas
@@ -143,3 +151,5 @@ erDiagram
     bool passed
   }
 ```
+
+

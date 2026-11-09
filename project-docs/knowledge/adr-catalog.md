@@ -1,3 +1,20 @@
+---
+id: "DOC-ADR-CATALOG_MD"
+title: "adr catalog"
+collection: "engineering"
+parent: null
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Catálogo de Decisiones de Arquitectura (ADR Catalog)
 
 > [!NOTE]
@@ -65,3 +82,5 @@
 - **Contexto**: En entornos restringidos o sin conexión a internet, los navegadores bloquean peticiones `fetch()` locales bajo el protocolo `file:///` por políticas de CORS.
 - **Decisión**: Generar automáticamente `project-docs/data-fallback.js` antes de cada compilación para embeber los datos en `window.__FALLBACK_DATA__`.
 - **Consecuencias**: El tablero funciona al 100% abriendo directamente `index.html` con doble clic.
+
+

@@ -1,3 +1,20 @@
+---
+id: "DOC-MODULES_AGENT-ORCHESTRATOR_SEQUENCE_MD"
+title: "modules/agent orchestrator/sequence"
+collection: "engineering"
+parent: "modules/agent-orchestrator/module-spec.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Flujo de Orquestación Multi-Agente: agent-orchestrator
 
 ```mermaid
@@ -28,3 +45,5 @@ sequenceDiagram
     Leader->>Implementer: "Reasignar correcciones"
   end
 ```
+
+

@@ -1,11 +1,19 @@
 ---
-id: MOD-DASH-RULES
+id: "MOD-DASH-RULES"
 title: "Módulo: dashboard-visualizer — Requerimientos & Reglas de Negocio"
+collection: "engineering"
+parent: "modules/dashboard-visualizer/module-spec.md"
+owner: "leader"
 module: "dashboard-visualizer"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["requirements", "rules", "anti-emoji", "offline-first"]
+tags: ["requirements","rules","anti-emoji","offline-first"]
+labels: ["requirements","rules","anti-emoji","offline-first","engineering"]
 ---
 
 # Módulo: dashboard-visualizer — Requerimientos & Reglas de Negocio
@@ -32,3 +40,5 @@ tags: ["requirements", "rules", "anti-emoji", "offline-first"]
 | `BR-DASH-001` | Crítica | `protocol == 'file:' ==> useFallbackData && bypassFetch` | `project-docs/src/core/api.js` | Silencia errores CORS |
 | `BR-DASH-002` | Alta | `count(emojiChars) == 0` en código fuente y HTML | `tests/unit/ui-anti-emoji.test.js` | Falla test unitario |
 | `BR-DASH-003` | Alta | `tabSwitch ==> destroyThreeScene && resetListeners` | `project-docs/src/features/space-view-3d/` | Previene fugas de memoria OOM |
+
+

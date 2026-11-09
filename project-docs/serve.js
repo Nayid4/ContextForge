@@ -15,7 +15,16 @@ import {
   recordIssueRelation,
   createIssueInSQLite,
   upsertPageInSQLite,
-  updatePagePropertiesInSQLite
+  updatePagePropertiesInSQLite,
+  createCollectionInSQLite,
+  updateCollectionInSQLite,
+  archiveCollectionInSQLite,
+  movePageInSQLite,
+  archivePageCascadeInSQLite,
+  unarchivePageInSQLite,
+  restorePageVersionInSQLite,
+  unlockPageInSQLite,
+  lockPageInSQLite
 } from './src/core/sqlite-sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -287,6 +296,107 @@ async function handlePlaneApi(req, res, database) {
       });
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true, page: updatedPage }));
+      return;
+    }
+
+    // 13b. POST /api/plane/collections - Crear Colección
+    if (pathname === '/api/plane/collections' && method === 'POST') {
+      const body = await parseJsonBody(req);
+      const col = createCollectionInSQLite(database, body);
+      res.writeHead(201);
+      res.end(JSON.stringify({ ok: true, collection: col }));
+      return;
+    }
+
+    // 13c. PATCH /api/plane/collections/:id - Actualizar Colección
+    const colMatch = pathname.match(/^\/api\/plane\/collections\/([^/]+)$/);
+    if (colMatch && (method === 'PATCH' || method === 'PUT')) {
+      const colId = decodeURIComponent(colMatch[1]);
+      const body = await parseJsonBody(req);
+      const col = updateCollectionInSQLite(database, colId, body);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, collection: col }));
+      return;
+    }
+
+    // 13d. DELETE /api/plane/collections/:id - Archivar Colección
+    if (colMatch && method === 'DELETE') {
+      const colId = decodeURIComponent(colMatch[1]);
+      archiveCollectionInSQLite(database, colId);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, message: `Colección ${colId} archivada` }));
+      return;
+    }
+
+    // 13e. POST /api/plane/pages/:id/unlock - Desbloquear documento normativo (con auditoría)
+    const unlockMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/unlock$/);
+    if (unlockMatch && method === 'POST') {
+      const pageId = decodeURIComponent(unlockMatch[1]);
+      const body = await parseJsonBody(req);
+      const unlocked = unlockPageInSQLite(database, pageId, {
+        actorRole: body.actorRole || body.role || 'human',
+        reason: body.reason || 'Confirmación explícita de desbloqueo'
+      });
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, page: unlocked }));
+      return;
+    }
+
+    // 13f. POST /api/plane/pages/:id/lock - Bloquear documento normativo (con auditoría)
+    const lockMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/lock$/);
+    if (lockMatch && method === 'POST') {
+      const pageId = decodeURIComponent(lockMatch[1]);
+      const body = await parseJsonBody(req);
+      const locked = lockPageInSQLite(database, pageId, {
+        actorRole: body.actorRole || body.role || 'human',
+        reason: body.reason || 'Bloqueo normativo'
+      });
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, page: locked }));
+      return;
+    }
+
+    // 13g. POST /api/plane/pages/:id/move - Mover de Colección o Padre
+    const moveMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/move$/);
+    if (moveMatch && method === 'POST') {
+      const pageId = decodeURIComponent(moveMatch[1]);
+      const body = await parseJsonBody(req);
+      const moved = movePageInSQLite(database, pageId, body.collection_id, body.parent_id);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, page: moved }));
+      return;
+    }
+
+    // 13h. POST /api/plane/pages/:id/archive-cascade - Archivar página y descendientes (BR-PAGE-09)
+    const cascadeMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/archive-cascade$/);
+    if (cascadeMatch && method === 'POST') {
+      const pageId = decodeURIComponent(cascadeMatch[1]);
+      archivePageCascadeInSQLite(database, pageId);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, message: `Página ${pageId} y jerarquía archivada` }));
+      return;
+    }
+
+    // 13i. POST /api/plane/pages/:id/unarchive - Desarchivar página (opción restoreSubtree)
+    const unarchiveMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/unarchive$/);
+    if (unarchiveMatch && method === 'POST') {
+      const pageId = decodeURIComponent(unarchiveMatch[1]);
+      const body = await parseBody(req);
+      unarchivePageInSQLite(database, pageId, { restoreSubtree: Boolean(body?.restoreSubtree) });
+      const updated = database.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, page: updated, message: `Página ${pageId} desarchivada exitosamente` }));
+      return;
+    }
+
+    // 13j. POST /api/plane/pages/:id/versions/:ver/restore - Restaurar versión
+    const restoreMatch = pathname.match(/^\/api\/plane\/pages\/([^/]+)\/versions\/(\d+)\/restore$/);
+    if (restoreMatch && method === 'POST') {
+      const pageId = decodeURIComponent(restoreMatch[1]);
+      const verNum = parseInt(restoreMatch[2], 10);
+      const restored = restorePageVersionInSQLite(database, pageId, verNum);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, page: restored }));
       return;
     }
 

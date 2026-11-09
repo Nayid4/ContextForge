@@ -1,11 +1,19 @@
 ---
-id: DOC-ARCH-PATTERNS
+id: "DOC-ARCH-PATTERNS"
 title: "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones"
+collection: "engineering"
+parent: "c4-model.md"
+owner: "leader"
 module: "global"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["architecture-as-is", "design-patterns", "gof", "screaming-architecture", "data-flows"]
+tags: ["architecture-as-is","design-patterns","gof","screaming-architecture","data-flows"]
+labels: ["architecture-as-is","design-patterns","gof","screaming-architecture","data-flows","engineering"]
 ---
 
 # Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones
@@ -82,3 +90,9 @@ harness_anginnering/
 6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)
 7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base
 ```
+
+### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)
+En `PageService` y `page.utils.js`, el cálculo de telemetría de lectura se rige por:
+- **Conteo de Palabras**: `words = text.trim().split(/\s+/).length`.
+- **Tiempo de Lectura**: `readingTime = Math.ceil(words / 200)` (velocidad estándar de 200 palabras por minuto).
+- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\n\s*\n/).filter(Boolean).length`.

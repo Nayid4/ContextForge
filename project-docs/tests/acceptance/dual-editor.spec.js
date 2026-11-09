@@ -3,10 +3,15 @@ import { test, expect } from '@playwright/test';
 test.describe('Aceptación E2E: Editor Dual ContextForge con Scroll Sincronizado', () => {
   test('Escenario 1: Apertura de modo editor, previsualización en vivo y conmutación de paneles', async ({ page }) => {
     // GIVEN: El usuario navega a la Base de Conocimiento
-    await page.goto('/project-docs/index.html');
-    await page.locator('button[data-tab="knowledge"]').click();
+    await page.goto('/project-docs/index.html#pages');
+    await page.waitForSelector('#plane-sidebar', { timeout: 10000 });
 
-    // WHEN: Pulsa editar en vivo sobre el documento destacado
+    // WHEN: Abre el menú de acciones de la fila y pulsa editar en vivo
+    const rowMenuBtn = page.locator('[data-action="open-row-menu"]').first();
+    await expect(rowMenuBtn).toBeVisible();
+    await rowMenuBtn.click();
+    await page.waitForTimeout(200);
+
     const editBtn = page.locator('button[data-action="open-article-edit"]').first();
     await expect(editBtn).toBeVisible();
     await editBtn.click();

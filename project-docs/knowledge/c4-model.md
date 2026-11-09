@@ -1,3 +1,20 @@
+---
+id: "DOC-C4-MODEL_MD"
+title: "c4 model"
+collection: "engineering"
+parent: null
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: true
+is_favorite: true
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Modelo C4 — AI Agentic SDD Engineering Harness
 
 > [!NOTE]
@@ -108,3 +125,5 @@ flowchart LR
   serverSync -->|"Exportación Soberana"| markdownFiles
   serverSync -->|"Bundle Offline"| jsonFallback
 ```
+
+

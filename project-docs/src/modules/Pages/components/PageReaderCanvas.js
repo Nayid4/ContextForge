@@ -67,7 +67,7 @@ export function renderPageReaderCanvas({
   const isFullWidth = Boolean(planePageState.isFullWidth);
 
   return `
-    <div id="kb-view-article" class="hidden flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100">
+    <div id="kb-view-article" class="${planePageState.isArticleOpen ? 'flex' : 'hidden'} flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100">
 
       <!-- 2.1 Plane PageEditorToolbarRoot (Sticky Top Header Bar h-11) -->
       <div class="h-11 px-5 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shrink-0">
@@ -167,12 +167,14 @@ export function renderPageReaderCanvas({
         <!-- Center Document Canvas: max-w-[760px] mx-auto px-6 py-10 (Exact Plane standard) -->
         <div id="doc-reader-main-col" class="flex-1 overflow-y-auto px-6 py-10 bg-white dark:bg-zinc-950 scrollbar-sm">
           <div class="${isFullWidth ? 'max-w-[1152px]' : 'max-w-[760px]'} mx-auto">
+
             <!-- Plane Icon & Cover Controls -->
             <div class="flex items-center gap-2 mb-3">
               <button
                 type="button"
                 data-action="add-page-icon"
                 class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-900 border border-transparent hover:border-gray-200 dark:hover:border-zinc-800 transition-colors cursor-pointer"
+                title="Configurar icono de documento Plane"
               >
                 ${Icons.smile('w-3.5 h-3.5')}
                 <span>Add icon</span>
@@ -181,6 +183,7 @@ export function renderPageReaderCanvas({
                 type="button"
                 data-action="add-page-cover"
                 class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-900 border border-transparent hover:border-gray-200 dark:hover:border-zinc-800 transition-colors cursor-pointer"
+                title="Configurar portada de documento Plane"
               >
                 ${Icons.image('w-3.5 h-3.5')}
                 <span>Add cover</span>

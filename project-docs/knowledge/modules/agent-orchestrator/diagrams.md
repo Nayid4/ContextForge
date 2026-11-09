@@ -1,11 +1,19 @@
 ---
-id: MOD-ORCH-DIAG
+id: "MOD-ORCH-DIAG"
 title: "Módulo: agent-orchestrator — Suite de 6 Diagramas"
+collection: "engineering"
+parent: "modules/agent-orchestrator/module-spec.md"
+owner: "leader"
 module: "agent-orchestrator"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
 last_updated: "2026-11-03"
-tags: ["c3", "class", "sequence", "state", "activity", "erd"]
+tags: ["c3","class","sequence","state","activity","erd"]
+labels: ["c3","class","sequence","state","activity","erd","engineering"]
 ---
 
 # Módulo: agent-orchestrator — Suite de 6 Diagramas
@@ -161,3 +169,5 @@ erDiagram
     string workspace_mode
   }
 ```
+
+

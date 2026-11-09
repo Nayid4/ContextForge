@@ -1,3 +1,20 @@
+---
+id: "DOC-SYSTEM-CAPABILITIES_MD"
+title: "system capabilities"
+collection: "product"
+parent: "03-capabilities-and-features.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["product"]
+---
+
 # Inventario de Capacidades del Sistema (System Capabilities)
 
 > [!NOTE]
@@ -26,3 +43,5 @@
 | `CAP-TEST-001` | `testing-qa-suite` | Pruebas unitarias nativas ultrarrápidas (<200ms) | `npm test` | Operativo [ACTIVO] |
 | `CAP-TEST-002` | `testing-qa-suite` | Pruebas smoke de evaluación web | `npm run test:e2e` | Operativo [ACTIVO] |
 | `CAP-TEST-003` | `testing-qa-suite` | Verificación de paridad y sincronización | `npm run sync` | Operativo [ACTIVO] |
+
+

@@ -1,11 +1,19 @@
 ---
-id: DOC-DDD-CRC
+id: "DOC-DDD-CRC"
 title: "Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC"
+collection: "general"
+parent: null
+owner: "leader"
 module: "global"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["ddd", "ubiquitous-language", "context-map", "crc-cards", "strategic-ddd"]
+tags: ["ddd","ubiquitous-language","context-map","crc-cards","strategic-ddd"]
+labels: ["ddd","ubiquitous-language","context-map","crc-cards","strategic-ddd","general"]
 ---
 
 # Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC
@@ -88,3 +96,5 @@ tags: ["ddd", "ubiquitous-language", "context-map", "crc-cards", "strategic-ddd"
   3. Compilar el archivo maestro unificado `MASTER-PROJECT-KNOWLEDGE.md`.
   4. Actualizar el grafo de relaciones en `knowledge-index.json`.
 - **Colaboradores**: `SyncDataScript`, `DashboardStore`, `MarkdownParser`.
+
+

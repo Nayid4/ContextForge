@@ -1,11 +1,19 @@
 ---
-id: MOD-DASH-SPEC
+id: "MOD-DASH-SPEC"
 title: "Módulo: dashboard-visualizer — Especificación & Tarjetas CRC"
+collection: "engineering"
+parent: null
+owner: "leader"
 module: "dashboard-visualizer"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["dashboard", "vanilla-js", "tailwind-v4", "three-js", "dual-editor", "crc-cards"]
+tags: ["dashboard","vanilla-js","tailwind-v4","three-js","dual-editor","crc-cards"]
+labels: ["dashboard","vanilla-js","tailwind-v4","three-js","dual-editor","crc-cards","engineering"]
 ---
 
 # Módulo: dashboard-visualizer — Especificación & Tarjetas CRC
@@ -43,3 +51,5 @@ tags: ["dashboard", "vanilla-js", "tailwind-v4", "three-js", "dual-editor", "crc
 ## 4. Contratos de Entrada y Salida (DTOs / Interfaces)
 - **Input**: `window.__FALLBACK_DATA__` o respuestas JSON de `fetchProjectData()`.
 - **Output**: Renderizado DOM reactivo en `#app`, eventos de navegación por hash y persistencia local de documentos modificados.
+
+

@@ -1,3 +1,20 @@
+---
+id: "DOC-UML-DIAGRAMS_MD"
+title: "uml diagrams"
+collection: "engineering"
+parent: "c4-model.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Diagramas UML — AI Agentic SDD Engineering Harness
 
 ---
@@ -171,3 +188,5 @@ flowchart TD
   actorAgent --> ucReview
   actorAgent --> ucKnowledge
 ```
+
+

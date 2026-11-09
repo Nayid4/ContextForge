@@ -137,3 +137,43 @@ El seguimiento visual vive en `project-docs/`:
 - **Idioma**: Inglés para código y commits, español para documentación.
 - **Ramas**: `{feature|bugfix}/INT-{id}/{nombre_rama}` (≤80 caracteres).
 - Las demás convenciones (puertos, docker, etc.) dependen del proyecto concreto donde se adopte el arnés.
+
+---
+
+## Reglas Permanentes: Wiki, Colecciones y Persistencia Dual
+
+### 1. Taxonomía Canónica de Colecciones (Plane Wiki Spaces)
+Toda página de la base de conocimiento (`pages`) debe clasificarse estrictamente en una de las 5 colecciones del arnés:
+- `general`: Visión del proyecto, contexto de negocio, estándares transversales, glosario de términos y gobernanza global.
+- `engineering`: Arquitectura AS-IS, modelo C4, diagramas UML, catálogo de reglas de negocio (`business-rules.md`), modelo relacional de datos y contratos de servicios externos (`external-services.md`).
+- `product`: Visión del producto, especificaciones funcionales (SRS ISO 29148 / IEEE 830), épicas y requerimientos de usuario.
+- `design`: Sistema de diseño, tokens visuales, especificaciones UX y maquetación de componentes.
+- `customer_support`: Procedimientos operativos, guías de despliegue, troubleshooting, manuales de soporte y runbooks.
+
+### 2. Fuente de Verdad Dual y Prioridad de Frontmatter
+- **En disco**: El frontmatter YAML de los archivos `.md` en `project-docs/knowledge/` y `project-docs/specs/` es la fuente de verdad declarativa (`collection`, `parent`, `owner`, `access`, `is_locked`, `is_favorite`, `full_width`, `labels`).
+- **En ejecución**: SQLite (`project-docs/data/harness.db`) materializa y consulta las relaciones en milisegundos. Toda mutación realizada desde la UI o API se sincroniza bidireccionalmente hacia el frontmatter del archivo `.md`.
+
+### 3. Invariantes de Negocio BR-PAGE-*
+- **`BR-PAGE-01`**: Visibilidad dual (`access = 0` Public vs `access = 1` Private).
+- **`BR-PAGE-02`**: Bloqueo normativo e inmutabilidad de archivo. Prohibido editar título o contenido Markdown si `is_locked = 1` o `archived_at != NULL` sin operación explícita previa de desbloqueo o restauración.
+- **`BR-PAGE-03`**: Archivar una página desmarca automáticamente `is_favorite = 0`.
+- **`BR-PAGE-04`**: Inmutabilidad de visibilidad en documentos archivados. Prohibido alternar `access` mientras esté archivada.
+- **`BR-PAGE-07`**: Herencia de colección. Toda subpágina hereda obligatoriamente el `collection_id` de su página padre.
+- **`BR-PAGE-08`**: Límite jerárquico de profundidad a 4 niveles (`depth <= 4`) y prohibición matemática de ciclos circulares en `parent_id` (`Circular hierarchy detected`).
+- **`BR-PAGE-09`**: Archivo en cascada. Archivar un padre propaga automáticamente `archived_at` y `is_favorite = 0` a todos sus descendientes.
+- **`BR-PAGE-10`**: Slugs únicos por colección (`idx_pages_collection_slug`) calculados deterministamente con sufijos correlativos (`-2`, `-3`).
+
+### 4. Política de Tolerancia Cero a Mocks ("Sin Mocks")
+Queda estrictamente prohibido quemar nombres de personas ficticias ('Aria', 'Marcus', 'Ana', 'Priya Sharma', 'Alex', 'Jordan Kim') o identificadores no persistidos ('prod-1', 'prod-2'). Toda entidad debe provenir de las tablas relacionales de SQLite (`users`, `collections`, `pages`, `issues`).
+
+### 5. Política de Cero Emojis ("0 Emojis")
+Todo icono en la interfaz de usuario debe ser vectorial SVG tipado desde `Icons.*` (`w-3.5 h-3.5`, etc.). Queda terminantemente prohibido incluir caracteres emoji unicode en el código fuente o templates HTML.
+
+### 6. Checklist de Cierre de Bloque (Obligatorio)
+Antes de dar por concluido cualquier bloque o feature:
+1. `npm --prefix project-docs run build`: Compilación con esbuild sin errores (0 advertencias).
+2. `npm --prefix project-docs test`: 100% de pruebas unitarias en verde (`node --test`).
+3. `npm --prefix project-docs run test:acceptance`: Pruebas de aceptación Playwright ejecutadas y en verde.
+4. `node project-docs/sync-data.js`: Sincronización de datos para modo offline (`file:///`) y servidor.
+5. Commit semántico (`feat`, `fix`) en la rama `{feature|bugfix}/INT-{num}/{name}` (≤ 80 caracteres).

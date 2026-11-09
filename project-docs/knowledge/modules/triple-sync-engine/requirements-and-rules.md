@@ -1,11 +1,19 @@
 ---
-id: MOD-SYNC-RULES
+id: "MOD-SYNC-RULES"
 title: "Módulo: triple-sync-engine — Requerimientos & Reglas de Negocio"
+collection: "engineering"
+parent: "modules/triple-sync-engine/module-spec.md"
+owner: "leader"
 module: "triple-sync-engine"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["requirements", "rules", "triple-sync", "source-of-truth"]
+tags: ["requirements","rules","triple-sync","source-of-truth"]
+labels: ["requirements","rules","triple-sync","source-of-truth","engineering"]
 ---
 
 # Módulo: triple-sync-engine — Requerimientos & Reglas de Negocio
@@ -25,3 +33,5 @@ tags: ["requirements", "rules", "triple-sync", "source-of-truth"]
 |---|---|---|---|---|
 | `BR-SYNC-001` | Crítica | `.opencode/skills/` es la única fuente de verdad | `.opencode/rules/skills-sync.md` | Prohibido sync inverso |
 | `BR-SYNC-002` | Alta | `frontmatter(opencode) === frontmatter(copilot) === frontmatter(agy)` | `sync-skills` | Falla paridad triple |
+
+

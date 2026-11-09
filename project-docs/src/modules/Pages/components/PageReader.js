@@ -105,25 +105,6 @@ export function PageReader({
     <div class="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden relative">
       <!-- Reading Column (Centered max-w-[760px] or Full Width max-w-[1152px] per Plane view_props) -->
       <article class="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto ${viewPropsFullWidth ? 'max-w-[1152px] mx-auto w-full' : 'max-w-[760px] mx-auto w-full'} selection:bg-indigo-500/20 selection:text-indigo-200 transition-all">
-        <!-- Plane Icon & Cover Controls -->
-        <div class="flex items-center gap-2 mb-3">
-          <button
-            type="button"
-            data-action="add-page-icon"
-            class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors cursor-pointer"
-          >
-            ${Icons.smile('w-3.5 h-3.5')}
-            <span>Add icon</span>
-          </button>
-          <button
-            type="button"
-            data-action="add-page-cover"
-            class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors cursor-pointer"
-          >
-            ${Icons.image('w-3.5 h-3.5')}
-            <span>Add cover</span>
-          </button>
-        </div>
 
         <!-- Plane Editable H1 Title -->
         <div class="mb-3">

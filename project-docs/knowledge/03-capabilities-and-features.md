@@ -1,11 +1,19 @@
 ---
-id: DOC-SYS-CAPABILITIES-FEATURES
+id: "DOC-SYS-CAPABILITIES-FEATURES"
 title: "Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional (DeepWiki Pattern)"
+collection: "product"
+parent: null
+owner: "leader"
 module: "global"
 status: "Publicado"
 version: "4.2.0"
+access: "public"
+is_locked: false
+is_favorite: true
+full_width: true
 last_updated: "2026-11-07"
-tags: ["deepwiki", "capabilities", "features", "mindmap", "user-journeys", "functional-decomposition", "deep-linking", "scrum-subtasks", "qa-evidence"]
+tags: ["deepwiki","capabilities","features","mindmap","user-journeys","functional-decomposition","deep-linking","scrum-subtasks","qa-evidence"]
+labels: ["deepwiki","capabilities","features","mindmap","user-journeys","functional-decomposition","deep-linking","scrum-subtasks","qa-evidence","product"]
 ---
 
 # Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional
@@ -294,3 +302,5 @@ sequenceDiagram
 | `CAP-DASH-002` | Interoperabilidad Offline `file:///` | [`project-docs/data-fallback.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/data-fallback.js) | [`tests/system/offline-fallback.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/system/offline-fallback.test.js) |
 | `CAP-TEST-001` | Pipeline de Verificación `project-docs/verify.sh` | [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh) | Ejecución integral de las 9 fases |
 | `CAP-TEST-002` | Aceptación E2E en Navegador Real | [`tests/acceptance/*.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/) | `npx playwright test` (10 escenarios) |
+
+

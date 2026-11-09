@@ -1,11 +1,20 @@
 ---
-id: DOC-BIZ-OVERVIEW
+id: "page-knowledge_01-project-overview-and-business_md"
 title: "Visión del Producto, Contexto de Negocio y Stakeholders"
+collection: "general"
+parent: null
+owner: "leader"
 module: "global"
 status: "Publicado"
 version: "4.0.0"
-last_updated: "2026-11-03"
-tags: ["ieee-830", "business-context", "product-vision", "stakeholders", "raci"]
+access: "public"
+is_locked: false
+is_favorite: true
+full_width: true
+archived_at: null
+last_updated: "2026-11-09"
+tags: ["ieee-830","business-context","product-vision","stakeholders","raci"]
+labels: ["ieee-830","business-context","product-vision","stakeholders","raci","general"]
 ---
 
 # Visión del Producto, Contexto de Negocio y Stakeholders (IEEE Std. 830-1998)
@@ -48,6 +57,27 @@ El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de
 2. **Gobernanza de Ramas y Commits**: Impone la convención obligatoria `{feature|bugfix}/INT-{numero}/{nombre_rama}` con longitud máxima de 80 caracteres y commits semánticos (`feat`, `fix`).
 3. **Puertas de Decisión Humana Infranqueables**: Utiliza herramientas nativas (`ask_question`) para congelar la ejecución hasta obtener aprobación explícita del humano antes de implementar o integrar código.
 4. **Triple Sincronización de 18 Skills**: Mantiene paridad absoluta e instantánea entre la fuente de verdad (`.opencode/skills/`) y los espejos (`.github/skills/` y `.agents/skills/`).
+
+| Skill | Descripción | Rol Exclusivo |
+|---|---|---|
+| `technical-audit` | Auditoría técnica de proyecto | Generar project-spec.yaml |
+| `project-knowledge` | Extracción de base de conocimiento y arquitectura | Generar modelo C4, UML, reglas de negocio y estándares anti-sesgo |
+| `generate-verify` | Generar verify.sh | Crear script de verificación integral |
+| `verification` | Documentación de verificación | Consultar estructura de testing |
+| `api-test-plan` | Plan de pruebas API REST | Generar plan markdown + archivos .http |
+| `execute-api-test-plan` | Ejecutar plan de pruebas API | Correr pruebas con curl y documentar hallazgos |
+| `acceptance-testing` | Pruebas de aceptación (Playwright), caja blanca/negra, sistema y carga | Automatización integral de QA y verificación end-to-end |
+| `requirements-analysis` | Análisis de requerimientos | Generar feature_list.json |
+| `generate-spec` | Generar spec técnico de una feature | Crear spec.md/tasks.md/decisions.md en project-docs + recomendar tdd/sdd/ftd |
+| `implement-tdd` | Implementar un spec con TDD (tests primero) | Lógica con ramas y rutas de error |
+| `implement-sdd` | Implementar un spec con SDD (spec → código) | Multi-módulo, migraciones, integraciones |
+| `implement-ftd` | Implementar un cambio pequeño sin lógica nueva | Constantes, labels, estilos, config, tweaks UI |
+| `write-unit-tests` | Escribir tests unitarios (agnóstico al lenguaje) | Cubrir código de un spec antes de verificarlo |
+| `targeted-qa` | Pruebas focalizadas de QA bajo demanda | Diseñar y ejecutar suites de prueba puntuales (E2E, BVA, API, carga, a11y) a solicitud de QA |
+| `verify-spec` | Verificar cierre completo de un spec (agnóstico al lenguaje) | Acceptance criteria, tasks, tests unitarios y verify.sh |
+| `sync-skills` | Sincronizar skills hacia los espejos (Copilot y Antigravity) | Propaga de `.opencode/skills/` a `.github/skills/` y `.agents/skills/` |
+| `sdd-workflow` | Orquestación del ciclo SDD completo | Guía el flujo multi-agente de inicio a fin |
+| `start-feature` | Iniciar o reanudar feature | Punto de entrada para el ciclo SDD de una tarea |
 5. **Base de Conocimiento Soberana (Docs-as-Code)**: Elicita y estructura modelos C4, diagramas UML, diccionario de datos/ERD, catálogo de reglas de negocio (`BR-*`), ADRs y radiografía granular de módulos.
 6. **Tablero Visual Offline-First (`project-docs/`)**: Aplicación web en Vanilla JS y Tailwind v4 con arquitectura screaming, lector editorial, editor dual Markdown/Bloques ContextForge, grafos de dependencias y constelación 3D en Three.js con soporte nativo para protocolo `file:///`.
 7. **Pipeline de Calidad en 8 Niveles (`project-docs/verify.sh`)**: Ejecuta pruebas unitarias, ATDD smoke, caja blanca, caja negra (BVA/resiliencia), integración/sistema, carga concurrente y aceptación E2E con Playwright.
@@ -100,3 +130,5 @@ El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de
 - **Experiencia**: 6 meses a 2 años en programación.
 - **Punto de Dolor**: Alta fricción cognitiva al incorporarse a proyectos grandes; miedo a romper reglas tácitas no documentadas.
 - **Objetivo con el Arnés**: Reducir su *time-to-first-PR* a menos de una semana gracias a la documentación interactiva y las tarjetas CRC.
+
+

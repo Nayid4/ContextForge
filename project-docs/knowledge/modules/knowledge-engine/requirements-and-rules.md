@@ -1,11 +1,19 @@
 ---
-id: MOD-KNOW-RULES
+id: "MOD-KNOW-RULES"
 title: "Módulo: knowledge-engine — Requerimientos & Reglas de Negocio"
+collection: "engineering"
+parent: "modules/knowledge-engine/module-spec.md"
+owner: "leader"
 module: "knowledge-engine"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["requirements", "rules", "anti-bias", "mermaid-syntax"]
+tags: ["requirements","rules","anti-bias","mermaid-syntax"]
+labels: ["requirements","rules","anti-bias","mermaid-syntax","engineering"]
 ---
 
 # Módulo: knowledge-engine — Requerimientos & Reglas de Negocio
@@ -29,3 +37,5 @@ tags: ["requirements", "rules", "anti-bias", "mermaid-syntax"]
 | `BR-KNOW-001` | Crítica | IDs Mermaid alfanuméricos puros + textos entrecomillados | `project-docs/sync-data.js` | Diagrama roto en parser |
 | `BR-KNOW-002` | Crítica | Consulta obligatoria de `project-docs/knowledge/` antes de codificar | `.agents/rules/antigravity-harness.md` | Rechazo en Review |
 | `BR-KNOW-003` | Alta | YAML frontmatter obligatorio en todo `.md` | `project-docs/knowledge/` | Falla indexación RAG |
+
+

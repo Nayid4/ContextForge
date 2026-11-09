@@ -1,3 +1,20 @@
+---
+id: "DOC-MODULES_KNOWLEDGE-ENGINE_SEQUENCE_MD"
+title: "modules/knowledge engine/sequence"
+collection: "engineering"
+parent: "modules/knowledge-engine/module-spec.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Flujo de Elicitación y Extracción: knowledge-engine
 
 ```mermaid
@@ -19,3 +36,5 @@ sequenceDiagram
   Skill->>Sync: "node project-docs/sync-data.js"
   Sync-->>User: "Base de conocimiento e interfaz actualizadas al 100%"
 ```
+
+

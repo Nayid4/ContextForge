@@ -86,6 +86,208 @@ export const DEFAULT_COLLECTIONS = [
   { id: 'customer_support', name: 'Customer support', description: 'Guías de soporte, procedimientos de despliegue, troubleshooting e incidentes', icon: 'messageSquare', color: '#10b981', is_private: 0, sort_order: 50 }
 ];
 
+export const COLLECTIONS_MANIFEST_PATH = path.join(KNOWLEDGE_DIR, 'collections.json');
+
+export function loadCollectionsFromManifest() {
+  if (fs.existsSync(COLLECTIONS_MANIFEST_PATH)) {
+    try {
+      const raw = fs.readFileSync(COLLECTIONS_MANIFEST_PATH, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {
+      console.warn('[SQLITE-SYNC] Warning reading collections.json:', e.message);
+    }
+  }
+  return DEFAULT_COLLECTIONS;
+}
+
+export function saveCollectionsToManifest(db) {
+  try {
+    const loc = typeof db.location === 'function' ? db.location() : db.location;
+    if (!loc || loc === ':memory:' || loc === '') return;
+    const cols = db.prepare('SELECT id, name, description, icon, color, is_private, sort_order FROM collections WHERE archived_at IS NULL ORDER BY sort_order ASC, name ASC').all();
+    if (cols && cols.length > 0) {
+      fs.writeFileSync(COLLECTIONS_MANIFEST_PATH, JSON.stringify(cols, null, 2), 'utf8');
+    }
+  } catch (e) {
+    console.warn('[SQLITE-SYNC] Warning saving collections.json:', e.message);
+  }
+}
+
+export function parseFrontmatter(content = '') {
+  let text = (content || '').trimStart();
+  let frontmatter = {};
+  while (true) {
+    const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+    if (!match) break;
+    const rawYaml = match[1];
+    text = text.slice(match[0].length).trimStart();
+    for (const line of rawYaml.split(/\r?\n/)) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx > -1) {
+        const key = line.slice(0, colonIdx).trim();
+        let val = line.slice(colonIdx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        } else if (val.startsWith('[') && val.endsWith(']')) {
+          try {
+            val = JSON.parse(val.replace(/'/g, '"'));
+          } catch (_) {
+            val = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+          }
+        } else if (val === 'true') {
+          val = true;
+        } else if (val === 'false') {
+          val = false;
+        } else if (val === 'null') {
+          val = null;
+        } else if (!isNaN(Number(val)) && val !== '') {
+          val = Number(val);
+        }
+        frontmatter[key] = val;
+      }
+    }
+  }
+  return { frontmatter, body: text };
+}
+
+export function runInTransaction(db, fn) {
+  const isOuterTx = Boolean(db.isTransaction);
+  if (!isOuterTx) {
+    db.exec('BEGIN IMMEDIATE TRANSACTION');
+  }
+  try {
+    const result = fn();
+    if (!isOuterTx) {
+      db.exec('COMMIT');
+    }
+    return result;
+  } catch (err) {
+    if (!isOuterTx) {
+      db.exec('ROLLBACK');
+    }
+    throw err;
+  }
+}
+
+export function buildYamlFrontmatter(data = {}) {
+  const orderedKeys = [
+    'id', 'title', 'collection', 'parent', 'owner', 'module', 'status', 'version',
+    'access', 'is_locked', 'is_favorite', 'full_width', 'archived_at', 'last_updated', 'tags', 'labels'
+  ];
+  const lines = ['---'];
+  for (const k of orderedKeys) {
+    if (data[k] !== undefined) {
+      const v = data[k];
+      if (k === 'access') {
+        const accStr = (v === 1 || v === '1' || v === 'private') ? 'private' : 'public';
+        lines.push(`access: "${accStr}"`);
+      } else if (k === 'is_locked' || k === 'is_favorite' || k === 'full_width') {
+        lines.push(`${k}: ${Boolean(v)}`);
+      } else if (k === 'parent') {
+        if (v === null || v === '' || v === '-') {
+          lines.push('parent: null');
+        } else {
+          lines.push(`parent: "${String(v).replace(/"/g, '\\"')}"`);
+        }
+      } else if (Array.isArray(v)) {
+        lines.push(`${k}: ${JSON.stringify(v)}`);
+      } else if (typeof v === 'boolean' || typeof v === 'number') {
+        lines.push(`${k}: ${v}`);
+      } else if (v === null) {
+        lines.push(`${k}: null`);
+      } else {
+        lines.push(`${k}: "${String(v).replace(/"/g, '\\"')}"`);
+      }
+    }
+  }
+  for (const k of Object.keys(data)) {
+    if (!orderedKeys.includes(k)) {
+      const v = data[k];
+      if (Array.isArray(v)) lines.push(`${k}: ${JSON.stringify(v)}`);
+      else if (typeof v === 'boolean' || typeof v === 'number') lines.push(`${k}: ${v}`);
+      else if (v === null) lines.push(`${k}: null`);
+      else lines.push(`${k}: "${String(v).replace(/"/g, '\\"')}"`);
+    }
+  }
+  lines.push('---');
+  return lines.join('\n');
+}
+
+export function rewritePageFileWithFrontmatter(db, pageId) {
+  const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  if (!page) {
+    throw new Error(`Cannot rewrite frontmatter: Page '${pageId}' not found in database.`);
+  }
+  if (!page.file_path) {
+    throw new Error(`Cannot rewrite frontmatter: Page '${pageId}' does not have a valid file_path.`);
+  }
+
+  const absPath = path.isAbsolute(page.file_path)
+    ? page.file_path
+    : path.join(PROJECT_DOCS_DIR, page.file_path);
+
+  const dirPath = path.dirname(absPath);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+
+  let existingFrontmatter = {};
+  let bodyContent = page.content_markdown || '';
+
+  if (fs.existsSync(absPath)) {
+    const rawContent = fs.readFileSync(absPath, 'utf8');
+    const parsed = parseFrontmatter(rawContent);
+    existingFrontmatter = parsed.frontmatter;
+    bodyContent = parsed.body || page.content_markdown || '';
+  }
+
+  let parentTarget = null;
+  if (page.parent_id) {
+    const parentRow = db.prepare('SELECT id, file_path, title FROM pages WHERE id = ?').get(page.parent_id);
+    if (parentRow) {
+      parentTarget = parentRow.file_path.replace(/^knowledge\//, '');
+    }
+  }
+
+  let vp = { full_width: false };
+  try {
+    vp = JSON.parse(page.view_props || '{"full_width":false}');
+  } catch (_) {}
+
+  const updatedFrontmatter = {
+    ...existingFrontmatter,
+    id: page.id,
+    title: page.title,
+    collection: page.collection_id,
+    parent: parentTarget,
+    owner: page.owner_name || existingFrontmatter.owner || 'spec-author',
+    access: (page.access === 1 || page.access === '1' || page.access === 'private') ? 'private' : 'public',
+    is_locked: Boolean(page.is_locked),
+    is_favorite: Boolean(page.is_favorite),
+    full_width: Boolean(vp.full_width),
+    archived_at: page.archived_at || null,
+    last_updated: new Date().toISOString().slice(0, 10)
+  };
+
+  const newFrontmatterStr = buildYamlFrontmatter(updatedFrontmatter);
+  const rawBody = page.content_markdown !== undefined ? page.content_markdown : bodyContent;
+  const newBody = parseFrontmatter(rawBody).body;
+  const finalContent = `${newFrontmatterStr}\n\n${newBody.trimStart()}`;
+
+  const tmpPath = `${absPath}.tmp.${Date.now()}`;
+  try {
+    fs.writeFileSync(tmpPath, finalContent, 'utf8');
+    fs.renameSync(tmpPath, absPath);
+    return true;
+  } catch (err) {
+    if (fs.existsSync(tmpPath)) {
+      try { fs.unlinkSync(tmpPath); } catch (_) {}
+    }
+    throw new Error(`Atomic write failed for '${absPath}': ${err.message}`);
+  }
+}
+
 export const DEFAULT_VIEWS = [
   {
     id: 'view-all-issues',
@@ -341,7 +543,8 @@ export function syncFilesToSQLite(db) {
     VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO NOTHING;
   `);
-  for (const c of DEFAULT_COLLECTIONS) {
+  const collectionsManifest = loadCollectionsFromManifest();
+  for (const c of collectionsManifest) {
     colStmt.run(c.id, c.name, c.description, c.icon, c.color, c.is_private, c.sort_order);
   }
 
@@ -681,9 +884,9 @@ export function syncFilesToSQLite(db) {
       id, project_id, workspace_id, parent_id, collection_id, owner_name, emoji,
       owned_by_id, owned_by_role, updated_by_id, module_id,
       file_path, title, summary, shelf, content_markdown, description_stripped,
-      is_locked, is_favorite, view_props,
+      access, is_locked, is_favorite, view_props,
       word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
-    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       parent_id = excluded.parent_id,
       collection_id = excluded.collection_id,
@@ -695,6 +898,9 @@ export function syncFilesToSQLite(db) {
       module_id = excluded.module_id,
       content_markdown = excluded.content_markdown,
       description_stripped = excluded.description_stripped,
+      access = excluded.access,
+      is_locked = excluded.is_locked,
+      is_favorite = excluded.is_favorite,
       view_props = excluded.view_props,
       word_count = excluded.word_count,
       char_count = excluded.char_count,
@@ -731,37 +937,11 @@ export function syncFilesToSQLite(db) {
       entity_type = excluded.entity_type;
   `);
 
-  function parseFrontmatter(content = '') {
-    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-    if (!match) return { frontmatter: {}, body: content };
-    const rawYaml = match[1];
-    const body = content.slice(match[0].length);
-    const frontmatter = {};
-    for (const line of rawYaml.split(/\r?\n/)) {
-      const colonIdx = line.indexOf(':');
-      if (colonIdx > -1) {
-        const key = line.slice(0, colonIdx).trim();
-        let val = line.slice(colonIdx + 1).trim();
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          val = val.slice(1, -1);
-        } else if (val === 'true') {
-          val = true;
-        } else if (val === 'false') {
-          val = false;
-        } else if (!isNaN(Number(val)) && val !== '') {
-          val = Number(val);
-        }
-        frontmatter[key] = val;
-      }
-    }
-    return { frontmatter, body };
-  }
-
   function deriveCollection(relPath, frontmatter = {}) {
     if (frontmatter.collection) {
       const c = String(frontmatter.collection).toLowerCase().trim().replace(/[- ]+/g, '_');
-      if (['product', 'engineering', 'general', 'design', 'customer_support'].includes(c)) return c;
       if (c === 'support') return 'customer_support';
+      return c;
     }
     const low = relPath.toLowerCase();
     if (low.startsWith('knowledge/product/') || low.includes('/product/')) return 'product';
@@ -804,20 +984,14 @@ export function syncFilesToSQLite(db) {
     if (frontmatter.owner) return frontmatter.owner;
     if (frontmatter.author) return frontmatter.author;
     const low = relPath.toLowerCase();
-    if (low.includes('overview') || low.includes('roadmap') || low.includes('launch')) return 'Aria';
-    if (low.includes('prd') || low.includes('invite') || low.includes('enterprise')) return 'Marcus';
-    if (low.includes('matrix') || low.includes('permission')) return 'Ana';
-    if (low.includes('interview')) return 'Priya Sharma';
-    if (low.includes('scim') || low.includes('rotation')) return 'Alex';
-    if (low.includes('pricing')) return 'Jordan Kim';
     if (low.includes('c4') || low.includes('architecture')) return 'Lead Architect';
     if (low.includes('data-dictionary')) return 'Data Lead';
     if (low.includes('uml')) return 'spec-author';
-    if (low.includes('business-rules')) return 'Governance Bot';
+    if (low.includes('business-rules')) return 'Governance Lead';
     if (low.includes('coding-standards')) return 'reviewer';
     if (low.includes('traceability')) return 'QA Lead';
     if (low.includes('external-services')) return 'Cloud Lead';
-    if (low.includes('master')) return 'Knowledge Bot';
+    if (low.includes('master')) return 'Knowledge Lead';
     if (low.includes('design')) return 'Product Designer';
     if (low.includes('verify')) return 'DevOps Lead';
     return ownerRole === 'reviewer' ? 'reviewer' : ownerRole === 'leader' ? 'leader' : 'spec-author';
@@ -868,10 +1042,22 @@ export function syncFilesToSQLite(db) {
           const pageId = `page-${relPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
           const shelf = shelfOverride || classifyShelf(relPath);
           const collectionId = deriveCollection(relPath, frontmatter);
+          const validCol = db.prepare('SELECT id FROM collections WHERE id = ?').get(collectionId);
+          if (!validCol) {
+            throw new Error(`BR-PAGE-07 Violation: Unknown collection '${collectionId}' referenced in file '${relPath}'. Must be declared in collections.json.`);
+          }
           const emoji = deriveEmoji(relPath, frontmatter);
           const ownerRole = shelf === 'specs' ? 'spec-author' : 'leader';
           const ownerName = deriveOwnerName(relPath, frontmatter, ownerRole);
           const ownerId = mapRoleToUserId(ownerRole);
+
+          const isLockedVal = frontmatter.is_locked !== undefined ? (frontmatter.is_locked ? 1 : 0) : telemetry.isLocked;
+          const isFavoriteVal = frontmatter.is_favorite !== undefined ? (frontmatter.is_favorite ? 1 : 0) : telemetry.isFavorite;
+          const accessVal = frontmatter.access !== undefined ? (Number(frontmatter.access) === 1 ? 1 : 0) : 0;
+          let vp = { full_width: telemetry.isFullWidth, assets: telemetry.assets };
+          if (frontmatter.full_width !== undefined) {
+            vp.full_width = Boolean(frontmatter.full_width);
+          }
 
           pageStmt.run(
             pageId,
@@ -887,11 +1073,12 @@ export function syncFilesToSQLite(db) {
             title,
             summary,
             shelf,
-            content,
+            body,
             summary,
-            telemetry.isLocked,
-            telemetry.isFavorite,
-            telemetry.viewPropsJson,
+            accessVal,
+            isLockedVal,
+            isFavoriteVal,
+            JSON.stringify(vp),
             telemetry.words,
             telemetry.chars,
             telemetry.paragraphs,
@@ -902,17 +1089,17 @@ export function syncFilesToSQLite(db) {
           if (frontmatter.parent) {
             parentsToResolve.push({ pageId, parentTarget: frontmatter.parent });
           } else if (relPath.includes('/modules/') && !relPath.endsWith('module-spec.md')) {
-            const modDir = path.dirname(relPath);
+            const modDir = path.dirname(relPath).replace(/\\/g, '/');
             parentsToResolve.push({ pageId, parentTarget: `${modDir}/module-spec.md` });
           } else if (relPath.startsWith('specs/') && (relPath.endsWith('tasks.md') || relPath.endsWith('design.md'))) {
-            const specDir = path.dirname(relPath);
+            const specDir = path.dirname(relPath).replace(/\\/g, '/');
             parentsToResolve.push({ pageId, parentTarget: `${specDir}/requirements.md` });
           }
 
           pageVersionStmt.run(
             `pv-${pageId}-v1`,
             pageId,
-            content,
+            body,
             summary,
             ownerRole,
             telemetry.words
@@ -931,6 +1118,9 @@ export function syncFilesToSQLite(db) {
             }
           }
         } catch (err) {
+          if (err.message && err.message.startsWith('BR-PAGE-')) {
+            throw err;
+          }
           console.warn(`[SQLITE-SYNC] Error indexando archivo ${full}:`, err.message);
         }
       }
@@ -958,12 +1148,17 @@ export function syncFilesToSQLite(db) {
   // Resolve nested parent_id relationships
   const updateParentStmt = db.prepare('UPDATE pages SET parent_id = ? WHERE id = ?');
   for (const pr of parentsToResolve) {
-    const parentPage = allIndexedPages.find(p =>
-      p.file_path === pr.parentTarget ||
-      p.file_path.endsWith(`/${path.basename(pr.parentTarget)}`) ||
-      path.basename(p.file_path) === path.basename(pr.parentTarget) ||
-      p.title.toLowerCase() === String(pr.parentTarget).toLowerCase()
-    );
+    const normTarget = String(pr.parentTarget).replace(/\\/g, '/');
+    const parentPage = allIndexedPages.find(p => {
+      if (p.id === pr.parentTarget) return true;
+      const pNorm = p.file_path.replace(/\\/g, '/');
+      if (pNorm === normTarget) return true;
+      if (pNorm.endsWith(normTarget) || pNorm.endsWith(`/${normTarget}`)) return true;
+      if (p.file_path === `knowledge/${normTarget}` || p.file_path === normTarget) return true;
+      if (p.title.toLowerCase() === normTarget.toLowerCase()) return true;
+      if (p.slug && p.slug.toLowerCase() === normTarget.toLowerCase()) return true;
+      return false;
+    });
     if (parentPage && parentPage.id !== pr.pageId) {
       updateParentStmt.run(parentPage.id, pr.pageId);
     }
@@ -974,60 +1169,76 @@ export function syncFilesToSQLite(db) {
 }
 
 export function backfillSlugAndDepth(db) {
-  const pages = db.prepare('SELECT id, title, collection_id, parent_id, file_path FROM pages').all();
-  const slugCounts = new Map();
+  return runInTransaction(db, () => {
+    const pages = db.prepare('SELECT id, title, collection_id, parent_id, file_path, slug FROM pages').all();
+    const slugCounts = new Map();
 
-  // 1. Calculate and backfill slugs (BR-PAGE-10: Unique slug per collection)
-  const updateSlugStmt = db.prepare('UPDATE pages SET slug = ? WHERE id = ?');
-  for (const p of pages) {
-    const rawName = p.title || path.basename(p.file_path, '.md');
-    let baseSlug = rawName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'page';
-
-    const colKey = p.collection_id || 'general';
-    const comboKey = `${colKey}:${baseSlug}`;
-    let finalSlug = baseSlug;
-
-    if (slugCounts.has(comboKey)) {
-      const count = slugCounts.get(comboKey) + 1;
-      slugCounts.set(comboKey, count);
-      finalSlug = `${baseSlug}-${count}`;
-    } else {
-      slugCounts.set(comboKey, 1);
-    }
-
-    updateSlugStmt.run(finalSlug, p.id);
-    p.slug = finalSlug;
-  }
-
-  // 2. Calculate depth (BR-PAGE-08: Max 4 levels, 1: root, 2: subpage, 3: sub-subpage, 4: max)
-  const pageMap = new Map(pages.map(p => [p.id, p]));
-  const updateDepthStmt = db.prepare('UPDATE pages SET depth = ? WHERE id = ?');
-
-  for (const p of pages) {
-    let depth = 1;
-    let currParentId = p.parent_id;
-    const visited = new Set([p.id]);
-
-    while (currParentId) {
-      if (visited.has(currParentId)) {
-        // Break cycle if detected during backfill
-        db.prepare('UPDATE pages SET parent_id = NULL WHERE id = ?').run(p.id);
-        break;
+    // 1. Seed existing non-empty slugs to preserve stability & prevent duplicates
+    for (const p of pages) {
+      if (p.slug && String(p.slug).trim().length > 0) {
+        const colKey = p.collection_id || 'general';
+        const comboKey = `${colKey}:${p.slug.trim()}`;
+        slugCounts.set(comboKey, (slugCounts.get(comboKey) || 0) + 1);
       }
-      visited.add(currParentId);
-      depth++;
-      const parent = pageMap.get(currParentId);
-      currParentId = parent ? parent.parent_id : null;
     }
 
-    const finalDepth = Math.min(depth, 4);
-    updateDepthStmt.run(finalDepth, p.id);
-  }
+    // 2. Only compute and backfill missing or empty slugs (BR-PAGE-10: Unique slug per collection)
+    const updateSlugStmt = db.prepare('UPDATE pages SET slug = ? WHERE id = ?');
+    for (const p of pages) {
+      if (!p.slug || String(p.slug).trim().length === 0) {
+        const rawName = p.title || path.basename(p.file_path, '.md');
+        let baseSlug = rawName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'page';
+
+        const colKey = p.collection_id || 'general';
+        const comboKey = `${colKey}:${baseSlug}`;
+        let finalSlug = baseSlug;
+
+        if (slugCounts.has(comboKey)) {
+          let count = 2;
+          while (slugCounts.has(`${colKey}:${baseSlug}-${count}`)) {
+            count++;
+          }
+          finalSlug = `${baseSlug}-${count}`;
+          slugCounts.set(`${colKey}:${finalSlug}`, 1);
+        } else {
+          slugCounts.set(comboKey, 1);
+        }
+
+        updateSlugStmt.run(finalSlug, p.id);
+        p.slug = finalSlug;
+      }
+    }
+
+    // 3. Calculate depth (BR-PAGE-08: Max 4 levels, 1: root, 2: subpage, 3: sub-subpage, 4: max)
+    const pageMap = new Map(pages.map(p => [p.id, p]));
+    const updateDepthStmt = db.prepare('UPDATE pages SET depth = ? WHERE id = ?');
+
+    for (const p of pages) {
+      let depth = 1;
+      let currParentId = p.parent_id;
+      const visited = new Set([p.id]);
+
+      while (currParentId) {
+        if (visited.has(currParentId)) {
+          // Break cycle if detected during backfill
+          db.prepare('UPDATE pages SET parent_id = NULL WHERE id = ?').run(p.id);
+          break;
+        }
+        visited.add(currParentId);
+        depth++;
+        const parent = pageMap.get(currParentId);
+        currParentId = parent ? parent.parent_id : null;
+      }
+
+      const finalDepth = Math.max(1, Math.min(depth, 4));
+      updateDepthStmt.run(finalDepth, p.id);
+    }
+  });
 }
 
 export function extractPageTelemetryAndLogs(content = '', relPath = '') {
@@ -1078,13 +1289,11 @@ export function extractPageTelemetryAndLogs(content = '', relPath = '') {
   const diagramsCount = assets.filter(a => a.type === 'mermaid').length;
 
   const lowPath = relPath.toLowerCase();
-  const isLocked = (
-    lowPath.includes('business-rule') ||
-    lowPath.includes('10-business-rules') ||
-    lowPath.includes('07-functional-requirements') ||
-    lowPath.includes('09-data-dictionary') ||
-    lowPath.includes('data-dictionary') ||
-    lowPath.endsWith('requirements.md')
+  const isModuleFile = lowPath.includes('modules/') || lowPath.includes('/modules/');
+  const isLocked = !isModuleFile && (
+    lowPath.includes('coding-standards') ||
+    lowPath.endsWith('c4-model.md') ||
+    lowPath.endsWith('data-dictionary.md')
   ) ? 1 : 0;
 
   const isFavorite = (
@@ -1800,9 +2009,6 @@ export function updatePagePropertiesInSQLite(db, pageId, {
   emoji,
   access,
   is_favorite,
-  is_locked,
-  archived,
-  archived_at,
   duplicate,
   full_width,
   restore_version_id,
@@ -1814,27 +2020,20 @@ export function updatePagePropertiesInSQLite(db, pageId, {
 
   const targetId = page.id;
 
-  // Server-side enforcement of BR-PAGE-02: Lock & Archive Guard
-  const isTargetLocked = Boolean(page.is_locked);
-  const isTargetArchived = Boolean(page.archived_at);
-  const isUnlockingAction = is_locked === 0 || is_locked === false;
-  const isRestoringAction = archived === false || archived_at === null;
-
-  if (isTargetLocked && !isUnlockingAction) {
-    if (content_markdown !== undefined || (title !== undefined && title !== page.title)) {
-      throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of locked page '${targetId}' without unlocking first.`);
-    }
-  }
-
-  if (isTargetArchived && !isRestoringAction) {
-    if (content_markdown !== undefined || (title !== undefined && title !== page.title)) {
-      throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of archived page '${targetId}'.`);
-    }
-  }
-
   // Server-side enforcement of BR-PAGE-04: Archive Access Immutability
-  if (isTargetArchived && access !== undefined && Number(access) !== Number(page.access)) {
+  if (page.archived_at && access !== undefined && Number(access) !== Number(page.access)) {
     throw new Error(`BR-PAGE-04 Violation: Cannot change access visibility of archived page '${targetId}'.`);
+  }
+
+  // Server-side enforcement of BR-PAGE-02: Lock Guard
+  // Locking & Unlocking are strictly audited operations handled via lockPageInSQLite / unlockPageInSQLite
+  if (page.is_locked) {
+    throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of locked page '${targetId}'. Unlock page explicitly first via unlockPageInSQLite.`);
+  }
+
+  // Server-side enforcement of BR-PAGE-02 for archived pages
+  if (page.archived_at) {
+    throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of archived page '${targetId}'. Restore page first.`);
   }
 
   if (duplicate) {
@@ -1853,47 +2052,8 @@ export function updatePagePropertiesInSQLite(db, pageId, {
   let nextCollectionId = collection_id !== undefined ? collection_id : page.collection_id;
   let nextOwnerName = owner_name !== undefined ? owner_name : page.owner_name;
   let nextEmoji = emoji !== undefined ? emoji : page.emoji;
-
-  let nextArchivedAt = page.archived_at || null;
-  if (archived !== undefined) {
-    nextArchivedAt = archived ? new Date().toISOString() : null;
-  } else if (archived_at !== undefined) {
-    nextArchivedAt = archived_at;
-  }
-
-  // Plane Business Rule BR-PAGE-04: Access can only be changed when page is NOT archived
-  let nextAccess = page.access || 0;
-  if (access !== undefined && !nextArchivedAt) {
-    nextAccess = Number(access) === 1 ? 1 : 0;
-  }
-
-  // Plane Business Rule BR-PAGE-03: Archiving a page automatically removes it from Favorites
+  let nextAccess = access !== undefined ? (Number(access) === 1 ? 1 : 0) : page.access;
   let nextFav = is_favorite !== undefined ? (is_favorite ? 1 : 0) : page.is_favorite;
-  if (nextArchivedAt) {
-    nextFav = 0;
-  }
-
-  const nextLock = is_locked !== undefined ? (is_locked ? 1 : 0) : page.is_locked;
-
-  if (typeof content_markdown === 'string') {
-    return upsertPageInSQLite(db, {
-      id: targetId,
-      file_path: page.file_path,
-      title: nextTitle,
-      parent_id: nextParentId,
-      collection_id: nextCollectionId,
-      owner_name: nextOwnerName,
-      emoji: nextEmoji,
-      shelf: page.shelf,
-      content_markdown,
-      owned_by_role: actor_role,
-      access: nextAccess,
-      is_locked: nextLock,
-      is_favorite: nextFav,
-      archived_at: nextArchivedAt,
-      full_width
-    });
-  }
 
   let vp = { full_width: false, assets: [] };
   try {
@@ -1903,14 +2063,30 @@ export function updatePagePropertiesInSQLite(db, pageId, {
     vp.full_width = Boolean(full_width);
   }
 
-  db.prepare(`
-    UPDATE pages
-    SET title = ?, parent_id = ?, collection_id = ?, owner_name = ?, emoji = ?,
-        access = ?, is_favorite = ?, is_locked = ?, archived_at = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(nextTitle, nextParentId, nextCollectionId, nextOwnerName, nextEmoji, nextAccess, nextFav, nextLock, nextArchivedAt, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
+  return runInTransaction(db, () => {
+    if (typeof content_markdown === 'string') {
+      const words = content_markdown.trim().split(/\s+/).filter(Boolean).length;
+      const chars = content_markdown.length;
 
-  return db.prepare('SELECT * FROM pages WHERE id = ?').get(targetId);
+      db.prepare(`
+        UPDATE pages
+        SET title = ?, parent_id = ?, collection_id = ?, owner_name = ?, emoji = ?,
+            access = ?, is_favorite = ?, content_markdown = ?, word_count = ?, char_count = ?,
+            view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(nextTitle, nextParentId, nextCollectionId, nextOwnerName, nextEmoji, nextAccess, nextFav, content_markdown, words, chars, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
+    } else {
+      db.prepare(`
+        UPDATE pages
+        SET title = ?, parent_id = ?, collection_id = ?, owner_name = ?, emoji = ?,
+            access = ?, is_favorite = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(nextTitle, nextParentId, nextCollectionId, nextOwnerName, nextEmoji, nextAccess, nextFav, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
+    }
+
+    rewritePageFileWithFrontmatter(db, targetId);
+    return db.prepare('SELECT * FROM pages WHERE id = ?').get(targetId);
+  });
 }
 
 export function getPlaneData(db) {
@@ -2066,25 +2242,35 @@ export function getPlaneData(db) {
   };
 }
 
-export function createCollectionInSQLite(db, { id, name, description = '', icon = 'folder', color = '#f59e0b', is_private = 0, sort_order = 1000 }) {
-  const colId = (id || name || 'collection').toLowerCase().trim().replace(/[^a-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
-  if (!name || !name.trim()) throw new Error('Collection name cannot be empty');
-  
-  db.prepare(`
-    INSERT INTO collections (id, project_id, workspace_id, name, description, icon, color, is_private, sort_order)
-    VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      name = excluded.name,
-      description = excluded.description,
-      icon = excluded.icon,
-      color = excluded.color,
-      is_private = excluded.is_private,
-      sort_order = excluded.sort_order,
-      archived_at = NULL,
-      updated_at = CURRENT_TIMESTAMP
-  `).run(colId, name.trim(), description.trim(), icon, color, is_private ? 1 : 0, sort_order);
+export function createCollectionInSQLite(db, { id, name, description = '', icon = 'folder', color = '#f59e0b', is_private = 0, sort_order = 1000 } = {}) {
+  const rawName = (name || '').trim();
+  if (!rawName) throw new Error('BR-PAGE-12 Violation: Collection name cannot be empty');
 
-  return db.prepare('SELECT * FROM collections WHERE id = ?').get(colId);
+  const normalized = (id || rawName)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  if (!normalized) throw new Error('BR-PAGE-12 Violation: Invalid collection identifier generated from name');
+
+  return runInTransaction(db, () => {
+    const existing = db.prepare('SELECT id FROM collections WHERE id = ?').get(normalized);
+    if (existing) {
+      throw new Error(`BR-PAGE-12 Violation: Collection with id '${normalized}' already exists`);
+    }
+
+    db.prepare(`
+      INSERT INTO collections (id, project_id, workspace_id, name, description, icon, color, is_private, sort_order)
+      VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?)
+    `).run(normalized, rawName, description.trim(), icon, color, is_private ? 1 : 0, sort_order);
+
+    saveCollectionsToManifest(db);
+    return db.prepare('SELECT * FROM collections WHERE id = ?').get(normalized);
+  });
 }
 
 export function updateCollectionInSQLite(db, collectionId, updates = {}) {
@@ -2103,6 +2289,8 @@ export function updateCollectionInSQLite(db, collectionId, updates = {}) {
     SET name = ?, description = ?, icon = ?, color = ?, is_private = ?, sort_order = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
   `).run(nextName, nextDesc, nextIcon, nextColor, nextPrivate, nextSort, collectionId);
+
+  saveCollectionsToManifest(db);
 
   return db.prepare('SELECT * FROM collections WHERE id = ?').get(collectionId);
 }
@@ -2127,172 +2315,417 @@ export function archiveCollectionInSQLite(db, collectionId) {
     WHERE id = ?
   `).run(collectionId);
 
+  saveCollectionsToManifest(db);
+
   return true;
 }
 
 /**
  * BR-PAGE-08: Hierarchy Invariant, Cycle Prevention & Depth Limit
  * Checks that targetParentId is not pageId itself, nor any descendant of pageId.
- * Enforces maximum nesting depth of 4 levels (0: root, 1: page, 2: subpage, 3: sub-subpage, 4: max).
+ * Enforces maximum nesting depth of 4 levels (root = 1, subpage = 2, sub-subpage = 3, max = 4).
+ * Enforces BR-PAGE-10: Checks for slug collision in target collection and suffixes -2, -3.
  */
 export function movePageInSQLite(db, pageId, targetCollectionId = null, targetParentId = null) {
-  const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
-  if (!page) throw new Error(`Page not found: ${pageId}`);
+  return runInTransaction(db, () => {
+    const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+    if (!page) throw new Error(`Page not found: ${pageId}`);
 
-  if (targetParentId) {
-    if (targetParentId === pageId) {
-      throw new Error(`BR-PAGE-08 Violation: A page cannot be its own parent (${pageId}).`);
-    }
-
-    // Check target parent exists
-    const targetParent = db.prepare('SELECT * FROM pages WHERE id = ?').get(targetParentId);
-    if (!targetParent) throw new Error(`Target parent page not found: ${targetParentId}`);
-
-    // Cycle check: climb upwards from targetParentId
-    let curr = targetParent;
-    let depthCount = 1;
-    while (curr && curr.parent_id) {
-      if (curr.parent_id === pageId) {
-        throw new Error(`BR-PAGE-08 Violation: Cyclic hierarchy detected! Page '${targetParentId}' is a descendant of '${pageId}'.`);
+    if (targetParentId) {
+      if (targetParentId === pageId) {
+        throw new Error(`BR-PAGE-08 Violation: A page cannot be its own parent (${pageId}).`);
       }
-      depthCount++;
-      curr = db.prepare('SELECT * FROM pages WHERE id = ?').get(curr.parent_id);
+
+      const targetParent = db.prepare('SELECT * FROM pages WHERE id = ?').get(targetParentId);
+      if (!targetParent) throw new Error(`Target parent page not found: ${targetParentId}`);
+
+      // Cycle check: climb upwards from targetParentId
+      let curr = targetParent;
+      const visited = new Set([targetParentId]);
+      while (curr && curr.parent_id) {
+        if (curr.parent_id === pageId) {
+          throw new Error(`BR-PAGE-08 Violation: Cyclic hierarchy detected! Page '${targetParentId}' is a descendant of '${pageId}'.`);
+        }
+        if (visited.has(curr.parent_id)) break;
+        visited.add(curr.parent_id);
+        curr = db.prepare('SELECT * FROM pages WHERE id = ?').get(curr.parent_id);
+      }
+
+      // Calculate subtree height of pageId
+      function getSubtreeHeight(rootId) {
+        const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(rootId);
+        if (children.length === 0) return 1;
+        let maxHeight = 0;
+        for (const ch of children) {
+          const h = getSubtreeHeight(ch.id);
+          if (h > maxHeight) maxHeight = h;
+        }
+        return 1 + maxHeight;
+      }
+
+      const subtreeHeight = getSubtreeHeight(pageId);
+      const targetParentDepth = targetParent.depth || 1;
+
+      if (targetParentDepth + subtreeHeight > 4) {
+        throw new Error(`BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded (attempted depth: ${targetParentDepth + subtreeHeight}).`);
+      }
     }
 
-    // Depth check
-    if (depthCount >= 4) {
-      throw new Error(`BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded (attempted depth: ${depthCount + 1}).`);
+    const nextColId = targetCollectionId || (targetParentId ? db.prepare('SELECT collection_id FROM pages WHERE id = ?').get(targetParentId)?.collection_id : page.collection_id) || page.collection_id;
+
+    // Check slug collision in target collection (BR-PAGE-10)
+    let finalSlug = page.slug;
+    if (finalSlug) {
+      const slugCollision = db.prepare(`
+        SELECT id FROM pages 
+        WHERE collection_id = ? AND slug = ? AND id != ?
+      `).get(nextColId, finalSlug, pageId);
+
+      if (slugCollision) {
+        let suffix = 2;
+        while (db.prepare('SELECT id FROM pages WHERE collection_id = ? AND slug = ? AND id != ?').get(nextColId, `${page.slug}-${suffix}`, pageId)) {
+          suffix++;
+        }
+        finalSlug = `${page.slug}-${suffix}`;
+        db.prepare('UPDATE pages SET slug = ? WHERE id = ?').run(finalSlug, pageId);
+      }
     }
-  }
 
-  const nextColId = targetCollectionId || (targetParentId ? db.prepare('SELECT collection_id FROM pages WHERE id = ?').get(targetParentId)?.collection_id : page.collection_id) || page.collection_id;
+    const targetParentDepth = targetParentId ? (db.prepare('SELECT depth FROM pages WHERE id = ?').get(targetParentId)?.depth || 1) : 0;
+    const newPageDepth = targetParentId ? (targetParentDepth + 1) : 1;
 
-  db.prepare(`
-    UPDATE pages
-    SET collection_id = ?, parent_id = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(nextColId, targetParentId, pageId);
+    db.prepare(`
+      UPDATE pages
+      SET collection_id = ?, parent_id = ?, depth = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(nextColId, targetParentId, newPageDepth, pageId);
 
-  // Propagate collection change to all descendants recursively
-  function updateDescendantsCol(parentId, newCol) {
-    const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(parentId);
-    for (const ch of children) {
-      db.prepare('UPDATE pages SET collection_id = ? WHERE id = ?').run(newCol, ch.id);
-      updateDescendantsCol(ch.id, newCol);
+    // Propagate collection change and recalculate depths for all descendants
+    function updateDescendants(parentId, colId, currentDepth) {
+      const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(parentId);
+      for (const ch of children) {
+        const chDepth = Math.min(4, currentDepth + 1);
+        db.prepare('UPDATE pages SET collection_id = ?, depth = ? WHERE id = ?').run(colId, chDepth, ch.id);
+        updateDescendants(ch.id, colId, chDepth);
+        rewritePageFileWithFrontmatter(db, ch.id);
+      }
     }
-  }
-  updateDescendantsCol(pageId, nextColId);
+    updateDescendants(pageId, nextColId, newPageDepth);
 
-  return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+    rewritePageFileWithFrontmatter(db, pageId);
+    return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  });
 }
 
 /**
  * BR-PAGE-09: Cascade Archive for Page Hierarchy
  * Archiving a parent cascades archived_at and clears is_favorite for all descendants.
+ * Audited strictly in page_audit.
  */
-export function archivePageCascadeInSQLite(db, pageId) {
-  const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
-  if (!page) throw new Error(`Page not found: ${pageId}`);
+export function archivePageCascadeInSQLite(db, pageId, { actor = { id: 'user-human-lead' } } = {}) {
+  return runInTransaction(db, () => {
+    const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+    if (!page) throw new Error(`Page not found: ${pageId}`);
 
-  const nowIso = new Date().toISOString();
-  db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, pageId);
+    const resolvedActor = resolveActor(db, actor);
+    const nowIso = new Date().toISOString();
+    db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, pageId);
+    rewritePageFileWithFrontmatter(db, pageId);
 
-  function cascadeArchive(parentId) {
-    const children = db.prepare('SELECT id FROM pages WHERE parent_id = ? AND archived_at IS NULL').all(parentId);
-    for (const ch of children) {
-      db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, ch.id);
-      cascadeArchive(ch.id);
+    let cascadeCount = 0;
+    function cascadeArchive(parentId) {
+      const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(parentId);
+      for (const ch of children) {
+        cascadeCount++;
+        db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, ch.id);
+        rewritePageFileWithFrontmatter(db, ch.id);
+        cascadeArchive(ch.id);
+      }
     }
-  }
-  cascadeArchive(pageId);
+    cascadeArchive(pageId);
 
-  return true;
+    logPageAudit(db, {
+      pageId,
+      action: 'archived',
+      actor: resolvedActor,
+      reason: `Página y ${cascadeCount} descendientes archivados en cascada por [${resolvedActor.type}:${resolvedActor.role}]`,
+      metadata: { cascadeCount, archived_at: nowIso }
+    });
+
+    return true;
+  });
+}
+
+/**
+ * Actor Resolver: verifies user exists in SQLite users table and determines human vs agent
+ */
+export function resolveActor(db, actor) {
+  if (!actor || !actor.id) {
+    throw new Error('BR-PAGE-02 Violation: Actor required for operation');
+  }
+  const user = db.prepare('SELECT id, username, role, is_bot FROM users WHERE id = ? OR username = ?').get(actor.id, actor.id);
+  if (!user) {
+    throw new Error(`BR-PAGE-02 Violation: Unknown actor '${actor.id}'`);
+  }
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    type: user.is_bot ? 'agent' : 'human'
+  };
+}
+
+/**
+ * Dedicated Page Audit Logger (writes strictly to page_audit table, preserving page_logs for entity relations)
+ */
+export function logPageAudit(db, { pageId, action, actor, reason = '', metadata = {} }) {
+  const auditActor = resolveActor(db, actor);
+  const auditId = `audit-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  db.prepare(`
+    INSERT INTO page_audit (id, page_id, action, actor_id, actor_role, actor_type, reason, metadata_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    auditId,
+    pageId,
+    action,
+    auditActor.id,
+    auditActor.role,
+    auditActor.type,
+    reason || `Action ${action} executed by [${auditActor.type}:${auditActor.role}]`,
+    JSON.stringify(metadata)
+  );
+  return auditId;
+}
+
+/**
+ * BR-PAGE-09: Unarchive / Restore Page Lifecycle
+ * Restores a page from archive (archived_at = NULL).
+ * By default per BR-PAGE-09: restoring a parent does NOT unarchive its children.
+ * If restoreSubtree === true: unarchives ONLY descendants sharing the same archived_at timestamp.
+ * Rejects if parent page or parent collection is still archived.
+ * Audited strictly in page_audit (actor required, human vs agent tracked) and rewrites YAML frontmatter.
+ */
+export function unarchivePageInSQLite(db, pageId, { restoreSubtree = false, actor } = {}) {
+  return runInTransaction(db, () => {
+    const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+    if (!page) throw new Error(`Page not found: ${pageId}`);
+
+    const resolvedActor = resolveActor(db, actor);
+
+    if (page.archived_at === null) {
+      return page;
+    }
+
+    // 1. Reject if parent collection is still archived
+    if (page.collection_id) {
+      const col = db.prepare('SELECT id, name, archived_at FROM collections WHERE id = ?').get(page.collection_id);
+      if (col && col.archived_at !== null) {
+        throw new Error(`BR-PAGE-07 Violation: Cannot unarchive page '${pageId}' because parent collection '${col.name}' is archived.`);
+      }
+    }
+
+    // 2. Reject if parent page is still archived
+    if (page.parent_id) {
+      const parent = db.prepare('SELECT id, title, archived_at FROM pages WHERE id = ?').get(page.parent_id);
+      if (parent && parent.archived_at !== null) {
+        throw new Error(`BR-PAGE-09 Violation: Cannot unarchive page '${pageId}' because parent page '${parent.title}' is archived.`);
+      }
+    }
+
+    const originalArchivedAt = page.archived_at;
+    db.prepare('UPDATE pages SET archived_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(pageId);
+    rewritePageFileWithFrontmatter(db, pageId);
+
+    // 3. With restoreSubtree: ONLY restore descendants that have the exact same archived_at as parent
+    if (restoreSubtree && originalArchivedAt) {
+      function cascadeUnarchive(parentId) {
+        const children = db.prepare('SELECT id, archived_at FROM pages WHERE parent_id = ? AND archived_at = ?').all(parentId, originalArchivedAt);
+        for (const ch of children) {
+          db.prepare('UPDATE pages SET archived_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(ch.id);
+          rewritePageFileWithFrontmatter(db, ch.id);
+          cascadeUnarchive(ch.id);
+        }
+      }
+      cascadeUnarchive(pageId);
+    }
+
+    logPageAudit(db, {
+      pageId,
+      action: 'unarchived',
+      actor: resolvedActor,
+      reason: `Página desarchivada por [${resolvedActor.type}:${resolvedActor.role}]`,
+      metadata: { restoreSubtree, originalArchivedAt }
+    });
+
+    return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  });
 }
 
 /**
  * Restore Version Snapshot
+ * Enforces BR-PAGE-02 / BR-PAGE-04: Cannot restore if page is locked or archived.
+ * Saves a pre-restore snapshot of the current state before applying the restored version.
+ * Audited strictly in page_audit.
  */
-export function restorePageVersionInSQLite(db, pageId, versionNumber) {
+export function restorePageVersionInSQLite(db, pageId, versionNumber, { actor = { id: 'user-human-lead' } } = {}) {
+  const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  if (!page) throw new Error(`Page not found: ${pageId}`);
+
+  // BR-PAGE-02 / BR-PAGE-04 Guard: Reject if locked or archived
+  if (page.is_locked) {
+    throw new Error(`BR-PAGE-02 Violation: Cannot restore version on locked page '${pageId}'. Unlock page first.`);
+  }
+  if (page.archived_at) {
+    throw new Error(`BR-PAGE-02 Violation: Cannot restore version on archived page '${pageId}'. Restore page from archive first.`);
+  }
+
+  const resolvedActor = resolveActor(db, actor);
+
   const version = db.prepare('SELECT * FROM page_versions WHERE page_id = ? AND version_number = ?').get(pageId, versionNumber);
   if (!version) throw new Error(`Version ${versionNumber} not found for page ${pageId}`);
 
-  const maxVerRow = db.prepare('SELECT MAX(version_number) as max_v FROM page_versions WHERE page_id = ?').get(pageId);
-  const nextVer = (maxVerRow?.max_v || versionNumber) + 1;
+  return runInTransaction(db, () => {
+    const maxVerRow = db.prepare('SELECT MAX(version_number) as max_v FROM page_versions WHERE page_id = ?').get(pageId);
+    const currentMax = maxVerRow?.max_v || 1;
+    const preRestoreVer = currentMax + 1;
+    const restoredVer = currentMax + 2;
 
-  db.prepare(`
-    INSERT INTO page_versions (id, page_id, version_number, content_markdown, description_html, description_stripped, owned_by_role, word_count)
-    VALUES (?, ?, ?, ?, ?, ?, 'restored-version', ?)
-  `).run(
-    `pv-${pageId}-v${nextVer}-${Date.now().toString(36)}`,
-    pageId,
-    nextVer,
-    version.content_markdown,
-    version.description_html || '',
-    version.description_stripped || '',
-    version.word_count || 0
-  );
+    // Snapshot current state before restoring
+    db.prepare(`
+      INSERT INTO page_versions (id, page_id, version_number, content_markdown, description_html, description_stripped, owned_by_role, word_count)
+      VALUES (?, ?, ?, ?, ?, ?, 'pre-restore-snapshot', ?)
+    `).run(
+      `pv-${pageId}-v${preRestoreVer}-pre-${Date.now().toString(36)}`,
+      pageId,
+      preRestoreVer,
+      page.content_markdown || '',
+      page.summary || '',
+      '',
+      page.word_count || 0
+    );
 
-  db.prepare(`
-    UPDATE pages
-    SET content_markdown = ?, word_count = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(version.content_markdown, version.word_count || 0, pageId);
+    // Save restored version
+    db.prepare(`
+      INSERT INTO page_versions (id, page_id, version_number, content_markdown, description_html, description_stripped, owned_by_role, word_count)
+      VALUES (?, ?, ?, ?, ?, ?, 'restored-version', ?)
+    `).run(
+      `pv-${pageId}-v${restoredVer}-${Date.now().toString(36)}`,
+      pageId,
+      restoredVer,
+      version.content_markdown,
+      version.description_html || '',
+      version.description_stripped || '',
+      version.word_count || 0
+    );
 
-  return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+    db.prepare(`
+      UPDATE pages
+      SET content_markdown = ?, word_count = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(version.content_markdown, version.word_count || 0, pageId);
+
+    // Dedicated audit log in page_audit
+    logPageAudit(db, {
+      pageId,
+      action: 'version_restored',
+      actor: resolvedActor,
+      reason: `Restaurada versión v${versionNumber} (snapshot previo respaldado como v${preRestoreVer})`,
+      metadata: { restoredVersion: versionNumber, preRestoreVersion: preRestoreVer }
+    });
+
+    rewritePageFileWithFrontmatter(db, pageId);
+    return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  });
 }
 
 /**
- * Operación separada de Desbloqueo (Auditada en page_logs)
+ * Operación separada de Desbloqueo (Auditada estrictamente en page_audit)
  */
-export function unlockPageInSQLite(db, pageId, { actorRole = 'human', reason = 'Manual unlock confirmation' } = {}) {
+export function unlockPageInSQLite(db, pageId, { actor = { id: 'user-human-lead' }, reason = 'Manual unlock confirmation' } = {}) {
   const page = db.prepare('SELECT id, is_locked, title FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
   if (!page) throw new Error(`Page ${pageId} not found`);
 
-  db.prepare(`
-    UPDATE pages
-    SET is_locked = 0, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(page.id);
+  const resolvedActor = resolveActor(db, actor);
 
-  const txId = `tx-${Date.now().toString(36)}`;
-  db.prepare(`
-    INSERT INTO page_logs (id, workspace_id, page_id, transaction_id, entity_identifier, entity_name, entity_type, action, log_message)
-    VALUES (?, 'ws-harness', ?, ?, ?, 'page_lock', 'page', 'unlocked', ?)
-  `).run(
-    `log-unlock-${page.id}-${Date.now().toString(36)}`,
-    page.id,
-    txId,
-    actorRole,
-    `Documento normativo desbloqueado por [${actorRole}]: ${reason}`
-  );
+  return runInTransaction(db, () => {
+    db.prepare(`
+      UPDATE pages
+      SET is_locked = 0, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(page.id);
 
-  return db.prepare('SELECT * FROM pages WHERE id = ?').get(page.id);
+    logPageAudit(db, {
+      pageId: page.id,
+      action: 'unlocked',
+      actor: resolvedActor,
+      reason: `Documento normativo desbloqueado por [${resolvedActor.type}:${resolvedActor.role}]: ${reason}`,
+      metadata: { reason }
+    });
+
+    rewritePageFileWithFrontmatter(db, page.id);
+    return db.prepare('SELECT * FROM pages WHERE id = ?').get(page.id);
+  });
 }
 
 /**
- * Operación separada de Bloqueo (Auditada en page_logs)
+ * Operación separada de Bloqueo (Auditada estrictamente en page_audit)
  */
-export function lockPageInSQLite(db, pageId, { actorRole = 'human', reason = 'Normative lock' } = {}) {
+export function lockPageInSQLite(db, pageId, { actor = { id: 'user-human-lead' }, reason = 'Normative lock' } = {}) {
   const page = db.prepare('SELECT id, is_locked, title FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
   if (!page) throw new Error(`Page ${pageId} not found`);
 
-  db.prepare(`
-    UPDATE pages
-    SET is_locked = 1, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(page.id);
+  const resolvedActor = resolveActor(db, actor);
 
-  const txId = `tx-${Date.now().toString(36)}`;
-  db.prepare(`
-    INSERT INTO page_logs (id, workspace_id, page_id, transaction_id, entity_identifier, entity_name, entity_type, action, log_message)
-    VALUES (?, 'ws-harness', ?, ?, ?, 'page_lock', 'page', 'locked', ?)
-  `).run(
-    `log-lock-${page.id}-${Date.now().toString(36)}`,
-    page.id,
-    txId,
-    actorRole,
-    `Documento normativo bloqueado por [${actorRole}]: ${reason}`
-  );
+  return runInTransaction(db, () => {
+    db.prepare(`
+      UPDATE pages
+      SET is_locked = 1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(page.id);
 
-  return db.prepare('SELECT * FROM pages WHERE id = ?').get(page.id);
+    logPageAudit(db, {
+      pageId: page.id,
+      action: 'locked',
+      actor: resolvedActor,
+      reason: `Documento normativo bloqueado por [${resolvedActor.type}:${resolvedActor.role}]: ${reason}`,
+      metadata: { reason }
+    });
+
+    rewritePageFileWithFrontmatter(db, page.id);
+    return db.prepare('SELECT * FROM pages WHERE id = ?').get(page.id);
+  });
+}
+
+/**
+ * Context Filter for Agents: excludes private (access = 1) and archived pages
+ */
+export function getAgentContextDossier(db, { includePrivate = false, moduleId = null } = {}) {
+  let query = 'SELECT * FROM pages WHERE archived_at IS NULL';
+  const params = [];
+
+  if (!includePrivate) {
+    query += ' AND access = 0';
+  }
+
+  if (moduleId) {
+    query += ' AND module_id = ?';
+    params.push(moduleId);
+  }
+
+  query += ' ORDER BY collection_id ASC, depth ASC, sort_order ASC, title ASC';
+
+  const pages = db.prepare(query).all(...params);
+  return pages.map(p => ({
+    id: p.id,
+    title: p.title,
+    collection: p.collection_id,
+    parent_id: p.parent_id,
+    depth: p.depth,
+    slug: p.slug,
+    access: p.access,
+    is_locked: p.is_locked,
+    summary: p.summary,
+    word_count: p.word_count,
+    content_markdown: p.content_markdown
+  }));
 }

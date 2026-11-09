@@ -1,3 +1,20 @@
+---
+id: "DOC-MODULES_TRIPLE-SYNC-ENGINE_SEQUENCE_MD"
+title: "modules/triple sync engine/sequence"
+collection: "engineering"
+parent: "modules/triple-sync-engine/module-spec.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Flujo de Sincronización Triple: triple-sync-engine
 
 ```mermaid
@@ -16,3 +33,5 @@ sequenceDiagram
   SyncTool->>MirrorAGY: "Comparar hash y replicar cambios"
   SyncTool-->>Dev: "Reporte de paridad al 100% (0 diferencias)"
 ```
+
+

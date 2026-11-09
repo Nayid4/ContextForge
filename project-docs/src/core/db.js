@@ -674,5 +674,24 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
     );
   `);
 
+  // 30. Page Audit Trail (Dedicated lifecycle and security audit log: locks, archives, unarchives, version restores)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS page_audit (
+      id TEXT PRIMARY KEY,
+      page_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      actor_id TEXT NOT NULL,
+      actor_role TEXT NOT NULL,
+      actor_type TEXT NOT NULL,
+      reason TEXT DEFAULT '',
+      metadata_json TEXT DEFAULT '{}',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE,
+      FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE RESTRICT
+    );
+    CREATE INDEX IF NOT EXISTS idx_page_audit_page ON page_audit(page_id);
+    CREATE INDEX IF NOT EXISTS idx_page_audit_action ON page_audit(action);
+  `);
+
   return db;
 }

@@ -1,11 +1,19 @@
 ---
-id: DOC-MASTER-KNOWLEDGE
+id: "DOC-MASTER-KNOWLEDGE"
 title: "Dossier Maestro Consolidado de Ingeniería — AI Agentic SDD Engineering Harness"
+collection: "general"
+parent: null
+owner: "leader"
 module: "global"
 status: "Publicado"
 version: "4.2.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
 last_updated: "2026-11-07"
-tags: ["master-dossier", "single-file-context", "sdd", "ieee-830", "c4-model", "uml", "ddd"]
+tags: ["master-dossier","single-file-context","sdd","ieee-830","c4-model","uml","ddd"]
+labels: ["master-dossier","single-file-context","sdd","ieee-830","c4-model","uml","ddd","general"]
 ---
 
 # Dossier Maestro Consolidado de Ingeniería Soberana (MASTER-PROJECT-KNOWLEDGE)
@@ -269,3 +277,5 @@ erDiagram
 | `RF-DASH-003` | `BR-DASH-002` | `HU-DASH-01` | `project-docs/src/shared/Icons.js` | `tests/unit/ui-anti-emoji.test.js` | Cubierto |
 | `RF-SYNC-001` | `BR-SYNC-001` | `HU-SYNC-01` | `.agents/skills/sync-skills/` | `tests/whitebox/sync-pipeline.test.js` | Cubierto |
 | `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `project-docs/verify.sh` | Suite de 9 fases (16 unit, 12 wb, 8 bb, 7 sys, 1 load, 5 e2e, 10 acceptance) | Cubierto |
+
+

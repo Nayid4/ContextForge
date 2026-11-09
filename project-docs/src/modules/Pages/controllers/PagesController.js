@@ -189,6 +189,7 @@ export class PagesController {
       const colId = collectionBtn.getAttribute('data-collection') || 'product';
       this.activeCollection = colId;
       this.isArticleOpen = false;
+      window.location.hash = `#pages/${colId}`;
       this.app.render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return true;
@@ -203,10 +204,28 @@ export class PagesController {
       return true;
     }
 
+    // 1b. Acciones de Encabezado: Icono y Portada Plane
+    const addIconBtn = e.target.closest('[data-action="add-page-icon"]');
+    if (addIconBtn) {
+      this.app.showToast?.('Selector de icono de documento activado', 'info');
+      return true;
+    }
+    const addCoverBtn = e.target.closest('[data-action="add-page-cover"]');
+    if (addCoverBtn) {
+      this.app.showToast?.('Selector de portada de documento activado', 'info');
+      return true;
+    }
+
     // 2. Abrir Documento en Modo Lectura (Fila o botón con data-doc-key)
-    const openReadBtn = e.target.closest('[data-action="open-article-read"], .kb-table-row[data-doc-key]');
-    if (openReadBtn && !e.target.closest('button') && !e.target.closest('.plane-row-actions-menu')) {
-      const docKey = openReadBtn.getAttribute('data-doc-key');
+    const explicitOpenBtn = e.target.closest('[data-action="open-article-read"]');
+    if (explicitOpenBtn) {
+      const docKey = explicitOpenBtn.getAttribute('data-doc-key');
+      if (docKey) this.openArticleView(docKey, false);
+      return true;
+    }
+    const openTableRow = e.target.closest('.kb-table-row[data-doc-key]');
+    if (openTableRow && !e.target.closest('button') && !e.target.closest('.plane-row-actions-menu') && !e.target.closest('a')) {
+      const docKey = openTableRow.getAttribute('data-doc-key');
       if (docKey) this.openArticleView(docKey, false);
       return true;
     }
@@ -1001,6 +1020,25 @@ export class PagesController {
       return true;
     }
 
+    // 43. Modal de Colección (Create / Edit Collection)
+    if (e.target.closest('[data-action="open-create-collection-modal"]')) {
+      const modal = document.getElementById('create-collection-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('col-form-name')?.focus();
+      }
+      return true;
+    }
+    if (e.target.closest('[data-action="close-create-collection-modal"]')) {
+      const modal = document.getElementById('create-collection-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      return true;
+    }
+
     return false;
   }
 
@@ -1149,6 +1187,35 @@ export class PagesController {
       }
       await this.app.refreshData();
       this.openArticleView(cleanDocKey, false);
+      return true;
+    }
+
+    if (e.target.id === 'create-collection-form') {
+      e.preventDefault();
+      const name = document.getElementById('col-form-name')?.value.trim();
+      const description = document.getElementById('col-form-desc')?.value.trim() || '';
+      const icon = document.getElementById('col-form-icon')?.value || 'folder';
+      const color = document.getElementById('col-form-color')?.value || '#6366f1';
+      const is_private = document.getElementById('col-form-private')?.checked ? 1 : 0;
+      if (!name) return true;
+
+      try {
+        const res = await fetch('/api/plane/collections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, icon, color, is_private })
+        });
+        if (res.ok) {
+          const modal = document.getElementById('create-collection-modal');
+          if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }
+          if (this.app?.refreshData) await this.app.refreshData();
+        }
+      } catch (err) {
+        console.warn('[COLLECTION] Error creando coleccion:', err);
+      }
       return true;
     }
     return false;

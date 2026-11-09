@@ -1,11 +1,19 @@
 ---
-id: MOD-TEST-RULES
+id: "MOD-TEST-RULES"
 title: "Módulo: testing-qa-suite — Requerimientos & Reglas de Negocio"
+collection: "engineering"
+parent: "modules/testing-qa-suite/module-spec.md"
+owner: "leader"
 module: "testing-qa-suite"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["requirements", "rules", "acceptance", "verification"]
+tags: ["requirements","rules","acceptance","verification"]
+labels: ["requirements","rules","acceptance","verification","engineering"]
 ---
 
 # Módulo: testing-qa-suite — Requerimientos & Reglas de Negocio
@@ -25,3 +33,5 @@ tags: ["requirements", "rules", "acceptance", "verification"]
 |---|---|---|---|---|
 | `BR-TEST-001` | Crítica | `exitCode == 0` en todas las fases de `project-docs/verify.sh` | `project-docs/verify.sh` | Aborta commit o merge |
 | `BR-TEST-002` | Alta | Concurrencia de carga $p95 < 200\text{ms}$ con 0% de fallos | `tests/load/server-concurrency.test.js` | Falla suite de carga |
+
+

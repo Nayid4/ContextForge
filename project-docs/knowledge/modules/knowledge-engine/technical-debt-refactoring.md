@@ -1,11 +1,19 @@
 ---
-id: MOD-KNOW-DEBT
+id: "MOD-KNOW-DEBT"
 title: "Módulo: knowledge-engine — Deuda Técnica & Refactorización"
+collection: "engineering"
+parent: "modules/knowledge-engine/module-spec.md"
+owner: "leader"
 module: "knowledge-engine"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["technical-debt", "refactoring", "knowledge-graph", "scalability"]
+tags: ["technical-debt","refactoring","knowledge-graph","scalability"]
+labels: ["technical-debt","refactoring","knowledge-graph","scalability","engineering"]
 ---
 
 # Módulo: knowledge-engine — Deuda Técnica & Refactorización
@@ -24,3 +32,5 @@ tags: ["technical-debt", "refactoring", "knowledge-graph", "scalability"]
 ## 2. Plan Táctico de Modernización
 1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.
 2. **Paso 2**: Exportar embeddings opcionales en formato JSONL para RAG vectorial local en ContextForge.
+
+

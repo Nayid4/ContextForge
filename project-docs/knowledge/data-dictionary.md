@@ -1,3 +1,20 @@
+---
+id: "DOC-DATA-DICTIONARY_MD"
+title: "data dictionary"
+collection: "engineering"
+parent: null
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: true
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)
 
 > [!NOTE]
@@ -107,7 +124,7 @@ erDiagram
 
 ---
 
-## 2. Catálogo de las 28 Tablas Relacionales SQLite (`project-docs/data/harness.db`)
+## 2. Catálogo de las 29 Tablas Relacionales SQLite (`project-docs/data/harness.db`)
 
 ### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)
 1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).
@@ -123,7 +140,7 @@ erDiagram
 9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).
 10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.
 12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).
-13. `cycles`: Sprints de iteración con fechas de inicio/fin y progreso.
+13. `cycles`: Sprints de iteración con estados canónicos (`draft`, `upcoming`, `current`, `completed`), fechas de inicio/fin y progreso.
 14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).
 15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.
 16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).
@@ -136,10 +153,11 @@ erDiagram
 23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.
 25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.
 
-### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`pages`, `page_versions`, `page_logs`, `page_labels`)
-26. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` indexados con telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`), banderas Plane (`is_locked`, `is_favorite`, `view_props`) y autoría de agente bot (`owned_by_id`, `updated_by_id`).
-27. `page_versions`: Snapshots históricos de versión (`PageVersion`) con autor bot/humano y restauración en un clic.
-28. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas por documento (`ieee-830`, `c4-model`, `uml-2.5`, `ddd`, `deepwiki`, `sdd-spec`).
+### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`)
+26. `collections`: Espacios de conocimiento dinámicos de Plane Wiki (`id`, `project_id`, `workspace_id`, `name`, `description`, `icon`, `color`, `is_private`, `sort_order`, `archived_at`).
+27. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` con claves foráneas `FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT` y `FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL`, jerarquía (`parent_id`, `depth <= 4`), slugs únicos (`idx_pages_collection_slug`), autoría (`owner_name`, `owned_by_id`), telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`) y banderas de acceso/bloqueo (`access = 0` Public / `1` Private, `is_locked = 1`, `is_favorite = 1`, `view_props`).
+28. `page_versions`: Snapshots históricos de versiones (`id`, `page_id`, `version_number`, `content_markdown`, `description_html`, `description_stripped`, `owned_by_role`, `word_count`, `last_saved_at`, `created_at`) con `FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE` y restauración en un clic (`restorePageVersionInSQLite`).
+29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`), auditoría estricta de bloqueo y desbloqueo normativo (`action = 'unlocked' | 'locked'`, `log_message`, `entity_identifier` con actor) y etiquetas semánticas (`page_labels`).
 
 ---
 
@@ -156,3 +174,5 @@ erDiagram
 
 ### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)
 - Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.
+
+

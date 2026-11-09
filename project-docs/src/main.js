@@ -117,6 +117,13 @@ class App {
       return;
     }
 
+    if (rawHash && rawHash.startsWith('pages/')) {
+      const sub = rawHash.replace('pages/', '');
+      if (this.pagesController) {
+        this.pagesController.activeCollection = sub;
+      }
+    }
+
     if (this.activeView === 'constellation' && domainView !== 'constellation') {
       this.spaceView3D.unmount();
     }
@@ -473,7 +480,10 @@ class App {
       const toggleCollapseBtn = e.target.closest('#toggle-sidebar-collapse');
       if (toggleCollapseBtn) {
         const curr = store.getState().isSidebarCollapsed || false;
-        store.setState({ isSidebarCollapsed: !curr });
+        const next = !curr;
+        try { localStorage.setItem('plane-sidebar-collapsed', String(next)); } catch (_) {}
+        store.setState({ isSidebarCollapsed: next });
+        this.render();
         return;
       }
 

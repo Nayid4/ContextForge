@@ -1,3 +1,20 @@
+---
+id: "DOC-MODULES_AGENT-ORCHESTRATOR_RULES_MD"
+title: "modules/agent orchestrator/rules"
+collection: "engineering"
+parent: "modules/agent-orchestrator/module-spec.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Reglas de Negocio Invariantes: agent-orchestrator
 
 ### BR-ORCH-001: Formato y Longitud Estricta de Ramas
@@ -15,3 +32,5 @@
 - **Severidad**: Crítica
 - **Restricción**: El subagente `reviewer` audita de forma imparcial la trazabilidad R-Tests, la compilación y los tests, pero tiene prohibido editar archivos fuente (`src/`, `tests/`).
 - **Comportamiento ante Violación**: Veredicto nulo y reasignación al `implementer`.
+
+

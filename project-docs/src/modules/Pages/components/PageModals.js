@@ -156,6 +156,77 @@ export function renderPageModals({ dynamicAiPrompt = '' }) {
     </div>
 
     <!-- ============================================================== -->
+    <!-- MODAL: CREAR / EDITAR COLECCIÓN (Plane CreateCollectionModal)    -->
+    <!-- ============================================================== -->
+    <div id="create-collection-modal" role="dialog" aria-modal="true" aria-labelledby="create-collection-title" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
+      <div class="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 pb-3">
+          <h3 id="create-collection-title" class="text-xs font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+            ${Icons.folder('w-4 h-4 text-indigo-500')} <span>Create New Collection (Plane Wiki Space)</span>
+          </h3>
+          <button type="button" data-action="close-create-collection-modal" aria-label="Close modal" class="w-6 h-6 rounded bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center cursor-pointer">
+            ${Icons.close('w-3.5 h-3.5')}
+          </button>
+        </div>
+
+        <form id="create-collection-form" class="space-y-3 text-xs">
+          <div>
+            <label for="col-form-name" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Collection Name:</label>
+            <input type="text" id="col-form-name" name="name" placeholder="e.g. Security, DevOps, Marketing..." class="w-full px-3 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none" required />
+          </div>
+
+          <div>
+            <label for="col-form-desc" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Description (optional):</label>
+            <input type="text" id="col-form-desc" name="description" placeholder="Short description of this knowledge space" class="w-full px-3 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="col-form-icon" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Icon:</label>
+              <select id="col-form-icon" name="icon" class="w-full px-2.5 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="folder">Folder</option>
+                <option value="monitor">Monitor (Product)</option>
+                <option value="flag">Flag (Engineering)</option>
+                <option value="palette">Palette (Design)</option>
+                <option value="messageSquare">Message (Support)</option>
+                <option value="shield">Shield (Security)</option>
+                <option value="book">Book (Knowledge)</option>
+              </select>
+            </div>
+            <div>
+              <label for="col-form-color" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Color Theme:</label>
+              <select id="col-form-color" name="color" class="w-full px-2.5 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="#6b7280">Gray</option>
+                <option value="#6366f1">Indigo</option>
+                <option value="#f59e0b">Amber</option>
+                <option value="#f97316">Orange</option>
+                <option value="#a855f7">Purple</option>
+                <option value="#10b981">Emerald</option>
+                <option value="#3b82f6">Blue</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <input type="checkbox" id="col-form-private" name="is_private" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4" />
+            <label for="col-form-private" class="text-xs text-gray-700 dark:text-zinc-300 cursor-pointer select-none">
+              Private collection (only members can access)
+            </label>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-200 dark:border-zinc-800">
+            <button type="button" data-action="close-create-collection-modal" class="h-7 px-3 rounded-md text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 font-medium cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" id="col-form-submit" class="h-7 px-3.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors cursor-pointer">
+              Create Collection
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
     <!-- MODAL: EXPANDIR DIAGRAMAS A PANTALLA COMPLETA                   -->
     <!-- ============================================================== -->
     <div id="diagram-modal" class="fixed inset-0 z-50 bg-zinc-950/85 backdrop-blur-xs hidden items-center justify-center p-4">

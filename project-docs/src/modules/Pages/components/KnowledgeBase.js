@@ -393,6 +393,9 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               </div>
             </div>
           </div>
+        ` : (activeCollection === 'library' || activeCollection === 'all') ? `
+          <!-- Library View: Tab header above, clean padding -->
+          <div class="h-2"></div>
         ` : `
         <!-- 1. Hero Header de la Colección (Image 1 Header) -->
         <div class="px-8 pt-7 pb-4 flex items-center justify-between border-b border-transparent">
@@ -502,7 +505,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               const hasChildren = (item.children && item.children.length > 0) || item.nestedCount > 0;
               return `
                 <div
-                  class="kb-table-row group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
+                  class="kb-table-row plane-page-item group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
                   data-doc-key="${item.docKey}"
                   data-page-title="${escapeAttr(item.title)}"
                   data-page-owner="${escapeAttr(item.owner)}"
@@ -592,21 +595,21 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
                   </div>
                 </div>
 
-                <!-- Indented Nested / Child Pages with continuous tree trunk -->
+                <!-- Indented Nested / Child Pages (Columns stay perfectly aligned) -->
                 ${isExpanded && item.children && item.children.length > 0 ? `
-                  <div class="relative pl-6 ml-6 border-l-2 border-indigo-200 dark:border-indigo-500/30 bg-gray-50/20 dark:bg-zinc-900/10 space-y-0.5 my-0.5">
+                  <div class="space-y-0 border-b border-gray-100 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/20">
                     ${item.children.map(ch => `
                       <div
-                        class="kb-table-row kb-nested-row group flex items-center px-3 py-2 border-b border-gray-100/70 dark:border-zinc-800/40 hover:bg-indigo-50/50 dark:hover:bg-zinc-850/50 transition-colors cursor-pointer relative"
+                        class="kb-table-row kb-nested-row plane-page-item group flex items-center px-4 py-2 border-b border-gray-100/60 dark:border-zinc-800/40 hover:bg-indigo-50/50 dark:hover:bg-zinc-850/50 transition-colors cursor-pointer"
                         data-parent-id="${item.id}"
                         data-doc-key="${ch.docKey}"
                         data-page-title="${escapeAttr(ch.title)}"
                         data-page-owner="${escapeAttr(ch.owner)}"
                         title="${escapeAttr(ch.title)}"
                       >
-                        <!-- Page Name Col (flex-1) with tree hook connecting to trunk -->
-                        <div class="flex-1 flex items-center gap-2 min-w-0 pr-4" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <span class="w-3.5 h-3 border-b-2 border-indigo-300 dark:border-indigo-500/40 rounded-bl-sm -mt-1.5 shrink-0 -ml-3"></span>
+                        <!-- Page Name Col (flex-1) with indented connector -->
+                        <div class="flex-1 flex items-center gap-2 min-w-0 pr-4 pl-7" data-action="open-article-read" data-doc-key="${ch.docKey}">
+                          <span class="text-indigo-400 dark:text-indigo-500 font-mono text-xs select-none shrink-0 font-bold">└</span>
                           <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${ch.docKey}">${renderDocIcon(ch.docKey || ch.title)}</span>
                           <span class="text-xs font-medium text-gray-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
                             ${escapeHtml(ch.title)}
@@ -615,14 +618,14 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
 
                         <!-- Owner Col (w-44) -->
                         <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <div class="w-4 h-4 rounded-full font-bold text-[9px] flex items-center justify-center shrink-0 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300">
+                          <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${ch.avatarBg || 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'}">
                             ${(ch.owner || 'A')[0]}
                           </div>
-                          <span class="text-xs text-gray-500 dark:text-zinc-400 truncate">${escapeHtml(ch.owner)}</span>
+                          <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml(ch.owner)}</span>
                         </div>
 
                         <!-- Nested Pages Col (w-32) -->
-                        <div class="w-32 text-xs font-mono text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
+                        <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
                           0
                         </div>
 

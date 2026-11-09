@@ -1,5 +1,5 @@
 (() => {
-  // project-docs/src/core/store.js
+  // src/core/store.js
   var getInitialTheme = () => {
     if (typeof localStorage !== "undefined") {
       const saved = localStorage.getItem("harness_theme");
@@ -57,7 +57,7 @@
     planePageEditorMode: "reader",
     // 'reader' | 'editor'
     planeSelectedIssueId: null,
-    isSidebarCollapsed: false,
+    isSidebarCollapsed: typeof localStorage !== "undefined" && localStorage.getItem("plane-sidebar-collapsed") === "true",
     isOmniboxOpen: false,
     omniboxQuery: "",
     graphMode: "graph"
@@ -388,7 +388,7 @@
     };
   }
 
-  // project-docs/src/core/api.js
+  // src/core/api.js
   async function fetchProjectData(options = {}) {
     const { bypassCache = false } = options;
     if (typeof window !== "undefined" && window.location?.protocol === "file:") {
@@ -637,7 +637,7 @@
     startPolling: startAutoSync
   };
 
-  // project-docs/src/core/router.js
+  // src/core/router.js
   var Router = class {
     constructor() {
       this.currentRoute = "issues";
@@ -801,7 +801,7 @@
   };
   var router = new Router();
 
-  // project-docs/src/core/detector.js
+  // src/core/detector.js
   async function detectEnvironment(projectData = {}) {
     const agents = [];
     const agentChecks = [
@@ -931,7 +931,7 @@
     };
   }
 
-  // project-docs/src/shared/ui/Icons.js
+  // src/shared/ui/Icons.js
   function createIcon(svgInner, defaultCls = "w-4 h-4") {
     const fn = (cls = defaultCls) => `
     <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1065,7 +1065,7 @@
     strikethrough: createIcon('<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/>')
   };
 
-  // project-docs/src/shared/utils/renderList.js
+  // src/shared/utils/renderList.js
   function renderList(items = [], renderItemFn, emptyMessageOrFn = "") {
     if (!items || !Array.isArray(items) || items.length === 0) {
       if (typeof emptyMessageOrFn === "function") {
@@ -1083,7 +1083,7 @@
     return items.map((item, index) => renderItemFn(item, index, items)).join("");
   }
 
-  // project-docs/src/shared/ui/PlaneSidebar.js
+  // src/shared/ui/PlaneSidebar.js
   function renderPlaneSidebar({
     currentView = "issues",
     activeWorkspace = "Harness Engineering",
@@ -1525,7 +1525,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/PlaneTopBar.js
+  // src/shared/ui/PlaneTopBar.js
   function renderPlaneTopBar({
     currentView = "issues",
     viewTitle = "Work items",
@@ -1646,7 +1646,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/OmniboxModal.js
+  // src/shared/ui/OmniboxModal.js
   function renderOmniboxModal({
     isOpen = false,
     query = "",
@@ -1730,7 +1730,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/MasterLayout.js
+  // src/shared/ui/MasterLayout.js
   function renderMasterLayout({
     sidebarProps = {},
     topBarProps = {},
@@ -1763,7 +1763,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/PlaneControlsBar.js
+  // src/shared/ui/PlaneControlsBar.js
   function renderPlaneControlsBar({
     currentViewMode = "list",
     filterState = "all",
@@ -1846,7 +1846,7 @@
   `;
   }
 
-  // project-docs/src/core/api-client.js
+  // src/core/api-client.js
   var ApiClient = class {
     constructor(baseUrl = "") {
       this.baseUrl = baseUrl;
@@ -2072,7 +2072,7 @@
   };
   var apiClient = new ApiClient();
 
-  // project-docs/src/modules/Projects/services/project.service.js
+  // src/modules/Projects/services/project.service.js
   var ProjectService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -2146,7 +2146,7 @@
   };
   var projectService = new ProjectService();
 
-  // project-docs/src/modules/Projects/store/project.store.js
+  // src/modules/Projects/store/project.store.js
   var initialProjectState = {
     workspace: null,
     project: null,
@@ -2200,7 +2200,7 @@
   };
   var projectStore = new ProjectStore();
 
-  // project-docs/src/modules/Issues/services/issue.service.js
+  // src/modules/Issues/services/issue.service.js
   var CANONICAL_STATES = [
     { id: "state-backlog", name: "Backlog", color: "bg-zinc-500", group: "backlog", sequence: 1 },
     { id: "state-todo", name: "Por Hacer", color: "bg-sky-500", group: "unstarted", sequence: 2 },
@@ -2370,7 +2370,7 @@
   };
   var issueService = new IssueService();
 
-  // project-docs/src/modules/Issues/store/issue.store.js
+  // src/modules/Issues/store/issue.store.js
   var initialIssueState = {
     viewMode: "board",
     // 'board' | 'list' | 'calendar' | 'spreadsheet'
@@ -2530,7 +2530,7 @@
   };
   var issueStore = new IssueStore();
 
-  // project-docs/src/modules/Issues/components/IssueCard.js
+  // src/modules/Issues/components/IssueCard.js
   function IssueCard(issue) {
     if (!issue) return "";
     const priorityIcons = {
@@ -2614,7 +2614,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueRow.js
+  // src/modules/Issues/components/IssueRow.js
   function IssueRow(issue) {
     if (!issue) return "";
     const priorityIcons = {
@@ -2696,7 +2696,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueBoard.js
+  // src/modules/Issues/components/IssueBoard.js
   function IssueBoard({
     issues = [],
     states = []
@@ -2740,7 +2740,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueList.js
+  // src/modules/Issues/components/IssueList.js
   function IssueList({
     issues = [],
     states = [],
@@ -2821,7 +2821,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueDetailModal.js
+  // src/modules/Issues/components/IssueDetailModal.js
   function IssueDetailModal({
     issue = null,
     states = [],
@@ -3202,7 +3202,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/index.js
+  // src/modules/Issues/index.js
   function renderIssueListView(props = {}) {
     return IssueList(props);
   }
@@ -3216,7 +3216,7 @@
     return IssueList({ ...props, groupBy: "none" });
   }
 
-  // project-docs/src/modules/Cycles/services/cycle.service.js
+  // src/modules/Cycles/services/cycle.service.js
   var CycleService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -3284,7 +3284,7 @@
   };
   var cycleService = new CycleService();
 
-  // project-docs/src/modules/Cycles/store/cycle.store.js
+  // src/modules/Cycles/store/cycle.store.js
   var initialCycleState = {
     cycles: [],
     selectedCycleId: null,
@@ -3338,7 +3338,7 @@
   };
   var cycleStore = new CycleStore();
 
-  // project-docs/src/modules/Cycles/components/BurnDownChart.js
+  // src/modules/Cycles/components/BurnDownChart.js
   function BurnDownChart({
     points = [],
     svgWidth = 600,
@@ -3396,7 +3396,7 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/components/CycleCard.js
+  // src/modules/Cycles/components/CycleCard.js
   function CycleCard({
     cycle = {},
     metrics = {},
@@ -3437,7 +3437,7 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/components/CycleList.js
+  // src/modules/Cycles/components/CycleList.js
   function CycleList({
     cycles = [],
     issues = [],
@@ -3465,7 +3465,7 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/pages/CyclesPage.js
+  // src/modules/Cycles/pages/CyclesPage.js
   function CyclesPage({
     cycles = [],
     issues = []
@@ -3552,12 +3552,12 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/index.js
+  // src/modules/Cycles/index.js
   function renderCyclesView(props = {}) {
     return CyclesPage(props);
   }
 
-  // project-docs/src/modules/Modules/services/module.service.js
+  // src/modules/Modules/services/module.service.js
   var ModuleService = class {
     getModules() {
       const state = store.getState();
@@ -3570,13 +3570,13 @@
   };
   var moduleService = new ModuleService();
 
-  // project-docs/src/modules/Modules/store/module.store.js
+  // src/modules/Modules/store/module.store.js
   var moduleStore = createStore({
     selectedModuleId: null,
     filterStatus: "all"
   });
 
-  // project-docs/src/modules/Modules/components/ModuleCard.js
+  // src/modules/Modules/components/ModuleCard.js
   function ModuleCard({ module, issues = [] }) {
     const modIssues = issues.filter((i) => i.module_id === module.id || i.module_name === module.name);
     const total = modIssues.length;
@@ -3632,7 +3632,7 @@
   `;
   }
 
-  // project-docs/src/modules/Modules/pages/ModulesPage.js
+  // src/modules/Modules/pages/ModulesPage.js
   function renderModulesView({
     modules = [],
     issues = [],
@@ -3664,7 +3664,7 @@
   `;
   }
 
-  // project-docs/src/modules/Pages/services/page.service.js
+  // src/modules/Pages/services/page.service.js
   var PageService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -3800,7 +3800,7 @@
   };
   var pageService = new PageService();
 
-  // project-docs/src/modules/Pages/store/page.store.js
+  // src/modules/Pages/store/page.store.js
   var initialPageState = {
     pages: [],
     activePageId: null,
@@ -4005,7 +4005,7 @@
   };
   var pageStore = new PageStore();
 
-  // project-docs/src/modules/Pages/components/PageNavigationPane.js
+  // src/modules/Pages/components/PageNavigationPane.js
   function renderFloatingOutlineBars(toc = []) {
     if (!toc || toc.length === 0) return "";
     return `
@@ -4415,7 +4415,7 @@
   `;
   }
 
-  // project-docs/src/shared/utils/dates.js
+  // src/shared/utils/dates.js
   function formatTimeAgo(input) {
     if (!input) return "";
     const date = input instanceof Date ? input : new Date(input);
@@ -4435,7 +4435,7 @@
     return `hace ${Math.floor(diffDays / 365)} a`;
   }
 
-  // project-docs/src/modules/Pages/components/PageReader.js
+  // src/modules/Pages/components/PageReader.js
   function enrichMarkdownWithSmartChips(html = "", issues = []) {
     if (!html || typeof html !== "string") return "";
     const issueMap = /* @__PURE__ */ new Map();
@@ -4471,10 +4471,14 @@
     return result;
   }
 
-  // project-docs/src/shared/MarkdownViewer.js
+  // src/shared/MarkdownViewer.js
   function stripFrontmatter(md = "") {
     if (!md || typeof md !== "string") return "";
-    return md.trimStart().replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+    let clean = md.trimStart();
+    while (/^---\r?\n[\s\S]*?\r?\n---\r?\n?/.test(clean)) {
+      clean = clean.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "").trimStart();
+    }
+    return clean;
   }
   function renderMarkdown2(content = "") {
     if (!content || typeof content !== "string") return '<p class="text-slate-400 italic">Documento vac\xEDo.</p>';
@@ -5054,7 +5058,7 @@ ${children}
     return rawMd.replace(/\n{3,}/g, "\n\n").trim();
   }
 
-  // project-docs/src/modules/Pages/pages/PagesPage.js
+  // src/modules/Pages/pages/PagesPage.js
   function renderPageHeaderActions({
     activePage = {},
     isFullWidth = false,
@@ -5277,7 +5281,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PageReaderCanvas.js
+  // src/modules/Pages/components/PageReaderCanvas.js
   function escapeHtml3(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5298,7 +5302,7 @@ ${children}
     const isActiveArchived = Boolean(activePlanePage.archived_at);
     const isFullWidth = Boolean(planePageState.isFullWidth);
     return `
-    <div id="kb-view-article" class="hidden flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100">
+    <div id="kb-view-article" class="${planePageState.isArticleOpen ? "flex" : "hidden"} flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100">
 
       <!-- 2.1 Plane PageEditorToolbarRoot (Sticky Top Header Bar h-11) -->
       <div class="h-11 px-5 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shrink-0">
@@ -5396,12 +5400,14 @@ ${children}
         <!-- Center Document Canvas: max-w-[760px] mx-auto px-6 py-10 (Exact Plane standard) -->
         <div id="doc-reader-main-col" class="flex-1 overflow-y-auto px-6 py-10 bg-white dark:bg-zinc-950 scrollbar-sm">
           <div class="${isFullWidth ? "max-w-[1152px]" : "max-w-[760px]"} mx-auto">
+
             <!-- Plane Icon & Cover Controls -->
             <div class="flex items-center gap-2 mb-3">
               <button
                 type="button"
                 data-action="add-page-icon"
                 class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-900 border border-transparent hover:border-gray-200 dark:hover:border-zinc-800 transition-colors cursor-pointer"
+                title="Configurar icono de documento Plane"
               >
                 ${Icons.smile("w-3.5 h-3.5")}
                 <span>Add icon</span>
@@ -5410,6 +5416,7 @@ ${children}
                 type="button"
                 data-action="add-page-cover"
                 class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-900 border border-transparent hover:border-gray-200 dark:hover:border-zinc-800 transition-colors cursor-pointer"
+                title="Configurar portada de documento Plane"
               >
                 ${Icons.image("w-3.5 h-3.5")}
                 <span>Add cover</span>
@@ -5772,7 +5779,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PageModals.js
+  // src/modules/Pages/components/PageModals.js
   function escapeHtml4(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5914,6 +5921,77 @@ ${children}
     </div>
 
     <!-- ============================================================== -->
+    <!-- MODAL: CREAR / EDITAR COLECCI\xD3N (Plane CreateCollectionModal)    -->
+    <!-- ============================================================== -->
+    <div id="create-collection-modal" role="dialog" aria-modal="true" aria-labelledby="create-collection-title" class="fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-xs hidden items-center justify-center p-4">
+      <div class="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 pb-3">
+          <h3 id="create-collection-title" class="text-xs font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+            ${Icons.folder("w-4 h-4 text-indigo-500")} <span>Create New Collection (Plane Wiki Space)</span>
+          </h3>
+          <button type="button" data-action="close-create-collection-modal" aria-label="Close modal" class="w-6 h-6 rounded bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center cursor-pointer">
+            ${Icons.close("w-3.5 h-3.5")}
+          </button>
+        </div>
+
+        <form id="create-collection-form" class="space-y-3 text-xs">
+          <div>
+            <label for="col-form-name" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Collection Name:</label>
+            <input type="text" id="col-form-name" name="name" placeholder="e.g. Security, DevOps, Marketing..." class="w-full px-3 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none" required />
+          </div>
+
+          <div>
+            <label for="col-form-desc" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Description (optional):</label>
+            <input type="text" id="col-form-desc" name="description" placeholder="Short description of this knowledge space" class="w-full px-3 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="col-form-icon" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Icon:</label>
+              <select id="col-form-icon" name="icon" class="w-full px-2.5 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="folder">Folder</option>
+                <option value="monitor">Monitor (Product)</option>
+                <option value="flag">Flag (Engineering)</option>
+                <option value="palette">Palette (Design)</option>
+                <option value="messageSquare">Message (Support)</option>
+                <option value="shield">Shield (Security)</option>
+                <option value="book">Book (Knowledge)</option>
+              </select>
+            </div>
+            <div>
+              <label for="col-form-color" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Color Theme:</label>
+              <select id="col-form-color" name="color" class="w-full px-2.5 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none">
+                <option value="#6b7280">Gray</option>
+                <option value="#6366f1">Indigo</option>
+                <option value="#f59e0b">Amber</option>
+                <option value="#f97316">Orange</option>
+                <option value="#a855f7">Purple</option>
+                <option value="#10b981">Emerald</option>
+                <option value="#3b82f6">Blue</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <input type="checkbox" id="col-form-private" name="is_private" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4" />
+            <label for="col-form-private" class="text-xs text-gray-700 dark:text-zinc-300 cursor-pointer select-none">
+              Private collection (only members can access)
+            </label>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-200 dark:border-zinc-800">
+            <button type="button" data-action="close-create-collection-modal" class="h-7 px-3 rounded-md text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 font-medium cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" id="col-form-submit" class="h-7 px-3.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors cursor-pointer">
+              Create Collection
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
     <!-- MODAL: EXPANDIR DIAGRAMAS A PANTALLA COMPLETA                   -->
     <!-- ============================================================== -->
     <div id="diagram-modal" class="fixed inset-0 z-50 bg-zinc-950/85 backdrop-blur-xs hidden items-center justify-center p-4">
@@ -5933,7 +6011,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PageCard.js
+  // src/modules/Pages/components/PageCard.js
   function getPageName(title = "") {
     return !title || !String(title).trim() ? "Untitled" : String(title).trim();
   }
@@ -6064,7 +6142,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PagesHeader.js
+  // src/modules/Pages/components/PagesHeader.js
   function renderPagesHeader({
     allCount = 0,
     createdByMeCount = 0,
@@ -6356,7 +6434,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/KnowledgeBase.js
+  // src/modules/Pages/components/KnowledgeBase.js
   function escapeHtml6(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -6700,6 +6778,9 @@ ${children}
               </div>
             </div>
           </div>
+        ` : activeCollection === "library" || activeCollection === "all" ? `
+          <!-- Library View: Tab header above, clean padding -->
+          <div class="h-2"></div>
         ` : `
         <!-- 1. Hero Header de la Colecci\xF3n (Image 1 Header) -->
         <div class="px-8 pt-7 pb-4 flex items-center justify-between border-b border-transparent">
@@ -6809,7 +6890,7 @@ ${children}
       const hasChildren = item.children && item.children.length > 0 || item.nestedCount > 0;
       return `
                 <div
-                  class="kb-table-row group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
+                  class="kb-table-row plane-page-item group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
                   data-doc-key="${item.docKey}"
                   data-page-title="${escapeAttr4(item.title)}"
                   data-page-owner="${escapeAttr4(item.owner)}"
@@ -6899,21 +6980,21 @@ ${children}
                   </div>
                 </div>
 
-                <!-- Indented Nested / Child Pages with continuous tree trunk -->
+                <!-- Indented Nested / Child Pages (Columns stay perfectly aligned) -->
                 ${isExpanded && item.children && item.children.length > 0 ? `
-                  <div class="relative pl-6 ml-6 border-l-2 border-indigo-200 dark:border-indigo-500/30 bg-gray-50/20 dark:bg-zinc-900/10 space-y-0.5 my-0.5">
+                  <div class="space-y-0 border-b border-gray-100 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/20">
                     ${item.children.map((ch) => `
                       <div
-                        class="kb-table-row kb-nested-row group flex items-center px-3 py-2 border-b border-gray-100/70 dark:border-zinc-800/40 hover:bg-indigo-50/50 dark:hover:bg-zinc-850/50 transition-colors cursor-pointer relative"
+                        class="kb-table-row kb-nested-row plane-page-item group flex items-center px-4 py-2 border-b border-gray-100/60 dark:border-zinc-800/40 hover:bg-indigo-50/50 dark:hover:bg-zinc-850/50 transition-colors cursor-pointer"
                         data-parent-id="${item.id}"
                         data-doc-key="${ch.docKey}"
                         data-page-title="${escapeAttr4(ch.title)}"
                         data-page-owner="${escapeAttr4(ch.owner)}"
                         title="${escapeAttr4(ch.title)}"
                       >
-                        <!-- Page Name Col (flex-1) with tree hook connecting to trunk -->
-                        <div class="flex-1 flex items-center gap-2 min-w-0 pr-4" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <span class="w-3.5 h-3 border-b-2 border-indigo-300 dark:border-indigo-500/40 rounded-bl-sm -mt-1.5 shrink-0 -ml-3"></span>
+                        <!-- Page Name Col (flex-1) with indented connector -->
+                        <div class="flex-1 flex items-center gap-2 min-w-0 pr-4 pl-7" data-action="open-article-read" data-doc-key="${ch.docKey}">
+                          <span class="text-indigo-400 dark:text-indigo-500 font-mono text-xs select-none shrink-0 font-bold">\u2514</span>
                           <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${ch.docKey}">${renderDocIcon(ch.docKey || ch.title)}</span>
                           <span class="text-xs font-medium text-gray-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
                             ${escapeHtml6(ch.title)}
@@ -6922,14 +7003,14 @@ ${children}
 
                         <!-- Owner Col (w-44) -->
                         <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <div class="w-4 h-4 rounded-full font-bold text-[9px] flex items-center justify-center shrink-0 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300">
+                          <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${ch.avatarBg || "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"}">
                             ${(ch.owner || "A")[0]}
                           </div>
-                          <span class="text-xs text-gray-500 dark:text-zinc-400 truncate">${escapeHtml6(ch.owner)}</span>
+                          <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml6(ch.owner)}</span>
                         </div>
 
                         <!-- Nested Pages Col (w-32) -->
-                        <div class="w-32 text-xs font-mono text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
+                        <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
                           0
                         </div>
 
@@ -7075,7 +7156,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     };
   }
 
-  // project-docs/src/modules/Pages/controllers/PagesController.js
+  // src/modules/Pages/controllers/PagesController.js
   function escapeHtml7(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -7231,6 +7312,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         const colId = collectionBtn.getAttribute("data-collection") || "product";
         this.activeCollection = colId;
         this.isArticleOpen = false;
+        window.location.hash = `#pages/${colId}`;
         this.app.render();
         window.scrollTo({ top: 0, behavior: "smooth" });
         return true;
@@ -7242,9 +7324,25 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
         window.scrollTo({ top: 0, behavior: "smooth" });
         return true;
       }
-      const openReadBtn = e.target.closest('[data-action="open-article-read"], .kb-table-row[data-doc-key]');
-      if (openReadBtn && !e.target.closest("button") && !e.target.closest(".plane-row-actions-menu")) {
-        const docKey = openReadBtn.getAttribute("data-doc-key");
+      const addIconBtn = e.target.closest('[data-action="add-page-icon"]');
+      if (addIconBtn) {
+        this.app.showToast?.("Selector de icono de documento activado", "info");
+        return true;
+      }
+      const addCoverBtn = e.target.closest('[data-action="add-page-cover"]');
+      if (addCoverBtn) {
+        this.app.showToast?.("Selector de portada de documento activado", "info");
+        return true;
+      }
+      const explicitOpenBtn = e.target.closest('[data-action="open-article-read"]');
+      if (explicitOpenBtn) {
+        const docKey = explicitOpenBtn.getAttribute("data-doc-key");
+        if (docKey) this.openArticleView(docKey, false);
+        return true;
+      }
+      const openTableRow = e.target.closest(".kb-table-row[data-doc-key]");
+      if (openTableRow && !e.target.closest("button") && !e.target.closest(".plane-row-actions-menu") && !e.target.closest("a")) {
+        const docKey = openTableRow.getAttribute("data-doc-key");
         if (docKey) this.openArticleView(docKey, false);
         return true;
       }
@@ -7947,6 +8045,23 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         }
         return true;
       }
+      if (e.target.closest('[data-action="open-create-collection-modal"]')) {
+        const modal = document.getElementById("create-collection-modal");
+        if (modal) {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          document.getElementById("col-form-name")?.focus();
+        }
+        return true;
+      }
+      if (e.target.closest('[data-action="close-create-collection-modal"]')) {
+        const modal = document.getElementById("create-collection-modal");
+        if (modal) {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }
+        return true;
+      }
       return false;
     }
     /**
@@ -8084,6 +8199,33 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         }
         await this.app.refreshData();
         this.openArticleView(cleanDocKey, false);
+        return true;
+      }
+      if (e.target.id === "create-collection-form") {
+        e.preventDefault();
+        const name = document.getElementById("col-form-name")?.value.trim();
+        const description = document.getElementById("col-form-desc")?.value.trim() || "";
+        const icon = document.getElementById("col-form-icon")?.value || "folder";
+        const color = document.getElementById("col-form-color")?.value || "#6366f1";
+        const is_private = document.getElementById("col-form-private")?.checked ? 1 : 0;
+        if (!name) return true;
+        try {
+          const res = await fetch("/api/plane/collections", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, description, icon, color, is_private })
+          });
+          if (res.ok) {
+            const modal = document.getElementById("create-collection-modal");
+            if (modal) {
+              modal.classList.add("hidden");
+              modal.classList.remove("flex");
+            }
+            if (this.app?.refreshData) await this.app.refreshData();
+          }
+        } catch (err) {
+          console.warn("[COLLECTION] Error creando coleccion:", err);
+        }
         return true;
       }
       return false;
@@ -8529,7 +8671,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     }
   };
 
-  // project-docs/src/modules/Harness/services/harness.service.js
+  // src/modules/Harness/services/harness.service.js
   var CANONICAL_AGENTS = [
     {
       id: "leader",
@@ -8638,7 +8780,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var harnessService = new HarnessService();
 
-  // project-docs/src/modules/Harness/store/harness.store.js
+  // src/modules/Harness/store/harness.store.js
   var initialHarnessState = {
     agents: [...CANONICAL_AGENTS],
     skills: [...CANONICAL_SKILLS],
@@ -8685,7 +8827,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var harnessStore = new HarnessStore();
 
-  // project-docs/src/modules/Harness/components/AgentCard.js
+  // src/modules/Harness/components/AgentCard.js
   function AgentCard({
     agent = {},
     isSelected = false
@@ -8740,7 +8882,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/AgentList.js
+  // src/modules/Harness/components/AgentList.js
   function AgentList({
     agents = [],
     selectedAgentId = "leader"
@@ -8755,7 +8897,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
+  // src/modules/Harness/components/SkillSyncStatus.js
   function SkillSyncStatus({
     skills = []
   } = {}) {
@@ -8805,7 +8947,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/HarnessOverview.js
+  // src/modules/Harness/components/HarnessOverview.js
   function HarnessOverview({
     governance = {}
   } = {}) {
@@ -8843,7 +8985,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/AiEngineMonitor.js
+  // src/modules/Harness/components/AiEngineMonitor.js
   function AiEngineMonitor({
     aiConfigs = [],
     aiRuns = [],
@@ -8959,7 +9101,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/pages/HarnessPage.js
+  // src/modules/Harness/pages/HarnessPage.js
   function HarnessPage({
     agents = [],
     skills = [],
@@ -9012,12 +9154,12 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/index.js
+  // src/modules/Harness/index.js
   function renderHarnessView(props = {}) {
     return HarnessPage(props);
   }
 
-  // project-docs/src/modules/Architecture/services/architecture.service.js
+  // src/modules/Architecture/services/architecture.service.js
   var ArchitectureService = class {
     getProjectSpec() {
       const state = store.getState();
@@ -9046,7 +9188,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var architectureService = new ArchitectureService();
 
-  // project-docs/src/modules/Architecture/store/architecture.store.js
+  // src/modules/Architecture/store/architecture.store.js
   var architectureStore = createStore({
     activeTab: "c4",
     // 'c4' | 'stack' | 'layers' | 'goals'
@@ -9054,7 +9196,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     zoomLevel: 100
   });
 
-  // project-docs/src/shared/MermaidViewer.js
+  // src/shared/MermaidViewer.js
   function renderMermaidViewer(diagram) {
     const { id, title, type, level, description, mermaid: code } = diagram;
     return `
@@ -9158,7 +9300,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/"/g, "&quot;");
   }
 
-  // project-docs/src/modules/Architecture/pages/ArchitecturePage.js
+  // src/modules/Architecture/pages/ArchitecturePage.js
   function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
     const spec = projectSpec || {};
     const kData = knowledgeIndex || {};
@@ -9777,7 +9919,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // project-docs/src/modules/Graph/services/graph.service.js
+  // src/modules/Graph/services/graph.service.js
   var GraphService = class {
     getFeatures() {
       const state = store.getState();
@@ -9798,7 +9940,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var graphService = new GraphService();
 
-  // project-docs/src/modules/Graph/store/graph.store.js
+  // src/modules/Graph/store/graph.store.js
   var graphStore = createStore({
     graphMode: "graph",
     // 'graph' | 'tree'
@@ -9806,7 +9948,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     zoomLevel: 100
   });
 
-  // project-docs/src/modules/Graph/components/DependencyGraph.js
+  // src/modules/Graph/components/DependencyGraph.js
   function renderDependencyGraph({ features }) {
     if (!features || features.length === 0) {
       return `<div class="p-12 text-center text-slate-500 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">No hay datos de dependencias disponibles.</div>`;
@@ -10118,7 +10260,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Graph/components/DependencyTree.js
+  // src/modules/Graph/components/DependencyTree.js
   var DependencyTreeComponent = class {
     constructor(containerEl, { features, currentSpec, onSelect }) {
       this.container = containerEl;
@@ -10435,7 +10577,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // project-docs/src/modules/Graph/pages/GraphPage.js
+  // src/modules/Graph/pages/GraphPage.js
   function renderDependencyGraphView({
     features = [],
     graphMode = "graph",
@@ -10476,7 +10618,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Constellation/services/constellation.service.js
+  // src/modules/Constellation/services/constellation.service.js
   var ConstellationService = class {
     getFeatures() {
       const state = store.getState();
@@ -10485,14 +10627,14 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var constellationService = new ConstellationService();
 
-  // project-docs/src/modules/Constellation/store/constellation.store.js
+  // src/modules/Constellation/store/constellation.store.js
   var constellationStore = createStore({
     selectedNodeId: null,
     isRotating: true,
     cameraDistance: 600
   });
 
-  // project-docs/src/modules/Constellation/components/SpaceView3D.js
+  // src/modules/Constellation/components/SpaceView3D.js
   var SpaceView3D = class {
     constructor() {
       this.container = null;
@@ -11076,7 +11218,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     }
   };
 
-  // project-docs/src/modules/Constellation/pages/ConstellationPage.js
+  // src/modules/Constellation/pages/ConstellationPage.js
   function renderConstellation3DView() {
     return `
     <div class="p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-120px)] flex flex-col">
@@ -11105,7 +11247,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Analytics/services/analytics.service.js
+  // src/modules/Analytics/services/analytics.service.js
   var AnalyticsService = class {
     getIssues() {
       const state = store.getState();
@@ -11122,14 +11264,14 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var analyticsService = new AnalyticsService();
 
-  // project-docs/src/modules/Analytics/store/analytics.store.js
+  // src/modules/Analytics/store/analytics.store.js
   var analyticsStore = createStore({
     timeRange: "all",
     // 'sprint' | 'month' | 'all'
     selectedAgent: "all"
   });
 
-  // project-docs/src/modules/Analytics/pages/AnalyticsPage.js
+  // src/modules/Analytics/pages/AnalyticsPage.js
   function renderAnalyticsView({
     issues = [],
     states = [],
@@ -11260,7 +11402,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/main.js
+  // src/main.js
   var App = class {
     constructor() {
       this.root = document.getElementById("app");
@@ -11339,6 +11481,12 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         const headingId = params.anchor || rawHash;
         this.pagesController?.scrollToHeading(headingId);
         return;
+      }
+      if (rawHash && rawHash.startsWith("pages/")) {
+        const sub = rawHash.replace("pages/", "");
+        if (this.pagesController) {
+          this.pagesController.activeCollection = sub;
+        }
       }
       if (this.activeView === "constellation" && domainView !== "constellation") {
         this.spaceView3D.unmount();
@@ -11662,7 +11810,13 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         const toggleCollapseBtn = e.target.closest("#toggle-sidebar-collapse");
         if (toggleCollapseBtn) {
           const curr = store.getState().isSidebarCollapsed || false;
-          store.setState({ isSidebarCollapsed: !curr });
+          const next = !curr;
+          try {
+            localStorage.setItem("plane-sidebar-collapsed", String(next));
+          } catch (_) {
+          }
+          store.setState({ isSidebarCollapsed: next });
+          this.render();
           return;
         }
         const navBtn = e.target.closest("[data-plane-nav]");

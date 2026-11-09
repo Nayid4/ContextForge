@@ -1,11 +1,19 @@
 ---
-id: MOD-ORCH-DEBT
+id: "MOD-ORCH-DEBT"
 title: "Módulo: agent-orchestrator — Deuda Técnica & Refactorización"
+collection: "engineering"
+parent: "modules/agent-orchestrator/module-spec.md"
+owner: "leader"
 module: "agent-orchestrator"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["technical-debt", "refactoring", "code-smells", "modernization"]
+tags: ["technical-debt","refactoring","code-smells","modernization"]
+labels: ["technical-debt","refactoring","code-smells","modernization","engineering"]
 ---
 
 # Módulo: agent-orchestrator — Deuda Técnica & Refactorización
@@ -24,3 +32,5 @@ tags: ["technical-debt", "refactoring", "code-smells", "modernization"]
 ## 2. Plan Táctico de Modernización
 1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.
 2. **Paso 2**: Extender la validación de ramas para soportar integración con Jira/Linear tags opcionales sin violar el límite de 80 caracteres.
+
+

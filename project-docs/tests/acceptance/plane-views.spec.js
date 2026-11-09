@@ -89,7 +89,7 @@ test.describe('Acceptance Tests: Makeplane (Plane) Multi-View, Cycles, Modules &
 
   test('TC-04: Vista de Páginas (Plane Pages) con Base de Conocimiento y Markdown', async ({ page }) => {
     await page.goto('/project-docs/index.html#plane');
-    const pagesNavBtn = page.locator('button[data-plane-nav="pages"]');
+    const pagesNavBtn = page.locator('button[data-plane-nav="pages"]').first();
     await expect(pagesNavBtn).toBeVisible({ timeout: 10000 });
     await pagesNavBtn.click();
     await page.waitForTimeout(300);

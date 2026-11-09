@@ -1,3 +1,20 @@
+---
+id: "DOC-TRACEABILITY-MATRIX_MD"
+title: "traceability matrix"
+collection: "engineering"
+parent: "c4-model.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Matriz de Trazabilidad Cruzada (RTM)
 
 > [!NOTE]
@@ -24,3 +41,5 @@
 | `RF-DASH-005` | `BR-DASH-001` | `US-003` | `src/features/space-view-3d/` | `tests/e2e/dashboard-smoke.test.js` |
 | `RF-TEST-001` | `BR-TEST-002` | `US-005` | `package.json` (`npm test`) | `tests/unit/*.test.js` |
 | `RF-TEST-002` | `BR-TEST-001` | `US-005` | `tests/e2e/dashboard-smoke.test.js` | `npm run test:e2e` |
+
+

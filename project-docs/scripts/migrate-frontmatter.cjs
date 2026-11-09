@@ -23,39 +23,46 @@ function getMdFiles(dir) {
 }
 
 function parseFrontmatter(content) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return { frontmatter: {}, body: content, hasFrontmatter: false };
+  let text = (content || '').trimStart();
+  let frontmatter = {};
+  let hadFrontmatter = false;
 
-  const raw = match[1];
-  const body = content.slice(match[0].length);
-  const data = {};
+  while (true) {
+    const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+    if (!match) break;
+    hadFrontmatter = true;
+    const raw = match[1];
+    text = text.slice(match[0].length).trimStart();
 
-  const lines = raw.split(/\r?\n/);
-  for (const line of lines) {
-    const kv = line.match(/^([a-zA-Z0-9_-]+):\s*(.*)$/);
-    if (kv) {
-      const key = kv[1].trim();
-      let val = kv[2].trim();
-      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-        val = val.slice(1, -1);
-      } else if (val.startsWith('[') && val.endsWith(']')) {
-        try {
-          val = JSON.parse(val.replace(/'/g, '"'));
-        } catch (_) {
-          val = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+    const lines = raw.split(/\r?\n/);
+    for (const line of lines) {
+      const kv = line.match(/^([a-zA-Z0-9_-]+):\s*(.*)$/);
+      if (kv) {
+        const key = kv[1].trim();
+        let val = kv[2].trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        } else if (val.startsWith('[') && val.endsWith(']')) {
+          try {
+            val = JSON.parse(val.replace(/'/g, '"'));
+          } catch (_) {
+            val = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+          }
+        } else if (val === 'true') {
+          val = true;
+        } else if (val === 'false') {
+          val = false;
+        } else if (val === 'null' || val === '') {
+          val = null;
+        } else if (!isNaN(Number(val)) && val !== '') {
+          val = Number(val);
         }
-      } else if (val === 'true' || val === '1') {
-        val = true;
-      } else if (val === 'false' || val === '0') {
-        val = false;
-      } else if (val === 'null' || val === '') {
-        val = null;
+        frontmatter[key] = val;
       }
-      data[key] = val;
     }
   }
 
-  return { frontmatter: data, body, hasFrontmatter: true, rawFrontmatter: raw };
+  return { frontmatter, body: text, hasFrontmatter: hadFrontmatter };
 }
 
 const CANONICAL_COLLECTION_MAP = {
@@ -148,22 +155,29 @@ function deriveFullWidth(relPath, fm, body) {
   return low.includes('c4-model') || low.includes('data-dictionary') || low.includes('traceability') || low.includes('diagrams') || hasMermaid;
 }
 
-function buildYamlFrontmatter(data) {
-  const lines = ['---'];
-  // Keep key order: id, title, collection, parent, owner, status, version, access, is_locked, is_favorite, full_width, last_updated, tags, labels
+function buildYamlFrontmatter(data = {}) {
   const orderedKeys = [
     'id', 'title', 'collection', 'parent', 'owner', 'module', 'status', 'version',
-    'access', 'is_locked', 'is_favorite', 'full_width', 'last_updated', 'tags', 'labels'
+    'access', 'is_locked', 'is_favorite', 'full_width', 'archived_at', 'last_updated', 'tags', 'labels'
   ];
-
+  const lines = ['---'];
   for (const k of orderedKeys) {
     if (data[k] !== undefined) {
       const v = data[k];
-      if (Array.isArray(v)) {
+      if (k === 'access') {
+        const accStr = (v === 1 || v === '1' || v === 'private') ? 'private' : 'public';
+        lines.push(`access: "${accStr}"`);
+      } else if (k === 'is_locked' || k === 'is_favorite' || k === 'full_width') {
+        lines.push(`${k}: ${Boolean(v)}`);
+      } else if (k === 'parent') {
+        if (v === null || v === '' || v === '-') {
+          lines.push('parent: null');
+        } else {
+          lines.push(`parent: "${String(v).replace(/"/g, '\\"')}"`);
+        }
+      } else if (Array.isArray(v)) {
         lines.push(`${k}: ${JSON.stringify(v)}`);
-      } else if (typeof v === 'boolean') {
-        lines.push(`${k}: ${v}`);
-      } else if (typeof v === 'number') {
+      } else if (typeof v === 'boolean' || typeof v === 'number') {
         lines.push(`${k}: ${v}`);
       } else if (v === null) {
         lines.push(`${k}: null`);
@@ -173,12 +187,13 @@ function buildYamlFrontmatter(data) {
     }
   }
 
-  // Any other keys
   for (const k of Object.keys(data)) {
     if (!orderedKeys.includes(k)) {
       const v = data[k];
       if (Array.isArray(v)) lines.push(`${k}: ${JSON.stringify(v)}`);
-      else lines.push(`${k}: "${String(v)}"`);
+      else if (typeof v === 'boolean' || typeof v === 'number') lines.push(`${k}: ${v}`);
+      else if (v === null) lines.push(`${k}: null`);
+      else lines.push(`${k}: "${String(v).replace(/"/g, '\\"')}"`);
     }
   }
 
@@ -189,6 +204,7 @@ function buildYamlFrontmatter(data) {
 function runMigration({ dryRun = true } = {}) {
   const files = getMdFiles(KNOWLEDGE_DIR);
   const report = [];
+  let modifiedFilesCount = 0;
 
   for (const file of files) {
     const rel = path.relative(KNOWLEDGE_DIR, file).replace(/\\/g, '/');
@@ -227,7 +243,12 @@ function runMigration({ dryRun = true } = {}) {
     };
 
     const newFrontmatterStr = buildYamlFrontmatter(updatedFm);
-    const newContent = `${newFrontmatterStr}\n${body.replace(/^\r?\n+/, '\n')}`;
+    const newContent = `${newFrontmatterStr}\n\n${body.replace(/^[\r\n]+/, '')}`;
+
+    const isDifferent = content !== newContent;
+    if (isDifferent) {
+      modifiedFilesCount++;
+    }
 
     report.push({
       file: rel,
@@ -237,23 +258,25 @@ function runMigration({ dryRun = true } = {}) {
       is_locked: updatedFm.is_locked ? 'SI' : 'NO',
       is_favorite: updatedFm.is_favorite ? 'SI' : 'NO',
       labels_count: updatedFm.labels.length,
-      action: hasFrontmatter ? 'UPDATE_FIELDS' : 'INSERT_FRONTMATTER'
+      action: !isDifferent ? 'UNCHANGED' : (hasFrontmatter ? 'UPDATE_FIELDS' : 'INSERT_FRONTMATTER')
     });
 
-    if (!dryRun) {
+    if (!dryRun && isDifferent) {
       fs.writeFileSync(file, newContent, 'utf8');
     }
   }
 
-  return report;
+  return { report, total: files.length, modified: modifiedFilesCount };
 }
 
 // CLI Entrypoint
-const isDryRun = process.argv.includes('--dry-run') || !process.argv.includes('--apply');
-console.log(`[FRONTMATTER-MIGRATOR] Modo: ${isDryRun ? 'DRY-RUN (Simulación sin escrituras)' : 'APPLY (Escritura en disco)'}`);
+if (require.main === module) {
+  const isDryRun = process.argv.includes('--dry-run') || !process.argv.includes('--apply');
+  console.log(`[FRONTMATTER-MIGRATOR] Modo: ${isDryRun ? 'DRY-RUN (Simulación sin escrituras)' : 'APPLY (Escritura en disco)'}`);
 
-const results = runMigration({ dryRun: isDryRun });
-console.log(`[FRONTMATTER-MIGRATOR] Documentos procesados: ${results.length}`);
-console.table(results.slice(0, 15));
+  const results = runMigration({ dryRun: isDryRun });
+  console.log(`[FRONTMATTER-MIGRATOR] Documentos procesados: ${results.total}, Modificados: ${results.modified}`);
+  console.table(results.report.slice(0, 15));
+}
 
-module.exports = { runMigration };
+module.exports = { runMigration, parseFrontmatter, buildYamlFrontmatter };

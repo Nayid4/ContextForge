@@ -1,11 +1,19 @@
 ---
-id: MOD-DASH-DIAG
+id: "MOD-DASH-DIAG"
 title: "Módulo: dashboard-visualizer — Suite de 6 Diagramas"
+collection: "engineering"
+parent: "modules/dashboard-visualizer/module-spec.md"
+owner: "leader"
 module: "dashboard-visualizer"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
 last_updated: "2026-11-03"
-tags: ["c3", "class", "sequence", "state", "activity", "erd"]
+tags: ["c3","class","sequence","state","activity","erd"]
+labels: ["c3","class","sequence","state","activity","erd","engineering"]
 ---
 
 # Módulo: dashboard-visualizer — Suite de 6 Diagramas
@@ -144,3 +152,5 @@ erDiagram
     int reading_time
   }
 ```
+
+

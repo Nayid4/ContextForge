@@ -1,11 +1,19 @@
 ---
-id: MOD-SYNC-SPEC
+id: "MOD-SYNC-SPEC"
 title: "Módulo: triple-sync-engine — Especificación & Tarjetas CRC"
+collection: "engineering"
+parent: null
+owner: "leader"
 module: "triple-sync-engine"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: false
 last_updated: "2026-11-03"
-tags: ["triple-sync", "skills-sync", "source-of-truth", "crc-cards"]
+tags: ["triple-sync","skills-sync","source-of-truth","crc-cards"]
+labels: ["triple-sync","skills-sync","source-of-truth","crc-cards","engineering"]
 ---
 
 # Módulo: triple-sync-engine — Especificación & Tarjetas CRC
@@ -33,3 +41,5 @@ tags: ["triple-sync", "skills-sync", "source-of-truth", "crc-cards"]
 ## 3. Contratos de Entrada y Salida
 - **Fuente de Verdad**: `.opencode/skills/{skill}/SKILL.md`
 - **Destinos Espejo**: `.github/skills/{skill}/SKILL.md` y `.agents/skills/{skill}/SKILL.md`
+
+

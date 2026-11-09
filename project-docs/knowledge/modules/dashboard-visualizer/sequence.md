@@ -1,3 +1,20 @@
+---
+id: "DOC-MODULES_DASHBOARD-VISUALIZER_SEQUENCE_MD"
+title: "modules/dashboard visualizer/sequence"
+collection: "engineering"
+parent: "modules/dashboard-visualizer/module-spec.md"
+owner: "leader"
+status: "Publicado"
+version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
+last_updated: "2026-11-09"
+tags: []
+labels: ["engineering"]
+---
+
 # Flujo de Renderizado y Navegación: dashboard-visualizer
 
 ```mermaid
@@ -22,3 +39,5 @@ sequenceDiagram
   User->>App: "Cambiar pestaña a Constelación 3D"
   App->>ThreeD: "mount(container) -> Pirámide 4 niveles"
 ```
+
+

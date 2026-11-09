@@ -1,11 +1,19 @@
 ---
-id: MOD-KNOW-SPEC
+id: "MOD-KNOW-SPEC"
 title: "Módulo: knowledge-engine — Especificación & Tarjetas CRC"
+collection: "engineering"
+parent: null
+owner: "leader"
 module: "knowledge-engine"
 status: "Publicado"
 version: "4.0.0"
+access: "public"
+is_locked: false
+is_favorite: false
+full_width: true
 last_updated: "2026-11-03"
-tags: ["knowledge-engine", "docs-as-code", "rag", "graphrag", "crc-cards"]
+tags: ["knowledge-engine","docs-as-code","rag","graphrag","crc-cards"]
+labels: ["knowledge-engine","docs-as-code","rag","graphrag","crc-cards","engineering"]
 ---
 
 # Módulo: knowledge-engine — Especificación & Tarjetas CRC
@@ -35,3 +43,25 @@ tags: ["knowledge-engine", "docs-as-code", "rag", "graphrag", "crc-cards"]
 - `project-docs/knowledge/knowledge-index.json`
 - `project-docs/data-fallback.js`
 - `project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`
+
+---
+
+## 4. Endpoints y Métodos HTTP del Módulo (`knowledge-engine`)
+
+| Método | Endpoint | Descripción | Parámetros / Payload |
+|---|---|---|---|
+| `GET` | `/api/plane/pages` | Listado general de páginas indexadas | Query: `?state=all&access=public&shelf=...` |
+| `GET` | `/api/plane/pages/:id` | Contenido Markdown completo, snapshots de versiones, bitácora y etiquetas | Path: `id` (slug o identificador) |
+| `POST` | `/api/plane/pages` | Crear o realizar upsert de página en SQLite y disco | Body: `{ title, shelf, access, file_path, content_markdown }` |
+| `PATCH` / `PUT` | `/api/plane/pages/:id` | Actualizar propiedades (`title`, `access`, `is_favorite`, `full_width`) | Body: `{ title, access, is_favorite, full_width, content_markdown }` |
+| `POST` | `/api/plane/pages/:id/unlock` | Desbloquear documento normativo (con auditoría en `page_logs`) | Body: `{ actorRole, reason }` |
+| `POST` | `/api/plane/pages/:id/lock` | Bloquear documento normativo (con auditoría en `page_logs`) | Body: `{ actorRole, reason }` |
+| `POST` | `/api/plane/pages/:id/move` | Mover página de colección o padre jerárquico (`BR-PAGE-07`, `BR-PAGE-08`) | Body: `{ collection_id, parent_id }` |
+| `POST` | `/api/plane/pages/:id/archive-cascade` | Archivar página y todos sus descendientes (`BR-PAGE-09`) | Ninguno |
+| `POST` | `/api/plane/pages/:id/versions/:ver/restore` | Restaurar snapshot histórico de versión | Path: `id`, `ver` (número de versión) |
+| `POST` | `/api/plane/collections` | Crear nueva colección en Plane Wiki | Body: `{ name, description, icon, color, is_private }` |
+| `PATCH` | `/api/plane/collections/:id` | Actualizar metadatos de colección | Body: `{ name, description, icon, color, is_private }` |
+| `DELETE` | `/api/plane/collections/:id` | Archivar colección en SQLite | Path: `id` |
+| `POST` | `/api/plane/sync` | Forzar re-sincronización bidireccional disco Markdown ↔ SQLite | Ninguno |
+
+

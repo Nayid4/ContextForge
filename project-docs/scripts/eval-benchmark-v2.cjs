@@ -1,0 +1,175 @@
+const fs = require('fs');
+const path = require('path');
+
+const KNOWLEDGE_DIR = path.join(__dirname, '../knowledge');
+
+// 1. Contextos limpios y medidos
+const master = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'MASTER-PROJECT-KNOWLEDGE.md'), 'utf8');
+
+// L0: Índice de enrutamiento puro (sin volcado de docs en bruto)
+const kRaw = JSON.parse(fs.readFileSync(path.join(KNOWLEDGE_DIR, 'knowledge-index.json'), 'utf8'));
+const kRouter = {
+  project: kRaw.project,
+  version: kRaw.version,
+  modules: kRaw.modules,
+  shelves: kRaw.shelves,
+  docMetadata: Object.fromEntries(
+    Object.entries(kRaw.docMetadata || {}).map(([k, v]) => [
+      k,
+      { title: v.title, shelf: v.shelf, wordCount: v.wordCount, readingTime: v.readingTime }
+    ])
+  )
+};
+const l0 = JSON.stringify(kRouter, null, 2);
+
+const l1_biz = fs.readFileSync(path.join(KNOWLEDGE_DIR, '01-project-overview-and-business.md'), 'utf8');
+const l1_arch = fs.readFileSync(path.join(KNOWLEDGE_DIR, '02-architecture-and-patterns.md'), 'utf8');
+const l1_c4 = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'c4-model.md'), 'utf8');
+const l0_l1 = l0 + '\n' + l1_biz + '\n' + l1_arch + '\n' + l1_c4;
+
+const l2_dict = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'data-dictionary.md'), 'utf8');
+const l2_rules = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'business-rules.md'), 'utf8');
+const l2_services = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'external-services.md'), 'utf8');
+const l2_mod_ke = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'modules/knowledge-engine/module-spec.md'), 'utf8');
+const l0_l1_l2 = l0_l1 + '\n' + l2_dict + '\n' + l2_rules + '\n' + l2_services + '\n' + l2_mod_ke;
+
+function getMetrics(text, name) {
+  const chars = text.length;
+  const words = text.trim().split(/\s+/).length;
+  const estTokens = Math.round(chars / 3.8);
+  return { name, chars, words, estTokens };
+}
+
+// 2. Catálogo de preguntas congeladas con verificación sustantiva
+const questions = [
+  {
+    id: 1,
+    q: "¿Cuáles son las 29 tablas exactas de la base de datos de Plane en SQLite?",
+    docFileName: "data-dictionary.md",
+    reqDoc: "data-dictionary.md (L2)",
+    check: (text) => text.includes('collections') && text.includes('page_versions') && text.includes('page_logs') && text.includes('ai_runs') && text.includes('issue_activities')
+  },
+  {
+    id: 2,
+    q: "¿Qué columnas componen la tabla page_versions y cuál es su clave foránea?",
+    docFileName: "data-dictionary.md",
+    reqDoc: "data-dictionary.md (L2)",
+    check: (text) => text.includes('page_versions') && text.includes('version_number') && text.includes('FOREIGN KEY (page_id) REFERENCES pages(id)')
+  },
+  {
+    id: 3,
+    q: "¿Cuál es la regla de negocio BR-PAGE-08 y qué excepción exacta lanza ante un ciclo?",
+    docFileName: "business-rules.md",
+    reqDoc: "business-rules.md (L2)",
+    check: (text) => text.includes('BR-PAGE-08') && text.includes('Circular hierarchy detected: cannot set parent to self or descendant')
+  },
+  {
+    id: 4,
+    q: "¿Qué estados canónicos existen para cycles y cuál es su transición permitida?",
+    docFileName: "data-dictionary.md",
+    reqDoc: "data-dictionary.md (L2)",
+    check: (text) => text.includes('draft, upcoming, current, completed') || (text.includes('draft') && text.includes('upcoming') && text.includes('current') && text.includes('completed') && text.includes('cycles'))
+  },
+  {
+    id: 5,
+    q: "¿Cuáles son los endpoints y métodos HTTP del módulo knowledge-engine?",
+    docFileName: "modules/knowledge-engine/module-spec.md",
+    reqDoc: "modules/knowledge-engine/module-spec.md (L2)",
+    check: (text) => text.includes('/api/plane/pages') && text.includes('/api/plane/collections') && text.includes('knowledge-engine') && text.includes('POST')
+  },
+  {
+    id: 6,
+    q: "¿Qué invariante define BR-TEST-001 respecto a la verificación multinivel antes de cerrar un ticket INT-*?",
+    docFileName: "business-rules.md",
+    reqDoc: "business-rules.md (L2)",
+    check: (text) => text.includes('BR-TEST-001') && text.includes('100% de Tests en Verde')
+  },
+  {
+    id: 7,
+    q: "¿Cómo se calcula el índice de lectura y conteo de palabras en PageService?",
+    docFileName: "02-architecture-and-patterns.md",
+    reqDoc: "02-architecture-and-patterns.md (L1)",
+    check: (text) => (text.includes('calculateReadingMetrics') || text.includes('200 palabras por minuto')) && text.includes('readingTime')
+  },
+  {
+    id: 8,
+    q: "¿Cuáles son las 18 skills SDD homologadas y cuál es el rol exclusivo de cada una?",
+    docFileName: "01-project-overview-and-business.md",
+    reqDoc: "01-project-overview-and-business.md (L1)",
+    check: (text) => text.includes('technical-audit') && text.includes('project-knowledge') && text.includes('implement-tdd') && text.includes('verify-spec') && text.includes('Triple Sincronización de 18 Skills')
+  },
+  {
+    id: 9,
+    q: "¿Qué campos contiene la metadata YAML canónica de una página de conocimiento (pages)?",
+    docFileName: "data-dictionary.md",
+    reqDoc: "data-dictionary.md (L2)",
+    check: (text) => text.includes('collection_id') && text.includes('parent_id') && text.includes('is_locked') && text.includes('access') && text.includes('view_props')
+  },
+  {
+    id: 10,
+    q: "¿Cuál es el algoritmo de backfill para slug cuando existen títulos duplicados en la misma colección?",
+    docFileName: "business-rules.md",
+    reqDoc: "business-rules.md (L2)",
+    check: (text) => text.includes('BR-PAGE-10') && text.includes('-2') && text.includes('colección')
+  },
+  {
+    id: 11,
+    q: "¿Qué puertos y servicios externos mockeados están definidos en external-services.md?",
+    docFileName: "external-services.md",
+    reqDoc: "external-services.md (L2)",
+    check: (text) => text.includes('3000') && text.includes('3333') && text.includes('Plane')
+  },
+  {
+    id: 12,
+    q: "¿Cuál es el límite máximo de profundidad de páginas (depth) permitido por BR-PAGE-08?",
+    docFileName: "business-rules.md",
+    reqDoc: "business-rules.md (L2)",
+    check: (text) => text.includes('BR-PAGE-08') && (text.includes('depth <= 4') || text.includes('máximo de 4 niveles de profundidad'))
+  }
+];
+
+let totalRoutedTokens = 0;
+
+const results = questions.map(q => {
+  const ansMaster = q.check(master);
+  const ansL0L1 = q.check(l0_l1);
+  const ansL0L1L2 = q.check(l0_l1_l2);
+
+  // Routing condition: L0 + only the required document for this question
+  const targetDocContent = fs.readFileSync(path.join(KNOWLEDGE_DIR, q.docFileName), 'utf8');
+  const routedContext = l0 + '\n\n' + targetDocContent;
+  const ansRouted = q.check(routedContext);
+  totalRoutedTokens += Math.round(routedContext.length / 3.8);
+
+  return {
+    id: q.id,
+    question: q.q,
+    reqDoc: q.reqDoc,
+    master: ansMaster ? 'CORRECTO' : 'INCORRECTO',
+    l0_l1: ansL0L1 ? 'CORRECTO' : 'INCORRECTO',
+    l0_routed: ansRouted ? 'CORRECTO' : 'INCORRECTO',
+    l0_l1_l2: ansL0L1L2 ? 'CORRECTO' : 'INCORRECTO'
+  };
+});
+
+const scoreMaster = results.filter(r => r.master === 'CORRECTO').length;
+const scoreL0L1 = results.filter(r => r.l0_l1 === 'CORRECTO').length;
+const scoreRouted = results.filter(r => r.l0_routed === 'CORRECTO').length;
+const scoreL0L1L2 = results.filter(r => r.l0_l1_l2 === 'CORRECTO').length;
+const avgRoutedTokens = Math.round(totalRoutedTokens / questions.length);
+
+console.log('=== MÉTRICAS DE TOKEN REALES (CARACTERES / PALABRAS / ESTIMACIÓN TOKENS) ===');
+console.log(getMetrics(master, 'Master Bundle (MASTER-PROJECT-KNOWLEDGE.md)'));
+console.log(getMetrics(l0, 'L0 Router (knowledge-index.json sin docs inlined)'));
+console.log(getMetrics(l0_l1, 'L0 + L1 Global (Index + Visión + Arquitectura + C4)'));
+console.log({ name: 'L0 + Routed Doc (Promedio por Pregunta)', estTokens: avgRoutedTokens });
+console.log(getMetrics(l0_l1_l2, 'L0 + L1 + L2 Especializado (+ Dictionary, Rules, Services, ModuleSpec)'));
+
+console.log('\n=== RESULTADOS DE EVALUACIÓN DE PREGUNTAS CONTEXTUALES ===');
+console.table(results);
+
+console.log('\n=== RESUMEN EMPÍRICO RIGUROSO ===');
+console.log(`- (a) Master Bundle: ${scoreMaster}/12 (${Math.round(scoreMaster/12*100)}%)`);
+console.log(`- (b) L0 + L1 Global: ${scoreL0L1}/12 (${Math.round(scoreL0L1/12*100)}%)`);
+console.log(`- (c) L0 + Routed (L0 + Solo Documento Específico): ${scoreRouted}/12 (${Math.round(scoreRouted/12*100)}%)`);
+console.log(`- (d) L0 + L1 + L2 Especializado: ${scoreL0L1L2}/12 (${Math.round(scoreL0L1L2/12*100)}%)`);
