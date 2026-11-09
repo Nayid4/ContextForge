@@ -92,7 +92,7 @@ harness_anginnering/
 ```
 
 ### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)
-En `PageService` y `page.utils.js`, el cálculo de telemetría de lectura se rige por:
-- **Conteo de Palabras**: `words = text.trim().split(/\s+/).length`.
-- **Tiempo de Lectura**: `readingTime = Math.ceil(words / 200)` (velocidad estándar de 200 palabras por minuto).
+En `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:
+- **Conteo de Palabras**: `words = text.trim().split(/\s+/).filter(Boolean).length`.
+- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).
 - **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\n\s*\n/).filter(Boolean).length`.

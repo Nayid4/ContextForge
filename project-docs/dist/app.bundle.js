@@ -1,5 +1,5 @@
 (() => {
-  // src/core/store.js
+  // project-docs/src/core/store.js
   var getInitialTheme = () => {
     if (typeof localStorage !== "undefined") {
       const saved = localStorage.getItem("harness_theme");
@@ -388,7 +388,7 @@
     };
   }
 
-  // src/core/api.js
+  // project-docs/src/core/api.js
   async function fetchProjectData(options = {}) {
     const { bypassCache = false } = options;
     if (typeof window !== "undefined" && window.location?.protocol === "file:") {
@@ -637,7 +637,7 @@
     startPolling: startAutoSync
   };
 
-  // src/core/router.js
+  // project-docs/src/core/router.js
   var Router = class {
     constructor() {
       this.currentRoute = "issues";
@@ -801,7 +801,7 @@
   };
   var router = new Router();
 
-  // src/core/detector.js
+  // project-docs/src/core/detector.js
   async function detectEnvironment(projectData = {}) {
     const agents = [];
     const agentChecks = [
@@ -931,7 +931,7 @@
     };
   }
 
-  // src/shared/ui/Icons.js
+  // project-docs/src/shared/ui/Icons.js
   function createIcon(svgInner, defaultCls = "w-4 h-4") {
     const fn = (cls = defaultCls) => `
     <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1065,7 +1065,7 @@
     strikethrough: createIcon('<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/>')
   };
 
-  // src/shared/utils/renderList.js
+  // project-docs/src/shared/utils/renderList.js
   function renderList(items = [], renderItemFn, emptyMessageOrFn = "") {
     if (!items || !Array.isArray(items) || items.length === 0) {
       if (typeof emptyMessageOrFn === "function") {
@@ -1083,7 +1083,7 @@
     return items.map((item, index) => renderItemFn(item, index, items)).join("");
   }
 
-  // src/shared/ui/PlaneSidebar.js
+  // project-docs/src/shared/ui/PlaneSidebar.js
   function renderPlaneSidebar({
     currentView = "issues",
     activeWorkspace = "Harness Engineering",
@@ -1525,7 +1525,7 @@
   `;
   }
 
-  // src/shared/ui/PlaneTopBar.js
+  // project-docs/src/shared/ui/PlaneTopBar.js
   function renderPlaneTopBar({
     currentView = "issues",
     viewTitle = "Work items",
@@ -1646,7 +1646,7 @@
   `;
   }
 
-  // src/shared/ui/OmniboxModal.js
+  // project-docs/src/shared/ui/OmniboxModal.js
   function renderOmniboxModal({
     isOpen = false,
     query = "",
@@ -1730,7 +1730,7 @@
   `;
   }
 
-  // src/shared/ui/MasterLayout.js
+  // project-docs/src/shared/ui/MasterLayout.js
   function renderMasterLayout({
     sidebarProps = {},
     topBarProps = {},
@@ -1763,7 +1763,7 @@
   `;
   }
 
-  // src/shared/ui/PlaneControlsBar.js
+  // project-docs/src/shared/ui/PlaneControlsBar.js
   function renderPlaneControlsBar({
     currentViewMode = "list",
     filterState = "all",
@@ -1846,7 +1846,7 @@
   `;
   }
 
-  // src/core/api-client.js
+  // project-docs/src/core/api-client.js
   var ApiClient = class {
     constructor(baseUrl = "") {
       this.baseUrl = baseUrl;
@@ -2072,7 +2072,7 @@
   };
   var apiClient = new ApiClient();
 
-  // src/modules/Projects/services/project.service.js
+  // project-docs/src/modules/Projects/services/project.service.js
   var ProjectService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -2146,7 +2146,7 @@
   };
   var projectService = new ProjectService();
 
-  // src/modules/Projects/store/project.store.js
+  // project-docs/src/modules/Projects/store/project.store.js
   var initialProjectState = {
     workspace: null,
     project: null,
@@ -2200,7 +2200,7 @@
   };
   var projectStore = new ProjectStore();
 
-  // src/modules/Issues/services/issue.service.js
+  // project-docs/src/modules/Issues/services/issue.service.js
   var CANONICAL_STATES = [
     { id: "state-backlog", name: "Backlog", color: "bg-zinc-500", group: "backlog", sequence: 1 },
     { id: "state-todo", name: "Por Hacer", color: "bg-sky-500", group: "unstarted", sequence: 2 },
@@ -2370,7 +2370,7 @@
   };
   var issueService = new IssueService();
 
-  // src/modules/Issues/store/issue.store.js
+  // project-docs/src/modules/Issues/store/issue.store.js
   var initialIssueState = {
     viewMode: "board",
     // 'board' | 'list' | 'calendar' | 'spreadsheet'
@@ -2530,7 +2530,7 @@
   };
   var issueStore = new IssueStore();
 
-  // src/modules/Issues/components/IssueCard.js
+  // project-docs/src/modules/Issues/components/IssueCard.js
   function IssueCard(issue) {
     if (!issue) return "";
     const priorityIcons = {
@@ -2614,7 +2614,7 @@
   `;
   }
 
-  // src/modules/Issues/components/IssueRow.js
+  // project-docs/src/modules/Issues/components/IssueRow.js
   function IssueRow(issue) {
     if (!issue) return "";
     const priorityIcons = {
@@ -2696,7 +2696,7 @@
   `;
   }
 
-  // src/modules/Issues/components/IssueBoard.js
+  // project-docs/src/modules/Issues/components/IssueBoard.js
   function IssueBoard({
     issues = [],
     states = []
@@ -2740,7 +2740,7 @@
   `;
   }
 
-  // src/modules/Issues/components/IssueList.js
+  // project-docs/src/modules/Issues/components/IssueList.js
   function IssueList({
     issues = [],
     states = [],
@@ -2821,7 +2821,7 @@
   `;
   }
 
-  // src/modules/Issues/components/IssueDetailModal.js
+  // project-docs/src/modules/Issues/components/IssueDetailModal.js
   function IssueDetailModal({
     issue = null,
     states = [],
@@ -3202,7 +3202,7 @@
   `;
   }
 
-  // src/modules/Issues/index.js
+  // project-docs/src/modules/Issues/index.js
   function renderIssueListView(props = {}) {
     return IssueList(props);
   }
@@ -3216,7 +3216,7 @@
     return IssueList({ ...props, groupBy: "none" });
   }
 
-  // src/modules/Cycles/services/cycle.service.js
+  // project-docs/src/modules/Cycles/services/cycle.service.js
   var CycleService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -3284,7 +3284,7 @@
   };
   var cycleService = new CycleService();
 
-  // src/modules/Cycles/store/cycle.store.js
+  // project-docs/src/modules/Cycles/store/cycle.store.js
   var initialCycleState = {
     cycles: [],
     selectedCycleId: null,
@@ -3338,7 +3338,7 @@
   };
   var cycleStore = new CycleStore();
 
-  // src/modules/Cycles/components/BurnDownChart.js
+  // project-docs/src/modules/Cycles/components/BurnDownChart.js
   function BurnDownChart({
     points = [],
     svgWidth = 600,
@@ -3396,7 +3396,7 @@
   `;
   }
 
-  // src/modules/Cycles/components/CycleCard.js
+  // project-docs/src/modules/Cycles/components/CycleCard.js
   function CycleCard({
     cycle = {},
     metrics = {},
@@ -3437,7 +3437,7 @@
   `;
   }
 
-  // src/modules/Cycles/components/CycleList.js
+  // project-docs/src/modules/Cycles/components/CycleList.js
   function CycleList({
     cycles = [],
     issues = [],
@@ -3465,7 +3465,7 @@
   `;
   }
 
-  // src/modules/Cycles/pages/CyclesPage.js
+  // project-docs/src/modules/Cycles/pages/CyclesPage.js
   function CyclesPage({
     cycles = [],
     issues = []
@@ -3552,12 +3552,12 @@
   `;
   }
 
-  // src/modules/Cycles/index.js
+  // project-docs/src/modules/Cycles/index.js
   function renderCyclesView(props = {}) {
     return CyclesPage(props);
   }
 
-  // src/modules/Modules/services/module.service.js
+  // project-docs/src/modules/Modules/services/module.service.js
   var ModuleService = class {
     getModules() {
       const state = store.getState();
@@ -3570,13 +3570,13 @@
   };
   var moduleService = new ModuleService();
 
-  // src/modules/Modules/store/module.store.js
+  // project-docs/src/modules/Modules/store/module.store.js
   var moduleStore = createStore({
     selectedModuleId: null,
     filterStatus: "all"
   });
 
-  // src/modules/Modules/components/ModuleCard.js
+  // project-docs/src/modules/Modules/components/ModuleCard.js
   function ModuleCard({ module, issues = [] }) {
     const modIssues = issues.filter((i) => i.module_id === module.id || i.module_name === module.name);
     const total = modIssues.length;
@@ -3632,7 +3632,7 @@
   `;
   }
 
-  // src/modules/Modules/pages/ModulesPage.js
+  // project-docs/src/modules/Modules/pages/ModulesPage.js
   function renderModulesView({
     modules = [],
     issues = [],
@@ -3664,7 +3664,7 @@
   `;
   }
 
-  // src/modules/Pages/services/page.service.js
+  // project-docs/src/modules/Pages/services/page.service.js
   var PageService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -3800,7 +3800,7 @@
   };
   var pageService = new PageService();
 
-  // src/modules/Pages/store/page.store.js
+  // project-docs/src/modules/Pages/store/page.store.js
   var initialPageState = {
     pages: [],
     activePageId: null,
@@ -4005,7 +4005,7 @@
   };
   var pageStore = new PageStore();
 
-  // src/modules/Pages/components/PageNavigationPane.js
+  // project-docs/src/modules/Pages/components/PageNavigationPane.js
   function renderFloatingOutlineBars(toc = []) {
     if (!toc || toc.length === 0) return "";
     return `
@@ -4415,7 +4415,7 @@
   `;
   }
 
-  // src/shared/utils/dates.js
+  // project-docs/src/shared/utils/dates.js
   function formatTimeAgo(input) {
     if (!input) return "";
     const date = input instanceof Date ? input : new Date(input);
@@ -4435,7 +4435,7 @@
     return `hace ${Math.floor(diffDays / 365)} a`;
   }
 
-  // src/modules/Pages/components/PageReader.js
+  // project-docs/src/modules/Pages/components/PageReader.js
   function enrichMarkdownWithSmartChips(html = "", issues = []) {
     if (!html || typeof html !== "string") return "";
     const issueMap = /* @__PURE__ */ new Map();
@@ -4471,7 +4471,7 @@
     return result;
   }
 
-  // src/shared/MarkdownViewer.js
+  // project-docs/src/shared/MarkdownViewer.js
   function stripFrontmatter(md = "") {
     if (!md || typeof md !== "string") return "";
     let clean = md.trimStart();
@@ -5058,7 +5058,7 @@ ${children}
     return rawMd.replace(/\n{3,}/g, "\n\n").trim();
   }
 
-  // src/modules/Pages/pages/PagesPage.js
+  // project-docs/src/modules/Pages/pages/PagesPage.js
   function renderPageHeaderActions({
     activePage = {},
     isFullWidth = false,
@@ -5281,7 +5281,7 @@ ${children}
   `;
   }
 
-  // src/modules/Pages/components/PageReaderCanvas.js
+  // project-docs/src/modules/Pages/components/PageReaderCanvas.js
   function escapeHtml3(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5779,7 +5779,7 @@ ${children}
   `;
   }
 
-  // src/modules/Pages/components/PageModals.js
+  // project-docs/src/modules/Pages/components/PageModals.js
   function escapeHtml4(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -6012,7 +6012,7 @@ ${children}
   `;
   }
 
-  // src/modules/Pages/components/PageCard.js
+  // project-docs/src/modules/Pages/components/PageCard.js
   function getPageName(title = "") {
     return !title || !String(title).trim() ? "Untitled" : String(title).trim();
   }
@@ -6143,7 +6143,7 @@ ${children}
   `;
   }
 
-  // src/modules/Pages/components/PagesHeader.js
+  // project-docs/src/modules/Pages/components/PagesHeader.js
   function renderPagesHeader({
     allCount = 0,
     createdByMeCount = 0,
@@ -6435,7 +6435,7 @@ ${children}
   `;
   }
 
-  // src/modules/Pages/components/KnowledgeBase.js
+  // project-docs/src/modules/Pages/components/KnowledgeBase.js
   function escapeHtml6(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -7157,7 +7157,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     };
   }
 
-  // src/modules/Pages/controllers/PagesController.js
+  // project-docs/src/modules/Pages/controllers/PagesController.js
   function escapeHtml7(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -8675,7 +8675,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     }
   };
 
-  // src/modules/Harness/services/harness.service.js
+  // project-docs/src/modules/Harness/services/harness.service.js
   var CANONICAL_AGENTS = [
     {
       id: "leader",
@@ -8784,7 +8784,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var harnessService = new HarnessService();
 
-  // src/modules/Harness/store/harness.store.js
+  // project-docs/src/modules/Harness/store/harness.store.js
   var initialHarnessState = {
     agents: [...CANONICAL_AGENTS],
     skills: [...CANONICAL_SKILLS],
@@ -8831,7 +8831,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var harnessStore = new HarnessStore();
 
-  // src/modules/Harness/components/AgentCard.js
+  // project-docs/src/modules/Harness/components/AgentCard.js
   function AgentCard({
     agent = {},
     isSelected = false
@@ -8886,7 +8886,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Harness/components/AgentList.js
+  // project-docs/src/modules/Harness/components/AgentList.js
   function AgentList({
     agents = [],
     selectedAgentId = "leader"
@@ -8901,7 +8901,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Harness/components/SkillSyncStatus.js
+  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
   function SkillSyncStatus({
     skills = []
   } = {}) {
@@ -8951,7 +8951,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Harness/components/HarnessOverview.js
+  // project-docs/src/modules/Harness/components/HarnessOverview.js
   function HarnessOverview({
     governance = {}
   } = {}) {
@@ -8989,7 +8989,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Harness/components/AiEngineMonitor.js
+  // project-docs/src/modules/Harness/components/AiEngineMonitor.js
   function AiEngineMonitor({
     aiConfigs = [],
     aiRuns = [],
@@ -9105,7 +9105,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Harness/pages/HarnessPage.js
+  // project-docs/src/modules/Harness/pages/HarnessPage.js
   function HarnessPage({
     agents = [],
     skills = [],
@@ -9158,12 +9158,12 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Harness/index.js
+  // project-docs/src/modules/Harness/index.js
   function renderHarnessView(props = {}) {
     return HarnessPage(props);
   }
 
-  // src/modules/Architecture/services/architecture.service.js
+  // project-docs/src/modules/Architecture/services/architecture.service.js
   var ArchitectureService = class {
     getProjectSpec() {
       const state = store.getState();
@@ -9192,7 +9192,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var architectureService = new ArchitectureService();
 
-  // src/modules/Architecture/store/architecture.store.js
+  // project-docs/src/modules/Architecture/store/architecture.store.js
   var architectureStore = createStore({
     activeTab: "c4",
     // 'c4' | 'stack' | 'layers' | 'goals'
@@ -9200,7 +9200,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     zoomLevel: 100
   });
 
-  // src/shared/MermaidViewer.js
+  // project-docs/src/shared/MermaidViewer.js
   function renderMermaidViewer(diagram) {
     const { id, title, type, level, description, mermaid: code } = diagram;
     return `
@@ -9304,7 +9304,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/"/g, "&quot;");
   }
 
-  // src/modules/Architecture/pages/ArchitecturePage.js
+  // project-docs/src/modules/Architecture/pages/ArchitecturePage.js
   function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
     const spec = projectSpec || {};
     const kData = knowledgeIndex || {};
@@ -9923,7 +9923,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // src/modules/Graph/services/graph.service.js
+  // project-docs/src/modules/Graph/services/graph.service.js
   var GraphService = class {
     getFeatures() {
       const state = store.getState();
@@ -9944,7 +9944,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var graphService = new GraphService();
 
-  // src/modules/Graph/store/graph.store.js
+  // project-docs/src/modules/Graph/store/graph.store.js
   var graphStore = createStore({
     graphMode: "graph",
     // 'graph' | 'tree'
@@ -9952,7 +9952,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     zoomLevel: 100
   });
 
-  // src/modules/Graph/components/DependencyGraph.js
+  // project-docs/src/modules/Graph/components/DependencyGraph.js
   function renderDependencyGraph({ features }) {
     if (!features || features.length === 0) {
       return `<div class="p-12 text-center text-slate-500 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">No hay datos de dependencias disponibles.</div>`;
@@ -10264,7 +10264,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Graph/components/DependencyTree.js
+  // project-docs/src/modules/Graph/components/DependencyTree.js
   var DependencyTreeComponent = class {
     constructor(containerEl, { features, currentSpec, onSelect }) {
       this.container = containerEl;
@@ -10581,7 +10581,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // src/modules/Graph/pages/GraphPage.js
+  // project-docs/src/modules/Graph/pages/GraphPage.js
   function renderDependencyGraphView({
     features = [],
     graphMode = "graph",
@@ -10622,7 +10622,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Constellation/services/constellation.service.js
+  // project-docs/src/modules/Constellation/services/constellation.service.js
   var ConstellationService = class {
     getFeatures() {
       const state = store.getState();
@@ -10631,14 +10631,14 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var constellationService = new ConstellationService();
 
-  // src/modules/Constellation/store/constellation.store.js
+  // project-docs/src/modules/Constellation/store/constellation.store.js
   var constellationStore = createStore({
     selectedNodeId: null,
     isRotating: true,
     cameraDistance: 600
   });
 
-  // src/modules/Constellation/components/SpaceView3D.js
+  // project-docs/src/modules/Constellation/components/SpaceView3D.js
   var SpaceView3D = class {
     constructor() {
       this.container = null;
@@ -11222,7 +11222,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     }
   };
 
-  // src/modules/Constellation/pages/ConstellationPage.js
+  // project-docs/src/modules/Constellation/pages/ConstellationPage.js
   function renderConstellation3DView() {
     return `
     <div class="p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-120px)] flex flex-col">
@@ -11251,7 +11251,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/modules/Analytics/services/analytics.service.js
+  // project-docs/src/modules/Analytics/services/analytics.service.js
   var AnalyticsService = class {
     getIssues() {
       const state = store.getState();
@@ -11268,14 +11268,14 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var analyticsService = new AnalyticsService();
 
-  // src/modules/Analytics/store/analytics.store.js
+  // project-docs/src/modules/Analytics/store/analytics.store.js
   var analyticsStore = createStore({
     timeRange: "all",
     // 'sprint' | 'month' | 'all'
     selectedAgent: "all"
   });
 
-  // src/modules/Analytics/pages/AnalyticsPage.js
+  // project-docs/src/modules/Analytics/pages/AnalyticsPage.js
   function renderAnalyticsView({
     issues = [],
     states = [],
@@ -11406,7 +11406,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // src/main.js
+  // project-docs/src/main.js
   var App = class {
     constructor() {
       this.root = document.getElementById("app");
