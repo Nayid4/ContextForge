@@ -171,6 +171,7 @@ export function renderPageModals({ dynamicAiPrompt = '' }) {
         </div>
 
         <form id="create-collection-form" class="space-y-3 text-xs">
+          <input type="hidden" id="col-form-id" name="collection_id" value="" />
           <div>
             <label for="col-form-name" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Collection Name:</label>
             <input type="text" id="col-form-name" name="name" placeholder="e.g. Security, DevOps, Marketing..." class="w-full px-3 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none" required />

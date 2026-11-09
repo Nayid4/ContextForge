@@ -574,8 +574,9 @@
       const fallback = window.__PLANE_DATA__ || window.__FALLBACK_DATA__ && window.__FALLBACK_DATA__.planeData || {};
       return fallback;
     }
+    const cacheBuster = options.bypassCache ? `?_t=${Date.now()}` : "";
     try {
-      const res = await fetch("/api/plane/data");
+      const res = await fetch(`/api/plane/data${cacheBuster}`, options.bypassCache ? { cache: "no-store" } : {});
       if (res.ok) {
         return await res.json();
       }
@@ -628,11 +629,81 @@
     }
     return { ok: false };
   }
+  async function createCollection(payload = {}) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.collections)) {
+        const newCol = {
+          id: payload.id || `col-${Date.now()}`,
+          name: payload.name || "New Collection",
+          description: payload.description || "",
+          icon: payload.icon || "folder",
+          color: payload.color || "#6b7280",
+          is_private: payload.is_private ? 1 : 0,
+          sort_order: (window.__PLANE_DATA__.collections.length + 1) * 10
+        };
+        window.__PLANE_DATA__.collections.push(newCol);
+        return { ok: true, collection: newCol };
+      }
+      return { ok: true };
+    }
+    try {
+      const res = await fetch("/api/plane/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("[API] Error creando colecci\xF3n:", e);
+    }
+    return { ok: false };
+  }
+  async function updateCollection(collectionId, payload = {}) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.collections)) {
+        const col = window.__PLANE_DATA__.collections.find((c) => c.id === collectionId);
+        if (col) Object.assign(col, payload);
+      }
+      return { ok: true };
+    }
+    try {
+      const res = await fetch(`/api/plane/collections/${encodeURIComponent(collectionId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("[API] Error actualizando colecci\xF3n:", e);
+    }
+    return { ok: false };
+  }
+  async function archiveCollection(collectionId) {
+    if (typeof window !== "undefined" && window.location?.protocol === "file:") {
+      if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.collections)) {
+        const col = window.__PLANE_DATA__.collections.find((c) => c.id === collectionId);
+        if (col) col.archived_at = (/* @__PURE__ */ new Date()).toISOString();
+      }
+      return { ok: true };
+    }
+    try {
+      const res = await fetch(`/api/plane/collections/${encodeURIComponent(collectionId)}`, {
+        method: "DELETE"
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("[API] Error archivando colecci\xF3n:", e);
+    }
+    return { ok: false };
+  }
   var api = {
     fetchAll: fetchProjectData,
     fetchPlaneData,
     updatePlaneIssue,
     updatePlanePage,
+    createCollection,
+    updateCollection,
+    archiveCollection,
     startAutoSync,
     startPolling: startAutoSync
   };
@@ -5288,6 +5359,30 @@ ${children}
   function escapeAttr2(text = "") {
     return String(text).replace(/"/g, "&quot;");
   }
+  function stripLeadingTitleH1(markdown = "", title = "") {
+    if (!markdown) return "";
+    const lines = markdown.split(/\r?\n/);
+    let firstIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].trim() !== "") {
+        firstIdx = i;
+        break;
+      }
+    }
+    if (firstIdx !== -1) {
+      const line = lines[firstIdx].trim();
+      if (line.startsWith("# ")) {
+        const headingText = line.substring(2).trim();
+        const normHeading = headingText.toLowerCase().replace(/[^\w\s]/g, "");
+        const normTitle = (title || "").toLowerCase().replace(/[^\w\s]/g, "");
+        if (!normTitle || normHeading.includes(normTitle) || normTitle.includes(normHeading) || normTitle.length >= 10 && normHeading.startsWith(normTitle.slice(0, 15))) {
+          lines.splice(firstIdx, 1);
+          return lines.join("\n");
+        }
+      }
+    }
+    return markdown;
+  }
   function renderPageReaderCanvas({
     activeDocKey = "",
     activeDocContent = "",
@@ -5478,7 +5573,7 @@ ${children}
 
             <!-- Document Rendered Body with prose-plane -->
             <article id="doc-active-body" class="prose dark:prose-invert prose-plane ${isFullWidth ? "max-w-[1152px]" : "max-w-[760px]"} mx-auto text-gray-800 dark:text-zinc-200 leading-relaxed text-sm">
-              ${enrichMarkdownWithSmartChips(renderMarkdown2(stripFrontmatter(activeDocContent)), features)}
+              ${enrichMarkdownWithSmartChips(renderMarkdown2(stripLeadingTitleH1(stripFrontmatter(activeDocContent), activeDocMeta.title || activePlanePage.title)), features)}
             </article>
           </div>
         </div>
@@ -5936,6 +6031,7 @@ ${children}
         </div>
 
         <form id="create-collection-form" class="space-y-3 text-xs">
+          <input type="hidden" id="col-form-id" name="collection_id" value="" />
           <div>
             <label for="col-form-name" class="block font-medium text-gray-700 dark:text-zinc-300 mb-1">Collection Name:</label>
             <input type="text" id="col-form-name" name="name" placeholder="e.g. Security, DevOps, Marketing..." class="w-full px-3 py-1.5 rounded-md bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 text-xs focus:border-indigo-500 focus:outline-none" required />
@@ -6488,7 +6584,7 @@ ${children}
       reqCount: 0,
       adrCount: 0
     };
-    const activeDocToc = extractTableOfContents(activeDocContent);
+    const activeDocToc = extractTableOfContents(stripLeadingTitleH1(activeDocContent, activeDocMeta.title || activePlanePage.title));
     const dynamicAiPrompt = buildAiSystemPrompt({ projectSpec, kData, rules, services, guardrails, naming });
     const activeCollection = planePageState.activeCollection || "product";
     const findPlanePage = (docKey, meta = {}) => {
@@ -6785,7 +6881,7 @@ ${children}
         ` : `
         <!-- 1. Hero Header de la Colecci\xF3n (Image 1 Header) -->
         <div class="px-8 pt-7 pb-4 flex items-center justify-between border-b border-transparent">
-          <!-- Left: Big Icon + Collection Title + Private Pill -->
+          <!-- Left: Big Icon + Collection Title + Private Pill + Collection Actions Menu -->
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 shadow-2xs ${currentCollection.iconWrapperClass}">
               ${currentCollection.iconSvg("w-5 h-5")}
@@ -6797,6 +6893,40 @@ ${children}
               ${currentCollection.isPrivate ? Icons.lock("w-3 h-3 text-gray-500") : Icons.globe("w-3 h-3 text-gray-500")}
               <span>${currentCollection.isPrivate ? "Private" : "Public"}</span>
             </span>
+
+            <!-- Collection Actions Menu (\xB7\xB7\xB7) -->
+            <div class="relative inline-block text-left">
+              <button
+                type="button"
+                id="btn-collection-actions"
+                data-action="toggle-collection-menu"
+                class="w-7 h-7 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-500 hover:text-gray-800 dark:hover:text-zinc-200 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                title="Opciones de la colecci\xF3n"
+              >
+                ${Icons.dotsHorizontal("w-3.5 h-3.5")}
+              </button>
+              <div id="collection-actions-menu" class="hidden absolute left-0 top-8 w-44 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal">
+                <button
+                  type="button"
+                  data-action="open-edit-collection-modal"
+                  data-collection-id="${activeCollection}"
+                  data-collection-name="${escapeAttr4(currentCollection.title)}"
+                  data-collection-description="${escapeAttr4(currentCollection.description || "")}"
+                  data-collection-private="${currentCollection.isPrivate ? "1" : "0"}"
+                  class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer"
+                >
+                  ${Icons.edit("w-3.5 h-3.5 text-gray-500")} <span>Editar colecci\xF3n</span>
+                </button>
+                <button
+                  type="button"
+                  data-action="archive-collection"
+                  data-collection-id="${activeCollection}"
+                  class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2 cursor-pointer border-t border-gray-100 dark:border-zinc-800"
+                >
+                  ${Icons.archive("w-3.5 h-3.5 text-rose-500")} <span>Archivar colecci\xF3n</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Right: Search, Filter & Blue "Add page v" Split Button -->
@@ -6886,170 +7016,119 @@ ${children}
 
           <!-- Table Rows -->
           <div class="divide-y divide-gray-100 dark:divide-zinc-800/60" id="kb-collection-table-rows">
-            ${currentCollection.items.map((item) => {
-      const isExpanded = expandedParentIds.has(item.id);
-      const hasChildren = item.children && item.children.length > 0 || item.nestedCount > 0;
-      return `
-                <div
-                  class="kb-table-row plane-page-item group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
-                  data-doc-key="${item.docKey}"
-                  data-page-title="${escapeAttr4(item.title)}"
-                  data-page-owner="${escapeAttr4(item.owner)}"
-                  title="${escapeAttr4(item.title)}"
-                >
-                  <!-- Page Name Col (flex-1) -->
-                  <div class="flex-1 flex items-center gap-2 min-w-0 pr-4">
-                    <span class="w-4 h-4 inline-flex items-center justify-center shrink-0">
-                      ${hasChildren ? `
-                        <button
-                          type="button"
-                          data-action="toggle-nested-rows"
-                          data-parent-id="${item.id}"
-                          class="w-4 h-4 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 inline-flex items-center justify-center text-[10px] cursor-pointer rounded transition-transform"
-                          title="${isExpanded ? "Collapse nested pages" : "Expand nested pages"}"
-                        >
-                          ${isExpanded ? Icons.chevronDown("w-3 h-3 text-gray-600 dark:text-zinc-300") : Icons.chevronRight("w-3 h-3 text-gray-400")}
-                        </button>
+            ${(() => {
+      const renderPageRow = (item, depth = 0) => {
+        if (depth > 4) return "";
+        const isExpanded = expandedParentIds.has(item.id);
+        const hasChildren = item.children && item.children.length > 0 || item.nestedCount > 0;
+        const indentPadding = depth === 0 ? "" : `style="padding-left: ${depth * 1.5}rem;"`;
+        return `
+                  <div
+                    class="kb-table-row plane-page-item group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer ${depth > 0 ? "kb-nested-row bg-gray-50/25 dark:bg-zinc-900/15" : ""}"
+                    data-parent-id="${item.parent_id || ""}"
+                    data-doc-key="${item.docKey}"
+                    data-page-title="${escapeAttr4(item.title)}"
+                    data-page-owner="${escapeAttr4(item.owner)}"
+                    data-depth="${depth}"
+                    title="${escapeAttr4(item.title)}"
+                  >
+                    <!-- Page Name Col (flex-1) with indented CSS guide line -->
+                    <div class="flex-1 flex items-center gap-2 min-w-0 pr-4" ${indentPadding}>
+                      ${depth > 0 ? `
+                        <span class="inline-block w-3.5 h-3.5 border-l-2 border-b-2 border-indigo-300 dark:border-indigo-600/70 rounded-bl-xs -mt-1 shrink-0 select-none"></span>
                       ` : ""}
-                    </span>
-                    <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${item.docKey}">${renderDocIcon(item.docKey || item.title)}</span>
-                    <span class="text-xs font-medium text-gray-800 dark:text-zinc-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate" data-action="open-article-read" data-doc-key="${item.docKey}">
-                      ${escapeHtml6(item.title)}
-                    </span>
-                  </div>
-
-                  <!-- Owner Col (w-44) -->
-                  <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
-                    <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${item.avatarBg || "bg-amber-100 text-amber-800"}">
-                      ${(item.owner || "A")[0]}
-                    </div>
-                    <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml6(item.owner)}</span>
-                  </div>
-
-                  <!-- Nested Pages Col (w-32) -->
-                  <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
-                    ${item.nestedCount || (item.children ? item.children.length : 0)}
-                  </div>
-
-                  <!-- Last Activity Col (w-40) -->
-                  <div class="w-40 text-xs text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
-                    ${escapeHtml6(item.lastActivity)}
-                  </div>
-
-                  <!-- Actions Menu Col (w-10 text-right) -->
-                  <div class="w-10 text-right shrink-0 relative">
-                    <button
-                      type="button"
-                      data-action="toggle-page-row-menu"
-                      data-page-id="${item.id}"
-                      class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-opacity cursor-pointer"
-                      title="More actions"
-                    >
-                      ${Icons.dotsHorizontal("w-3.5 h-3.5")}
-                    </button>
-
-                    <!-- Row Dropdown Popover Menu -->
-                    <div id="page-row-menu-${item.id}" class="plane-row-actions-menu hidden absolute right-0 top-7 w-48 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal text-left">
-                      <button type="button" data-action="open-article-read" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.eye("w-3.5 h-3.5 text-gray-500")} <span>Open in reader</span>
-                      </button>
-                      <button type="button" data-action="open-article-edit" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.edit("w-3.5 h-3.5 text-gray-500")} <span>Edit in editor</span>
-                      </button>
-                      <button type="button" data-action="open-new-doc-modal" data-parent-id="${item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
-                        ${Icons.plus("w-3.5 h-3.5 text-gray-500")} <span>Add sub-page</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-favorite" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.star("w-3.5 h-3.5 text-amber-500")} <span>Toggle Favorite</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-lock" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.lock("w-3.5 h-3.5 text-gray-500")} <span>Toggle Lock</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-access" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
-                        ${Icons.globe("w-3.5 h-3.5 text-gray-500")} <span>Toggle Public/Private</span>
-                      </button>
-                      <button type="button" data-action="duplicate-page" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
-                        ${Icons.copy("w-3.5 h-3.5 text-gray-500")} <span>Duplicate page</span>
-                      </button>
-                      <button type="button" data-action="copy-page-link" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.copy("w-3.5 h-3.5 text-gray-500")} <span>Copy link</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-archive" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2 cursor-pointer">
-                        ${Icons.archive("w-3.5 h-3.5 text-rose-500")} <span>Archive</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Indented Nested / Child Pages (Columns stay perfectly aligned) -->
-                ${isExpanded && item.children && item.children.length > 0 ? `
-                  <div class="space-y-0 border-b border-gray-100 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/20">
-                    ${item.children.map((ch) => `
-                      <div
-                        class="kb-table-row kb-nested-row plane-page-item group flex items-center px-4 py-2 border-b border-gray-100/60 dark:border-zinc-800/40 hover:bg-indigo-50/50 dark:hover:bg-zinc-850/50 transition-colors cursor-pointer"
-                        data-parent-id="${item.id}"
-                        data-doc-key="${ch.docKey}"
-                        data-page-title="${escapeAttr4(ch.title)}"
-                        data-page-owner="${escapeAttr4(ch.owner)}"
-                        title="${escapeAttr4(ch.title)}"
-                      >
-                        <!-- Page Name Col (flex-1) with indented connector -->
-                        <div class="flex-1 flex items-center gap-2 min-w-0 pr-4 pl-7" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <span class="text-indigo-400 dark:text-indigo-500 font-mono text-xs select-none shrink-0 font-bold">\u2514</span>
-                          <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${ch.docKey}">${renderDocIcon(ch.docKey || ch.title)}</span>
-                          <span class="text-xs font-medium text-gray-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
-                            ${escapeHtml6(ch.title)}
-                          </span>
-                        </div>
-
-                        <!-- Owner Col (w-44) -->
-                        <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${ch.avatarBg || "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"}">
-                            ${(ch.owner || "A")[0]}
-                          </div>
-                          <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml6(ch.owner)}</span>
-                        </div>
-
-                        <!-- Nested Pages Col (w-32) -->
-                        <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          0
-                        </div>
-
-                        <!-- Last Activity Col (w-40) -->
-                        <div class="w-40 text-xs text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          ${escapeHtml6(ch.lastActivity || "Recently")}
-                        </div>
-
-                        <!-- Actions Menu Col (w-10 text-right) -->
-                        <div class="w-10 text-right shrink-0 relative">
+                      <span class="w-4 h-4 inline-flex items-center justify-center shrink-0">
+                        ${hasChildren ? `
                           <button
                             type="button"
-                            data-action="toggle-page-row-menu"
-                            data-page-id="${ch.id}"
-                            class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-opacity cursor-pointer"
-                            title="More actions"
+                            data-action="toggle-nested-rows"
+                            data-parent-id="${item.id}"
+                            class="w-4 h-4 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 inline-flex items-center justify-center text-[10px] cursor-pointer rounded transition-transform"
+                            title="${isExpanded ? "Collapse nested pages" : "Expand nested pages"}"
                           >
-                            ${Icons.dotsHorizontal("w-3.5 h-3.5")}
+                            ${isExpanded ? Icons.chevronDown("w-3 h-3 text-gray-600 dark:text-zinc-300") : Icons.chevronRight("w-3 h-3 text-gray-400")}
                           </button>
+                        ` : ""}
+                      </span>
+                      <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${item.docKey}">${renderDocIcon(item.docKey || item.title)}</span>
+                      <span class="text-xs font-medium text-gray-800 dark:text-zinc-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate" data-action="open-article-read" data-doc-key="${item.docKey}">
+                        ${escapeHtml6(item.title)}
+                      </span>
+                    </div>
 
-                          <div id="page-row-menu-${ch.id}" class="plane-row-actions-menu hidden absolute right-0 top-7 w-48 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal text-left">
-                            <button type="button" data-action="open-article-read" data-doc-key="${ch.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                              ${Icons.eye("w-3.5 h-3.5 text-gray-500")} <span>Open in reader</span>
-                            </button>
-                            <button type="button" data-action="open-article-edit" data-doc-key="${ch.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                              ${Icons.edit("w-3.5 h-3.5 text-gray-500")} <span>Edit in editor</span>
-                            </button>
-                            <button type="button" data-action="copy-page-link" data-doc-key="${ch.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                              ${Icons.copy("w-3.5 h-3.5 text-gray-500")} <span>Copy link</span>
-                            </button>
-                          </div>
-                        </div>
+                    <!-- Owner Col (w-44) -->
+                    <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
+                      <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${item.avatarBg || "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"}">
+                        ${(item.owner || "A")[0]}
                       </div>
-                    `).join("")}
+                      <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml6(item.owner)}</span>
+                    </div>
+
+                    <!-- Nested Pages Col (w-32) -->
+                    <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
+                      ${item.children && item.children.length || item.nestedCount || 0}
+                    </div>
+
+                    <!-- Last Activity Col (w-40) -->
+                    <div class="w-40 text-xs text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
+                      ${escapeHtml6(item.lastActivity || "Recently")}
+                    </div>
+
+                    <!-- Actions Menu Col (w-10 text-right) -->
+                    <div class="w-10 text-right shrink-0 relative">
+                      <button
+                        type="button"
+                        data-action="toggle-page-row-menu"
+                        data-page-id="${item.id}"
+                        class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-opacity cursor-pointer"
+                        title="More actions"
+                      >
+                        ${Icons.dotsHorizontal("w-3.5 h-3.5")}
+                      </button>
+
+                      <!-- Row Dropdown Popover Menu -->
+                      <div id="page-row-menu-${item.id}" class="plane-row-actions-menu hidden absolute right-0 top-7 w-48 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal text-left">
+                        <button type="button" data-action="open-article-read" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.eye("w-3.5 h-3.5 text-gray-500")} <span>Open in reader</span>
+                        </button>
+                        <button type="button" data-action="open-article-edit" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.edit("w-3.5 h-3.5 text-gray-500")} <span>Edit in editor</span>
+                        </button>
+                        <button type="button" data-action="open-new-doc-modal" data-parent-id="${item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
+                          ${Icons.plus("w-3.5 h-3.5 text-gray-500")} <span>Add sub-page</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-favorite" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.star("w-3.5 h-3.5 text-amber-500")} <span>Toggle Favorite</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-lock" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.lock("w-3.5 h-3.5 text-gray-500")} <span>Toggle Lock</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-access" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
+                          ${Icons.globe("w-3.5 h-3.5 text-gray-500")} <span>Toggle Public/Private</span>
+                        </button>
+                        <button type="button" data-action="duplicate-page" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
+                          ${Icons.copy("w-3.5 h-3.5 text-gray-500")} <span>Duplicate page</span>
+                        </button>
+                        <button type="button" data-action="copy-page-link" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.copy("w-3.5 h-3.5 text-gray-500")} <span>Copy link</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-archive" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2 cursor-pointer">
+                          ${Icons.archive("w-3.5 h-3.5 text-rose-500")} <span>Archive</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                ` : ""}
-              `;
-    }).join("")}
+
+                  <!-- Recursive Children Pages -->
+                  ${isExpanded && item.children && item.children.length > 0 ? `
+                    <div class="space-y-0 border-b border-gray-100 dark:border-zinc-800/60">
+                      ${item.children.map((ch) => renderPageRow(ch, depth + 1)).join("")}
+                    </div>
+                  ` : ""}
+                `;
+      };
+      return currentCollection.items.map((item) => renderPageRow(item, 0)).join("");
+    })()}
           </div>
         </div>
 
@@ -7230,7 +7309,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
      * Manejador de eventos click delegados para Pages y Library
      */
     async handleClick(e) {
-      const scrollHeadingBtn = e.target.closest('[data-action="scroll-to-heading"], #doc-active-toc a, #plane-page-navigation-pane nav a');
+      const scrollHeadingBtn = e.target.closest('[data-action="scroll-to-heading"], #doc-active-toc a, #doc-active-toc button, #plane-page-navigation-pane nav a, #plane-page-navigation-pane nav button, #doc-active-body a[href^="#"], #article-floating-outline-wrapper a, #article-floating-outline-wrapper button');
       if (scrollHeadingBtn) {
         e.preventDefault();
         e.stopPropagation();
@@ -8049,13 +8128,81 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         }
         return true;
       }
+      const toggleColMenuBtn = e.target.closest('[data-action="toggle-collection-menu"]');
+      if (toggleColMenuBtn) {
+        e.stopPropagation();
+        const menu = document.getElementById("collection-actions-menu");
+        if (menu) {
+          menu.classList.toggle("hidden");
+        }
+        return true;
+      }
       if (e.target.closest('[data-action="open-create-collection-modal"]')) {
         const modal = document.getElementById("create-collection-modal");
         if (modal) {
+          const idInput = document.getElementById("col-form-id");
+          if (idInput) idInput.value = "";
+          const nameInput = document.getElementById("col-form-name");
+          if (nameInput) nameInput.value = "";
+          const descInput = document.getElementById("col-form-desc");
+          if (descInput) descInput.value = "";
+          const privCheck = document.getElementById("col-form-private");
+          if (privCheck) privCheck.checked = false;
+          const titleSpan = document.querySelector("#create-collection-title span");
+          if (titleSpan) titleSpan.textContent = "Create New Collection (Plane Wiki Space)";
+          const submitBtn = document.getElementById("col-form-submit");
+          if (submitBtn) submitBtn.textContent = "Create Collection";
           modal.classList.remove("hidden");
           modal.classList.add("flex");
-          document.getElementById("col-form-name")?.focus();
+          nameInput?.focus();
         }
+        return true;
+      }
+      const editColBtn = e.target.closest('[data-action="open-edit-collection-modal"]');
+      if (editColBtn) {
+        const colId = editColBtn.getAttribute("data-collection-id");
+        const colName = editColBtn.getAttribute("data-collection-name") || "";
+        const colDesc = editColBtn.getAttribute("data-collection-description") || "";
+        const colPriv = editColBtn.getAttribute("data-collection-private") === "1";
+        const modal = document.getElementById("create-collection-modal");
+        if (modal) {
+          const idInput = document.getElementById("col-form-id");
+          if (idInput) idInput.value = colId;
+          const nameInput = document.getElementById("col-form-name");
+          if (nameInput) nameInput.value = colName;
+          const descInput = document.getElementById("col-form-desc");
+          if (descInput) descInput.value = colDesc;
+          const privCheck = document.getElementById("col-form-private");
+          if (privCheck) privCheck.checked = colPriv;
+          const titleSpan = document.querySelector("#create-collection-title span");
+          if (titleSpan) titleSpan.textContent = "Edit Collection (Plane Wiki Space)";
+          const submitBtn = document.getElementById("col-form-submit");
+          if (submitBtn) submitBtn.textContent = "Save Changes";
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          nameInput?.focus();
+        }
+        const menu = document.getElementById("collection-actions-menu");
+        if (menu) menu.classList.add("hidden");
+        return true;
+      }
+      const archiveColBtn = e.target.closest('[data-action="archive-collection"]');
+      if (archiveColBtn) {
+        const colId = archiveColBtn.getAttribute("data-collection-id");
+        if (colId) {
+          const confirmed = typeof window !== "undefined" ? window.confirm(`\xBFEst\xE1s seguro de archivar la colecci\xF3n "${colId}"?`) : true;
+          if (confirmed) {
+            try {
+              await api.archiveCollection(colId);
+              this.activeCollection = "general";
+              if (this.app?.refreshData) await this.app.refreshData();
+            } catch (err) {
+              console.warn("[COLLECTION] Error archivando coleccion:", err);
+            }
+          }
+        }
+        const menu = document.getElementById("collection-actions-menu");
+        if (menu) menu.classList.add("hidden");
         return true;
       }
       if (e.target.closest('[data-action="close-create-collection-modal"]')) {
@@ -8173,7 +8320,8 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
      * Manejador de eventos submit delegados
      */
     async handleSubmit(e) {
-      if (e.target.id === "new-doc-form") {
+      const formId = typeof e.target.getAttribute === "function" && e.target.getAttribute("id") || e.target.id;
+      if (formId === "new-doc-form") {
         e.preventDefault();
         const filenameInput = document.getElementById("new-doc-filename");
         const moduleInput = document.getElementById("new-doc-module");
@@ -8205,21 +8353,23 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         this.openArticleView(cleanDocKey, false);
         return true;
       }
-      if (e.target.id === "create-collection-form") {
+      if (formId === "create-collection-form") {
         e.preventDefault();
-        const name = document.getElementById("col-form-name")?.value.trim();
-        const description = document.getElementById("col-form-desc")?.value.trim() || "";
+        const colId = document.getElementById("col-form-id")?.value || "";
+        const name = (document.getElementById("col-form-name")?.value || "").trim();
+        const description = (document.getElementById("col-form-desc")?.value || "").trim();
         const icon = document.getElementById("col-form-icon")?.value || "folder";
         const color = document.getElementById("col-form-color")?.value || "#6366f1";
         const is_private = document.getElementById("col-form-private")?.checked ? 1 : 0;
         if (!name) return true;
         try {
-          const res = await fetch("/api/plane/collections", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, description, icon, color, is_private })
-          });
-          if (res.ok) {
+          let res;
+          if (colId) {
+            res = await api.updateCollection(colId, { name, description, icon, color, is_private });
+          } else {
+            res = await api.createCollection({ name, description, icon, color, is_private });
+          }
+          if (res && (res.ok || res.id || res.collection)) {
             const modal = document.getElementById("create-collection-modal");
             if (modal) {
               modal.classList.add("hidden");
@@ -8228,7 +8378,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
             if (this.app?.refreshData) await this.app.refreshData();
           }
         } catch (err) {
-          console.warn("[COLLECTION] Error creando coleccion:", err);
+          console.warn("[COLLECTION] Error guardando coleccion:", err);
         }
         return true;
       }
@@ -8428,7 +8578,11 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
      */
     scrollToHeading(headingId) {
       if (!headingId) return;
-      const cleanId = String(headingId).replace(/^#/, "").trim();
+      let cleanId = String(headingId).replace(/^#/, "").trim();
+      try {
+        cleanId = decodeURIComponent(cleanId);
+      } catch {
+      }
       const scrollContainer = document.getElementById("doc-reader-main-col");
       const bodyEl = document.getElementById("doc-active-body");
       if (!bodyEl) return;
@@ -8437,7 +8591,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         const headings = Array.from(bodyEl.querySelectorAll("h1, h2, h3, h4, h5, h6"));
         targetEl = headings.find((h) => {
           const hId = h.id || h.getAttribute("id") || "";
-          return hId === cleanId || hId.toLowerCase() === cleanId.toLowerCase() || h.textContent.trim().toLowerCase().includes(cleanId.toLowerCase().replace(/-/g, " "));
+          return hId === cleanId || hId.toLowerCase() === cleanId.toLowerCase() || h.textContent.trim().toLowerCase().includes(cleanId.toLowerCase().replace(/[-_]/g, " "));
         });
       }
       if (targetEl) {
@@ -8453,7 +8607,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
         setTimeout(() => {
           targetEl.classList.remove("bg-indigo-500/15");
         }, 1500);
-        document.querySelectorAll('[data-action="scroll-to-heading"]').forEach((link) => {
+        document.querySelectorAll('[data-action="scroll-to-heading"], #doc-active-toc button').forEach((link) => {
           const isMatch = (link.getAttribute("data-heading-id") || (link.getAttribute("href") || "").replace(/^#/, "")) === cleanId;
           link.classList.toggle("text-indigo-600", isMatch);
           link.classList.toggle("dark:text-indigo-400", isMatch);
@@ -8640,33 +8794,33 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
       container.innerHTML = blocks.map((b, idx) => {
         const typeLabel = getBlockTypeLabel(b.type);
         return `
-        <div class="visual-block-card rounded-2xl border border-zinc-800 bg-zinc-900 p-4 shadow-xs space-y-3"
+        <div class="visual-block-card rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-3"
              data-block-id="${b.id}"
              data-block-index="${idx}">
-          <div class="flex items-center justify-between text-xs font-mono pb-2 border-b border-zinc-800">
+          <div class="flex items-center justify-between text-xs font-mono pb-2 border-b border-gray-100 dark:border-zinc-800">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md bg-indigo-950/60 text-indigo-400 font-bold text-[10px]">
+              <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-500/20 font-bold text-[10px]">
                 ${typeLabel}
               </span>
-              <span class="text-zinc-500 text-[10px]">Bloque #${idx + 1}</span>
+              <span class="text-gray-500 dark:text-zinc-500 text-[10px]">Bloque #${idx + 1}</span>
             </div>
             <div class="flex items-center gap-1">
-              <button type="button" data-block-action="move-up" class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200" title="Subir">
+              <button type="button" data-block-action="move-up" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200" title="Subir">
                 ${Icons.chevronUp("w-3.5 h-3.5")}
               </button>
-              <button type="button" data-block-action="move-down" class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200" title="Bajar">
+              <button type="button" data-block-action="move-down" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200" title="Bajar">
                 ${Icons.chevronDown("w-3.5 h-3.5")}
               </button>
-              <button type="button" data-block-action="delete" class="p-1 rounded hover:bg-rose-950/50 text-zinc-400 hover:text-rose-400" title="Eliminar">
+              <button type="button" data-block-action="delete" class="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 text-gray-400 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400" title="Eliminar">
                 ${Icons.trash("w-3.5 h-3.5")}
               </button>
             </div>
           </div>
           <div class="space-y-2">
             ${b.type === "header" ? `
-              <input type="text" class="w-full text-base font-bold bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white" value="${escapeAttr5(b.text)}" placeholder="T\xEDtulo..." />
+              <input type="text" class="w-full text-base font-bold bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-gray-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500 focus:outline-none transition-colors" value="${escapeAttr5(b.text)}" placeholder="T\xEDtulo..." />
             ` : `
-              <textarea rows="3" class="w-full text-xs bg-zinc-950 border border-zinc-800 rounded-xl p-3 font-mono text-white">${escapeHtml7(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || (Array.isArray(b.content) ? b.content.join("\n") : ""))}</textarea>
+              <textarea rows="3" class="w-full text-xs bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-3 font-mono text-gray-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500 focus:outline-none transition-colors">${escapeHtml7(Array.isArray(b.lines) ? b.lines.join("\n") : b.text || (Array.isArray(b.content) ? b.content.join("\n") : ""))}</textarea>
             `}
           </div>
         </div>

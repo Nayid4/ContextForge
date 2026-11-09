@@ -13,7 +13,7 @@
 import { Icons } from '../../../shared/Icons.js';
 import { formatTimeAgo } from '../../../shared/utils/dates.js';
 import { extractTableOfContents } from '../../../shared/MarkdownViewer.js';
-import { renderPageReaderCanvas } from './PageReaderCanvas.js';
+import { renderPageReaderCanvas, stripLeadingTitleH1 } from './PageReaderCanvas.js';
 import { renderPageModals } from './PageModals.js';
 import { renderPageCard, getPageName } from './PageCard.js';
 import { renderPagesHeader } from './PagesHeader.js';
@@ -83,7 +83,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
     adrCount: 0
   };
 
-  const activeDocToc = extractTableOfContents(activeDocContent);
+  const activeDocToc = extractTableOfContents(stripLeadingTitleH1(activeDocContent, activeDocMeta.title || activePlanePage.title));
   const dynamicAiPrompt = buildAiSystemPrompt({ projectSpec, kData, rules, services, guardrails, naming });
 
   const activeCollection = planePageState.activeCollection || 'product';
@@ -399,7 +399,7 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
         ` : `
         <!-- 1. Hero Header de la Colección (Image 1 Header) -->
         <div class="px-8 pt-7 pb-4 flex items-center justify-between border-b border-transparent">
-          <!-- Left: Big Icon + Collection Title + Private Pill -->
+          <!-- Left: Big Icon + Collection Title + Private Pill + Collection Actions Menu -->
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 shadow-2xs ${currentCollection.iconWrapperClass}">
               ${currentCollection.iconSvg('w-5 h-5')}
@@ -411,6 +411,40 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
               ${currentCollection.isPrivate ? Icons.lock('w-3 h-3 text-gray-500') : Icons.globe('w-3 h-3 text-gray-500')}
               <span>${currentCollection.isPrivate ? 'Private' : 'Public'}</span>
             </span>
+
+            <!-- Collection Actions Menu (···) -->
+            <div class="relative inline-block text-left">
+              <button
+                type="button"
+                id="btn-collection-actions"
+                data-action="toggle-collection-menu"
+                class="w-7 h-7 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-500 hover:text-gray-800 dark:hover:text-zinc-200 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                title="Opciones de la colección"
+              >
+                ${Icons.dotsHorizontal('w-3.5 h-3.5')}
+              </button>
+              <div id="collection-actions-menu" class="hidden absolute left-0 top-8 w-44 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal">
+                <button
+                  type="button"
+                  data-action="open-edit-collection-modal"
+                  data-collection-id="${activeCollection}"
+                  data-collection-name="${escapeAttr(currentCollection.title)}"
+                  data-collection-description="${escapeAttr(currentCollection.description || '')}"
+                  data-collection-private="${currentCollection.isPrivate ? '1' : '0'}"
+                  class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer"
+                >
+                  ${Icons.edit('w-3.5 h-3.5 text-gray-500')} <span>Editar colección</span>
+                </button>
+                <button
+                  type="button"
+                  data-action="archive-collection"
+                  data-collection-id="${activeCollection}"
+                  class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2 cursor-pointer border-t border-gray-100 dark:border-zinc-800"
+                >
+                  ${Icons.archive('w-3.5 h-3.5 text-rose-500')} <span>Archivar colección</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Right: Search, Filter & Blue "Add page v" Split Button -->
@@ -500,170 +534,121 @@ export function renderKnowledgeBase({ knowledgeIndex, projectSpec, features = []
 
           <!-- Table Rows -->
           <div class="divide-y divide-gray-100 dark:divide-zinc-800/60" id="kb-collection-table-rows">
-            ${currentCollection.items.map(item => {
-              const isExpanded = expandedParentIds.has(item.id);
-              const hasChildren = (item.children && item.children.length > 0) || item.nestedCount > 0;
-              return `
-                <div
-                  class="kb-table-row plane-page-item group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
-                  data-doc-key="${item.docKey}"
-                  data-page-title="${escapeAttr(item.title)}"
-                  data-page-owner="${escapeAttr(item.owner)}"
-                  title="${escapeAttr(item.title)}"
-                >
-                  <!-- Page Name Col (flex-1) -->
-                  <div class="flex-1 flex items-center gap-2 min-w-0 pr-4">
-                    <span class="w-4 h-4 inline-flex items-center justify-center shrink-0">
-                      ${hasChildren ? `
-                        <button
-                          type="button"
-                          data-action="toggle-nested-rows"
-                          data-parent-id="${item.id}"
-                          class="w-4 h-4 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 inline-flex items-center justify-center text-[10px] cursor-pointer rounded transition-transform"
-                          title="${isExpanded ? 'Collapse nested pages' : 'Expand nested pages'}"
-                        >
-                          ${isExpanded ? Icons.chevronDown('w-3 h-3 text-gray-600 dark:text-zinc-300') : Icons.chevronRight('w-3 h-3 text-gray-400')}
-                        </button>
+            ${(() => {
+              const renderPageRow = (item, depth = 0) => {
+                if (depth > 4) return ''; // Invariante BR-PAGE-08: límite jerárquico de profundidad 4
+                const isExpanded = expandedParentIds.has(item.id);
+                const hasChildren = (item.children && item.children.length > 0) || item.nestedCount > 0;
+                const indentPadding = depth === 0 ? '' : `style="padding-left: ${depth * 1.5}rem;"`;
+
+                return `
+                  <div
+                    class="kb-table-row plane-page-item group flex items-center px-4 py-2.5 border-b border-gray-100 dark:border-zinc-800/60 hover:bg-gray-50/80 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer ${depth > 0 ? 'kb-nested-row bg-gray-50/25 dark:bg-zinc-900/15' : ''}"
+                    data-parent-id="${item.parent_id || ''}"
+                    data-doc-key="${item.docKey}"
+                    data-page-title="${escapeAttr(item.title)}"
+                    data-page-owner="${escapeAttr(item.owner)}"
+                    data-depth="${depth}"
+                    title="${escapeAttr(item.title)}"
+                  >
+                    <!-- Page Name Col (flex-1) with indented CSS guide line -->
+                    <div class="flex-1 flex items-center gap-2 min-w-0 pr-4" ${indentPadding}>
+                      ${depth > 0 ? `
+                        <span class="inline-block w-3.5 h-3.5 border-l-2 border-b-2 border-indigo-300 dark:border-indigo-600/70 rounded-bl-xs -mt-1 shrink-0 select-none"></span>
                       ` : ''}
-                    </span>
-                    <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${item.docKey}">${renderDocIcon(item.docKey || item.title)}</span>
-                    <span class="text-xs font-medium text-gray-800 dark:text-zinc-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate" data-action="open-article-read" data-doc-key="${item.docKey}">
-                      ${escapeHtml(item.title)}
-                    </span>
-                  </div>
-
-                  <!-- Owner Col (w-44) -->
-                  <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
-                    <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${item.avatarBg || 'bg-amber-100 text-amber-800'}">
-                      ${(item.owner || 'A')[0]}
-                    </div>
-                    <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml(item.owner)}</span>
-                  </div>
-
-                  <!-- Nested Pages Col (w-32) -->
-                  <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
-                    ${item.nestedCount || (item.children ? item.children.length : 0)}
-                  </div>
-
-                  <!-- Last Activity Col (w-40) -->
-                  <div class="w-40 text-xs text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
-                    ${escapeHtml(item.lastActivity)}
-                  </div>
-
-                  <!-- Actions Menu Col (w-10 text-right) -->
-                  <div class="w-10 text-right shrink-0 relative">
-                    <button
-                      type="button"
-                      data-action="toggle-page-row-menu"
-                      data-page-id="${item.id}"
-                      class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-opacity cursor-pointer"
-                      title="More actions"
-                    >
-                      ${Icons.dotsHorizontal('w-3.5 h-3.5')}
-                    </button>
-
-                    <!-- Row Dropdown Popover Menu -->
-                    <div id="page-row-menu-${item.id}" class="plane-row-actions-menu hidden absolute right-0 top-7 w-48 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal text-left">
-                      <button type="button" data-action="open-article-read" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.eye('w-3.5 h-3.5 text-gray-500')} <span>Open in reader</span>
-                      </button>
-                      <button type="button" data-action="open-article-edit" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.edit('w-3.5 h-3.5 text-gray-500')} <span>Edit in editor</span>
-                      </button>
-                      <button type="button" data-action="open-new-doc-modal" data-parent-id="${item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
-                        ${Icons.plus('w-3.5 h-3.5 text-gray-500')} <span>Add sub-page</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-favorite" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.star('w-3.5 h-3.5 text-amber-500')} <span>Toggle Favorite</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-lock" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.lock('w-3.5 h-3.5 text-gray-500')} <span>Toggle Lock</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-access" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
-                        ${Icons.globe('w-3.5 h-3.5 text-gray-500')} <span>Toggle Public/Private</span>
-                      </button>
-                      <button type="button" data-action="duplicate-page" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
-                        ${Icons.copy('w-3.5 h-3.5 text-gray-500')} <span>Duplicate page</span>
-                      </button>
-                      <button type="button" data-action="copy-page-link" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                        ${Icons.copy('w-3.5 h-3.5 text-gray-500')} <span>Copy link</span>
-                      </button>
-                      <button type="button" data-action="toggle-page-archive" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2 cursor-pointer">
-                        ${Icons.archive('w-3.5 h-3.5 text-rose-500')} <span>Archive</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Indented Nested / Child Pages (Columns stay perfectly aligned) -->
-                ${isExpanded && item.children && item.children.length > 0 ? `
-                  <div class="space-y-0 border-b border-gray-100 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/20">
-                    ${item.children.map(ch => `
-                      <div
-                        class="kb-table-row kb-nested-row plane-page-item group flex items-center px-4 py-2 border-b border-gray-100/60 dark:border-zinc-800/40 hover:bg-indigo-50/50 dark:hover:bg-zinc-850/50 transition-colors cursor-pointer"
-                        data-parent-id="${item.id}"
-                        data-doc-key="${ch.docKey}"
-                        data-page-title="${escapeAttr(ch.title)}"
-                        data-page-owner="${escapeAttr(ch.owner)}"
-                        title="${escapeAttr(ch.title)}"
-                      >
-                        <!-- Page Name Col (flex-1) with indented connector -->
-                        <div class="flex-1 flex items-center gap-2 min-w-0 pr-4 pl-7" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <span class="text-indigo-400 dark:text-indigo-500 font-mono text-xs select-none shrink-0 font-bold">└</span>
-                          <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${ch.docKey}">${renderDocIcon(ch.docKey || ch.title)}</span>
-                          <span class="text-xs font-medium text-gray-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
-                            ${escapeHtml(ch.title)}
-                          </span>
-                        </div>
-
-                        <!-- Owner Col (w-44) -->
-                        <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${ch.avatarBg || 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'}">
-                            ${(ch.owner || 'A')[0]}
-                          </div>
-                          <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml(ch.owner)}</span>
-                        </div>
-
-                        <!-- Nested Pages Col (w-32) -->
-                        <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          0
-                        </div>
-
-                        <!-- Last Activity Col (w-40) -->
-                        <div class="w-40 text-xs text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${ch.docKey}">
-                          ${escapeHtml(ch.lastActivity || 'Recently')}
-                        </div>
-
-                        <!-- Actions Menu Col (w-10 text-right) -->
-                        <div class="w-10 text-right shrink-0 relative">
+                      <span class="w-4 h-4 inline-flex items-center justify-center shrink-0">
+                        ${hasChildren ? `
                           <button
                             type="button"
-                            data-action="toggle-page-row-menu"
-                            data-page-id="${ch.id}"
-                            class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-opacity cursor-pointer"
-                            title="More actions"
+                            data-action="toggle-nested-rows"
+                            data-parent-id="${item.id}"
+                            class="w-4 h-4 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 inline-flex items-center justify-center text-[10px] cursor-pointer rounded transition-transform"
+                            title="${isExpanded ? 'Collapse nested pages' : 'Expand nested pages'}"
                           >
-                            ${Icons.dotsHorizontal('w-3.5 h-3.5')}
+                            ${isExpanded ? Icons.chevronDown('w-3 h-3 text-gray-600 dark:text-zinc-300') : Icons.chevronRight('w-3 h-3 text-gray-400')}
                           </button>
+                        ` : ''}
+                      </span>
+                      <span class="shrink-0 inline-flex items-center" data-action="open-article-read" data-doc-key="${item.docKey}">${renderDocIcon(item.docKey || item.title)}</span>
+                      <span class="text-xs font-medium text-gray-800 dark:text-zinc-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate" data-action="open-article-read" data-doc-key="${item.docKey}">
+                        ${escapeHtml(item.title)}
+                      </span>
+                    </div>
 
-                          <div id="page-row-menu-${ch.id}" class="plane-row-actions-menu hidden absolute right-0 top-7 w-48 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal text-left">
-                            <button type="button" data-action="open-article-read" data-doc-key="${ch.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                              ${Icons.eye('w-3.5 h-3.5 text-gray-500')} <span>Open in reader</span>
-                            </button>
-                            <button type="button" data-action="open-article-edit" data-doc-key="${ch.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                              ${Icons.edit('w-3.5 h-3.5 text-gray-500')} <span>Edit in editor</span>
-                            </button>
-                            <button type="button" data-action="copy-page-link" data-doc-key="${ch.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
-                              ${Icons.copy('w-3.5 h-3.5 text-gray-500')} <span>Copy link</span>
-                            </button>
-                          </div>
-                        </div>
+                    <!-- Owner Col (w-44) -->
+                    <div class="w-44 flex items-center gap-2 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
+                      <div class="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 ${item.avatarBg || 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">
+                        ${(item.owner || 'A')[0]}
                       </div>
-                    `).join('')}
+                      <span class="text-xs text-gray-600 dark:text-zinc-400 truncate">${escapeHtml(item.owner)}</span>
+                    </div>
+
+                    <!-- Nested Pages Col (w-32) -->
+                    <div class="w-32 text-xs font-mono text-gray-500 dark:text-zinc-400 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
+                      ${(item.children && item.children.length) || item.nestedCount || 0}
+                    </div>
+
+                    <!-- Last Activity Col (w-40) -->
+                    <div class="w-40 text-xs text-gray-400 dark:text-zinc-500 shrink-0" data-action="open-article-read" data-doc-key="${item.docKey}">
+                      ${escapeHtml(item.lastActivity || 'Recently')}
+                    </div>
+
+                    <!-- Actions Menu Col (w-10 text-right) -->
+                    <div class="w-10 text-right shrink-0 relative">
+                      <button
+                        type="button"
+                        data-action="toggle-page-row-menu"
+                        data-page-id="${item.id}"
+                        class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-opacity cursor-pointer"
+                        title="More actions"
+                      >
+                        ${Icons.dotsHorizontal('w-3.5 h-3.5')}
+                      </button>
+
+                      <!-- Row Dropdown Popover Menu -->
+                      <div id="page-row-menu-${item.id}" class="plane-row-actions-menu hidden absolute right-0 top-7 w-48 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl py-1 z-40 text-xs font-normal text-left">
+                        <button type="button" data-action="open-article-read" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.eye('w-3.5 h-3.5 text-gray-500')} <span>Open in reader</span>
+                        </button>
+                        <button type="button" data-action="open-article-edit" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.edit('w-3.5 h-3.5 text-gray-500')} <span>Edit in editor</span>
+                        </button>
+                        <button type="button" data-action="open-new-doc-modal" data-parent-id="${item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
+                          ${Icons.plus('w-3.5 h-3.5 text-gray-500')} <span>Add sub-page</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-favorite" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.star('w-3.5 h-3.5 text-amber-500')} <span>Toggle Favorite</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-lock" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.lock('w-3.5 h-3.5 text-gray-500')} <span>Toggle Lock</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-access" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
+                          ${Icons.globe('w-3.5 h-3.5 text-gray-500')} <span>Toggle Public/Private</span>
+                        </button>
+                        <button type="button" data-action="duplicate-page" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer border-b border-gray-100 dark:border-zinc-800">
+                          ${Icons.copy('w-3.5 h-3.5 text-gray-500')} <span>Duplicate page</span>
+                        </button>
+                        <button type="button" data-action="copy-page-link" data-doc-key="${item.docKey}" class="w-full text-left px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 flex items-center gap-2 cursor-pointer">
+                          ${Icons.copy('w-3.5 h-3.5 text-gray-500')} <span>Copy link</span>
+                        </button>
+                        <button type="button" data-action="toggle-page-archive" data-page-id="${item.pageId || item.id}" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2 cursor-pointer">
+                          ${Icons.archive('w-3.5 h-3.5 text-rose-500')} <span>Archive</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                ` : ''}
-              `;
-            }).join('')}
+
+                  <!-- Recursive Children Pages -->
+                  ${isExpanded && item.children && item.children.length > 0 ? `
+                    <div class="space-y-0 border-b border-gray-100 dark:border-zinc-800/60">
+                      ${item.children.map(ch => renderPageRow(ch, depth + 1)).join('')}
+                    </div>
+                  ` : ''}
+                `;
+              };
+
+              return currentCollection.items.map(item => renderPageRow(item, 0)).join('');
+            })()}
           </div>
         </div>
 

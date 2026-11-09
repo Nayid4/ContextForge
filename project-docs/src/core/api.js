@@ -216,8 +216,9 @@ export async function fetchPlaneData(options = {}) {
     return fallback;
   }
 
+  const cacheBuster = options.bypassCache ? `?_t=${Date.now()}` : '';
   try {
-    const res = await fetch('/api/plane/data');
+    const res = await fetch(`/api/plane/data${cacheBuster}`, options.bypassCache ? { cache: 'no-store' } : {});
     if (res.ok) {
       return await res.json();
     }
@@ -275,11 +276,87 @@ export async function updatePlanePage(pageId, payload) {
   return { ok: false };
 }
 
+export async function createCollection(payload = {}) {
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.collections)) {
+      const newCol = {
+        id: payload.id || `col-${Date.now()}`,
+        name: payload.name || 'New Collection',
+        description: payload.description || '',
+        icon: payload.icon || 'folder',
+        color: payload.color || '#6b7280',
+        is_private: payload.is_private ? 1 : 0,
+        sort_order: (window.__PLANE_DATA__.collections.length + 1) * 10
+      };
+      window.__PLANE_DATA__.collections.push(newCol);
+      return { ok: true, collection: newCol };
+    }
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch('/api/plane/collections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('[API] Error creando colección:', e);
+  }
+  return { ok: false };
+}
+
+export async function updateCollection(collectionId, payload = {}) {
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.collections)) {
+      const col = window.__PLANE_DATA__.collections.find(c => c.id === collectionId);
+      if (col) Object.assign(col, payload);
+    }
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch(`/api/plane/collections/${encodeURIComponent(collectionId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('[API] Error actualizando colección:', e);
+  }
+  return { ok: false };
+}
+
+export async function archiveCollection(collectionId) {
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    if (window.__PLANE_DATA__ && Array.isArray(window.__PLANE_DATA__.collections)) {
+      const col = window.__PLANE_DATA__.collections.find(c => c.id === collectionId);
+      if (col) col.archived_at = new Date().toISOString();
+    }
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch(`/api/plane/collections/${encodeURIComponent(collectionId)}`, {
+      method: 'DELETE'
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('[API] Error archivando colección:', e);
+  }
+  return { ok: false };
+}
+
 export const api = {
   fetchAll: fetchProjectData,
   fetchPlaneData,
   updatePlaneIssue,
   updatePlanePage,
+  createCollection,
+  updateCollection,
+  archiveCollection,
   startAutoSync,
   startPolling: startAutoSync
 };

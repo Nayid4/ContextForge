@@ -259,4 +259,60 @@ test.describe('Acceptance Tests: Plane Wiki Interactions & Navigation', () => {
     await expect(targetEl).toBeAttached();
     await expect(targetEl).toHaveClass(/transition-all/);
   });
+
+  test('TC-11: Opciones de colección en Hero Header (Abrir modal de edición con ID prellenado)', async ({ page }) => {
+    // 1. Clic en menú de acciones de la colección activa
+    const colMenuBtn = page.locator('#btn-collection-actions');
+    await expect(colMenuBtn).toBeVisible();
+    await colMenuBtn.click();
+    await page.waitForTimeout(200);
+
+    // 2. Verificar que el dropdown se despliega
+    const colMenu = page.locator('#collection-actions-menu');
+    await expect(colMenu).toBeVisible();
+
+    // 3. Clic en Editar colección
+    const editBtn = page.locator('[data-action="open-edit-collection-modal"]');
+    await expect(editBtn).toBeVisible();
+    await editBtn.click();
+    await page.waitForTimeout(200);
+
+    // 4. Modal de edición se abre con título y botón adaptados
+    const modal = page.locator('#create-collection-modal');
+    await expect(modal).toBeVisible();
+    const modalTitle = page.locator('#create-collection-title');
+    await expect(modalTitle).toContainText('Edit Collection');
+    const submitBtn = page.locator('#col-form-submit');
+    await expect(submitBtn).toHaveText('Save Changes');
+
+    // 5. Cerrar modal
+    await page.locator('[data-action="close-create-collection-modal"]').first().click();
+    await expect(modal).toBeHidden();
+  });
+
+  test.afterAll(async () => {
+    try {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const { DatabaseSync } = await import('node:sqlite');
+      const collectionsPath = path.resolve('project-docs/knowledge/collections.json');
+      const dbPath = path.resolve('project-docs/data/harness.db');
+      if (fs.existsSync(collectionsPath)) {
+        const raw = fs.readFileSync(collectionsPath, 'utf8');
+        const cols = JSON.parse(raw);
+        const canonicalIds = ['general', 'engineering', 'product', 'design', 'customer_support'];
+        const filtered = cols.filter(c => canonicalIds.includes(c.id));
+        if (filtered.length !== cols.length) {
+          fs.writeFileSync(collectionsPath, JSON.stringify(filtered, null, 2), 'utf8');
+        }
+      }
+      if (fs.existsSync(dbPath)) {
+        const db = new DatabaseSync(dbPath);
+        db.exec("DELETE FROM collections WHERE id NOT IN ('general', 'engineering', 'product', 'design', 'customer_support');");
+        db.close();
+      }
+    } catch {
+      // ignore cleanup errors in test teardown
+    }
+  });
 });

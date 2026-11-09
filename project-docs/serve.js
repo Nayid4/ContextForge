@@ -83,6 +83,7 @@ async function handlePlaneApi(req, res, database) {
   const method = req.method.toUpperCase();
 
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
   if (!database) {
     res.writeHead(503);

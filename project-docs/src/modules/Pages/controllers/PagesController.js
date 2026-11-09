@@ -91,7 +91,7 @@ export class PagesController {
    */
   async handleClick(e) {
     // 0. Navegación en documento: Scroll interactivo a Encabezados H1-H4 (TOC & Inspector)
-    const scrollHeadingBtn = e.target.closest('[data-action="scroll-to-heading"], #doc-active-toc a, #plane-page-navigation-pane nav a');
+    const scrollHeadingBtn = e.target.closest('[data-action="scroll-to-heading"], #doc-active-toc a, #doc-active-toc button, #plane-page-navigation-pane nav a, #plane-page-navigation-pane nav button, #doc-active-body a[href^="#"], #article-floating-outline-wrapper a, #article-floating-outline-wrapper button');
     if (scrollHeadingBtn) {
       e.preventDefault();
       e.stopPropagation();
@@ -1023,16 +1023,94 @@ export class PagesController {
       return true;
     }
 
-    // 43. Modal de Colección (Create / Edit Collection)
-    if (e.target.closest('[data-action="open-create-collection-modal"]')) {
-      const modal = document.getElementById('create-collection-modal');
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.getElementById('col-form-name')?.focus();
+    // 43.0 Toggle Menu Acciones de Colección (Hero Header)
+    const toggleColMenuBtn = e.target.closest('[data-action="toggle-collection-menu"]');
+    if (toggleColMenuBtn) {
+      e.stopPropagation();
+      const menu = document.getElementById('collection-actions-menu');
+      if (menu) {
+        menu.classList.toggle('hidden');
       }
       return true;
     }
+
+    // 43.1 Modal de Colección (Create Collection)
+    if (e.target.closest('[data-action="open-create-collection-modal"]')) {
+      const modal = document.getElementById('create-collection-modal');
+      if (modal) {
+        const idInput = document.getElementById('col-form-id');
+        if (idInput) idInput.value = '';
+        const nameInput = document.getElementById('col-form-name');
+        if (nameInput) nameInput.value = '';
+        const descInput = document.getElementById('col-form-desc');
+        if (descInput) descInput.value = '';
+        const privCheck = document.getElementById('col-form-private');
+        if (privCheck) privCheck.checked = false;
+        const titleSpan = document.querySelector('#create-collection-title span');
+        if (titleSpan) titleSpan.textContent = 'Create New Collection (Plane Wiki Space)';
+        const submitBtn = document.getElementById('col-form-submit');
+        if (submitBtn) submitBtn.textContent = 'Create Collection';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        nameInput?.focus();
+      }
+      return true;
+    }
+
+    // 43.2 Modal de Colección (Edit Collection)
+    const editColBtn = e.target.closest('[data-action="open-edit-collection-modal"]');
+    if (editColBtn) {
+      const colId = editColBtn.getAttribute('data-collection-id');
+      const colName = editColBtn.getAttribute('data-collection-name') || '';
+      const colDesc = editColBtn.getAttribute('data-collection-description') || '';
+      const colPriv = editColBtn.getAttribute('data-collection-private') === '1';
+
+      const modal = document.getElementById('create-collection-modal');
+      if (modal) {
+        const idInput = document.getElementById('col-form-id');
+        if (idInput) idInput.value = colId;
+        const nameInput = document.getElementById('col-form-name');
+        if (nameInput) nameInput.value = colName;
+        const descInput = document.getElementById('col-form-desc');
+        if (descInput) descInput.value = colDesc;
+        const privCheck = document.getElementById('col-form-private');
+        if (privCheck) privCheck.checked = colPriv;
+        const titleSpan = document.querySelector('#create-collection-title span');
+        if (titleSpan) titleSpan.textContent = 'Edit Collection (Plane Wiki Space)';
+        const submitBtn = document.getElementById('col-form-submit');
+        if (submitBtn) submitBtn.textContent = 'Save Changes';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        nameInput?.focus();
+      }
+      const menu = document.getElementById('collection-actions-menu');
+      if (menu) menu.classList.add('hidden');
+      return true;
+    }
+
+    // 43.3 Archivar Colección
+    const archiveColBtn = e.target.closest('[data-action="archive-collection"]');
+    if (archiveColBtn) {
+      const colId = archiveColBtn.getAttribute('data-collection-id');
+      if (colId) {
+        const confirmed = typeof window !== 'undefined' ? window.confirm(`¿Estás seguro de archivar la colección "${colId}"?`) : true;
+        if (confirmed) {
+          try {
+            await api.archiveCollection(colId);
+            this.activeCollection = 'general';
+            if (this.app?.refreshData) await this.app.refreshData();
+          } catch (err) {
+            console.warn('[COLLECTION] Error archivando coleccion:', err);
+          }
+        }
+      }
+      const menu = document.getElementById('collection-actions-menu');
+      if (menu) menu.classList.add('hidden');
+      return true;
+    }
+
     if (e.target.closest('[data-action="close-create-collection-modal"]')) {
       const modal = document.getElementById('create-collection-modal');
       if (modal) {
@@ -1160,7 +1238,8 @@ export class PagesController {
    * Manejador de eventos submit delegados
    */
   async handleSubmit(e) {
-    if (e.target.id === 'new-doc-form') {
+    const formId = (typeof e.target.getAttribute === 'function' && e.target.getAttribute('id')) || e.target.id;
+    if (formId === 'new-doc-form') {
       e.preventDefault();
       const filenameInput = document.getElementById('new-doc-filename');
       const moduleInput = document.getElementById('new-doc-module');
@@ -1193,22 +1272,24 @@ export class PagesController {
       return true;
     }
 
-    if (e.target.id === 'create-collection-form') {
+    if (formId === 'create-collection-form') {
       e.preventDefault();
-      const name = document.getElementById('col-form-name')?.value.trim();
-      const description = document.getElementById('col-form-desc')?.value.trim() || '';
+      const colId = document.getElementById('col-form-id')?.value || '';
+      const name = (document.getElementById('col-form-name')?.value || '').trim();
+      const description = (document.getElementById('col-form-desc')?.value || '').trim();
       const icon = document.getElementById('col-form-icon')?.value || 'folder';
       const color = document.getElementById('col-form-color')?.value || '#6366f1';
       const is_private = document.getElementById('col-form-private')?.checked ? 1 : 0;
       if (!name) return true;
 
       try {
-        const res = await fetch('/api/plane/collections', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, description, icon, color, is_private })
-        });
-        if (res.ok) {
+        let res;
+        if (colId) {
+          res = await api.updateCollection(colId, { name, description, icon, color, is_private });
+        } else {
+          res = await api.createCollection({ name, description, icon, color, is_private });
+        }
+        if (res && (res.ok || res.id || res.collection)) {
           const modal = document.getElementById('create-collection-modal');
           if (modal) {
             modal.classList.add('hidden');
@@ -1217,7 +1298,7 @@ export class PagesController {
           if (this.app?.refreshData) await this.app.refreshData();
         }
       } catch (err) {
-        console.warn('[COLLECTION] Error creando coleccion:', err);
+        console.warn('[COLLECTION] Error guardando coleccion:', err);
       }
       return true;
     }
@@ -1447,7 +1528,12 @@ export class PagesController {
    */
   scrollToHeading(headingId) {
     if (!headingId) return;
-    const cleanId = String(headingId).replace(/^#/, '').trim();
+    let cleanId = String(headingId).replace(/^#/, '').trim();
+    try {
+      cleanId = decodeURIComponent(cleanId);
+    } catch {
+      // fallback to raw
+    }
     const scrollContainer = document.getElementById('doc-reader-main-col');
     const bodyEl = document.getElementById('doc-active-body');
     if (!bodyEl) return;
@@ -1458,7 +1544,7 @@ export class PagesController {
       targetEl = headings.find(h => {
         const hId = h.id || h.getAttribute('id') || '';
         return hId === cleanId || hId.toLowerCase() === cleanId.toLowerCase() ||
-          h.textContent.trim().toLowerCase().includes(cleanId.toLowerCase().replace(/-/g, ' '));
+          h.textContent.trim().toLowerCase().includes(cleanId.toLowerCase().replace(/[-_]/g, ' '));
       });
     }
 
@@ -1479,7 +1565,7 @@ export class PagesController {
       }, 1500);
 
       // Resaltado de pestaña de Outline
-      document.querySelectorAll('[data-action="scroll-to-heading"]').forEach(link => {
+      document.querySelectorAll('[data-action="scroll-to-heading"], #doc-active-toc button').forEach(link => {
         const isMatch = (link.getAttribute('data-heading-id') || (link.getAttribute('href') || '').replace(/^#/, '')) === cleanId;
         link.classList.toggle('text-indigo-600', isMatch);
         link.classList.toggle('dark:text-indigo-400', isMatch);
@@ -1678,33 +1764,33 @@ export class PagesController {
     container.innerHTML = blocks.map((b, idx) => {
       const typeLabel = getBlockTypeLabel(b.type);
       return `
-        <div class="visual-block-card rounded-2xl border border-zinc-800 bg-zinc-900 p-4 shadow-xs space-y-3"
+        <div class="visual-block-card rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-3"
              data-block-id="${b.id}"
              data-block-index="${idx}">
-          <div class="flex items-center justify-between text-xs font-mono pb-2 border-b border-zinc-800">
+          <div class="flex items-center justify-between text-xs font-mono pb-2 border-b border-gray-100 dark:border-zinc-800">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md bg-indigo-950/60 text-indigo-400 font-bold text-[10px]">
+              <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-500/20 font-bold text-[10px]">
                 ${typeLabel}
               </span>
-              <span class="text-zinc-500 text-[10px]">Bloque #${idx + 1}</span>
+              <span class="text-gray-500 dark:text-zinc-500 text-[10px]">Bloque #${idx + 1}</span>
             </div>
             <div class="flex items-center gap-1">
-              <button type="button" data-block-action="move-up" class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200" title="Subir">
+              <button type="button" data-block-action="move-up" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200" title="Subir">
                 ${Icons.chevronUp('w-3.5 h-3.5')}
               </button>
-              <button type="button" data-block-action="move-down" class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200" title="Bajar">
+              <button type="button" data-block-action="move-down" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200" title="Bajar">
                 ${Icons.chevronDown('w-3.5 h-3.5')}
               </button>
-              <button type="button" data-block-action="delete" class="p-1 rounded hover:bg-rose-950/50 text-zinc-400 hover:text-rose-400" title="Eliminar">
+              <button type="button" data-block-action="delete" class="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 text-gray-400 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400" title="Eliminar">
                 ${Icons.trash('w-3.5 h-3.5')}
               </button>
             </div>
           </div>
           <div class="space-y-2">
             ${b.type === 'header' ? `
-              <input type="text" class="w-full text-base font-bold bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white" value="${escapeAttr(b.text)}" placeholder="Título..." />
+              <input type="text" class="w-full text-base font-bold bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-gray-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500 focus:outline-none transition-colors" value="${escapeAttr(b.text)}" placeholder="Título..." />
             ` : `
-              <textarea rows="3" class="w-full text-xs bg-zinc-950 border border-zinc-800 rounded-xl p-3 font-mono text-white">${escapeHtml(Array.isArray(b.lines) ? b.lines.join('\n') : (b.text || (Array.isArray(b.content) ? b.content.join('\n') : '')))}</textarea>
+              <textarea rows="3" class="w-full text-xs bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-3 font-mono text-gray-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:border-indigo-500 focus:outline-none transition-colors">${escapeHtml(Array.isArray(b.lines) ? b.lines.join('\n') : (b.text || (Array.isArray(b.content) ? b.content.join('\n') : '')))}</textarea>
             `}
           </div>
         </div>

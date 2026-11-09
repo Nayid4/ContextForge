@@ -2319,7 +2319,7 @@ window.__FALLBACK_DATA__ = {
   },
   "docs": {
     "01-project-overview-and-business.md": "---\nid: \"page-knowledge_01-project-overview-and-business_md\"\ntitle: \"Visión del Producto, Contexto de Negocio y Stakeholders\"\ncollection: \"general\"\nparent: null\nowner: \"leader\"\nmodule: \"global\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: true\nfull_width: true\narchived_at: null\nlast_updated: \"2026-11-09\"\ntags: [\"ieee-830\",\"business-context\",\"product-vision\",\"stakeholders\",\"raci\"]\nlabels: [\"ieee-830\",\"business-context\",\"product-vision\",\"stakeholders\",\"raci\",\"general\"]\n---\n\n# Visión del Producto, Contexto de Negocio y Stakeholders (IEEE Std. 830-1998)\r\n\r\n> [!NOTE]\r\n> Especificación formal del propósito, alcance, límites, usuarios y gobernanza del **AI Agentic SDD Engineering Harness** bajo el estándar IEEE Std. 830-1998 / ISO/IEC/IEEE 29148.\r\n\r\n---\r\n\r\n## 1. Naturaleza y Propósito del Proyecto\r\n\r\nEl **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development — SDD**) diseñado para permitir la colaboración autónoma, segura y determinista entre ingenieros humanos y agentes de inteligencia artificial (Google Antigravity, GitHub Copilot y OpenCode).\r\n\r\n### 1.1 Formulación del Problema\r\n\r\n#### Dolor de Negocio\r\n- **Fricción Cognitiva y Pérdida de Productividad**: En organizaciones de software, la rotación de desarrolladores y el conocimiento tácito atrapado en silos (*Bus Factor = 1*) provocan que los ingenieros senior pierdan entre 1.5 y 2.5 horas diarias respondiendo dudas operativas y validando reglas de negocio no documentadas.\r\n- **Alucinaciones y Regresiones por IA**: Los asistentes de programación tradicionales generan código sintácticamente correcto pero funcionalmente incompatible cuando carecen de un modelo formal del dominio, rompiendo invariantes de base de datos, violando reglas de negocio (`BR-*`) o importando librerías no autorizadas.\r\n\r\n#### Dolor Técnico\r\n- **Ceguera de Contexto en Proyectos Extensos**: A partir de 50.000 líneas de código, cargar archivos planos en prompts satura la atención del modelo y causa omisiones catastróficas.\r\n- **Falta de Trazabilidad RTM**: Ausencia de vinculación bidireccional entre requerimientos funcionales (`RF-*`), reglas de negocio (`BR-*`), historias de usuario (`HU-*`), código fuente y suites de prueba automatizadas.\r\n\r\n---\r\n\r\n## 2. Declaración Formal de la Visión del Producto\r\n\r\n> **PARA** ingenieros de software, arquitectos de soluciones y equipos de desarrollo asistidos por IA,  \r\n> **QUIENES** experimentan alucinaciones, código desalineado con el dominio y regresiones al usar agentes de programación en bases de código medianas y complejas,  \r\n> **EL** AI Agentic SDD Engineering Harness,  \r\n> **QUE ES UN** arnés de ingeniería de software agnóstico basado en Docs-as-Code, orquestación multi-agente y verificación formal en 8 niveles,  \r\n> **QUE** garantiza una precisión funcional $\\ge 95\\%$ en el código generado por IA mediante un ciclo cerrado y determinista (Especificación EARS $\\to$ Puerta Humana $\\to$ Implementación TDD/SDD $\\to$ Revisión Imparcial $\\to$ Verificación Automatizada), triple sincronización de skills y tablero visual offline.\r\n\r\n---\r\n\r\n## 3. Ámbito del Producto (IEEE 830 Secciones 1.2 y 2.2)\r\n\r\n### 3.1 Qué HACE el Sistema (Alcance Incluido)\r\n1. **Orquestación Multi-Agente Homologada**: Provee 4 roles especializados (`leader`, `spec-author`, `implementer`, `reviewer`) con responsabilidades estrictamente delimitadas.\r\n2. **Gobernanza de Ramas y Commits**: Impone la convención obligatoria `{feature|bugfix}/INT-{numero}/{nombre_rama}` con longitud máxima de 80 caracteres y commits semánticos (`feat`, `fix`).\r\n3. **Puertas de Decisión Humana Infranqueables**: Utiliza herramientas nativas (`ask_question`) para congelar la ejecución hasta obtener aprobación explícita del humano antes de implementar o integrar código.\r\n4. **Triple Sincronización de 18 Skills**: Mantiene paridad absoluta e instantánea entre la fuente de verdad (`.opencode/skills/`) y los espejos (`.github/skills/` y `.agents/skills/`).\r\n\r\n| Skill | Descripción | Rol Exclusivo |\r\n|---|---|---|\r\n| `technical-audit` | Auditoría técnica de proyecto | Generar project-spec.yaml |\r\n| `project-knowledge` | Extracción de base de conocimiento y arquitectura | Generar modelo C4, UML, reglas de negocio y estándares anti-sesgo |\r\n| `generate-verify` | Generar verify.sh | Crear script de verificación integral |\r\n| `verification` | Documentación de verificación | Consultar estructura de testing |\r\n| `api-test-plan` | Plan de pruebas API REST | Generar plan markdown + archivos .http |\r\n| `execute-api-test-plan` | Ejecutar plan de pruebas API | Correr pruebas con curl y documentar hallazgos |\r\n| `acceptance-testing` | Pruebas de aceptación (Playwright), caja blanca/negra, sistema y carga | Automatización integral de QA y verificación end-to-end |\r\n| `requirements-analysis` | Análisis de requerimientos | Generar feature_list.json |\r\n| `generate-spec` | Generar spec técnico de una feature | Crear spec.md/tasks.md/decisions.md en project-docs + recomendar tdd/sdd/ftd |\r\n| `implement-tdd` | Implementar un spec con TDD (tests primero) | Lógica con ramas y rutas de error |\r\n| `implement-sdd` | Implementar un spec con SDD (spec → código) | Multi-módulo, migraciones, integraciones |\r\n| `implement-ftd` | Implementar un cambio pequeño sin lógica nueva | Constantes, labels, estilos, config, tweaks UI |\r\n| `write-unit-tests` | Escribir tests unitarios (agnóstico al lenguaje) | Cubrir código de un spec antes de verificarlo |\r\n| `targeted-qa` | Pruebas focalizadas de QA bajo demanda | Diseñar y ejecutar suites de prueba puntuales (E2E, BVA, API, carga, a11y) a solicitud de QA |\r\n| `verify-spec` | Verificar cierre completo de un spec (agnóstico al lenguaje) | Acceptance criteria, tasks, tests unitarios y verify.sh |\r\n| `sync-skills` | Sincronizar skills hacia los espejos (Copilot y Antigravity) | Propaga de `.opencode/skills/` a `.github/skills/` y `.agents/skills/` |\r\n| `sdd-workflow` | Orquestación del ciclo SDD completo | Guía el flujo multi-agente de inicio a fin |\r\n| `start-feature` | Iniciar o reanudar feature | Punto de entrada para el ciclo SDD de una tarea |\r\n5. **Base de Conocimiento Soberana (Docs-as-Code)**: Elicita y estructura modelos C4, diagramas UML, diccionario de datos/ERD, catálogo de reglas de negocio (`BR-*`), ADRs y radiografía granular de módulos.\r\n6. **Tablero Visual Offline-First (`project-docs/`)**: Aplicación web en Vanilla JS y Tailwind v4 con arquitectura screaming, lector editorial, editor dual Markdown/Bloques ContextForge, grafos de dependencias y constelación 3D en Three.js con soporte nativo para protocolo `file:///`.\r\n7. **Pipeline de Calidad en 8 Niveles (`project-docs/verify.sh`)**: Ejecuta pruebas unitarias, ATDD smoke, caja blanca, caja negra (BVA/resiliencia), integración/sistema, carga concurrente y aceptación E2E con Playwright.\r\n\r\n### 3.2 Qué NO HACE el Sistema (Exclusiones Explícitas)\r\n- **No Toma Decisiones de Arquitectura Autónomas**: Las decisiones de diseño, aprobación de especificaciones e integración a la rama base requieren siempre autorización del humano.\r\n- **No Realiza Push Remoto no Autorizado**: Queda terminantemente prohibido ejecutar `git push` a repositorios remotos sin confirmación explícita del usuario.\r\n- **No Modifica Código Durante la Fase de Revisión**: El subagente `reviewer` audita de forma imparcial y jamás edita código fuente ni tests.\r\n- **No Acopla el Proyecto a un Framework Específico**: El arnés es agnóstico al lenguaje (Node.js, .NET, Python, Go, Java, Rust); solo la carpeta de configuración `.agents/` y `project-docs/` forman el arnés.\r\n\r\n---\r\n\r\n## 4. Catálogo de Stakeholders y Matriz RACI (IEEE 830 Sección 2.3)\r\n\r\n### 4.1 Catálogo de Interesados\r\n\r\n| Stakeholder | Rol en el Sistema | Responsabilidad | Intereses Principales | Necesidades Clave |\r\n|---|---|---|---|---|\r\n| **Tech Lead / Arquitecto** | Sponsor & Owner | Diseñar la arquitectura base y aprobar specs/ADRs | Mantenibilidad, reducción de deuda técnica | Documentación AS-IS fidedigna, cero alucinaciones de IA |\r\n| **Ingeniero de Software (Dev)** | Usuario Directo | Implementar features y refactorizaciones | Velocidad de desarrollo, contexto claro | Búsqueda rápida de reglas BR-*, especificaciones unívocas |\r\n| **Agentes de IA (AGY/Copilot)** | Ejecutores Asistidos | Redactar specs, implementar código y auditar | Contexto sin truncamiento, instrucciones deterministas | YAML frontmatter, tarjetas CRC, lista blanca de dependencias |\r\n| **QA Automation Specialist** | Usuario Directo | Diseñar y supervisar la suite de pruebas | Cobertura en ramas, confiabilidad de regresión | Matriz RTM completa, pruebas BVA y Playwright E2E |\r\n| **Product Manager / Negocio** | Usuario Indirecto | Priorizar features y validar aceptación | Time-to-market, alineación con negocio | Visibilidad visual de progreso en el tablero interactivo |\r\n\r\n### 4.2 Matriz RACI de Componentes del Sistema\r\n\r\n| Componente / Proceso | Tech Lead | Dev Humano | Leader Agent | Implementer | Reviewer | QA |\r\n|---|---|---|---|---|---|---|\r\n| **Definición de Requerimientos** | A | C | R | I | C | C |\r\n| **Aprobación de Spec (Puerta)** | A / R | A / R | C | I | I | I |\r\n| **Implementación de Código** | I | C | C | R | I | I |\r\n| **Auditoría de Calidad / Review** | I | I | C | I | R | C |\r\n| **Ejecución de project-docs/verify.sh** | I | C | I | R | R | A / R |\r\n| **Integración a Rama Base** | A | R | C | I | I | I |\r\n\r\n*Convención: R = Responsable de ejecutar, A = Aprobador final, C = Consultado, I = Informado.*\r\n\r\n---\r\n\r\n## 5. Perfiles de Usuario y Personas (IEEE 830 Sección 2.3)\r\n\r\n### Persona 1: Ingeniero Senior / Tech Lead\r\n- **Formación**: Licenciatura / Maestría en Ciencias de la Computación o Ingeniería de Sistemas.\r\n- **Experiencia**: >8 años en desarrollo de software y arquitectura distribuida.\r\n- **Punto de Dolor**: Dedica demasiado tiempo explicando arquitectura histórica y corrigiendo PRs generados por IA que inventan dependencias o violan reglas de negocio.\r\n- **Objetivo con el Arnés**: Disponer de un arnés que obligue a los agentes a ceñirse al contexto soberano antes de escribir una sola línea de código.\r\n\r\n### Persona 2: Desarrollador Junior / Nuevo Integrante\r\n- **Formación**: Grado en Ingeniería o egresado de Bootcamp técnico.\r\n- **Experiencia**: 6 meses a 2 años en programación.\r\n- **Punto de Dolor**: Alta fricción cognitiva al incorporarse a proyectos grandes; miedo a romper reglas tácitas no documentadas.\r\n- **Objetivo con el Arnés**: Reducir su *time-to-first-PR* a menos de una semana gracias a la documentación interactiva y las tarjetas CRC.\r\n\r\n\r\n",
-    "02-architecture-and-patterns.md": "---\nid: \"DOC-ARCH-PATTERNS\"\ntitle: \"Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\"\ncollection: \"engineering\"\nparent: \"c4-model.md\"\nowner: \"leader\"\nmodule: \"global\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-03\"\ntags: [\"architecture-as-is\",\"design-patterns\",\"gof\",\"screaming-architecture\",\"data-flows\"]\nlabels: [\"architecture-as-is\",\"design-patterns\",\"gof\",\"screaming-architecture\",\"data-flows\",\"engineering\"]\n---\n\n# Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\r\n\r\n> [!NOTE]\r\n> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.\r\n\r\n---\r\n\r\n## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)\r\n\r\n### 1.1 Organización por Screaming Architecture\r\nEl repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:\r\n\r\n```text\r\nharness_anginnering/\r\n├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)\r\n├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)\r\n├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)\r\n├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code\r\n│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)\r\n│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)\r\n│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)\r\n│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)\r\n│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás\r\n│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)\r\n│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)\r\n│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias\r\n│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)\r\n└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)\r\n```\r\n\r\n### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)\r\n- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.\r\n- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.\r\n\r\n---\r\n\r\n## 2. Catálogo Forense de Patrones de Diseño Detectados\r\n\r\n| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |\r\n|---|---|---|---|\r\n| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |\r\n| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |\r\n| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |\r\n| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |\r\n| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |\r\n| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |\r\n| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |\r\n\r\n---\r\n\r\n## 3. Flujos de Datos Extremo a Extremo (Data Flows)\r\n\r\n### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero\r\n```text\r\n1. Agente o Desarrollador modifica specs, reglas o feature_list.json\r\n2. Ejecución de `node project-docs/sync-data.js`\r\n3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid\r\n4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`\r\n5. Al abrir `index.html`:\r\n   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON\r\n   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red\r\n6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas\r\n```\r\n\r\n### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente\r\n```text\r\n1. Usuario solicita nueva feature o bugfix\r\n2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)\r\n3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md\r\n4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%\r\n5. Subagente `implementer` escribe código de producción y tests automatizados\r\n6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)\r\n7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base\r\n```\n\n### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)\nEn `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:\n- **Conteo de Palabras**: `words = text.trim().split(/\\s+/).filter(Boolean).length`.\n- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).\n- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\\n\\s*\\n/).filter(Boolean).length`.\n",
+    "02-architecture-and-patterns.md": "---\r\nid: \"DOC-ARCH-PATTERNS\"\r\ntitle: \"Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\"\r\ncollection: \"engineering\"\r\nparent: \"c4-model.md\"\r\nowner: \"leader\"\r\nmodule: \"global\"\r\nstatus: \"Publicado\"\r\nversion: \"4.0.0\"\r\naccess: \"public\"\r\nis_locked: false\r\nis_favorite: false\r\nfull_width: false\r\nlast_updated: \"2026-11-03\"\r\ntags: [\"architecture-as-is\",\"design-patterns\",\"gof\",\"screaming-architecture\",\"data-flows\"]\r\nlabels: [\"architecture-as-is\",\"design-patterns\",\"gof\",\"screaming-architecture\",\"data-flows\",\"engineering\"]\r\n---\r\n\r\n# Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\r\n\r\n> [!NOTE]\r\n> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.\r\n\r\n---\r\n\r\n## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)\r\n\r\n### 1.1 Organización por Screaming Architecture\r\nEl repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:\r\n\r\n```text\r\nharness_anginnering/\r\n├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)\r\n├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)\r\n├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)\r\n├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code\r\n│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)\r\n│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)\r\n│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)\r\n│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)\r\n│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás\r\n│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)\r\n│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)\r\n│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias\r\n│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)\r\n└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)\r\n```\r\n\r\n### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)\r\n- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.\r\n- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.\r\n\r\n---\r\n\r\n## 2. Catálogo Forense de Patrones de Diseño Detectados\r\n\r\n| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |\r\n|---|---|---|---|\r\n| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |\r\n| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |\r\n| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |\r\n| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |\r\n| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |\r\n| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |\r\n| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |\r\n\r\n---\r\n\r\n## 3. Flujos de Datos Extremo a Extremo (Data Flows)\r\n\r\n### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero\r\n```text\r\n1. Agente o Desarrollador modifica specs, reglas o feature_list.json\r\n2. Ejecución de `node project-docs/sync-data.js`\r\n3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid\r\n4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`\r\n5. Al abrir `index.html`:\r\n   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON\r\n   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red\r\n6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas\r\n```\r\n\r\n### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente\r\n```text\r\n1. Usuario solicita nueva feature o bugfix\r\n2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)\r\n3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md\r\n4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%\r\n5. Subagente `implementer` escribe código de producción y tests automatizados\r\n6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)\r\n7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base\r\n```\r\n\r\n### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)\r\nEn `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:\r\n- **Conteo de Palabras**: `words = text.trim().split(/\\s+/).filter(Boolean).length`.\r\n- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).\r\n- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\\n\\s*\\n/).filter(Boolean).length`.\r\n",
     "03-capabilities-and-features.md": "---\nid: \"DOC-SYS-CAPABILITIES-FEATURES\"\ntitle: \"Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional (DeepWiki Pattern)\"\ncollection: \"product\"\nparent: null\nowner: \"leader\"\nmodule: \"global\"\nstatus: \"Publicado\"\nversion: \"4.2.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: true\nfull_width: true\nlast_updated: \"2026-11-07\"\ntags: [\"deepwiki\",\"capabilities\",\"features\",\"mindmap\",\"user-journeys\",\"functional-decomposition\",\"deep-linking\",\"scrum-subtasks\",\"qa-evidence\"]\nlabels: [\"deepwiki\",\"capabilities\",\"features\",\"mindmap\",\"user-journeys\",\"functional-decomposition\",\"deep-linking\",\"scrum-subtasks\",\"qa-evidence\",\"product\"]\n---\n\n# Catálogo Exhaustivo de Capacidades, Features y Desglose Funcional\r\n\r\n> [!NOTE]\r\n> Este documento implementa el patrón de ingeniería inversa funcional de **DeepWiki / OpenDeepWiki**. Descompone el sistema en capacidades de alto nivel, features granulares, mapa mental de dependencias, flujos de usuario de extremo a extremo (*User Journeys*) y vínculos directos al código fuente (*Deep Source Linking*) para eliminar puntos ciegos y alucinaciones en agentes de IA.\r\n\r\n---\r\n\r\n## 1. Mapa Mental de Funcionalidades del Sistema (Mermaid Mindmap)\r\n\r\n```mermaid\r\nmindmap\r\n  root((AI Agentic SDD Harness))\r\n    Orquestación Multi-Agente\r\n      Control de Ramas INT-000 ≤80c\r\n      Redactor de Specs spec-author\r\n      Puerta Humana ask_question\r\n      Implementador TDD/SDD implementer\r\n      Auditor Independiente reviewer\r\n      Subtareas Scrum DEV/QA\r\n      Captura de Evidencias Visuales\r\n      Puerta de Integración Merge/PR\r\n    Sincronización Triple\r\n      Fuente de Verdad .opencode\r\n      Espejo Copilot .github\r\n      Espejo Antigravity .agents\r\n      Auditoría de Paridad sync-skills\r\n    Base de Conocimiento Soberana\r\n      Descubrimiento Forense en 2 Fases\r\n      Atlas de Diagramas C4 y UML\r\n      Catálogo de Invariantes BR-*\r\n      Diccionario de Datos y ERD\r\n      5 Bounded Contexts Especializados\r\n      Megadocumento MASTER-*.md\r\n      Desglose Funcional DeepWiki\r\n    Tablero Visual project-docs\r\n      Navegación en 3 Niveles\r\n      Lector Editorial 780px + TOC\r\n      Editor Dual ContextForge\r\n      Buscador Omnibox Ctrl+K\r\n      Constelación 3D Three.js\r\n      Interoperabilidad Offline file:///\r\n    Aseguramiento de Calidad QA\r\n      Pipeline project-docs/verify.sh 9 Niveles\r\n      Pruebas Unitarias Nativas\r\n      Pruebas Caja Blanca Branch Coverage\r\n      Pruebas Caja Negra BVA\r\n      Pruebas de Sistema e Interoperabilidad\r\n      Pruebas de Carga y Rendimiento\r\n      Aceptación E2E Playwright con Chrome\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo Jerárquico de Capacidades y Features Granulares\r\n\r\n### Capacidad 1: Orquestación Multi-Agente SDD (`agent-orchestrator`)\r\n\r\n#### Feature 1.1: Control y Aislamiento Estricto de Ramas Git\r\n- **Propósito**: Garantizar que ninguna tarea contamine las ramas base (`main`, `master`, `dev`), aislando el trabajo en ramas efímeras rastreables.\r\n- **Entrada / Disparador**: Solicitud de nueva feature o inicio de ciclo `/sdd-workflow`.\r\n- **Precondiciones**: Estado de working tree limpio en la rama base.\r\n- **Invariante**: Longitud total del nombre de la rama $\\le 80$ caracteres. Prefijo obligatorio `{feature|bugfix}/INT-{numero}/{nombre_descriptivo}`.\r\n- **Ciclo de Ejecución**:\r\n  1. Valida que la rama base sea válida.\r\n  2. Calcula la longitud del nombre propuesto.\r\n  3. Ejecuta `git checkout -b {feature|bugfix}/INT-{numero}/{nombre}`.\r\n- **Salida / Artefacto**: Rama local activa en Git.\r\n- **Código Fuente**: [`.agents/rules/antigravity-harness.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/rules/antigravity-harness.md), [`.opencode/rules/branches.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/rules/branches.md).\r\n- **Pruebas Automatizadas**: [`tests/unit/branching-rules.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/branching-rules.test.js), [`tests/blackbox/bva-inputs.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/blackbox/bva-inputs.test.js).\r\n\r\n#### Feature 1.2: Redacción Formal de Especificaciones Técnicas (`spec-author`)\r\n- **Propósito**: Redactar el contrato técnico antes de escribir código, previniendo desviaciones funcionales y sobre-ingeniería.\r\n- **Entrada / Disparador**: Invocación de subagente `spec-author` o skill `/generate-spec`.\r\n- **Precondiciones**: Consulta obligatoria previa de `project-docs/knowledge/` para respetar la arquitectura soberana.\r\n- **Ciclo de Ejecución**:\r\n  1. Lee el item correspondiente en `project-docs/feature_list.json`.\r\n  2. Genera `project-docs/specs/{NNN}_{name}/requirements.md` siguiendo sintaxis EARS.\r\n  3. Genera `project-docs/specs/{NNN}_{name}/design.md` con decisiones ADRs y diagramas Mermaid.\r\n  4. Genera `project-docs/specs/{NNN}_{name}/tasks.md` con tareas secuenciales y técnica recomendada (TDD / SDD / FTD).\r\n  5. Marca el estado como `spec_ready` en `progress/current.json`.\r\n- **Salida / Artefacto**: Carpeta de especificación formal completa.\r\n- **Código Fuente**: [`.agents/agents/spec-author.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/spec-author.md), [`.agents/skills/generate-spec/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/generate-spec/SKILL.md).\r\n\r\n#### Feature 1.3: Puerta de Aprobación Humana Interactiva\r\n- **Propósito**: Asegurar la soberanía humana sobre el alcance y arquitectura antes de autorizar la codificación.\r\n- **Entrada / Disparador**: Finalización de la redacción del spec (`spec_ready`).\r\n- **Comportamiento**: La IA bloquea la ejecución y despliega el modal interactivo nativo `ask_question`.\r\n- **Opciones**:\r\n  - `(Recommended) Aprobar spec al 100% e iniciar implementación`\r\n  - `Solicitar correcciones o ajustes en el spec`\r\n  - `Rechazar spec`\r\n- **Invariante**: Queda prohibido escribir código de producción sin la opción de aprobación humana explícita.\r\n- **Código Fuente**: [`.agents/rules/antigravity-harness.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/rules/antigravity-harness.md).\r\n\r\n#### Feature 1.4: Implementación Guiada por Pruebas TDD/SDD (`implementer`)\r\n- **Propósito**: Escribir código de producción y pruebas automatizadas que satisfagan al 100% la especificación aprobada.\r\n- **Entrada / Disparador**: Aprobación humana del spec (`in_progress`).\r\n- **Ciclo de Ejecución**:\r\n  1. Si la técnica es TDD: escribe pruebas que fallen (rojo) $\\to$ implementa código mínimo (verde) $\\to$ refactoriza.\r\n  2. Si la técnica es SDD: implementa fases de diseño $\\to$ cubre con tests unitarios y de aceptación.\r\n  3. Ejecuta `project-docs/verify.sh` de forma iterativa hasta verde total.\r\n  4. Documenta la matriz de trazabilidad Requerimiento $\\leftrightarrow$ Tests en `progress/impl_{name}.md`.\r\n- **Salida / Artefacto**: Código productivo, suite de tests y bitácora de trazabilidad.\r\n- **Código Fuente**: [`.agents/agents/implementer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/implementer.md), [`.agents/skills/implement/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/implement/SKILL.md).\r\n\r\n#### Feature 1.5: Auditoría de Calidad Imparcial (`reviewer`)\r\n- **Propósito**: Validar de manera independiente que la implementación cumpla con el spec sin incurrir en conflictos de interés.\r\n- **Invariante**: El revisor **NO tiene herramientas para editar archivos ni código**.\r\n- **Ciclo de Ejecución**:\r\n  1. Audita el código generado contra los criterios de aceptación de `requirements.md`.\r\n  2. Verifica que ninguna regla `BR-*` haya sido alterada o vulnerada.\r\n  3. Comprueba el paso del 100% de las pruebas en `project-docs/verify.sh`.\r\n  4. Emite veredicto: APROBADO o RECHAZADO con lista de hallazgos.\r\n- **Código Fuente**: [`.agents/agents/reviewer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/reviewer.md), [`.agents/skills/review/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/skills/review/SKILL.md).\r\n\r\n#### Feature 1.6: Gestión de Subtareas Scrum Jira DEV/QA y Captura de Evidencias Visuales\r\n- **Propósito**: Descomponer la User Story en subtareas formales de Jira (desarrollo `DEV` y aseguramiento de calidad `QA`), con trazabilidad a criterios de aceptación, DoD y captura automática de evidencias gráficas (screenshots headless) para auditoría.\r\n- **Entrada / Disparador**: Generación de spec (`generate-spec`) y ejecución de pruebas de aceptación (`npm run test:acceptance` o `node scripts/capture-evidence.js`).\r\n- **Precondiciones**: Existencia de `project-docs/specs/{NNN}_{name}/tasks.md` estructurado con subtareas `INT-{id}-DEV` e `INT-{id}-QA`.\r\n- **Invariante**: Ninguna feature puede cerrarse sin que ambas subtareas (`DEV` y `QA`) estén completadas y existan capturas de pantalla de evidencia en `project-docs/specs/{NNN}_{name}/evidence/`.\r\n- **Salida / Artefacto**: Modal interactivo en el tablero con badges DEV/QA, trazabilidad DoD y capturas PNG en `evidence/`.\r\n- **Código Fuente**: [`scripts/capture-evidence.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/scripts/capture-evidence.js), [`project-docs/src/shared/Modal.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/shared/Modal.js), [`project-docs/src/features/feature-list/FeatureTable.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/features/feature-list/FeatureTable.js).\r\n- **Pruebas Automatizadas**: [`tests/acceptance/scrum-evidence-capture.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/scrum-evidence-capture.spec.js).\r\n\r\n---\r\n\r\n### Capacidad 2: Motor de Sincronización Triple (`triple-sync-engine`)\r\n\r\n#### Feature 2.1: Gestión de Fuente de Verdad y Replicación\r\n- **Propósito**: Mantener paridad absoluta en las 18 skills entre las tres plataformas soportadas (opencode, GitHub Copilot y Google Antigravity).\r\n- **Fuente de Verdad**: `.opencode/skills/`\r\n- **Espejos Homologados**: `.github/skills/` y `.agents/skills/`.\r\n- **Mecanismo**: Skill `/sync-skills` audita y propaga diferencias sin alterar la fuente.\r\n- **Código Fuente**: [`.opencode/skills/sync-skills/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/sync-skills/SKILL.md).\r\n\r\n---\r\n\r\n### Capacidad 3: Base de Conocimiento Soberana (`knowledge-engine`)\r\n\r\n#### Feature 3.1: Protocolo de Descubrimiento Forense en 2 Fases\r\n- **Propósito**: Eliminar el desbordamiento de contexto (*context truncation*) en repositorios de gran escala.\r\n- **Fase 1 (Topología Global)**: Escaneo superficial de directorios, manifiestos de paquetes y configuraciones sin leer cuerpos completos de código.\r\n- **Fase 2 (Extracción Profunda)**: Análisis focalizado delimitado por cada Bounded Context.\r\n- **Salida**: Documentos globales 01, 02, 03, 04 y carpetas `modules/{modulo}/`.\r\n- **Código Fuente**: [`.opencode/skills/project-knowledge/SKILL.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/project-knowledge/SKILL.md).\r\n\r\n#### Feature 3.2: Megadocumento Maestro Consolidado (`MASTER-PROJECT-KNOWLEDGE.md`)\r\n- **Propósito**: Proporcionar un dossier unificado en un solo archivo para inicializar LLMs sin sesgo ni necesidad de múltiples lecturas.\r\n- **Estructura**: Capítulos formales (Negocio IEEE 830, Arquitectura AS-IS, Modelado C4, Bounded Contexts con CRC, INVEST, ERD, Reglas `BR-*`, Servicios Externos y RTM).\r\n- **Código Fuente**: [`project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md).\r\n\r\n#### Feature 3.3: Desglose de 5 Artefactos Especializados por Bounded Context\r\n- **Propósito**: Documentar granularmente cada subdominio estratégico con 5 documentos formales:\r\n  1. `module-spec.md`: Alcance, lenguaje ubicuo y tarjetas CRC (Clase, Responsabilidades, Colaboradores).\r\n  2. `requirements-and-rules.md`: Matriz de requerimientos `RF-*`, invariantes `BR-*`, `HU-*` y `TI-*`.\r\n  3. `data-and-transactions.md`: Persistencia, entidades, concurrencia optimista/pesimista y bloqueos ACID.\r\n  4. `diagrams.md`: Suite de diagramas Mermaid dedicados (Contexto, Contenedor, Componentes, Secuencia, Estado y ERD).\r\n  5. `technical-debt-refactoring.md`: Deuda técnica, olores de código, brechas de pruebas y plan de mitigación.\r\n- **Código Fuente**: [`project-docs/knowledge/modules/`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/modules/).\r\n\r\n---\r\n\r\n### Capacidad 4: Tablero Visual y Lector Editorial (`dashboard-visualizer`)\r\n\r\n#### Feature 4.1: Navegación por Perspectivas en 3 Niveles\r\n- **Propósito**: Permitir que el usuario explore la documentación sin mezclar arbitrariamente información global con detalles de módulos.\r\n- **Tiers Disponibles**:\r\n  - **Tier 1 (Visión Global & Arquitectura)**: Documentos canónicos, modelo C4 destacado, resumen IEEE 830 y 6 estantes temáticos.\r\n  - **Tier 2 (Módulos & Bounded Contexts)**: Pestañas interactivas de módulos con sus 5 artefactos formales.\r\n  - **Tier 3 (Dossier Maestro Consolidado)**: Panel dedicado para `MASTER-PROJECT-KNOWLEDGE.md` con botones para leer, copiar y descargar.\r\n- **Código Fuente**: [`project-docs/src/features/knowledge-base/KnowledgeBase.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/features/knowledge-base/KnowledgeBase.js).\r\n\r\n#### Feature 4.2: Editor Dual ContextForge con Scroll Sincronizado\r\n- **Propósito**: Ofrecer edición técnica simultánea en Markdown y Bloques Visuales con previsualización en vivo.\r\n- **Características**: Scroll sincronizado proporcional bidireccional, renderizado de Mermaid y reordenamiento de bloques.\r\n- **Código Fuente**: [`project-docs/src/main.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/main.js).\r\n\r\n#### Feature 4.3: Interoperabilidad Offline (`file:///`) y Fallback Autocontenido\r\n- **Propósito**: Permitir que el tablero funcione abriendo `index.html` directamente en el navegador sin necesidad de servidor HTTP ni riesgo de errores de CORS.\r\n- **Mecanismo**: `data-fallback.js` inyecta `window.__FALLBACK_DATA__` con todos los metadatos y documentos Markdown.\r\n- **Código Fuente**: [`project-docs/data-fallback.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/data-fallback.js), [`project-docs/sync-data.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/sync-data.js).\r\n\r\n---\r\n\r\n### Capacidad 5: Suite Integral de Aseguramiento de Calidad (`testing-qa-suite`)\r\n\r\n#### Feature 5.1: Pipeline de Verificación Determinista en 9 Niveles (`project-docs/verify.sh`)\r\n- **Propósito**: Ejecutar un barrido exhaustivo de calidad en una sola instrucción.\r\n- **Niveles Validados**:\r\n  1. Compilación y bundling (`esbuild`).\r\n  2. Pruebas unitarias nativas (Node.js test runner).\r\n  3. Pruebas de aceptación smoke ATDD.\r\n  4. Pruebas de caja blanca (Branch Coverage).\r\n  5. Pruebas de caja negra (Análisis de Valores Límite BVA y resiliencia).\r\n  6. Pruebas de sistema e interoperabilidad offline.\r\n  7. Pruebas de carga y concurrencia.\r\n  8. Pruebas de aceptación E2E en navegador real con Playwright.\r\n  9. Sincronización y consistencia de datos offline.\r\n- **Código Fuente**: [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh).\r\n\r\n---\r\n\r\n## 3. Flujos de Usuario Extremo a Extremo (*User Journeys*)\r\n\r\n### Journey 1: Desarrollador realizando el Onboarding de un Proyecto Externo\r\n```mermaid\r\nsequenceDiagram\r\n  autonumber\r\n  actor Dev as \"Ingeniero Humano\"\r\n  participant AG as \"AI Harness Agent\"\r\n  participant Core as \"Pipeline de Skills\"\r\n  participant Dash as \"Tablero Visual\"\r\n\r\n  Dev->>AG: \"Adopta este proyecto y prepáralo con el arnés\"\r\n  AG->>Core: \"/technical-audit -> genera project-docs/project-spec.yaml\"\r\n  AG->>Core: \"/generate-verify -> genera project-docs/verify.sh\"\r\n  AG->>Core: \"/project-knowledge -> extrae C4, UML, ERD, BR-* y MASTER-*.md\"\r\n  AG->>Core: \"/requirements-analysis -> genera feature_list.json\"\r\n  AG->>Core: \"node project-docs/sync-data.js\"\r\n  AG->>Dash: \"Tablero listo en project-docs/index.html\"\r\n  AG-->>Dev: \"Proyecto auditado y blindado contra alucinaciones\"\r\n```\r\n\r\n### Journey 2: Ciclo de Vida Autónomo de una Feature (SDD)\r\n```mermaid\r\nsequenceDiagram\r\n  autonumber\r\n  actor Dev as \"Ingeniero Humano\"\r\n  participant Leader as \"Leader Agent\"\r\n  participant Spec as \"spec-author\"\r\n  participant Impl as \"implementer\"\r\n  participant Rev as \"reviewer\"\r\n\r\n  Dev->>Leader: \"/start-feature INT-005\"\r\n  Leader->>Leader: \"Crea rama feature/INT-005/{name} (≤80c)\"\r\n  Leader->>Spec: \"Redacta specs consultando project-docs/knowledge/\"\r\n  Spec-->>Leader: \"specs/005/ completado (spec_ready)\"\r\n  Leader->>Dev: \"⏸ ask_question: ¿Aprobar spec al 100%?\"\r\n  Dev-->>Leader: \"Aprobado (in_progress)\"\r\n  Leader->>Impl: \"Implementa código y tests (TDD/SDD)\"\r\n  Impl->>Impl: \"Ejecuta ./project-docs/verify.sh hasta 100% verde\"\r\n  Impl-->>Leader: \"Trazabilidad R<->Tests completada\"\r\n  Leader->>Rev: \"Audita sin editar código\"\r\n  Rev-->>Leader: \"Aprobado (0 hallazgos)\"\r\n  Leader->>Leader: \"/verify-spec cierra metadata y crea commit semántico\"\r\n  Leader->>Dev: \"⏸ ask_question: ¿Integrar a rama base master?\"\r\n  Dev-->>Leader: \"Sí, fusionar\"\r\n  Leader->>Leader: \"git merge fast-forward\"\r\n```\r\n\r\n### Journey 3: Auto-Mejora y Refactorización del Propio Arnés\r\n```mermaid\r\nsequenceDiagram\r\n  autonumber\r\n  actor Dev as \"Ingeniero Humano\"\r\n  participant Leader as \"Leader Agent\"\r\n  participant QA as \"Suite de Testing\"\r\n  participant Code as \"Código del Arnés\"\r\n\r\n  Dev->>Leader: \"Refactoriza el visor y agrega desglose DeepWiki\"\r\n  Leader->>QA: \"Ejecuta línea base (project-docs/verify.sh + Playwright)\"\r\n  QA-->>Leader: \"Línea base en verde\"\r\n  Leader->>Code: \"Aplica refactorización (cero emojis, 3 tiers, SVG icons)\"\r\n  Leader->>QA: \"Re-ejecuta project-docs/verify.sh multinivel\"\r\n  QA-->>Leader: \"Todos los niveles en verde\"\r\n  Leader->>Code: \"Commit semántico feat(knowledge): ...\"\r\n  Leader-->>Dev: \"Auto-mejora completada con 100% de tests passing\"\r\n```\r\n\r\n---\r\n\r\n## 4. Matriz de Trazabilidad Funcional y Deep Linking a Código Fuente\r\n\r\n| ID Capacidad | Feature | Componente Fuente | Suite de Pruebas Asociada |\r\n| :--- | :--- | :--- | :--- |\r\n| `CAP-ORCH-001` | Validación de Ramas Git (≤80c) | [`.agents/rules/antigravity-harness.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/rules/antigravity-harness.md) | [`tests/unit/branching-rules.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/branching-rules.test.js) |\r\n| `CAP-ORCH-002` | Puertas de Aprobación Humana | `ask_question` modal | [`tests/e2e/atdd-frontend.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/e2e/atdd-frontend.test.js) |\r\n| `CAP-ORCH-003` | Auditoría de Calidad Sin Edición | [`.agents/agents/reviewer.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.agents/agents/reviewer.md) | Inspección de permisos de herramientas |\r\n| `CAP-ORCH-004` | Subtareas Scrum Jira DEV/QA & Evidencias | [`scripts/capture-evidence.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/scripts/capture-evidence.js) | [`tests/acceptance/scrum-evidence-capture.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/scrum-evidence-capture.spec.js) |\r\n| `CAP-SYNC-001` | Paridad de 18 Skills en 3 Espejos | [`.opencode/skills/sync-skills/`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/sync-skills/) | [`tests/system/offline-fallback.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/system/offline-fallback.test.js) |\r\n| `CAP-KNOW-001` | Descubrimiento Forense en 2 Fases | [`.opencode/skills/project-knowledge/`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/.opencode/skills/project-knowledge/) | [`tests/whitebox/sync-pipeline.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/whitebox/sync-pipeline.test.js) |\r\n| `CAP-KNOW-002` | Dossier Consolidado MASTER-*.md | [`project-docs/knowledge/MASTER-*.md`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md) | [`tests/unit/sync-data.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/unit/sync-data.test.js) |\r\n| `CAP-DASH-001` | Lector y Editor Dual ContextForge | [`project-docs/src/main.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/src/main.js) | [`tests/acceptance/dual-editor.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/dual-editor.spec.js) |\r\n| `CAP-DASH-002` | Interoperabilidad Offline `file:///` | [`project-docs/data-fallback.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/data-fallback.js) | [`tests/system/offline-fallback.test.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/system/offline-fallback.test.js) |\r\n| `CAP-TEST-001` | Pipeline de Verificación `project-docs/verify.sh` | [`project-docs/verify.sh`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/project-docs/verify.sh) | Ejecución integral de las 9 fases |\r\n| `CAP-TEST-002` | Aceptación E2E en Navegador Real | [`tests/acceptance/*.spec.js`](file:///c:/Users/nayid/Documents/Proyectos/Proyecto%20-%20Harness/harness_anginnering/tests/acceptance/) | `npx playwright test` (10 escenarios) |\r\n\n\n",
     "04-domain-ddd-and-crc.md": "---\nid: \"DOC-DDD-CRC\"\ntitle: \"Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC\"\ncollection: \"general\"\nparent: null\nowner: \"leader\"\nmodule: \"global\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-03\"\ntags: [\"ddd\",\"ubiquitous-language\",\"context-map\",\"crc-cards\",\"strategic-ddd\"]\nlabels: [\"ddd\",\"ubiquitous-language\",\"context-map\",\"crc-cards\",\"strategic-ddd\",\"general\"]\n---\n\n# Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC\r\n\r\n> [!NOTE]\r\n> Especificación formal del diseño guiado por el dominio (DDD Estratégico y Táctico), mapa de contextos y catálogo de Tarjetas CRC (*Class-Responsibility-Collaborator*).\r\n\r\n---\r\n\r\n## 1. Clasificación de Subdominios (DDD Estratégico)\r\n\r\n1. **Core Domain (Dominio Central)**:\r\n   - **`agent-orchestrator`**: Orquestación del ciclo de vida SDD, ciclo de subagentes especializados, cumplimiento estricto de convenciones de branching y puertas humanas con `ask_question`.\r\n2. **Supporting Subdomains (Subdominios de Soporte)**:\r\n   - **`triple-sync-engine`**: Motor de sincronización triple y garantía de paridad entre OpenCode, Copilot y Antigravity.\r\n   - **`knowledge-engine`**: Motor de ingesta y preservación de contexto soberano Docs-as-Code anti-sesgo.\r\n   - **`dashboard-visualizer`**: Tablero interactivo, lector editorial, editor dual ContextForge y visualizador 3D.\r\n   - **`testing-qa-suite`**: Automatización del arnés de verificación en 8 niveles y runner de `project-docs/verify.sh`.\r\n3. **Generic Subdomains (Subdominios Genéricos)**:\r\n   - Control de versiones (Git), motor de renderizado Markdown y Three.js.\r\n\r\n---\r\n\r\n## 2. Diccionario de Lenguaje Ubicuo (Ubiquitous Language)\r\n\r\n| Término Ubicuo | Definición Funcional y Técnica | Equivalente en Código / Artefactos |\r\n|---|---|---|\r\n| **Harness (Arnés)** | Conjunto de reglas, scripts, skills y roles que guían y restringen a los agentes de IA. | `.agents/`, `.opencode/`, `.github/`, `project-docs/verify.sh` |\r\n| **Spec-Driven Development (SDD)** | Metodología donde ninguna línea de código se escribe antes de aprobar formalmente su spec. | `project-docs/specs/{NNN}_{name}/`, `generate-spec` |\r\n| **Human Gate (Puerta Humana)** | Pausa obligatoria del flujo que bloquea la ejecución del agente hasta confirmación del humano. | Herramienta nativa `ask_question` |\r\n| **Rama INT-*** | Rama de trabajo dedicada que cumple `{feature\\|bugfix}/INT-{numero}/{nombre}` $\\le 80$ caracteres. | Convención en `AGENTS.md` y `branches.md` |\r\n| **Docs-as-Code** | Práctica de gestionar la documentación en Markdown versionado junto al código fuente. | `project-docs/knowledge/**` |\r\n| **Triple Sincronización** | Replicación unidireccional obligatoria desde `.opencode/` hacia Copilot y Antigravity. | `sync-skills` y `skills-sync.md` |\r\n| **Fallback Data** | Objeto embebido en JS que permite abrir el tablero vía `file:///` sin servidores ni CORS. | `project-docs/data-fallback.js` |\r\n\r\n---\r\n\r\n## 3. Catálogo Maestro de Tarjetas CRC (Class-Responsibility-Collaborator)\r\n\r\n### Tarjeta CRC 1: `LeaderAgent`\r\n- **Estereotipo DDD**: `<<AgentOrchestrator>>`\r\n- **Responsabilidades**:\r\n  1. Validar entorno de trabajo y rama base (`main`, `master`, `dev`).\r\n  2. Crear la rama de trabajo `{feature|bugfix}/INT-{numero}/{nombre_rama}` ($\\le 80$ caracteres).\r\n  3. Delegar tareas secuenciales en subagentes (`spec-author`, `implementer`, `reviewer`).\r\n  4. Detener el flujo y solicitar aprobación humana mediante `ask_question`.\r\n- **Colaboradores**: `GitCLI`, `SpecAuthorAgent`, `ImplementerAgent`, `ReviewerAgent`, `AskQuestionModal`.\r\n\r\n### Tarjeta CRC 2: `SpecAuthorAgent`\r\n- **Estereotipo DDD**: `<<RequirementsEngineer>>`\r\n- **Responsabilidades**:\r\n  1. Redactar especificaciones técnicas (`requirements.md`, `design.md`, `tasks.md`).\r\n  2. Aplicar sintaxis formal de requerimientos EARS e IEEE 830.\r\n  3. Recomendar técnica de implementación (TDD, SDD o FTD).\r\n  4. Marcar la tarea como `spec_ready` sin tocar código fuente ni tests.\r\n- **Colaboradores**: `KnowledgeIndex`, `FeatureList`, `LeaderAgent`.\r\n\r\n### Tarjeta CRC 3: `ImplementerAgent`\r\n- **Estereotipo DDD**: `<<SoftwareDeveloper>>`\r\n- **Responsabilidades**:\r\n  1. Implementar código de producción siguiendo la técnica aprobada.\r\n  2. Escribir tests unitarios y de integración según la convención del stack.\r\n  3. Ejecutar verificaciones automatizadas (`npm test`, `project-docs/verify.sh`).\r\n  4. Registrar la trazabilidad bidireccional $R \\leftrightarrow Tests$ en `progress/impl_{name}.md`.\r\n- **Colaboradores**: `ProjectSpec`, `TestRunner`, `LeaderAgent`, `ReviewerAgent`.\r\n\r\n### Tarjeta CRC 4: `ReviewerAgent`\r\n- **Estereotipo DDD**: `<<QualityAuditor>>`\r\n- **Responsabilidades**:\r\n  1. Auditar de forma imparcial el cumplimiento del 100% de los criterios del spec.\r\n  2. Verificar cobertura de código, compilación y ausencia de errores de arquitectura.\r\n  3. Emitir reporte de aprobación o hallazgos sin editar código bajo ninguna circunstancia.\r\n- **Colaboradores**: `ProjectSpec`, `TasksList`, `LeaderAgent`.\r\n\r\n### Tarjeta CRC 5: `KnowledgeEngine`\r\n- **Estereotipo DDD**: `<<KnowledgeRepository>>`\r\n- **Responsabilidades**:\r\n  1. Escanear el código fuente y extraer modelos C4, UML, ERD y reglas `BR-*`.\r\n  2. Generar y mantener la base de conocimiento en `project-docs/knowledge/`.\r\n  3. Compilar el archivo maestro unificado `MASTER-PROJECT-KNOWLEDGE.md`.\r\n  4. Actualizar el grafo de relaciones en `knowledge-index.json`.\r\n- **Colaboradores**: `SyncDataScript`, `DashboardStore`, `MarkdownParser`.\r\n\n\n",
     "adr-catalog.md": "---\nid: \"DOC-ADR-CATALOG_MD\"\ntitle: \"adr catalog\"\ncollection: \"engineering\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"engineering\"]\n---\n\n# Catálogo de Decisiones de Arquitectura (ADR Catalog)\r\n\r\n> [!NOTE]\r\n> Registro canónico de Decisiones de Arquitectura (ADR) según el formato Michael Nygard. Documenta el qué, el por qué y las consecuencias técnicas asumidas para evitar refactorizaciones regresivas por parte de agentes de IA.\r\n\r\n---\r\n\r\n## ADR-001: Desacoplamiento Universal de Subagentes (Multi-Stack Agnostic)\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: Anteriormente los subagentes `implementer` y `reviewer` ejecutaban comandos fijos de `.NET` (`dotnet build /warnaserror`), fallando en repositorios políglotas o basados en Node.js, Python o Go.\r\n- **Decisión**: Los subagentes inspeccionan dinámicamente el bloque `checks` de `project-docs/project-spec.yaml` para obtener los comandos específicos de compilación y pruebas del proyecto objetivo.\r\n- **Consecuencias**: El arnés opera de manera transparente sobre cualquier stack tecnológico preservando la misma disciplina SDD.\r\n\r\n---\r\n\r\n## ADR-002: Sincronización Triple de Skills con Fuente de Verdad Única\r\n- **Fecha**: 2026-11-01\r\n- **Estado**: Aceptado\r\n- **Contexto**: El desarrollo asistido por IA ocurre a menudo en múltiples plataformas (Google Antigravity, OpenCode, GitHub Copilot). Mantener skills dispersas producía drift funcional.\r\n- **Decisión**: Establecer `.opencode/skills/` como la única fuente canónica y generar espejos automáticos en `.github/skills/` y `.agents/skills/` mediante la skill `/sync-skills`.\r\n- **Consecuencias**: Paridad total de capacidades en las tres herramientas sin duplicación manual.\r\n\r\n---\r\n\r\n## ADR-003: Pruebas Automatizadas Nativas con Node.js Test Runner\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: El arnés requería pruebas automatizadas para sus serializadores y sincronizadores, pero añadir frameworks pesados como Jest o Mocha introducía sobrecarga de instalación y dependencias vulnerables.\r\n- **Decisión**: Utilizar el ejecutor nativo `node --test` integrado en Node.js v18+.\r\n- **Consecuencias**: Tiempos de ejecución inferiores a 200ms con cero dependencias externas en tiempo de ejecución.\r\n\r\n---\r\n\r\n## ADR-004: Arquitectura Screaming & Tailwind CSS v4 en el Tablero Visual\r\n- **Fecha**: 2026-11-01\r\n- **Estado**: Aceptado\r\n- **Contexto**: La interfaz de seguimiento en `project-docs/` necesitaba ser modular, mantenible y liviana sin depender de frameworks de compilación SPA como React o Angular.\r\n- **Decisión**: Organizar el código bajo Screaming Architecture (`src/features/` por dominio) utilizando Vanilla JS moderno (ES Modules) y Tailwind CSS v4 en el navegador (`@tailwindcss/browser@4`).\r\n- **Consecuencias**: Modularidad limpia, código ligero y soporte nativo para temas claro/oscuro.\r\n\r\n---\r\n\r\n## ADR-005: Editor Dual ContextForge con Scroll Sincronizado Proporcional\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: Los desarrolladores y arquitectos requerían tanto la velocidad del editor de texto Markdown como la comodidad estructurada de bloques visuales para manipular requerimientos y diagramas.\r\n- **Decisión**: Implementar un conmutador de modo dual (`Modo Markdown` / `Modo Bloques`) con serialización bidireccional instantánea y sincronización de scroll proporcional basada en el ratio de desplazamiento con flags de exclusión mutua.\r\n- **Consecuencias**: Edición fluida sin pérdida de formato ni bloqueos por loops de eventos.\r\n\r\n---\r\n\r\n## ADR-006: Constelación 3D en Jerarquía Piramidal Three.js\r\n- **Fecha**: 2026-11-02\r\n- **Estado**: Aceptado\r\n- **Contexto**: La representación en grafo 3D anterior colocaba los nodos en un único plano caótico, provocando colisión de etiquetas e imposibilidad de comprender la jerarquía del sistema.\r\n- **Decisión**: Distribuir los nodos en 4 niveles arquitectónicos verticales ($Y=+165$ Ápice, $Y=+55$ Core, $Y=-55$ Features, $Y=-165$ Base) con distribución radial armónica y curvas cuadráticas de Bezier.\r\n- **Consecuencias**: Comprensión visual inmediata de la criticidad y dependencias del sistema.\r\n\r\n---\r\n\r\n## ADR-007: Compatibilidad Offline Total (Zero-Server Fallback)\r\n- **Fecha**: 2026-11-01\r\n- **Estado**: Aceptado\r\n- **Contexto**: En entornos restringidos o sin conexión a internet, los navegadores bloquean peticiones `fetch()` locales bajo el protocolo `file:///` por políticas de CORS.\r\n- **Decisión**: Generar automáticamente `project-docs/data-fallback.js` antes de cada compilación para embeber los datos en `window.__FALLBACK_DATA__`.\r\n- **Consecuencias**: El tablero funciona al 100% abriendo directamente `index.html` con doble clic.\r\n\n\n",
@@ -2327,7 +2327,7 @@ window.__FALLBACK_DATA__ = {
     "business-rules.md": "---\nid: \"DOC-BUSINESS-RULES_MD\"\ntitle: \"business rules\"\ncollection: \"engineering\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: true\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"product\"]\n---\n\n# Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)\r\n\r\n> [!IMPORTANT]\r\n> Invariantes de cumplimiento estricto para desarrolladores y agentes de IA. Ninguna implementación, spec o refactorización puede violar estas reglas.\r\n\r\n---\r\n\r\n## Módulo: agent-orchestrator\r\n\r\n### BR-ORCH-001: Formato y Longitud Estricta de Ramas Git\r\n- **Severidad**: Crítica\r\n- **Fórmula**: `length({type}/INT-{numero}/{nombre_rama}) <= 80`\r\n- **Valores permitidos de type**: Exclusivamente `feature` o `bugfix`.\r\n- **Descripción**: Toda rama de trabajo debe crearse desde la rama base, tener un prefijo `INT-` con número de ticket y no superar 80 caracteres.\r\n- **Comportamiento ante Violación**: La rama es rechazada y el agente debe solicitar corrección al humano.\r\n\r\n### BR-ORCH-002: Puerta Humana Obligatoria para Aprobación de Spec\r\n- **Severidad**: Crítica\r\n- **Descripción**: Queda estrictamente prohibido pasar una tarea a `in_progress` o iniciar implementación sin aprobación explícita del humano mediante la herramienta `ask_question`.\r\n- **Comportamiento ante Violación**: Detención inmediata del ciclo SDD.\r\n\r\n### BR-ORCH-003: Subagente Revisor No Modifica Código\r\n- **Severidad**: Crítica\r\n- **Descripción**: El subagente `reviewer` evalúa de forma independiente e imparcial la trazabilidad, build y tests. Bajo ninguna circunstancia edita código de producción o pruebas.\r\n- **Comportamiento ante Violación**: Se anula el veredicto y se reasigna al `implementer`.\r\n\r\n---\r\n\r\n## Módulo: triple-sync-engine\r\n\r\n### BR-SYNC-001: Fuente de Verdad Inviolable en .opencode/\r\n- **Severidad**: Crítica\r\n- **Descripción**: La carpeta `.opencode/skills/` es la única fuente de verdad para las 18 skills del arnés. Los cambios se propagan de forma unidireccional a `.github/skills/` y `.agents/skills/`.\r\n- **Comportamiento ante Violación**: Cualquier cambio aislado en espejos se sobrescribe al sincronizar.\r\n\r\n### BR-SYNC-002: Paridad Estricta de Frontmatter\r\n- **Severidad**: Alta\r\n- **Descripción**: Todo archivo `SKILL.md` debe contener exactamente el mismo bloque YAML `name` y `description` en las tres plataformas.\r\n- **Comportamiento ante Violación**: Reporte de inconsistencia en `/sync-skills`.\r\n\r\n---\r\n\r\n## Módulo: knowledge-engine\r\n\r\n### BR-KNOW-001: Sintaxis Mermaid Ultra-Estricta\r\n- **Severidad**: Crítica\r\n- **Descripción**: Para garantizar que los diagramas se rendericen sin errores en cualquier parser web o visor markdown, todo ID de nodo debe ser estrictamente alfanumérico sin guiones (`nodeAuth`) y todo texto descriptivo debe estar entre comillas dobles (`[\"Texto seguro\"]`).\r\n- **Comportamiento ante Violación**: Diagrama marcado como inválido en tiempo de validación.\r\n\r\n### BR-KNOW-002: Consulta Obligatoria Anti-Sesgo de la Base de Conocimiento\r\n- **Severidad**: Crítica\r\n- **Descripción**: Antes de proponer nuevas historias, redactar requerimientos o implementar código, los agentes DEBEN consultar `project-docs/knowledge/` para evitar reinventar capacidades o violar directrices.\r\n- **Comportamiento ante Violación**: Prohibición estricta de alucinar librerías externas o duplicar endpoints.\r\n\r\n---\r\n\r\n## Módulo: dashboard-visualizer\r\n\r\n### BR-DASH-001: Compatibilidad Offline Total (Protocolo file:///)\r\n- **Severidad**: Crítica\r\n- **Descripción**: El visor en `project-docs/index.html` debe ser 100% navegable con doble clic directo sin servidor local mediante la carga inmediata de `data-fallback.js`.\r\n- **Comportamiento ante Violación**: El script `sync-data.js` actualiza automáticamente el fallback tras cada compilación.\r\n\r\n### BR-DASH-002: Scroll Sincronizado Proporcional Anti-Bloqueo\r\n- **Severidad**: Alta\r\n- **Descripción**: La sincronización de scroll entre el editor Markdown y la vista previa utiliza flags de exclusión mutua para impedir bucles infinitos de eventos de scroll.\r\n- **Comportamiento ante Violación**: Desactivación temporal del listener para restaurar fluidez.\r\n\r\n---\r\n\r\n## Módulo: testing-qa-suite\r\n\r\n### BR-TEST-001: 100% de Tests en Verde para Cierre de Spec\r\n- **Severidad**: Crítica\r\n- **Descripción**: Ninguna feature o bugfix puede cerrarse como `done` si existe un solo test fallando en la suite de pruebas del proyecto.\r\n- **Comportamiento ante Violación**: `verify-spec` rechaza el cierre y exige corrección.\r\n\r\n### BR-TEST-002: Ejecutor de Pruebas Nativo sin Bloat\r\n- **Severidad**: Alta\r\n- **Descripción**: Las pruebas unitarias del arnés se ejecutan mediante `node --test` para asegurar tiempos de respuesta inferiores a 500ms y cero dependencias externas en testing.\r\n- **Comportamiento ante Violación**: Se rechaza la inclusión de dependencias redundantes.\r\n\r\n---\r\n\r\n## Módulo: knowledge-engine & plane-wiki (Reglas BR-PAGE-*)\r\n\r\n### BR-PAGE-01: Visibilidad Dual de Páginas\r\n- **Severidad**: Media\r\n- **Descripción**: Todo documento en la biblioteca de Plane Wiki clasifica su visibilidad en `access = 0` (Public, visible en toda la organización) o `access = 1` (Private, borrador personal).\r\n- **Comportamiento ante Violación**: Por defecto toda página no explícita se indexa como pública (`access: 0`).\r\n\r\n### BR-PAGE-02: Bloqueo Normativo e Inmutabilidad de Archivo (Lock Guard)\r\n- **Severidad**: Crítica\r\n- **Descripción**: Ninguna página con `is_locked = 1` o con `archived_at IS NOT NULL` permite editar su título o su contenido Markdown sin una operación previa y explícita de desbloqueo (`unlockPageInSQLite`) o restauración.\r\n- **Comportamiento ante Violación**: SQLite rechaza la mutación lanzando una excepción `BR-PAGE-02 Violation`.\r\n\r\n### BR-PAGE-03: Desmarcado Automático de Favoritos al Archivar\r\n- **Severidad**: Media\r\n- **Descripción**: Cuando una página es archivada (`archived_at` asignado), el sistema desmarca forzosamente `is_favorite = 0` para eliminarla de accesos directos.\r\n- **Comportamiento ante Violación**: El motor de persistencia resetea `is_favorite = 0` automáticamente.\r\n\r\n### BR-PAGE-04: Inmutabilidad de Visibilidad en Documentos Archivados\r\n- **Severidad**: Alta\r\n- **Descripción**: No está permitido alternar la visibilidad (`access`) de una página mientras se encuentre archivada.\r\n- **Comportamiento ante Violación**: SQLite rechaza la actualización con `BR-PAGE-04 Violation: Cannot change access visibility of archived page`.\r\n\r\n### BR-PAGE-07: Herencia de Colección en Páginas Hijas\r\n- **Severidad**: Alta\r\n- **Descripción**: Toda subpágina asignada a un `parent_id` hereda obligatoriamente el `collection_id` de su página padre. Al mover un padre a otra colección, la colección se propaga recursivamente a todos sus descendientes.\r\n- **Comportamiento ante Violación**: La función `movePageInSQLite` sobrescribe el `collection_id` de los hijos para mantener coherencia espacial.\r\n\r\n### BR-PAGE-08: Límite Jerárquico de Profundidad (Depth <= 4) y Prevención de Ciclos\r\n- **Severidad**: Crítica\r\n- **Descripción**: La jerarquía de anidación de páginas en una colección permite un máximo de 4 niveles de profundidad (`depth <= 4`, donde la raíz de la colección es nivel 0). Está estrictamente prohibido crear referencias circulares directas o indirectas (`A -> B -> A`).\r\n- **Comportamiento ante Violación**: Si se intenta crear un ciclo, se lanza `Circular hierarchy detected: cannot set parent to self or descendant`. Si se excede el límite de 4 niveles, se lanza `Max page nesting depth exceeded (max 4 levels allowed)`.\r\n\r\n### BR-PAGE-09: Archivo en Cascada de Jerarquías\r\n- **Severidad**: Alta\r\n- **Descripción**: Archivar una página padre propaga de inmediato el timestamp de archivo (`archived_at`) y el desmarcado de favoritos (`is_favorite = 0`) a todos sus hijos y descendientes en cascada.\r\n- **Comportamiento ante Violación**: Ejecución automática de `archivePageCascadeInSQLite`.\r\n\r\n### BR-PAGE-10: Slugs Únicos por Colección y Backfill de Depth\r\n- **Severidad**: Alta\r\n- **Descripción**: Cada página cuenta con un `slug` alfanumérico único dentro de su colección (`idx_pages_collection_slug`). Ante títulos duplicados en la misma colección, el algoritmo aplica sufijos correlativos (`-2`, `-3`).\r\n- **Comportamiento ante Violación**: El cálculo determinista en `backfillSlugAndDepth` previene colisiones antes de escribir en disco o SQLite.\r\n\n\n",
     "c4-model.md": "---\nid: \"DOC-C4-MODEL_MD\"\ntitle: \"c4 model\"\ncollection: \"engineering\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: true\nis_favorite: true\nfull_width: true\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"engineering\"]\n---\n\n# Modelo C4 — AI Agentic SDD Engineering Harness\r\n\r\n> [!NOTE]\r\n> Arquitectura de Sistema, Contenedores y Componentes del Arnés de Ingeniería Dirigida por Especificaciones (SDD).\r\n\r\n---\r\n\r\n## Nivel 1: Diagrama de Contexto del Sistema (C1)\r\n\r\nMuestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:\r\n\r\n```mermaid\r\nflowchart TD\r\n  userDeveloper[\"Desarrollador / Ingeniero de Software\"]\r\n  agentLeader[\"Agente Principal (Leader)\"]\r\n  harnessSystem[\"AI Agentic SDD Engineering Harness\"]\r\n  gitSystem[\"Sistema de Control de Versiones (Git / GitHub)\"]\r\n  browserUser[\"Navegador Web (Dashboard / Tablero Visual)\"]\r\n\r\n  userDeveloper -->|\"Define requerimientos y aprueba specs\"| harnessSystem\r\n  agentLeader -->|\"Orquesta tareas e invoca subagentes\"| harnessSystem\r\n  harnessSystem -->|\"Crea ramas INT-* y commits semánticos\"| gitSystem\r\n  harnessSystem -->|\"Genera y sincroniza datos en tiempo real\"| browserUser\r\n  browserUser -->|\"Permite lectura editorial y edición dual\"| userDeveloper\r\n```\r\n\r\n---\r\n\r\n## Nivel 2: Diagrama de Contenedores (C2)\r\n\r\nDescompone el arnés en sus subsistemas y aplicaciones principales:\r\n\r\n```mermaid\r\nflowchart TD\r\n  subgraph HarnessContainers[\"Contenedores del Arnés SDD\"]\r\n    containerOrchestrator[\"Orquestador Multi-Agente<br/>(Leader, Spec-Author, Implementer, Reviewer)\"]\r\n    containerTripleSync[\"Motor de Sincronización Triple<br/>(.opencode / .github / .agents)\"]\r\n    containerKnowledge[\"Motor de Base de Conocimiento<br/>(Docs-as-Code, C4, UML, BR-*, ADRs)\"]\r\n    containerDashboard[\"Tablero de Seguimiento Interactivo<br/>(Tailwind v4, Three.js, Editor Dual)\"]\r\n    containerTestRunner[\"Suite de Pruebas Automatizadas<br/>(Node.js Test Runner, Smoke Tests)\"]\r\n  end\r\n\r\n  gitRepo[\"Repositorio Git Local\"]\r\n  userView[\"Navegador (file:/// o HTTP)\"]\r\n\r\n  containerOrchestrator -->|\"Escribe specs y código\"| gitRepo\r\n  containerTripleSync -->|\"Mantiene paridad de 18 skills\"| containerOrchestrator\r\n  containerKnowledge -->|\"Alimenta contexto anti-sesgo\"| containerOrchestrator\r\n  containerDashboard -->|\"Lee metadatos de specs y progreso\"| gitRepo\r\n  containerDashboard -->|\"Renderiza vistas interactivas\"| userView\r\n  containerTestRunner -->|\"Verifica build, tests y convenciones\"| containerOrchestrator\r\n```\r\n\r\n---\r\n\r\n## Nivel 3: Diagrama de Componentes del Tablero Web (C3)\r\n\r\nDesglose interno de la aplicación web en `project-docs/` bajo Screaming Architecture modular:\r\n\r\n```mermaid\r\nflowchart TD\r\n  subgraph ClientApp[\"Tablero Screaming Architecture (project-docs/src/)\"]\r\n    subgraph CoreLayer[\"Núcleo Transversal (src/core/)\"]\r\n      compStore[\"Store Observer Reactivo<br/>(store.js)\"]\r\n      compRouter[\"Hash Router con URL Params<br/>(router.js)\"]\r\n      compBus[\"EventBus Desacoplado<br/>(event-bus.js)\"]\r\n      compClient[\"API Client con Resiliencia<br/>(api-client.js)\"]\r\n      compSqlite[\"Adaptador SQLite WAL<br/>(db.js & sqlite-sync.js)\"]\r\n    end\r\n\r\n    subgraph DomainModules[\"Módulos de Negocio Screaming (src/modules/)\"]\r\n      modProjects[\"Projects<br/>(Workspaces, Metadata, KPIs)\"]\r\n      modIssues[\"Issues<br/>(Kanban, Lista, Scrum, Jira DEV/QA)\"]\r\n      modCycles[\"Cycles<br/>(Sprints, SVG Burn-down)\"]\r\n      modPages[\"Pages<br/>(ContextForge Reader, Dual Editor)\"]\r\n      modHarness[\"Harness<br/>(Agentes, Gobernanza, Skills)\"]\r\n    end\r\n\r\n    subgraph SharedLayer[\"Componentes Compartidos (src/shared/)\"]\r\n      sharedLayout[\"MasterLayout / Sidebar / TopBar\"]\r\n      sharedIcons[\"Iconografía 100% SVG Nativo\"]\r\n      sharedUtils[\"renderList / DOM / Markdown\"]\r\n    end\r\n  end\r\n\r\n  compRouter --> compStore\r\n  compBus --> compStore\r\n  DomainModules --> compStore\r\n  DomainModules --> compClient\r\n  compClient --> compSqlite\r\n  DomainModules --> sharedLayer\r\n```\r\n\r\n---\r\n\r\n## Nivel 4: Persistencia Dual Determinista (C4 / Data Storage)\r\n\r\n```mermaid\r\nflowchart LR\r\n  subgraph DataSources[\"Fuentes de Persistencia Dual\"]\r\n    sqliteDB[\"SQLite Relacional WAL<br/>(project-docs/data/harness.db)\"]\r\n    markdownFiles[\"Documentos Vivos Markdown<br/>(project-docs/knowledge/ & specs/)\"]\r\n    jsonFallback[\"Data Fallback Resiliente<br/>(project-docs/data-fallback.js)\"]\r\n  end\r\n\r\n  serverSync[\"Servidor Local & Sync Bridge<br/>(serve.js & sync-data.js)\"]\r\n  serverSync -->|\"Persistencia Transaccional\"| sqliteDB\r\n  serverSync -->|\"Exportación Soberana\"| markdownFiles\r\n  serverSync -->|\"Bundle Offline\"| jsonFallback\r\n```\r\n\n\n",
     "coding-standards.md": "---\nid: \"DOC-CODING-STANDARDS_MD\"\ntitle: \"coding standards\"\ncollection: \"general\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: true\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"general\"]\n---\n\n# Estándares de Codificación & Guardrails Anti-Sesgo\r\n\r\n> [!IMPORTANT]\r\n> Directrices obligatorias para desarrolladores y agentes de IA. Diseñadas para eliminar el sesgo algorítmico, prevenir alucinaciones de paquetes y mantener una arquitectura limpia.\r\n\r\n---\r\n\r\n## 1. Convenciones de Nomenclatura y Control de Versiones\r\n\r\n- **Ramas Git**:\r\n  - Exclusivamente dos tipos: `feature` y `bugfix`.\r\n  - Estructura obligatoria: `{type}/INT-{numero}/{nombre_rama_de_lo_realizado}`.\r\n  - Longitud máxima estricta: **80 caracteres**.\r\n  - Ejemplo: `feature/INT-001/refactor_harness_architecture`.\r\n- **Commits Semánticos**:\r\n  - Formato: `feat(scope): descripción` o `fix(scope): descripción`.\r\n  - Tipos válidos: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.\r\n  - Idioma: Inglés para commits y código fuente; español para documentación técnica y comentarios explicativos.\r\n\r\n---\r\n\r\n## 2. Guardrails Anti-Alucinación (Inviolables para Agentes de IA)\r\n\r\n1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `package.json` o `project-docs/project-spec.yaml`.\r\n2. **Invariante de Conocimiento Previo**: Antes de implementar una solución, el agente debe verificar si ya existe una función, componente o regla en `project-docs/knowledge/`.\r\n3. **Respeto a las Reglas de Negocio (BR-*)**: Ningún código puede modificar o relajar una regla de negocio sin una actualización previa y aprobada de la especificación.\r\n4. **Cero Código Muerto**: Prohibido dejar código comentado, banderas de depuración (`console.log`, `debugger`) o secretos hardcodeados.\r\n\r\n---\r\n\r\n## 3. Arquitectura del Código Frontend (`project-docs/src/`)\r\n\r\n- **Vanilla JS Modular**: Usar ES Modules puros (`import` / `export`) organizados por dominios en `src/features/`.\r\n- **Separación de Responsabilidades**: Las funciones de renderizado devuelven cadenas HTML puras; los controladores de eventos se enlazan mediante selectores o `data-action`.\r\n- **Inmutabilidad en el Store**: El estado global (`store.js`) se actualiza mediante acciones atómicas notificando a los suscriptores.\r\n\n\n",
-    "data-dictionary.md": "---\nid: \"DOC-DATA-DICTIONARY_MD\"\ntitle: \"data dictionary\"\ncollection: \"engineering\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: true\nis_favorite: false\nfull_width: true\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"engineering\"]\n---\n\n# Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)\r\n\r\n> [!NOTE]\r\n> Especificación formal del modelo relacional completo de Plane (28 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`), su grafo de conocimiento (`page_logs`, `page_labels`, `page_versions`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.\r\n\r\n---\r\n\r\n## 1. Diagrama Entidad-Relación (ERD) del Arnés & Plane AI\r\n\r\n```mermaid\r\nerDiagram\r\n  WORKSPACE ||--o{ WORKSPACE_MEMBER : \"agrupa\"\r\n  USER ||--o{ WORKSPACE_MEMBER : \"pertenece\"\r\n  USER ||--o{ API_TOKEN : \"autentica (is_bot=1)\"\r\n  WORKSPACE ||--o{ PROJECT : \"contiene\"\r\n  WORKSPACE ||--o{ AI_CONFIG : \"configura LLM\"\r\n  PROJECT ||--o{ STATE : \"define flujo\"\r\n  PROJECT ||--o{ LABEL : \"clasifica\"\r\n  PROJECT ||--o{ ESTIMATE : \"mide\"\r\n  ESTIMATE ||--o{ ESTIMATE_POINT : \"escala Fibonacci\"\r\n  PROJECT ||--o{ ISSUE_TYPE : \"tipifica\"\r\n  PROJECT ||--o{ CYCLE : \"planifica sprints\"\r\n  PROJECT ||--o{ MODULE : \"delimita dominios\"\r\n  PROJECT ||--o{ ISSUE_VIEW : \"guarda filtros\"\r\n  PROJECT ||--o{ ISSUE : \"gestiona\"\r\n  PROJECT ||--o{ PAGE : \"documenta\"\r\n  ISSUE ||--o{ SUBTASK : \"desglosa DEV/QA\"\r\n  ISSUE ||--o{ ISSUE_ASSIGNEE : \"asigna bot/humano\"\r\n  ISSUE ||--o{ ISSUE_LABEL : \"etiqueta\"\r\n  ISSUE ||--o{ ISSUE_RELATION : \"relaciona / bloquea\"\r\n  ISSUE ||--o{ ISSUE_ACTIVITY : \"audita mutaciones\"\r\n  ISSUE ||--o{ ISSUE_COMMENT : \"comenta skills\"\r\n  ISSUE ||--o{ ISSUE_EVIDENCE : \"vincula QA y capturas\"\r\n  ISSUE ||--o{ AI_RUN : \"registra ejecucion IA\"\r\n  CYCLE ||--o{ CYCLE_ISSUE : \"compromete\"\r\n  MODULE ||--o{ MODULE_ISSUE : \"encapsula\"\r\n  PAGE ||--o{ PAGE_VERSION : \"versiona snapshots\"\r\n  PAGE ||--o{ PAGE_LOG : \"vincula INT/BR/RF/backlinks\"\r\n  PAGE ||--o{ PAGE_LABEL : \"etiqueta semantica\"\r\n\r\n  WORKSPACE {\r\n    string id PK\r\n    string name\r\n    string slug\r\n    string owner_id\r\n    string organization_size\r\n    string timezone\r\n  }\r\n\r\n  USER {\r\n    string id PK\r\n    string username\r\n    string display_name\r\n    string role\r\n    int is_bot\r\n    string bot_type\r\n  }\r\n\r\n  ISSUE {\r\n    string id PK\r\n    string project_id FK\r\n    int sequence_id\r\n    string title\r\n    string state_id FK\r\n    string priority\r\n    string type_id FK\r\n    int point\r\n    string assignee_role\r\n    string cycle_id FK\r\n    string module_id FK\r\n    string branch\r\n  }\r\n\r\n  AI_RUN {\r\n    string id PK\r\n    string issue_id FK\r\n    string page_id FK\r\n    string agent_role\r\n    string skill_name\r\n    string task_type\r\n    string provider\r\n    string model\r\n    string prompt_summary\r\n    string status\r\n  }\r\n\r\n  ISSUE_EVIDENCE {\r\n    string id PK\r\n    string issue_id FK\r\n    string subtask_id\r\n    string type\r\n    string title\r\n    string file_path\r\n    string created_by_skill\r\n  }\r\n\r\n  PAGE {\r\n    string id PK\r\n    string project_id FK\r\n    string file_path\r\n    string title\r\n    string shelf\r\n    int word_count\r\n    int reading_time_min\r\n  }\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo de las 29 Tablas Relacionales SQLite (`project-docs/data/harness.db`)\r\n\r\n### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)\r\n1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).\r\n2. `users`: Usuarios humanos e identidades de subagentes IA (`is_bot = 1`, `bot_type` para `leader`, `spec-author`, `implementer`, `reviewer`).\r\n3. `workspace_members`: Membresía y permisos RBAC por espacio de trabajo.\r\n4. `api_tokens`: Tokens de servicio (`user_type = 1` para bots) empleados por skills y agentes.\r\n5. `ai_configs`: Configuración del motor IA (`LLM_PROVIDER`, `LLM_MODEL`, `DUAL_PERSISTENCE_ENGINE`).\r\n6. `ai_runs`: Registro inmutable de cada invocación de skill o subagente IA, sincronizado automáticamente con `project-docs/knowledge/ai-runs-log.md`.\r\n\r\n### 2.2 Gestión de Proyectos, Tareas y Trazabilidad (`projects`, `issues`, `evidences`)\r\n7. `projects`: Configuración del proyecto (`proj-harness`, identificador `INT`, flags de vistas).\r\n8. `states`: Máquina de estados Kanban (`Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Cancelled`).\r\n9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).\r\n10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.\r\n12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).\r\n13. `cycles`: Sprints de iteración con estados canónicos (`draft`, `upcoming`, `current`, `completed`), fechas de inicio/fin y progreso.\r\n14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).\r\n15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.\r\n16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).\r\n17. `issue_assignees`: Asignación relacional entre tareas y agentes bot/humanos.\r\n18. `issue_labels`: Tabla puente muchos-a-muchos entre `issues` y `labels`.\r\n19. `issue_relations`: Grafo de dependencias entre tareas (`blocked_by`, `blocks`, `relates_to`).\r\n20. `issue_activities`: Bitácora de auditoría (`IssueActivity`) de cada cambio de estado, evidencia o ejecución de skill.\r\n21. `issue_comments`: Comentarios técnicos en Markdown emitidos por agentes o skills.\r\n22. `issue_evidences`: Artefactos de evidencia QA, reportes de verificación, planes API y capturas Playwright E2E vinculados a cada tarea.\r\n23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.\r\n25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.\r\n\r\n### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`, `page_audit`)\r\n26. `collections`: Espacios de conocimiento dinámicos de Plane Wiki (`id`, `project_id`, `workspace_id`, `name`, `description`, `icon`, `color`, `is_private`, `sort_order`, `archived_at`).\r\n27. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` con claves foráneas `FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT` y `FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL`, jerarquía (`parent_id`, `depth <= 4`), slugs únicos (`idx_pages_collection_slug`), autoría (`owner_name`, `owned_by_id`), telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`) y banderas de acceso/bloqueo (`access = 0` Public / `1` Private, `is_locked = 1`, `is_favorite = 1`, `view_props`).\r\n28. `page_versions`: Snapshots históricos de versiones (`id`, `page_id`, `version_number`, `content_markdown`, `description_html`, `description_stripped`, `owned_by_role`, `word_count`, `last_saved_at`, `created_at`) con `FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE` y restauración en un clic (`restorePageVersionInSQLite`).\r\n29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas (`page_labels`).\n30. `page_audit`: Bitácora inmutable de auditoría de ciclo de vida documental (`action = 'created' | 'updated' | 'moved' | 'locked' | 'unlocked' | 'archived' | 'unarchived' | 'version_restored'`, `page_id`, `actor_id`, `actor_role`, `actor_type = 'human' | 'agent'`, `reason`, `created_at`).\r\n\r\n---\r\n\r\n## 3. Catálogo de Esquemas JSON / YAML & Sincronización Dual\r\n\r\n### 3.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)\r\n- `project.name`: Nombre canónico del sistema.\r\n- `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).\r\n- `runtime.language`: Lenguaje de programación principal.\r\n- `checks.build`, `checks.test`, `checks.verify`: Comandos de verificación ejecutables.\r\n\r\n### 3.2 `project-docs/feature_list.json` (Espejo JSON de Tareas)\r\n- Sincronizado bidireccionalmente con las tablas `issues`, `subtasks`, `issue_relations` e `issue_evidences` mediante `project-docs/src/core/sqlite-sync.js`.\r\n\r\n### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)\r\n- Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.\r\n\n\n",
+    "data-dictionary.md": "---\r\nid: \"DOC-DATA-DICTIONARY_MD\"\r\ntitle: \"data dictionary\"\r\ncollection: \"engineering\"\r\nparent: null\r\nowner: \"leader\"\r\nstatus: \"Publicado\"\r\nversion: \"4.0.0\"\r\naccess: \"public\"\r\nis_locked: true\r\nis_favorite: false\r\nfull_width: true\r\nlast_updated: \"2026-11-09\"\r\ntags: []\r\nlabels: [\"engineering\"]\r\n---\r\n\r\n# Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)\r\n\r\n> [!NOTE]\r\n> Especificación formal del modelo relacional completo de Plane (28 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`), su grafo de conocimiento (`page_logs`, `page_labels`, `page_versions`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.\r\n\r\n---\r\n\r\n## 1. Diagrama Entidad-Relación (ERD) del Arnés & Plane AI\r\n\r\n```mermaid\r\nerDiagram\r\n  WORKSPACE ||--o{ WORKSPACE_MEMBER : \"agrupa\"\r\n  USER ||--o{ WORKSPACE_MEMBER : \"pertenece\"\r\n  USER ||--o{ API_TOKEN : \"autentica (is_bot=1)\"\r\n  WORKSPACE ||--o{ PROJECT : \"contiene\"\r\n  WORKSPACE ||--o{ AI_CONFIG : \"configura LLM\"\r\n  PROJECT ||--o{ STATE : \"define flujo\"\r\n  PROJECT ||--o{ LABEL : \"clasifica\"\r\n  PROJECT ||--o{ ESTIMATE : \"mide\"\r\n  ESTIMATE ||--o{ ESTIMATE_POINT : \"escala Fibonacci\"\r\n  PROJECT ||--o{ ISSUE_TYPE : \"tipifica\"\r\n  PROJECT ||--o{ CYCLE : \"planifica sprints\"\r\n  PROJECT ||--o{ MODULE : \"delimita dominios\"\r\n  PROJECT ||--o{ ISSUE_VIEW : \"guarda filtros\"\r\n  PROJECT ||--o{ ISSUE : \"gestiona\"\r\n  PROJECT ||--o{ PAGE : \"documenta\"\r\n  ISSUE ||--o{ SUBTASK : \"desglosa DEV/QA\"\r\n  ISSUE ||--o{ ISSUE_ASSIGNEE : \"asigna bot/humano\"\r\n  ISSUE ||--o{ ISSUE_LABEL : \"etiqueta\"\r\n  ISSUE ||--o{ ISSUE_RELATION : \"relaciona / bloquea\"\r\n  ISSUE ||--o{ ISSUE_ACTIVITY : \"audita mutaciones\"\r\n  ISSUE ||--o{ ISSUE_COMMENT : \"comenta skills\"\r\n  ISSUE ||--o{ ISSUE_EVIDENCE : \"vincula QA y capturas\"\r\n  ISSUE ||--o{ AI_RUN : \"registra ejecucion IA\"\r\n  CYCLE ||--o{ CYCLE_ISSUE : \"compromete\"\r\n  MODULE ||--o{ MODULE_ISSUE : \"encapsula\"\r\n  PAGE ||--o{ PAGE_VERSION : \"versiona snapshots\"\r\n  PAGE ||--o{ PAGE_LOG : \"vincula INT/BR/RF/backlinks\"\r\n  PAGE ||--o{ PAGE_LABEL : \"etiqueta semantica\"\r\n\r\n  WORKSPACE {\r\n    string id PK\r\n    string name\r\n    string slug\r\n    string owner_id\r\n    string organization_size\r\n    string timezone\r\n  }\r\n\r\n  USER {\r\n    string id PK\r\n    string username\r\n    string display_name\r\n    string role\r\n    int is_bot\r\n    string bot_type\r\n  }\r\n\r\n  ISSUE {\r\n    string id PK\r\n    string project_id FK\r\n    int sequence_id\r\n    string title\r\n    string state_id FK\r\n    string priority\r\n    string type_id FK\r\n    int point\r\n    string assignee_role\r\n    string cycle_id FK\r\n    string module_id FK\r\n    string branch\r\n  }\r\n\r\n  AI_RUN {\r\n    string id PK\r\n    string issue_id FK\r\n    string page_id FK\r\n    string agent_role\r\n    string skill_name\r\n    string task_type\r\n    string provider\r\n    string model\r\n    string prompt_summary\r\n    string status\r\n  }\r\n\r\n  ISSUE_EVIDENCE {\r\n    string id PK\r\n    string issue_id FK\r\n    string subtask_id\r\n    string type\r\n    string title\r\n    string file_path\r\n    string created_by_skill\r\n  }\r\n\r\n  PAGE {\r\n    string id PK\r\n    string project_id FK\r\n    string file_path\r\n    string title\r\n    string shelf\r\n    int word_count\r\n    int reading_time_min\r\n  }\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo de las 29 Tablas Relacionales SQLite (`project-docs/data/harness.db`)\r\n\r\n### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)\r\n1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).\r\n2. `users`: Usuarios humanos e identidades de subagentes IA (`is_bot = 1`, `bot_type` para `leader`, `spec-author`, `implementer`, `reviewer`).\r\n3. `workspace_members`: Membresía y permisos RBAC por espacio de trabajo.\r\n4. `api_tokens`: Tokens de servicio (`user_type = 1` para bots) empleados por skills y agentes.\r\n5. `ai_configs`: Configuración del motor IA (`LLM_PROVIDER`, `LLM_MODEL`, `DUAL_PERSISTENCE_ENGINE`).\r\n6. `ai_runs`: Registro inmutable de cada invocación de skill o subagente IA, sincronizado automáticamente con `project-docs/knowledge/ai-runs-log.md`.\r\n\r\n### 2.2 Gestión de Proyectos, Tareas y Trazabilidad (`projects`, `issues`, `evidences`)\r\n7. `projects`: Configuración del proyecto (`proj-harness`, identificador `INT`, flags de vistas).\r\n8. `states`: Máquina de estados Kanban (`Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Cancelled`).\r\n9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).\r\n10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.\r\n12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).\r\n13. `cycles`: Sprints de iteración con estados canónicos (`draft`, `upcoming`, `current`, `completed`), fechas de inicio/fin y progreso.\r\n14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).\r\n15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.\r\n16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).\r\n17. `issue_assignees`: Asignación relacional entre tareas y agentes bot/humanos.\r\n18. `issue_labels`: Tabla puente muchos-a-muchos entre `issues` y `labels`.\r\n19. `issue_relations`: Grafo de dependencias entre tareas (`blocked_by`, `blocks`, `relates_to`).\r\n20. `issue_activities`: Bitácora de auditoría (`IssueActivity`) de cada cambio de estado, evidencia o ejecución de skill.\r\n21. `issue_comments`: Comentarios técnicos en Markdown emitidos por agentes o skills.\r\n22. `issue_evidences`: Artefactos de evidencia QA, reportes de verificación, planes API y capturas Playwright E2E vinculados a cada tarea.\r\n23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.\r\n25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.\r\n\r\n### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`, `page_audit`)\r\n26. `collections`: Espacios de conocimiento dinámicos de Plane Wiki (`id`, `project_id`, `workspace_id`, `name`, `description`, `icon`, `color`, `is_private`, `sort_order`, `archived_at`).\r\n27. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` con claves foráneas `FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT` y `FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL`, jerarquía (`parent_id`, `depth <= 4`), slugs únicos (`idx_pages_collection_slug`), autoría (`owner_name`, `owned_by_id`), telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`) y banderas de acceso/bloqueo (`access = 0` Public / `1` Private, `is_locked = 1`, `is_favorite = 1`, `view_props`).\r\n28. `page_versions`: Snapshots históricos de versiones (`id`, `page_id`, `version_number`, `content_markdown`, `description_html`, `description_stripped`, `owned_by_role`, `word_count`, `last_saved_at`, `created_at`) con `FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE` y restauración en un clic (`restorePageVersionInSQLite`).\r\n29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas (`page_labels`).\r\n30. `page_audit`: Bitácora inmutable de auditoría de ciclo de vida documental (`action = 'created' | 'updated' | 'moved' | 'locked' | 'unlocked' | 'archived' | 'unarchived' | 'version_restored'`, `page_id`, `actor_id`, `actor_role`, `actor_type = 'human' | 'agent'`, `reason`, `created_at`).\r\n\r\n---\r\n\r\n## 3. Catálogo de Esquemas JSON / YAML & Sincronización Dual\r\n\r\n### 3.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)\r\n- `project.name`: Nombre canónico del sistema.\r\n- `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).\r\n- `runtime.language`: Lenguaje de programación principal.\r\n- `checks.build`, `checks.test`, `checks.verify`: Comandos de verificación ejecutables.\r\n\r\n### 3.2 `project-docs/feature_list.json` (Espejo JSON de Tareas)\r\n- Sincronizado bidireccionalmente con las tablas `issues`, `subtasks`, `issue_relations` e `issue_evidences` mediante `project-docs/src/core/sqlite-sync.js`.\r\n\r\n### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)\r\n- Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.\r\n\r\n\r\n",
     "external-services.md": "---\nid: \"DOC-EXTERNAL-SERVICES_MD\"\ntitle: \"external services\"\ncollection: \"engineering\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"general\"]\n---\n\n# Catálogo de Integraciones y Servicios Externos\r\n\r\n> [!NOTE]\r\n> Matriz de servicios adyacentes, protocolos de comunicación, variables de configuración y políticas de contingencia del arnés de ingeniería.\r\n\r\n---\r\n\r\n## Matriz de Servicios y Dependencias\r\n\r\n| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |\r\n| :--- | :--- | :--- | :--- | :--- |\r\n| **Google Antigravity** | Agentic IDE & CLI | Native Subagent Protocol / IPC | N/A (Entorno IDE) | Operar mediante CLI estándar o shell local |\r\n| **OpenCode** | CLI Engine | CLI Exec / Local JSON | N/A | Lectura directa de `.opencode/rules/` |\r\n| **GitHub Copilot** | AI Assistant | Instructions / Markdown | N/A | Carga desde `.github/instructions/` |\r\n| **Git / GitHub** | Control de Versiones | CLI Git / HTTPS / SSH | `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL` | Modo local desconectado en rama `{type}/INT-*` |\r\n| **Tailwind CSS v4** | CSS Runtime | CDN `@tailwindcss/browser@4` | N/A | Estilos base incrustados en `<style>` |\r\n| **Three.js** | 3D Graphics Engine | CDN `three.min.js r128` | N/A | Vista alternativa en Árbol SVG y Grafo DAG |\r\n| **Mermaid.js** | Diagram Engine | CDN `mermaid.min.js v10` | N/A | Previsualización de código Mermaid con botón de copia |\r\n\r\n---\r\n\r\n## Servicios Locales y Puertos de Red\r\n\r\n| Servicio | Puerto | URL Local | Descripción & Uso |\r\n|---|---|---|---|\r\n| **Plane Local Instance** | `3000` | `http://localhost:3000/` | Instancia local de Plane de referencia para auditoría visual y paridad UI/UX. |\r\n| **Harness Dashboard & API** | `3333` | `http://127.0.0.1:3333/` | Servidor Node.js (`serve.js`) para API REST SQLite (`/api/plane/*`) y cliente web. |\r\n\n\n",
     "functional-requirements.md": "---\nid: \"DOC-FUNCTIONAL-REQUIREMENTS_MD\"\ntitle: \"functional requirements\"\ncollection: \"product\"\nparent: null\nowner: \"leader\"\nstatus: \"Publicado\"\nversion: \"4.0.0\"\naccess: \"public\"\nis_locked: true\nis_favorite: false\nfull_width: false\nlast_updated: \"2026-11-09\"\ntags: []\nlabels: [\"product\"]\n---\n\n# Especificación de Requerimientos del Sistema (SRS IEEE 830 / ISO 29148)\r\n\r\n> [!NOTE]\r\n> Requerimientos Funcionales (`RF-*`) y Requerimientos No Funcionales (`RNF-*`) bajo clasificación FURPS+ para el Arnés de Ingeniería SDD.\r\n\r\n---\r\n\r\n## 1. Requerimientos Funcionales (`RF-*`)\r\n\r\n### Módulo: agent-orchestrator\r\n- **RF-ORCH-001**: El orquestador DEBE validar que toda rama de trabajo cumpla con la expresión regular `^(feature|bugfix)/INT-\\d{3,4}/[a-z0-9_]+$` y una longitud menor o igual a 80 caracteres.\r\n- **RF-ORCH-002**: El orquestador DEBE invocar de manera aislada al subagente `spec-author` con workspace heredado (`Workspace: \"inherit\"`) para redactar la especificación formal antes de escribir código.\r\n- **RF-ORCH-003**: El orquestador DEBE pausar la ejecución mediante `ask_question` para solicitar aprobación humana del spec generado antes de permitir el inicio de la fase de implementación.\r\n- **RF-ORCH-004**: Al concluir la implementación, el orquestador DEBE invocar de forma independiente al subagente `reviewer` para emitir veredicto formal de calidad y trazabilidad.\r\n\r\n### Módulo: triple-sync-engine\r\n- **RF-SYNC-001**: El motor DEBE comparar el árbol de skills en `.opencode/skills/` contra `.github/skills/` y `.agents/skills/` para identificar diferencias de contenido o metadatos.\r\n- **RF-SYNC-002**: La skill `/sync-skills` DEBE replicar archivos de forma no destructiva preservando el frontmatter YAML y el formato Markdown.\r\n\r\n### Módulo: knowledge-engine\r\n- **RF-KNOW-001**: La skill `/project-knowledge` DEBE realizar el descubrimiento en 2 fases para evitar desbordamiento de contexto (escaneo topológico previo a inspección de código).\r\n- **RF-KNOW-002**: El generador de diagramas DEBE sanitizar identificadores y textos en sintaxis Mermaid estricta con comillas dobles para evitar fallos del parser en tiempo de ejecución.\r\n\r\n### Módulo: dashboard-visualizer\r\n- **RF-DASH-001**: El tablero DEBE presentar una biblioteca organizada en 6 estantes temáticos con tarjeta Hero destacada y filtros rápidos por categoría.\r\n- **RF-DASH-002**: El lector de artículos DEBE renderizar el documento con columna centrada a 780px, interlineado de 1.75em, anclas de encabezados y barra lateral flotante con la Tabla de Contenidos (TOC).\r\n- **RF-DASH-003**: El editor dual DEBE permitir alternar instantáneamente entre modo Markdown split-pane y modo Bloques Visuales ContextForge con scroll sincronizado proporcional y reordenamiento de tarjetas.\r\n- **RF-DASH-004**: El buscador Omnibox DEBE responder al atajo `Ctrl+K` o `Cmd+K` y permitir búsqueda en tiempo real sobre tareas, documentos, reglas e índices.\r\n- **RF-DASH-005**: La vista 3D DEBE estructurar los nodos en 4 niveles piramidales en Three.js con anillos translúcidos y distribución armónica radial sin solapamiento de etiquetas.\r\n\r\n### Módulo: testing-qa-suite\r\n- **RF-TEST-001**: La suite DEBE ejecutar pruebas unitarias automatizadas mediante el ejecutor nativo `node --test` reportando resultados en menos de 500ms.\r\n- **RF-TEST-002**: La suite DEBE incluir pruebas de aceptación tipo smoke para validar la integridad del bundle web y la compatibilidad con el protocolo `file:///`.\r\n\r\n---\r\n\r\n## 2. Requerimientos No Funcionales (`RNF-*`) bajo FURPS+\r\n\r\n### Functionality (Seguridad e Integridad)\r\n- **RNF-SEC-001**: Prohibición estricta de credenciales, tokens de API o connection strings hardcodeados en los archivos de especificación o base de conocimiento.\r\n- **RNF-SEC-002**: Aislamiento estricto de subagentes impidiendo que el subagente `reviewer` modifique código de producción o pruebas.\r\n\r\n### Usability (Experiencia Editorial & Heurísticas)\r\n- **RNF-USAB-001**: Cumplimiento de WCAG AAA en contraste de texto y soporte nativo de modo claro y oscuro sin parpadeo (FOUC).\r\n- **RNF-USAB-002**: Búsqueda con debouncing para no bloquear la digitación del usuario en inputs de búsqueda (180ms - 260ms).\r\n\r\n### Reliability (Confiabilidad & Cero-Server)\r\n- **RNF-RELI-001**: Disponibilidad offline del 100% de la documentación y tablero interactivo mediante `data-fallback.js` sin requerir servidor HTTP ni sufrir bloqueos CORS.\r\n- **RNF-RELI-002**: Gestión adecuada del ciclo de vida en Three.js con limpieza completa de memoria (`mount`/`unmount`) al cambiar de pestaña para prevenir fugas de memoria.\r\n\r\n### Performance (Rendimiento)\r\n- **RNF-PERF-001**: Tiempo de carga inicial del tablero web inferior a 800ms en modo local.\r\n- **RNF-PERF-002**: Ejecución de la suite completa de pruebas unitarias en menos de 500ms.\r\n\r\n### Supportability (Mantenibilidad & Extensibilidad)\r\n- **RNF-SUPP-001**: Arquitectura modular Screaming Architecture en Vanilla JS sin dependencias de frameworks pesados de frontend (React, Vue, Angular) en tiempo de ejecución.\r\n- **RNF-SUPP-002**: Agnóstico al lenguaje: el arnés debe poder auditar e interactuar con proyectos en Node.js, .NET, Python, Go y Rust.\r\n\n\n",
     "MASTER-PROJECT-KNOWLEDGE.md": "---\nid: \"DOC-MASTER-KNOWLEDGE\"\ntitle: \"Dossier Maestro Consolidado de Ingeniería — AI Agentic SDD Engineering Harness\"\ncollection: \"general\"\nparent: null\nowner: \"leader\"\nmodule: \"global\"\nstatus: \"Publicado\"\nversion: \"4.2.0\"\naccess: \"public\"\nis_locked: false\nis_favorite: false\nfull_width: true\nlast_updated: \"2026-11-07\"\ntags: [\"master-dossier\",\"single-file-context\",\"sdd\",\"ieee-830\",\"c4-model\",\"uml\",\"ddd\"]\nlabels: [\"master-dossier\",\"single-file-context\",\"sdd\",\"ieee-830\",\"c4-model\",\"uml\",\"ddd\",\"general\"]\n---\n\n# Dossier Maestro Consolidado de Ingeniería Soberana (MASTER-PROJECT-KNOWLEDGE)\r\n\r\n> [!NOTE]\r\n> Documento unificado y autocontenido que consolida el 100% del conocimiento arquitectónico, de negocio, requerimientos, módulos y diagramas del **AI Agentic SDD Engineering Harness**. Diseñado para lectura continua, auditoría técnica integral e inyección en motores LLM de gran ventana de contexto (NotebookLM, Claude Projects, ChatGPT).\r\n\r\n---\r\n\r\n## Tabla de Contenidos\r\n\r\n1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)\r\n2. [Capítulo 2: Diagnóstico AS-IS de la Arquitectura, Flujos de Datos y Patrones](#capítulo-2-diagnóstico-as-is-de-la-arquitectura-flujos-de-datos-y-patrones)\r\n3. [Capítulo 3: Atlas Completo de Diagramas de Arquitectura (C4) y UML 2.5](#capítulo-3-atlas-completo-de-diagramas-de-arquitectura-c4-y-uml-25)\r\n4. [Capítulo 4: Inventario de Capacidades y Especificación Formal de Requisitos (SRS)](#capítulo-4-inventario-de-capacidades-y-especificación-formal-de-requisitos-srs)\r\n5. [Capítulo 5: Catálogo Ágil INVEST, Desglose SPIDR y Tareas de Ingeniería (TI-*)](#capítulo-5-catálogo-ágil-invest-desglose-spidr-y-tareas-de-ingeniería-ti-)\r\n6. [Capítulo 6: Diccionario de Datos, ERD Crow's Foot y Persistencia Híbrida](#capítulo-6-diccionario-de-datos-erd-crows-foot-y-persistencia-híbrida)\r\n7. [Capítulo 7: Catálogo Maestro de Reglas de Negocio (BR-*), ADRs y Servicios Externos](#capítulo-7-catálogo-maestro-de-reglas-de-negocio-br--adrs-y-servicios-externos)\r\n8. [Capítulo 8: Enciclopedia de Módulos & Bounded Contexts](#capítulo-8-enciclopedia-de-módulos--bounded-contexts)\r\n   - [8.1 Módulo: agent-orchestrator](#81-módulo-agent-orchestrator)\r\n   - [8.2 Módulo: dashboard-visualizer](#82-módulo-dashboard-visualizer)\r\n   - [8.3 Módulo: knowledge-engine](#83-módulo-knowledge-engine)\r\n   - [8.4 Módulo: testing-qa-suite](#84-módulo-testing-qa-suite)\r\n   - [8.5 Módulo: triple-sync-engine](#85-módulo-triple-sync-engine)\r\n9. [Capítulo 9: Estándares de Código, Guardrails Anti-Sesgo y Matriz de Trazabilidad (RTM)](#capítulo-9-estándares-de-código-guardrails-anti-sesgo-y-matriz-de-trazabilidad-rtm)\r\n\r\n---\r\n\r\n## Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)\r\n\r\n### 1.1 Declaración Formal de la Visión\r\n> **PARA** ingenieros de software, arquitectos de soluciones y equipos de desarrollo asistidos por IA,  \r\n> **QUIENES** experimentan alucinaciones, código desalineado con el dominio y regresiones al usar agentes de programación en bases de código medianas y complejas,  \r\n> **EL** AI Agentic SDD Engineering Harness,  \r\n> **QUE ES UN** arnés de ingeniería de software agnóstico basado en Docs-as-Code, orquestación multi-agente y verificación formal en 8 niveles,  \r\n> **QUE** garantiza una precisión funcional $\\ge 95\\%$ en el código generado por IA mediante un ciclo cerrado y determinista (Especificación EARS $\\to$ Puerta Humana $\\to$ Implementación TDD/SDD $\\to$ Revisión Imparcial $\\to$ Verificación Automatizada), triple sincronización de skills y tablero visual offline.\r\n\r\n### 1.2 Alcance del Sistema\r\n- **Qué HACE**: Orquesta 4 subagentes (`leader`, `spec-author`, `implementer`, `reviewer`), valida ramas git $\\le 80$ caracteres, impone pausas interactivas con `ask_question`, mantiene paridad triple en 18 skills, y provee un tablero interactivo offline-first con editor dual y verificación en 8 niveles.\r\n- **Qué NO HACE**: No sustituye el criterio de arquitectura humano, no realiza `git push` sin autorización, no edita código en fase de revisión y no acopla el código a un runtime particular.\r\n\r\n---\r\n\r\n## Capítulo 2: Diagnóstico AS-IS de la Arquitectura, Flujos de Datos y Patrones\r\n\r\n### 2.1 Screaming Architecture y Organización\r\nEl proyecto aplica el principio de **Screaming Architecture**:\r\n- La raíz separa claramente la orquestación (`.agents/`, `.opencode/`, `.github/`), la interfaz y documentación (`project-docs/`) y el arnés de verificación (`project-docs/verify.sh`).\r\n- El frontend en `project-docs/src/` está modularizado bajo Screaming Architecture orientada a dominios de negocio:\r\n  * `core/`: Núcleo reactivo Observer / Pub-Sub (`store.js`), Hash Router (`router.js`), `event-bus.js`, `api-client.js` y persistencia SQLite (`db.js`).\r\n  * `modules/`: Dominios de negocio puros (`Projects`, `Issues`, `Cycles`, `Pages`, `Harness`).\r\n  * `shared/`: Componentes UI y utilidades (`MasterLayout.js`, `PlaneSidebar.js`, `PlaneTopBar.js`, `Icons.js`, `renderList.js`).\r\n  * `data/`: Persistencia relacional SQLite WAL (`harness.db`) con sincronización dual bidireccional hacia Markdown en disco.\r\n- El build se empaqueta en un bundle universal IIFE (`dist/app.bundle.js`) compatible con ejecución offline (`file:///`) y servidor HTTP (`serve.js`).\r\n\r\n### 2.2 Patrones de Diseño Detectados\r\n1. **Reactive Store (Pub/Sub)**: `store.js` gestiona el estado y propaga cambios a la vista reactivamente.\r\n2. **Fallback Data Cache**: `api.js` y `data-fallback.js` garantizan funcionamiento offline en protocolo `file:///`.\r\n3. **Triple Mirror Sync**: `.opencode/skills/` funciona como fuente canónica y sincroniza unidireccionalmente a `.github/` y `.agents/`.\r\n4. **Dual Editor Mode**: `MarkdownViewer.js` soporta edición textual de Markdown y manipulación visual por bloques con scroll sincronizado.\r\n\r\n---\r\n\r\n## Capítulo 3: Atlas Completo de Diagramas de Arquitectura (C4) y UML 2.5\r\n\r\n### 3.1 Modelo C4 — Contexto de Sistema (C1)\r\n```mermaid\r\nflowchart TD\r\n  userDev[\"Desarrollador / Ingeniero de Software\"]\r\n  agentLeader[\"Agente Principal (Leader)\"]\r\n  harnessSystem[\"AI Agentic SDD Engineering Harness\"]\r\n  gitSystem[\"Control de Versiones (Git Local / GitHub)\"]\r\n  browserUser[\"Navegador Web (Dashboard / Tablero Visual)\"]\r\n\r\n  userDev -->|\"Define requerimientos y aprueba specs\"| harnessSystem\r\n  agentLeader -->|\"Orquesta tareas e invoca subagentes\"| harnessSystem\r\n  harnessSystem -->|\"Crea ramas INT-* y commits semánticos\"| gitSystem\r\n  harnessSystem -->|\"Genera y sincroniza datos en tiempo real\"| browserUser\r\n  browserUser -->|\"Permite lectura editorial y edición dual\"| userDev\r\n```\r\n\r\n### 3.2 Modelo C4 — Contenedores del Arnés (C2)\r\n```mermaid\r\nflowchart TD\r\n  subgraph HarnessContainers[\"Contenedores del Arnés SDD\"]\r\n    containerOrchestrator[\"Orquestador Multi-Agente<br/>(Leader, Spec, Impl, Review)\"]\r\n    containerTripleSync[\"Motor de Sincronización Triple<br/>(.opencode / .github / .agents)\"]\r\n    containerKnowledge[\"Motor de Base de Conocimiento<br/>(Docs-as-Code, C4, UML, BR-*)\"]\r\n    containerDashboard[\"Tablero de Seguimiento Interactivo<br/>(Tailwind v4, Three.js, Editor Dual)\"]\r\n    containerTestRunner[\"Suite de Pruebas Automatizadas<br/>(Node.js Test Runner, Playwright)\"]\r\n  end\r\n\r\n  gitRepo[\"Repositorio Git Local\"]\r\n  userView[\"Navegador (file:/// o HTTP)\"]\r\n\r\n  containerOrchestrator -->|\"Escribe specs y código\"| gitRepo\r\n  containerTripleSync -->|\"Mantiene paridad de 18 skills\"| containerOrchestrator\r\n  containerKnowledge -->|\"Alimenta contexto anti-sesgo\"| containerOrchestrator\r\n  containerDashboard -->|\"Lee metadatos de specs y progreso\"| gitRepo\r\n  containerDashboard -->|\"Renderiza vistas interactivas\"| userView\r\n  containerTestRunner -->|\"Verifica build, tests y convenciones\"| containerOrchestrator\r\n```\r\n\r\n### 3.3 Modelo C4 — Componentes del Tablero Web (C3)\r\n```mermaid\r\nflowchart LR\r\n  subgraph DashboardComponents[\"project-docs/src/\"]\r\n    compRouter[\"Enrutador por Pestañas (router.js)\"]\r\n    compStore[\"Store Reactivo Central (store.js)\"]\r\n    compDetector[\"Detector de Entorno & Agente (detector.js)\"]\r\n    compMarkdown[\"Lector Editorial & Parser Bloques (MarkdownViewer.js)\"]\r\n    compThree[\"Constelación 3D Piramidal (SpaceView3D.js)\"]\r\n    compMermaid[\"Visor & Editor Draw.io (MermaidViewer.js)\"]\r\n    compOmnibox[\"Buscador Global Ctrl+K (Omnibox Modal)\"]\r\n  end\r\n\r\n  compRouter --> compStore\r\n  compDetector --> compStore\r\n  compStore --> compMarkdown\r\n  compStore --> compThree\r\n  compStore --> compMermaid\r\n  compStore --> compOmnibox\r\n```\r\n\r\n---\r\n\r\n## Capítulo 4: Inventario de Capacidades y Especificación Formal de Requisitos (SRS)\r\n\r\n### Requerimientos Funcionales Nucleares\r\n- **RF-ORCH-001**: Creación y validación de ramas `{type}/INT-{id}/{name}` con longitud $\\le 80$ caracteres.\r\n- **RF-ORCH-002**: Puerta humana obligatoria con `ask_question` previa a la implementación.\r\n- **RF-ORCH-003**: Partición formal en subtareas Scrum Jira DEV/QA y captura automatizada de evidencias visuales en `project-docs/specs/{NNN}_{name}/evidence/`.\r\n- **RF-DASH-001**: Operación offline nativa en protocolo `file:///` con carga instantánea de fallback.\r\n- **RF-DASH-002**: Editor dual Markdown/Bloques con scroll sincronizado.\r\n- **RF-SYNC-001**: Sincronización unidireccional de 18 skills desde `.opencode/`.\r\n- **RF-TEST-001**: Verificación integral en 9 niveles mediante `project-docs/verify.sh`.\r\n\r\n---\r\n\r\n## Capítulo 5: Catálogo Ágil INVEST, Desglose SPIDR y Tareas de Ingeniería (TI-*)\r\n\r\n### Historias de Usuario Principales\r\n1. **HU-ORCH-01**: Gobernanza de ramas y puertas humanas (3 SP).\r\n   - `TI-ORCH-01`: Validador regex de nombres de rama y contador $\\le 80$c.\r\n   - `TI-ORCH-02`: Suite BVA de ramas límite en pruebas de caja negra.\r\n2. **HU-DASH-01**: Experiencia editorial y editor dual en el tablero (5 SP).\r\n   - `TI-DASH-01`: Parser bidireccional Markdown $\\leftrightarrow$ Bloques.\r\n   - `TI-DASH-02`: Detección de protocolo `file:///` en `api.js`.\r\n3. **HU-SYNC-01**: Homologación triple de skills (2 SP).\r\n   - `TI-SYNC-01`: Script verificador de paridad de frontmatter YAML.\r\n4. **HU-ORCH-02**: Desglose Scrum DEV/QA y captura automatizada de evidencias (5 SP).\r\n   - `TI-ORCH-03`: Implementar runner de capturas headless en `scripts/capture-evidence.js`.\r\n   - `TI-ORCH-04`: Integrar visualización de subtareas DEV/QA y visor de evidencias en `Modal.js`.\r\n   - `TI-ORCH-05`: Añadir pruebas E2E con Playwright en `tests/acceptance/scrum-evidence-capture.spec.js`.\r\n\r\n---\r\n\r\n## Capítulo 6: Diccionario de Datos, ERD Crow's Foot y Persistencia Híbrida\r\n\r\n### Diagrama Entidad-Relación Global\r\n```mermaid\r\nerDiagram\r\n  PROJECT ||--o{ FEATURE : \"contiene\"\r\n  PROJECT ||--|| PROJECT_SPEC : \"especificado por\"\r\n  FEATURE ||--|{ ACCEPTANCE_CRITERIA : \"valida con\"\r\n  FEATURE ||--o{ TASK : \"descompone en\"\r\n  FEATURE ||--o{ BUSINESS_RULE : \"satisface\"\r\n  KNOWLEDGE_INDEX ||--o{ DOCUMENT : \"cataloga\"\r\n  DOCUMENT ||--o{ SHELF : \"pertenece a\"\r\n  DOCUMENT ||--o{ BUSINESS_RULE : \"documenta\"\r\n\r\n  PROJECT {\r\n    string name PK\r\n    string version\r\n    string runtime\r\n  }\r\n\r\n  FEATURE {\r\n    int id PK\r\n    string type\r\n    string name\r\n    string branch\r\n    string status\r\n  }\r\n\r\n  BUSINESS_RULE {\r\n    string id PK\r\n    string module\r\n    string severity\r\n    string title\r\n  }\r\n\r\n  DOCUMENT {\r\n    string key PK\r\n    string title\r\n    string shelf\r\n    int wordCount\r\n  }\r\n```\r\n\r\n---\r\n\r\n## Capítulo 7: Catálogo Maestro de Reglas de Negocio (BR-*), ADRs y Servicios Externos\r\n\r\n### Invariantes Críticas\r\n- **BR-ORCH-001**: Ramas Git obligatoriamente `{feature|bugfix}/INT-{numero}/{nombre}` y longitud $\\le 80$ caracteres.\r\n- **BR-ORCH-002**: Prohibido implementar código sin aprobación del spec al 100% mediante `ask_question`.\r\n- **BR-ORCH-003**: El subagente `reviewer` audita de forma imparcial y no modifica código.\r\n- **BR-ORCH-004**: Toda User Story cerrada debe contar con subtareas Scrum DEV/QA completadas y al menos una captura de pantalla de evidencia.\r\n- **BR-SYNC-001**: `.opencode/skills/` es la única fuente de verdad; los demás son espejos.\r\n- **BR-KNOW-001**: Sintaxis Mermaid ultra-estricta (IDs alfanuméricos simples y textos entrecomillados).\r\n- **BR-KNOW-002**: Consulta obligatoria de `project-docs/knowledge/` antes de codificar.\r\n- **BR-DASH-001**: Compatibilidad offline nativa en protocolo `file:///`.\r\n- **BR-DASH-002**: Cero emojis en interfaz y código; solo iconos SVG de `Icons.js`.\r\n\r\n---\r\n\r\n## Capítulo 8: Enciclopedia de Módulos & Bounded Contexts\r\n\r\n### 8.1 Módulo: agent-orchestrator\r\n- **Propósito**: Orquestación multi-agente, validación de ramas git, gobernanza de puertas humanas y subtareas Scrum DEV/QA.\r\n- **Tareas Asociadas**: `INT-001` (Refactorización del arnés) e `INT-009` (Subtareas Scrum Jira DEV/QA y evidencias de prueba).\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.2 Módulo: dashboard-visualizer\r\n- **Propósito**: Tablero web interactivo, métricas KPI, editor dual ContextForge y soporte offline `file:///`.\r\n- **Tareas Asociadas**: `INT-004`, `INT-005`, `INT-006`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.3 Módulo: knowledge-engine\r\n- **Propósito**: Extracción, preservación y estandarización de la base de conocimiento Docs-as-Code.\r\n- **Tareas Asociadas**: `INT-003`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.4 Módulo: testing-qa-suite\r\n- **Propósito**: Automatización de pruebas en 9 fases, runner de `project-docs/verify.sh` y Playwright E2E.\r\n- **Tareas Asociadas**: `INT-007`, `INT-008`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n### 8.5 Módulo: triple-sync-engine\r\n- **Propósito**: Sincronización triple y paridad absoluta de 18 skills entre OpenCode, Copilot y Antigravity.\r\n- **Tareas Asociadas**: `INT-002`.\r\n- **Artefactos**: `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md`, `technical-debt-refactoring.md`.\r\n\r\n---\r\n\r\n## Capítulo 9: Estándares de Código, Guardrails Anti-Sesgo y Matriz de Trazabilidad (RTM)\r\n\r\n### 9.1 Guardrails Anti-Sesgo para IA\r\n- **Lista Blanca Autorizada**: Vanilla JS (ES Modules), Tailwind CSS v4 (`@tailwindcss/browser@4`), Three.js (r128), Node.js Test Runner nativo (`node:test`), Playwright (`@playwright/test`), esbuild.\r\n- **Lista Negra Terminantemente Prohibida**: Frameworks pesados no autorizados (React, Vue o Angular en `project-docs`), librerías de estilos adicionales, emojis unicode en código de producción o commits directos a ramas base sin confirmación.\r\n\r\n### 9.2 Matriz de Trazabilidad Bidireccional (RTM)\r\n| Requerimiento (`RF-*`) | Regla (`BR-*`) | Historia (`HU-*`) | Componente Implementado | Suite de Pruebas | Estado |\r\n|---|---|---|---|---|---|\r\n| `RF-ORCH-001` | `BR-ORCH-001` | `HU-ORCH-01` | `.opencode/rules/branches.md` | `tests/unit/branching-rules.test.js`, `tests/blackbox/bva-inputs.test.js` | Cubierto |\r\n| `RF-ORCH-002` | `BR-ORCH-002` | `HU-ORCH-01` | `.agents/rules/antigravity-harness.md` | Manual con `ask_question` | Cubierto |\r\n| `RF-ORCH-003` | `BR-ORCH-004` | `HU-ORCH-02` | `scripts/capture-evidence.js`, `Modal.js` | `tests/acceptance/scrum-evidence-capture.spec.js` | Cubierto |\r\n| `RF-DASH-001` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/core/api.js` | `tests/system/offline-fallback.test.js` | Cubierto |\r\n| `RF-DASH-002` | `BR-DASH-001` | `HU-DASH-01` | `project-docs/src/shared/MarkdownViewer.js` | `tests/acceptance/dual-editor.spec.js` | Cubierto |\r\n| `RF-DASH-003` | `BR-DASH-002` | `HU-DASH-01` | `project-docs/src/shared/Icons.js` | `tests/unit/ui-anti-emoji.test.js` | Cubierto |\r\n| `RF-SYNC-001` | `BR-SYNC-001` | `HU-SYNC-01` | `.agents/skills/sync-skills/` | `tests/whitebox/sync-pipeline.test.js` | Cubierto |\r\n| `RF-TEST-001` | `BR-TEST-001` | `HU-ORCH-01` | `project-docs/verify.sh` | Suite de 9 fases (16 unit, 12 wb, 8 bb, 7 sys, 1 load, 5 e2e, 10 acceptance) | Cubierto |\r\n\n\n",
@@ -3869,7 +3869,7 @@ window.__FALLBACK_DATA__ = {
     "owner_id": "user-leader",
     "organization_size": "10-50",
     "timezone": "America/Bogota",
-    "updated_at": "2026-11-09 06:01:16"
+    "updated_at": "2026-11-09 14:27:15"
   },
   "project": {
     "id": "proj-harness",
@@ -3891,7 +3891,7 @@ window.__FALLBACK_DATA__ = {
     "default_state_id": "state-backlog",
     "default_assignee_id": "user-leader",
     "project_lead_id": "user-leader",
-    "updated_at": "2026-11-09 06:01:16"
+    "updated_at": "2026-11-09 14:27:15"
   },
   "users": [
     {
@@ -4538,244 +4538,6 @@ window.__FALLBACK_DATA__ = {
       "archived_at": null,
       "created_at": "2026-11-09 01:34:02",
       "updated_at": "2026-11-09 01:34:02"
-    },
-    {
-      "id": "secops_mw8pd3n2",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8pd3n2",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 03:29:35",
-      "updated_at": "2026-11-09 03:29:35"
-    },
-    {
-      "id": "secops_mw8pfbop",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8pfbop",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 03:31:19",
-      "updated_at": "2026-11-09 03:31:19"
-    },
-    {
-      "id": "secops_mw8pk19s",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8pk19s",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 03:34:59",
-      "updated_at": "2026-11-09 03:34:59"
-    },
-    {
-      "id": "secops_mw8pnbni",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8pnbni",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 03:37:32",
-      "updated_at": "2026-11-09 03:37:32"
-    },
-    {
-      "id": "secops_mw8prith",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8prith",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 03:40:48",
-      "updated_at": "2026-11-09 03:40:48"
-    },
-    {
-      "id": "secops_mw8r57pd",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8r57pd",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 04:19:27",
-      "updated_at": "2026-11-09 04:19:27"
-    },
-    {
-      "id": "secops_mw8rpifi",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8rpifi",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 04:35:14",
-      "updated_at": "2026-11-09 04:35:14"
-    },
-    {
-      "id": "secops_mw8sao58",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8sao58",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 04:51:41",
-      "updated_at": "2026-11-09 04:51:41"
-    },
-    {
-      "id": "secops_mw8seban",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8seban",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 04:54:31",
-      "updated_at": "2026-11-09 04:54:31"
-    },
-    {
-      "id": "secops_mw8sn3u6",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8sn3u6",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:01:21",
-      "updated_at": "2026-11-09 05:01:21"
-    },
-    {
-      "id": "secops_mw8sp8dd",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8sp8dd",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:03:00",
-      "updated_at": "2026-11-09 05:03:00"
-    },
-    {
-      "id": "secops_mw8sr252",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8sr252",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:04:26",
-      "updated_at": "2026-11-09 05:04:26"
-    },
-    {
-      "id": "secops_mw8sudkn",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8sudkn",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:07:00",
-      "updated_at": "2026-11-09 05:07:00"
-    },
-    {
-      "id": "secops_mw8toxj1",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8toxj1",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:30:46",
-      "updated_at": "2026-11-09 05:30:46"
-    },
-    {
-      "id": "secops_mw8u5qw3",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8u5qw3",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:43:50",
-      "updated_at": "2026-11-09 05:43:50"
-    },
-    {
-      "id": "secops_mw8u9xi8",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8u9xi8",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:47:06",
-      "updated_at": "2026-11-09 05:47:06"
-    },
-    {
-      "id": "secops_mw8uoqjw",
-      "project_id": "proj-harness",
-      "workspace_id": "ws-harness",
-      "name": "SecOps mw8uoqjw",
-      "description": "Espacio de seguridad y auditoría",
-      "icon": "folder",
-      "color": "#6b7280",
-      "is_private": 0,
-      "sort_order": 1000,
-      "archived_at": null,
-      "created_at": "2026-11-09 05:58:36",
-      "updated_at": "2026-11-09 05:58:36"
     }
   ],
   "views": [
@@ -4835,7 +4597,7 @@ window.__FALLBACK_DATA__ = {
       "model": "gemini-2.5-pro",
       "category": "AI_ENGINE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-09 06:01:16"
+      "updated_at": "2026-11-09 14:27:15"
     },
     {
       "id": "aicfg-provider",
@@ -4846,7 +4608,7 @@ window.__FALLBACK_DATA__ = {
       "model": "gemini-2.5-pro",
       "category": "AI_ENGINE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-09 06:01:16"
+      "updated_at": "2026-11-09 14:27:15"
     },
     {
       "id": "aicfg-branching",
@@ -4857,7 +4619,7 @@ window.__FALLBACK_DATA__ = {
       "model": "git-guard",
       "category": "GOVERNANCE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-09 06:01:16"
+      "updated_at": "2026-11-09 14:27:15"
     },
     {
       "id": "aicfg-sync",
@@ -4868,7 +4630,7 @@ window.__FALLBACK_DATA__ = {
       "model": "sync-skills-v2",
       "category": "GOVERNANCE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-09 06:01:16"
+      "updated_at": "2026-11-09 14:27:15"
     },
     {
       "id": "aicfg-persistence",
@@ -4879,7 +4641,7 @@ window.__FALLBACK_DATA__ = {
       "model": "sqlite-3-wal",
       "category": "STORAGE",
       "is_encrypted": 0,
-      "updated_at": "2026-11-09 06:01:16"
+      "updated_at": "2026-11-09 14:27:15"
     }
   ],
   "aiRuns": [
@@ -5704,7 +5466,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"project-spec.yaml y project-spec.json representan fielmente el arnés de IA sin mocks e-commerce\",\"Los subagentes implementer y reviewer son agnósticos al stack y leen checks de compilación/tests\",\"package.json y suite de tests unitarios están configurados y pasando en verde\",\"El tablero project-docs/ sincroniza en tiempo real los datos reales en modo offline y HTTP\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Auditoría real del repositorio, saneamiento de mocks e-commerce residuales, desacoplamiento universal de subagentes y configuración de tests automatizados.",
@@ -5892,7 +5654,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"18 skills homologadas en .opencode/skills/ replicadas exactamente a .github/ y .agents/\",\"Frontmatter name y description idénticos en los 3 espejos\",\"Skill sync-skills disponible para auditoría de discrepancias\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Mecanismo de replicación y paridad entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/.",
@@ -6079,7 +5841,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Escaneo de topología en Fase 1 sin saturación de tokens\",\"Documentación profunda por módulo en Fase 2\",\"Catálogo de reglas de negocio BR-* e invariantes de dominio indexadas\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Protocolo de elicitación profunda en 2 fases con C4, UML, ERD, diccionario de datos, reglas BR-* y ADRs.",
@@ -6266,7 +6028,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Biblioteca organizada por estantes temáticos con tarjeta Hero destacada\",\"Lector de artículos con ancho centrado a 780px e interlineado 1.75em\",\"Editor dual ContextForge con soporte de bloques visuales y scroll sincronizado proporcional\",\"Erradicacion 100% de emojis con iconografia SVG accesible y suite ATDD en verde\",\"Seccion de Stack Tecnologico compacta y estructurada en tabla tecnica\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Interfaz visual con Tailwind CSS v4, iconografia SVG accesible (0 emojis), tabla tecnica de stack, columna de lectura 780px, scrollspy TOC y editor dual Markdown/Bloques.",
@@ -6462,7 +6224,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"4 niveles piramidales Y=+165 (Ápice), Y=+55 (Core), Y=-55 (Features), Y=-165 (Base)\",\"Distribución radial armónica para evitar colisión de etiquetas\",\"Curvas cuadráticas de Bezier y ciclo de vida mount/unmount sin memory leaks\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Visualización 3D espacial estructurada en 4 niveles arquitectónicos con anillos translúcidos y flujo de energía Bezier.",
@@ -6656,7 +6418,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Apertura inmediata con Ctrl+K o Cmd+K desde cualquier sección\",\"Indexación simultánea de tareas, documentos, reglas BR-* y bounded contexts\",\"Navegación fluida por teclado (Up, Down, Enter, Escape)\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Buscador omnibox modal (Ctrl+K / Cmd+K) con filtrado reactivo de tareas, documentos, reglas y módulos.",
@@ -6850,7 +6612,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Suite de tests unitarios nativos ejecutables con npm test\",\"Cobertura de parser de markdown, parseMarkdownToBlocks y blocksToMarkdown\",\"Validación de cálculo de tiempos de lectura y clasificación en estantes\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Pruebas automatizadas con Node.js Test Runner para sync-data.js, serializadores de markdown, TOC y reglas de branching.",
@@ -7037,7 +6799,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Script de prueba automatizada verificando carga de index.html\",\"Verificación de renderizado de la constelación 3D y conmutación de pestañas\",\"Prueba de edición y persistencia en el editor dual\"]",
       "evidence_summary": "Implementación y verificación completadas conforme a los criterios de aceptación.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Automatización integral de pruebas E2E, caja blanca y caja negra para validar el tablero, constelación 3D y editor dual.",
@@ -7224,7 +6986,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Los specs incorporan estructura Scrum con User Story (Como/Quiero/Para), DoR y DoD\",\"Cada tarea principal desglosa una Subtarea de Desarrollo (DEV) y una Subtarea de QA estilo Jira\",\"Al cerrar la tarea se documenta en el spec y en JSON qué se hizo, qué pruebas se realizaron y capturas de pantalla\",\"Toda la persistencia se realiza 100% en JSON sin bases de datos SQL\",\"El tablero interactivo muestra las subtareas DEV/QA y la galería de capturas de pantalla\"]",
       "evidence_summary": "Implementación completa del modelo de datos Scrum, subtareas Jira DEV/QA, modal interactivo con DoD y galería visual de screenshots.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Estandarización de especificaciones con User Stories Scrum (Como/Quiero/Para), desglose formal de subtareas de Desarrollo (DEV) y de QA estilo Jira, y protocolo de cierre con evidencias técnicas y capturas de pantalla integradas en JSON.",
@@ -7413,7 +7175,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La raíz del repositorio solo contiene los 4 directorios canónicos (.agents/, .github/, .opencode/, project-docs/) y los archivos canónicos mínimos indispensables (AGENTS.md, opencode.json, project-spec.yaml, verify.sh, README.md, .gitignore)\",\"Las dependencias y tooling de Node/npm (package.json, package-lock.json, node_modules/, playwright.config.js) están encapsulados dentro de project-docs/ sin colisionar con el proyecto anfitrión\",\"Las suites de pruebas internas del arnés y tablero están reubicadas dentro de project-docs/tests/ sin contaminar los tests del proyecto cliente\",\"Los scripts de soporte y captura de evidencias residen en project-docs/scripts/capture-evidence.js\",\"El archivo kickstart.json de plantilla reside dentro de project-docs/kickstart.json\",\"ANTIGRAVITY.md está unificado y referenciado limpiamente desde .agents/ y AGENTS.md\",\"verify.sh y los comandos de npm funcionan de forma transparente delegando en project-docs/ (ej. npm --prefix project-docs ...)\",\"El 100% de las suites de prueba (unit, whitebox, blackbox, system, load, Playwright E2E) siguen pasando en verde con las nuevas rutas\",\"El tablero interactivo project-docs/ mantiene sincronización offline y visualización intacta sin errores de carga\"]",
       "evidence_summary": "Encapsulamiento exitoso de package.json, package-lock.json, playwright.config.js, node_modules, tests/ y scripts/ dentro de project-docs/. Reubicación de ANTIGRAVITY.md a .agents/ANTIGRAVITY.md y kickstart.json a project-docs/kickstart.json. verify.sh actualizado con delegación transparente via npm --prefix project-docs. Raíz 100% limpia para adopción externa.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Reorganizar la arquitectura de archivos del arnés para que la raíz contenga exclusivamente los archivos y carpetas indispensables de adopción (.agents/, .github/, .opencode/, project-docs/, AGENTS.md, opencode.json, project-spec.yaml, verify.sh), encapsulando el tooling npm, scripts, suites de prueba y specs dentro de project-docs/ para prevenir cualquier colisión al copiar y pegar el arnés en proyectos externos (.NET, Python, Java, Go, etc.).",
@@ -7606,7 +7368,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"La carpeta specs/ reside exclusivamente dentro de project-docs/specs/\",\"El archivo project-spec.yaml reside en project-docs/project-spec.yaml\",\"El script verify.sh reside en project-docs/verify.sh y es ejecutable desde cualquier ubicación\",\"La raíz del repositorio solo contiene 4 carpetas (.agents, .github, .opencode, project-docs) y 4 archivos (AGENTS.md, opencode.json, README.md, .gitignore)\",\"Los 4 agentes de Google Antigravity (.agents/agents/) crean y consultan specs en project-docs/specs/ y config en project-docs/\",\"Las skills en .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/ están 100% sincronizadas y operan con las nuevas rutas en project-docs/\",\"El 100% de la suite de pruebas (unit, whitebox, blackbox, system, load, Playwright E2E) pasa en verde\",\"El script project-docs/verify.sh completa los 9 pasos de verificación con exit code 0\"]",
       "evidence_summary": "Reubicación de specs/, verify.sh y project-spec.yaml a project-docs/. Actualización de los 4 agentes en .agents/agents/ y de las 16 skills en .opencode/skills/ con propagación 100% a .github/skills/ y .agents/skills/. Raíz 100% pura con solo 4 carpetas y 4 archivos.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Reubicar specs/, verify.sh y project-spec.yaml dentro de project-docs/ para dejar la raíz con exclusivamente 4 carpetas (.agents/, .github/, .opencode/, project-docs/) y 4 archivos indispensables (AGENTS.md, opencode.json, README.md, .gitignore). Actualizar exhaustivamente todos los agentes y skills de Antigravity, Copilot y OpenCode para crear y consumir archivos en las nuevas rutas.",
@@ -7798,7 +7560,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Motor de datos relacional SQLite (node:sqlite) operativo en project-docs/data/harness.db con tablas para workspaces, projects, states, cycles, modules, issues, subtasks y pages.\",\"Sincronizacion bidireccional automatica: lectura y escritura en SQLite manteniendo copias sincronizadas en archivos .md y .json para consumo nativo por los agentes de IA.\",\"Interfaz y UX inspirada en Plane con estetica profesional dark/light theme, barra lateral colapsable, switcher de proyectos y Command Palette (Ctrl+K).\",\"Multi-vista completa para Issues/Tareas: Vista de Lista (List View), Tablero Kanban (Board View agrupado por Estado o Prioridad), Vista Temporal (Calendar/Gantt) y Vista de Hoja de Calculo (Spreadsheet Table).\",\"Gestion de Ciclos (Sprints) con metricas de burn-down, porcentaje de completitud y estado de tiempo.\",\"Gestion de Modulos (Epics/Bounded Contexts) agrupando historias y tareas con progreso acumulado.\",\"Integracion de Paginas / Docs (Knowledge Base) estilo Plane Pages, con editor dual y vinculacion bidireccional con tareas y reglas de negocio.\",\"Filtros rapidos, agrupacion (Group by State, Priority, Assignee) y ordenacion fluida sin recargas de pagina.\",\"Soporte offline y persistencia tanto en modo servidor (Node.js REST API con SQLite) como en modo offline (fallback sync a JSON/localStorage).\",\"Zero emojis en toda la interfaz, codigo fuente y pruebas; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Implementacion completa de la arquitectura y UX inspirada en Makeplane: motor SQLite con node:sqlite nativo en project-docs/data/harness.db con espejo continuo a archivos Markdown y JSON; endpoints REST en serve.js; vistas de Lista, Kanban, Calendario y Hoja de calculo; gestion de Ciclos con burn-down SVG; Modulos/Epics; y Plane Pages.",
       "created_at": "2026-11-07 15:48:41",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Replicacion y adaptacion de la arquitectura, UX y vistas de Makeplane (Plane) para el tablero de seguimiento: Work items con vistas de Lista, Tablero Kanban interactivo, Vista de Calendario/Gantt y Hoja de calculo; gestion de Ciclos (Sprints) y Modulos (Epics); motor de base de datos relacional SQLite (via node:sqlite nativo en Node.js 24) en project-docs/data/harness.db con sincronizacion bidireccional continua hacia archivos .md y .json para que los agentes de IA lean y escriban en su formato nativo optimo.",
@@ -8023,7 +7785,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/features/: carpetas por dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) con estructura interna coherente (components/, views/, helpers/).\",\"Bucles de renderizado funcional en componentes Vanilla JS con composicion modular limpia estilo componentes repetitivos de React.\",\"Unificacion total del diseno en una sola voz y experiencia UI/UX inspirada en Plane (sustituyendo el layout clasico legacy como vista primaria) con navegacion fluida por barra lateral y atajos.\",\"Integracion completa de todas las capacidades previas (C4 diagrams, grafo y arbol de dependencias, constelacion 3D Three.js, base de conocimiento editorial) como vistas nativas dentro de Plane.\",\"Mejora en graficos vectoriales interactivos: burn-down dinamico, diagramas Mermaid reactivos y visualizacion 3D.\",\"Herramienta CLI unificada (project-docs/cli.js) para que los agentes de IA, skills y desarrolladores consulten y manipulen tareas, ciclos, modulos y paginas desde consola o chat sin friccion.\",\"Persistencia relacional continua en SQLite (harness.db) con espejo sincronizado automatico en archivos .md y .json.\",\"Zero emojis en todo el codigo fuente, componentes UI, tests y documentacion; 100% de la suite de pruebas pasando en verde sin regresiones.\"]",
       "evidence_summary": "Refactorizacion arquitectonica integral bajo Screaming Architecture: pureza de 9 dominios en src/features/, helper declarativo renderList para componentes repetitivos en Vanilla JS, unificacion en una sola voz UX estilo Plane eliminando el layout legacy, CLI soberana node project-docs/cli.js para IA y terminal conectada a SQLite y disco, y 100% de tests en verde.",
       "created_at": "2026-11-07 16:47:57",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Refactorizacion arquitectonica integral del frontend bajo Screaming Architecture: cada dominio de negocio (issues, cycles, modules, pages, architecture, graph, constellation, analytics) encapsula sus propios componentes, vistas y helpers con bucles funcionales de renderizado (estilo React en Vanilla JS). Unificacion total del tablero en una experiencia unica inspirada en Plane sin depender del tablero clasico, diseno UI/UX y graficos mejorados (burn-down, C4, constelacion 3D), y CLI soberana ('node project-docs/cli.js') para manipulacion y consulta directa de tareas y base de conocimiento por agentes de IA, skills y terminal.",
@@ -8222,7 +7984,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Screaming Architecture pura en project-docs/src/modules/ con dominios Projects, Issues, Cycles, Pages y Harness encapsulados con components/, pages/, services/, store/ y barriles index.js.\",\"Nucleo transversal reactivo en project-docs/src/core/ con Store Observer Pub-Sub, Router hash con soporte de query parameters, EventBus desacoplado y ApiClient con fallback offline.\",\"Capa compartida agnostica en project-docs/src/shared/ con 40+ iconos vectoriales 100% SVG nativos, utilidades funcionales renderList y shell MasterLayout unificado.\",\"Persistencia dual determinista con SQLite WAL (project-docs/data/harness.db) y espejo continuo en archivos Markdown en disco para agentes y CLI.\",\"Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright, tests de whitebox, blackbox, sistema y carga pasando al 100% en verde.\",\"Zero emojis en codigo fuente, interfaces y documentacion, con cumplimiento de limite de 80 caracteres en ramas y pureza estricta en la raiz del proyecto.\"]",
       "evidence_summary": "Implementacion modular integral bajo Screaming Architecture: nucleo reactivo Observer Pub-Sub en src/core/, iconos 100% SVG nativos y renderList en src/shared/, y 5 dominios de negocio autosuficientes en src/modules/ (Projects, Issues, Cycles, Pages, Harness) con soporte dual SQLite/Markdown y 100% de tests en verde.",
       "created_at": "2026-11-07 18:35:47",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Reestructuracion modular estricta orientada a dominios de negocio bajo Screaming Architecture pura: src/modules/ (Projects, Issues, Cycles, Pages, Harness), src/core/ (Store Observer Pub-Sub, Router hash con URL params, EventBus, ApiClient, persistencia SQLite WAL) y src/shared/ (Icons 100% SVG nativo, renderList funcional, MasterLayout, Sidebar, TopBar, Omnibox). Soporte para persistencia dual (SQLite + Markdown), cero emojis, arquitectura desacoplada para agentes y skills, y cobertura completa en 9 niveles de verificacion.",
@@ -8419,7 +8181,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Eliminacion fisica completa de project-docs/src/features/ sin directorios residuales.\",\"Consolidacion estricta de 10 modulos en project-docs/src/modules/ con components/, pages/, services/, store/ y barriles index.js.\",\"Punto de entrada src/main.js consumiendo exclusivamente src/modules/ y src/shared/ui/.\",\"Diseno visual coherente estilo Plane en todas las vistas con paleta dark slate y 0 emojis.\",\"Suite completa de 66 pruebas unitarias, 14 pruebas de aceptacion Playwright y los 9 niveles de verify.sh en verde.\"]",
       "evidence_summary": "Eliminacion definitiva de src/features/, consolidacion en 10 modulos canonicos en src/modules/ con diseno Plane y 100% de tests en verde.",
       "created_at": "2026-11-07 18:59:13",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Erradicacion definitiva de la carpeta legacy project-docs/src/features/ y consolidacion de los 10 dominios canonicos bajo Screaming Architecture pura en project-docs/src/modules/ (Analytics, Architecture, Constellation, Cycles, Graph, Harness, Issues, Modules, Pages, Projects). Diseno uniforme estilo Plane con paleta dark slate, cero emojis, iconografia 100% SVG nativa y 100% de verificacion en verde.",
@@ -8615,7 +8377,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"26 tablas relacionales del modelo Plane e IA operativas en project-docs/data/harness.db con integridad referencial y migracion automatica.\",\"Sincronizacion bidireccional de ejecuciones IA (ai_runs) hacia project-docs/knowledge/ai-runs-log.md y de evidencias/relaciones hacia feature_list.json.\",\"CLI soberana (project-docs/cli.js) y API REST (project-docs/serve.js) soportando registro de ai log, issue evidence, issue comment, issue relate, page upsert y user list.\",\"Visualizacion de etiquetas Plane, puntos Fibonacci, relaciones, evidencias QA, ai_configs, api_tokens bot y bitacora ai_runs en IssueDetailModal y HarnessPage.\",\"21 skills SDD homologadas en .opencode/skills/, .github/skills/ y .agents/skills/ configuradas para enviar toda documentacion, evidencia y reporte al proyecto.\"]",
       "evidence_summary": "Implementado el modelo de datos completo de Plane (26 tablas en SQLite WAL) incluyendo agentes bot (is_bot=1), tokens API, ai_configs, ai_runs, evidencias QA, comentarios, actividades, relaciones, etiquetas, puntos Fibonacci y versiones de paginas; espejo automatico en knowledge/ai-runs-log.md; CLI y API ampliadas; y 21 skills SDD conectadas.",
       "created_at": "2026-11-07 19:36:23",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Implementacion integral del modelo de datos relacional de Makeplane (Plane) y su subsistema de Inteligencia Artificial en SQLite (project-docs/data/harness.db con 26 tablas: workspaces, users con is_bot=1, workspace_members, api_tokens, projects, states, labels, estimates, estimate_points, issue_types, cycles, cycle_issues, modules, module_issues, issues, subtasks, issue_assignees, issue_labels, issue_relations, issue_activities, issue_comments, issue_evidences, pages, page_versions, issue_views, ai_configs, ai_runs) sincronizado bidireccionalmente con archivos Markdown (knowledge/ai-runs-log.md, specs/, feature_list.json). Ampliacion de CLI, API REST, vistas Screaming (IssueDetailModal, AiEngineMonitor en HarnessPage) y homologacion de las 21 skills SDD para enviar toda informacion, evidencia y reporte al proyecto.",
@@ -8939,7 +8701,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"28 tablas relacionales operativas en project-docs/data/harness.db incluyendo page_logs y page_labels.\",\"PageShelfTree.js con pestañas de filtro rapido (Todas, Favoritas, Normativas, Por Modulo) e iconos SVG de bloqueo, favorito y conteo de diagramas.\",\"PageHeaderActions con badge SQLite + .md Synced, botones interactivos de Favorito, Bloqueo Normativo, Ancho Completo, Copiar Markdown, Ask Harness AI y toggle de inspector.\",\"PageNavigationPane.js con las 4 pestañas de Plane (Outline, Info con 4 KPI cards y PageLog Graph, Assets con diagramas Mermaid, Historial con restauracion de page_versions).\",\"PageReader.js con Smart Entity Chips que convierten menciones INT-XXX en chips interactivos que abren IssueDetailModal y BR/RF/ADR/CAP en insignias tecnicas.\",\"Skill /project-knowledge actualizada y sincronizada en triple espejo (.opencode/skills/, .github/skills/, .agents/skills/).\"]",
       "evidence_summary": "Implementada la evolucion de la Base de Conocimiento al patron Plane Pages: 28 tablas en SQLite (page_logs, page_labels y telemetria en pages), PageShelfTree con 4 filtros rapidos, PageHeaderActions con Ask Harness AI, PageNavigationPane de 4 pestañas (Outline, Info, Assets, Historial), Smart Entity Chips en PageReader y actualizacion triple de la skill /project-knowledge.",
       "created_at": "2026-11-07 20:17:23",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Extension relacional en SQLite a 28 tablas con page_logs (menciones automaticas a INT-XXX, BR-XXX, RF-XXX, ADR-XXX, CAP-XXX, back_link y forward_link), page_labels y telemetria documental (word_count, char_count, paragraph_count, diagrams_count, is_locked, is_favorite, view_props). Rediseño de PageShelfTree (filtros Todas, Favoritas, Normativas, Por Modulo), PageHeaderActions (Ask Harness AI, Lock, Favorite, Full Width, Sync Badge), PageNavigationPane (4 pestañas: Outline, Info, Assets, Historial) y PageReader (Smart Entity Chips clicables), junto con la evolucion de la skill /project-knowledge.",
@@ -9242,7 +9004,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"El menu lateral principal muestra Library e incluye la seccion Favorites con acceso directo a paginas favoritas.\",\"KnowledgeBase.js utiliza la paleta oscura bg-zinc-950 y filas compactas inspiradas en Plane.\"]",
       "evidence_summary": "Sidebar actualizado a Library con seccion Favorites y rediseño de KnowledgeBase.js en filas compactas.",
       "created_at": "2026-11-07 21:50:48",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Renombrado del menu lateral de Pages a Library con seccion dinamica Favorites en Sidebar.js y rediseño inicial de KnowledgeBase.js al formato de listas compactas y oscuras de Plane.",
@@ -9444,7 +9206,7 @@ window.__FALLBACK_DATA__ = {
       "acceptance_criteria": "[\"Reglas de negocio BR-PAGE-01 a BR-PAGE-06 implementadas en sqlite-sync.js, serve.js, cli.js, page.service.js, page.store.js y main.js.\",\"Barra de navegacion de Library con pestañas Public, Private y Archived, selector OrderBy (Date modified, Date created, Name asc/desc), popover Filters y barra PageAppliedFiltersList.\",\"Filas de pagina (PageListBlock) con BlockItemAction en hover (Visibilidad Globe/Lock, Lock/Unlock, Avatar de Agente Bot, Favorite Star y menu contextual '...' con Open, Copy markdown, Copy link, Make a copy, Lock/Unlock, Make public/private, Export y Archive/Restore).\",\"Banner interactivo de proteccion Lock/Archive (#article-status-banner) y lienzo centrado de 720px (o 1152px en Full Width) con barras flotantes de Outline cuando el panel derecho se oculta.\",\"Skill /project-knowledge actualizada y sincronizada en triple espejo (.opencode/skills/, .github/skills/, .agents/skills/) organizando los documentos generados bajo el modelo Public/Private/Locked/Favorite de Plane Library.\"]",
       "evidence_summary": "Implementadas las 6 reglas de negocio de Plane Library (BR-PAGE-01..06), los flujos de visibilidad Public/Private/Archived, duplicacion de paginas, ordenamiento y filtros avanzados, menu contextual por fila, modal de exportacion, banner de bloqueo/archivo y actualizacion de la skill /project-knowledge.",
       "created_at": "2026-11-07 21:50:48",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "workspace_id": "ws-harness",
       "description_html": "",
       "description_stripped": "Implementacion integral de las reglas de negocio de Plane Library (base-page.ts y project-page.store.ts): BR-PAGE-01 (Untitled fallback), BR-PAGE-02 (Lock & Archive read-only guard con banner interactivo), BR-PAGE-03 (auto-unfavorite al archivar pagina), BR-PAGE-04 (bloqueo de cambio de visibilidad Public/Private en paginas archivadas), BR-PAGE-05 (Make a copy / duplicacion de pagina en SQLite y disco .md) y BR-PAGE-06 (motor de filtrado por pestañas Public, Private y Archived, ordenamiento por Date modified, Date created y Name en asc/desc, popover de filtros Favorites/Locked/Created by y barra de chips PageAppliedFiltersList). Rediseño de las filas de Library con BlockItemAction y menu contextual (...), ExportPageModal y actualizacion de la skill /project-knowledge.",
@@ -9676,7 +9438,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 4,
       "reading_time_min": 10,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -9708,7 +9470,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -9719,7 +9481,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
               "owned_by_role": "leader",
               "word_count": 393,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -9977,7 +9739,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 4,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -9988,7 +9750,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 659,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -10027,7 +9789,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 1997,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10419,7 +10181,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 8,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -10430,7 +10192,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
           "owned_by_role": "leader",
           "word_count": 1550,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -10483,7 +10245,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 4,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 3,
       "children": [
         {
@@ -10502,7 +10264,7 @@ window.__FALLBACK_DATA__ = {
           "title": "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones",
           "summary": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
           "shelf": "architecture",
-          "content_markdown": "# Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\r\n\r\n> [!NOTE]\r\n> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.\r\n\r\n---\r\n\r\n## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)\r\n\r\n### 1.1 Organización por Screaming Architecture\r\nEl repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:\r\n\r\n```text\r\nharness_anginnering/\r\n├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)\r\n├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)\r\n├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)\r\n├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code\r\n│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)\r\n│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)\r\n│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)\r\n│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)\r\n│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás\r\n│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)\r\n│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)\r\n│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias\r\n│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)\r\n└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)\r\n```\r\n\r\n### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)\r\n- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.\r\n- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.\r\n\r\n---\r\n\r\n## 2. Catálogo Forense de Patrones de Diseño Detectados\r\n\r\n| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |\r\n|---|---|---|---|\r\n| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |\r\n| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |\r\n| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |\r\n| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |\r\n| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |\r\n| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |\r\n| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |\r\n\r\n---\r\n\r\n## 3. Flujos de Datos Extremo a Extremo (Data Flows)\r\n\r\n### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero\r\n```text\r\n1. Agente o Desarrollador modifica specs, reglas o feature_list.json\r\n2. Ejecución de `node project-docs/sync-data.js`\r\n3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid\r\n4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`\r\n5. Al abrir `index.html`:\r\n   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON\r\n   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red\r\n6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas\r\n```\r\n\r\n### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente\r\n```text\r\n1. Usuario solicita nueva feature o bugfix\r\n2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)\r\n3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md\r\n4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%\r\n5. Subagente `implementer` escribe código de producción y tests automatizados\r\n6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)\r\n7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base\r\n```\n\n### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)\nEn `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:\n- **Conteo de Palabras**: `words = text.trim().split(/\\s+/).filter(Boolean).length`.\n- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).\n- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\\n\\s*\\n/).filter(Boolean).length`.\n",
+          "content_markdown": "# Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\r\n\r\n> [!NOTE]\r\n> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.\r\n\r\n---\r\n\r\n## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)\r\n\r\n### 1.1 Organización por Screaming Architecture\r\nEl repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:\r\n\r\n```text\r\nharness_anginnering/\r\n├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)\r\n├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)\r\n├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)\r\n├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code\r\n│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)\r\n│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)\r\n│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)\r\n│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)\r\n│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás\r\n│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)\r\n│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)\r\n│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias\r\n│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)\r\n└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)\r\n```\r\n\r\n### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)\r\n- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.\r\n- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.\r\n\r\n---\r\n\r\n## 2. Catálogo Forense de Patrones de Diseño Detectados\r\n\r\n| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |\r\n|---|---|---|---|\r\n| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |\r\n| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |\r\n| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |\r\n| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |\r\n| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |\r\n| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |\r\n| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |\r\n\r\n---\r\n\r\n## 3. Flujos de Datos Extremo a Extremo (Data Flows)\r\n\r\n### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero\r\n```text\r\n1. Agente o Desarrollador modifica specs, reglas o feature_list.json\r\n2. Ejecución de `node project-docs/sync-data.js`\r\n3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid\r\n4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`\r\n5. Al abrir `index.html`:\r\n   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON\r\n   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red\r\n6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas\r\n```\r\n\r\n### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente\r\n```text\r\n1. Usuario solicita nueva feature o bugfix\r\n2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)\r\n3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md\r\n4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%\r\n5. Subagente `implementer` escribe código de producción y tests automatizados\r\n6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)\r\n7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base\r\n```\r\n\r\n### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)\r\nEn `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:\r\n- **Conteo de Palabras**: `words = text.trim().split(/\\s+/).filter(Boolean).length`.\r\n- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).\r\n- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\\n\\s*\\n/).filter(Boolean).length`.\r\n",
           "access": 0,
           "is_locked": 0,
           "is_favorite": 0,
@@ -10510,12 +10272,12 @@ window.__FALLBACK_DATA__ = {
           "view_props": "{\"full_width\":false,\"assets\":[]}",
           "logo_props": "{\"in_use\":\"icon\",\"icon\":{\"name\":\"file-text\",\"color\":\"#6366f1\"}}",
           "word_count": 874,
-          "char_count": 6945,
+          "char_count": 6970,
           "paragraph_count": 5,
           "diagrams_count": 0,
           "reading_time_min": 5,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -10526,7 +10288,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
               "owned_by_role": "leader",
               "word_count": 874,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -10585,7 +10347,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -10596,7 +10358,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
               "owned_by_role": "leader",
               "word_count": 281,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -10955,7 +10717,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 4,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -10966,7 +10728,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
               "owned_by_role": "leader",
               "word_count": 546,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -11034,7 +10796,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
           "owned_by_role": "leader",
           "word_count": 433,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11109,7 +10871,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11120,7 +10882,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 301,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11179,7 +10941,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11190,7 +10952,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 336,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11249,7 +11011,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11260,7 +11022,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 144,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11326,7 +11088,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11337,7 +11099,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 179,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11396,7 +11158,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11407,7 +11169,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```",
           "owned_by_role": "spec-author",
           "word_count": 385,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11490,7 +11252,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 5,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11501,7 +11263,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "spec-author",
           "word_count": 826,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11579,7 +11341,7 @@ window.__FALLBACK_DATA__ = {
       "title": "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones",
       "summary": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
       "shelf": "architecture",
-      "content_markdown": "# Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\r\n\r\n> [!NOTE]\r\n> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.\r\n\r\n---\r\n\r\n## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)\r\n\r\n### 1.1 Organización por Screaming Architecture\r\nEl repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:\r\n\r\n```text\r\nharness_anginnering/\r\n├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)\r\n├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)\r\n├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)\r\n├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code\r\n│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)\r\n│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)\r\n│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)\r\n│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)\r\n│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás\r\n│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)\r\n│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)\r\n│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias\r\n│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)\r\n└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)\r\n```\r\n\r\n### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)\r\n- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.\r\n- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.\r\n\r\n---\r\n\r\n## 2. Catálogo Forense de Patrones de Diseño Detectados\r\n\r\n| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |\r\n|---|---|---|---|\r\n| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |\r\n| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |\r\n| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |\r\n| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |\r\n| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |\r\n| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |\r\n| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |\r\n\r\n---\r\n\r\n## 3. Flujos de Datos Extremo a Extremo (Data Flows)\r\n\r\n### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero\r\n```text\r\n1. Agente o Desarrollador modifica specs, reglas o feature_list.json\r\n2. Ejecución de `node project-docs/sync-data.js`\r\n3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid\r\n4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`\r\n5. Al abrir `index.html`:\r\n   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON\r\n   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red\r\n6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas\r\n```\r\n\r\n### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente\r\n```text\r\n1. Usuario solicita nueva feature o bugfix\r\n2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)\r\n3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md\r\n4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%\r\n5. Subagente `implementer` escribe código de producción y tests automatizados\r\n6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)\r\n7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base\r\n```\n\n### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)\nEn `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:\n- **Conteo de Palabras**: `words = text.trim().split(/\\s+/).filter(Boolean).length`.\n- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).\n- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\\n\\s*\\n/).filter(Boolean).length`.\n",
+      "content_markdown": "# Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones\r\n\r\n> [!NOTE]\r\n> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.\r\n\r\n---\r\n\r\n## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)\r\n\r\n### 1.1 Organización por Screaming Architecture\r\nEl repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:\r\n\r\n```text\r\nharness_anginnering/\r\n├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)\r\n├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)\r\n├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)\r\n├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code\r\n│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)\r\n│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)\r\n│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)\r\n│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)\r\n│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás\r\n│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)\r\n│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)\r\n│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias\r\n│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)\r\n└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)\r\n```\r\n\r\n### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)\r\n- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.\r\n- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.\r\n\r\n---\r\n\r\n## 2. Catálogo Forense de Patrones de Diseño Detectados\r\n\r\n| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |\r\n|---|---|---|---|\r\n| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |\r\n| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |\r\n| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |\r\n| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |\r\n| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |\r\n| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |\r\n| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |\r\n\r\n---\r\n\r\n## 3. Flujos de Datos Extremo a Extremo (Data Flows)\r\n\r\n### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero\r\n```text\r\n1. Agente o Desarrollador modifica specs, reglas o feature_list.json\r\n2. Ejecución de `node project-docs/sync-data.js`\r\n3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid\r\n4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`\r\n5. Al abrir `index.html`:\r\n   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON\r\n   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red\r\n6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas\r\n```\r\n\r\n### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente\r\n```text\r\n1. Usuario solicita nueva feature o bugfix\r\n2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)\r\n3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md\r\n4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%\r\n5. Subagente `implementer` escribe código de producción y tests automatizados\r\n6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)\r\n7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base\r\n```\r\n\r\n### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)\r\nEn `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:\r\n- **Conteo de Palabras**: `words = text.trim().split(/\\s+/).filter(Boolean).length`.\r\n- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).\r\n- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\\n\\s*\\n/).filter(Boolean).length`.\r\n",
       "access": 0,
       "is_locked": 0,
       "is_favorite": 0,
@@ -11587,12 +11349,12 @@ window.__FALLBACK_DATA__ = {
       "view_props": "{\"full_width\":false,\"assets\":[]}",
       "logo_props": "{\"in_use\":\"icon\",\"icon\":{\"name\":\"file-text\",\"color\":\"#6366f1\"}}",
       "word_count": 874,
-      "char_count": 6945,
+      "char_count": 6970,
       "paragraph_count": 5,
       "diagrams_count": 0,
       "reading_time_min": 5,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11603,7 +11365,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
           "owned_by_role": "leader",
           "word_count": 874,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11662,7 +11424,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 7,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11673,7 +11435,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
           "owned_by_role": "spec-author",
           "word_count": 1205,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11814,7 +11576,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11825,7 +11587,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El principio rector es **Screaming Architecture**: la organizacion del codigo grita el proposito del negocio y sus dominios funcionales principales.",
           "owned_by_role": "spec-author",
           "word_count": 764,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -11956,7 +11718,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -11967,7 +11729,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```text",
           "owned_by_role": "spec-author",
           "word_count": 409,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12064,7 +11826,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12075,7 +11837,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 149,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -12146,7 +11908,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12157,7 +11919,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Esta especificación extiende el núcleo de datos del arnés (`project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js`), la CLI (`project-docs/cli.js...",
           "owned_by_role": "spec-author",
           "word_count": 461,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12216,7 +11978,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12227,7 +11989,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
           "owned_by_role": "spec-author",
           "word_count": 248,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12293,7 +12055,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12304,7 +12066,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
           "owned_by_role": "spec-author",
           "word_count": 392,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12363,7 +12125,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12374,7 +12136,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
           "owned_by_role": "spec-author",
           "word_count": 645,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -12469,7 +12231,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12480,7 +12242,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 143,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 21:50:49"
         }
       ],
@@ -12589,7 +12351,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 4,
       "reading_time_min": 9,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -12600,7 +12362,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
           "owned_by_role": "leader",
           "word_count": 1788,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13033,7 +12795,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 7,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -13044,7 +12806,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
           "owned_by_role": "spec-author",
           "word_count": 1257,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13170,7 +12932,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 7,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -13202,7 +12964,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 7,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -13213,7 +12975,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
               "owned_by_role": "spec-author",
               "word_count": 1257,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -13339,7 +13101,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -13350,7 +13112,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 425,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -13396,7 +13158,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El arnés actual cuenta con un tablero de seguimiento visual (`project-docs/index.html`) con una tabla de features, visor 3D Three.js, grafo de dependencias y ba...",
           "owned_by_role": "spec-author",
           "word_count": 1269,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13476,7 +13238,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 7,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -13508,7 +13270,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 7,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -13519,7 +13281,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
               "owned_by_role": "spec-author",
               "word_count": 1205,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -13660,7 +13422,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -13671,7 +13433,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 449,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -13717,7 +13479,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Tras la implementación inicial de las vistas de Plane y el motor SQLite en INT-012, el arnés dispone de dos layouts simultáneos (el clásico y el modo Plane).",
           "owned_by_role": "spec-author",
           "word_count": 1231,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -13809,7 +13571,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 5,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -13841,7 +13603,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 4,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -13852,7 +13614,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "El principio rector es **Screaming Architecture**: la organizacion del codigo grita el proposito del negocio y sus dominios funcionales principales.",
               "owned_by_role": "spec-author",
               "word_count": 764,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -13983,7 +13745,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -13994,7 +13756,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 480,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14033,7 +13795,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Tras la unificacion inicial del tablero con estetica Plane en INT-013, se requiere formalizar y desacoplar la arquitectura frontend siguiendo una estricta **Scr...",
           "owned_by_role": "spec-author",
           "word_count": 858,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14123,7 +13885,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -14155,7 +13917,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14166,7 +13928,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```text",
               "owned_by_role": "spec-author",
               "word_count": 409,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14263,7 +14025,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14274,7 +14036,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 333,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14313,7 +14075,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Tras la creacion inicial de los primeros 5 modulos en `src/modules/` en INT-014, coexistia aun la carpeta `src/features/` conteniendo 5 dominios residuales (`ar...",
           "owned_by_role": "spec-author",
           "word_count": 504,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14398,7 +14160,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -14430,7 +14192,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14441,7 +14203,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 301,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14500,7 +14262,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14511,7 +14273,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "Esta especificación extiende el núcleo de datos del arnés (`project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js`), la CLI (`project-docs/cli.js...",
               "owned_by_role": "spec-author",
               "word_count": 461,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14550,7 +14312,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 492,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14616,7 +14378,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -14648,7 +14410,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14659,7 +14421,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 336,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14718,7 +14480,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 4,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14729,7 +14491,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
               "owned_by_role": "spec-author",
               "word_count": 645,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -14804,7 +14566,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Antes de iniciar la implementación, se validó que:",
           "owned_by_role": "spec-author",
           "word_count": 582,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -14870,7 +14632,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -14902,7 +14664,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14913,7 +14675,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 149,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 20:17:24"
             }
           ],
@@ -14984,7 +14746,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -14995,7 +14757,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 115,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 20:17:24"
             }
           ],
@@ -15034,7 +14796,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Atributo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 361,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -15136,7 +14898,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -15168,7 +14930,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -15179,7 +14941,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 144,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -15245,7 +15007,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -15256,7 +15018,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
               "owned_by_role": "spec-author",
               "word_count": 248,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -15302,7 +15064,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 252,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15375,7 +15137,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -15407,7 +15169,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -15418,7 +15180,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 179,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -15477,7 +15239,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -15488,7 +15250,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
               "owned_by_role": "spec-author",
               "word_count": 392,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -15527,7 +15289,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 383,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15593,7 +15355,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -15604,7 +15366,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 98,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -15663,7 +15425,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -15674,7 +15436,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Esquema Relacional Completo de Plane + IA (`project-docs/src/core/db.js`)**:",
           "owned_by_role": "spec-author",
           "word_count": 258,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15733,7 +15495,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -15744,7 +15506,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 420,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15832,7 +15594,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -15843,7 +15605,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 437,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -15938,7 +15700,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -15949,7 +15711,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 345,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16037,7 +15799,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -16048,7 +15810,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
           "owned_by_role": "spec-author",
           "word_count": 456,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16143,7 +15905,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -16154,7 +15916,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 355,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16242,7 +16004,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -16253,7 +16015,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 335,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16334,7 +16096,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -16345,7 +16107,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Core Domain (Dominio Central)**:",
           "owned_by_role": "leader",
           "word_count": 649,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16405,7 +16167,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -16416,7 +16178,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El orquestador interactúa con dos fuentes de persistencia:",
           "owned_by_role": "leader",
           "word_count": 182,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16462,7 +16224,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -16473,7 +16235,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
           "owned_by_role": "leader",
           "word_count": 152,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -16519,7 +16281,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 6,
       "children": [
         {
@@ -16551,7 +16313,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -16562,7 +16324,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "El orquestador interactúa con dos fuentes de persistencia:",
               "owned_by_role": "leader",
               "word_count": 182,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -16608,7 +16370,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -16619,7 +16381,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
               "owned_by_role": "leader",
               "word_count": 152,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -16665,7 +16427,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -16676,7 +16438,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
               "owned_by_role": "leader",
               "word_count": 567,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -16826,7 +16588,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 6,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -16837,7 +16599,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 451,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -16946,7 +16708,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -16957,7 +16719,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 172,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -17040,7 +16802,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -17051,7 +16813,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 131,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -17105,7 +16867,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 447,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17183,7 +16945,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -17194,7 +16956,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 567,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17344,7 +17106,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 6,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -17355,7 +17117,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 451,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17464,7 +17226,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -17475,7 +17237,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 185,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17521,7 +17283,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -17532,7 +17294,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
           "owned_by_role": "leader",
           "word_count": 174,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -17585,7 +17347,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 6,
       "children": [
         {
@@ -17617,7 +17379,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -17628,7 +17390,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 185,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -17674,7 +17436,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -17685,7 +17447,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
               "owned_by_role": "leader",
               "word_count": 174,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -17738,7 +17500,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -17749,7 +17511,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
               "owned_by_role": "leader",
               "word_count": 268,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -17875,7 +17637,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 6,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -17886,7 +17648,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 388,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -17982,7 +17744,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -17993,7 +17755,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 122,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18064,7 +17826,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18075,7 +17837,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 146,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18116,7 +17878,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 365,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -18162,7 +17924,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -18173,7 +17935,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 268,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -18299,7 +18061,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 6,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -18310,7 +18072,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 388,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -18406,7 +18168,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -18417,7 +18179,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "El archivo `knowledge-index.json` persiste:",
           "owned_by_role": "leader",
           "word_count": 111,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -18463,7 +18225,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -18474,7 +18236,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
           "owned_by_role": "leader",
           "word_count": 134,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -18520,7 +18282,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 6,
       "children": [
         {
@@ -18552,7 +18314,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18563,7 +18325,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "El archivo `knowledge-index.json` persiste:",
               "owned_by_role": "leader",
               "word_count": 111,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18609,7 +18371,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18620,7 +18382,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
               "owned_by_role": "leader",
               "word_count": 134,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18666,7 +18428,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18677,7 +18439,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
               "owned_by_role": "leader",
               "word_count": 224,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18791,7 +18553,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 6,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18802,7 +18564,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 392,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18898,7 +18660,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18909,7 +18671,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 133,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -18980,7 +18742,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -18991,7 +18753,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 126,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19039,7 +18801,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 485,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -19122,7 +18884,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -19133,7 +18895,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 224,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -19247,7 +19009,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 6,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -19258,7 +19020,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 392,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -19354,7 +19116,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -19365,7 +19127,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 82,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -19411,7 +19173,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -19422,7 +19184,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 108,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -19468,7 +19230,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 6,
       "children": [
         {
@@ -19500,7 +19262,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -19511,7 +19273,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 82,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19557,7 +19319,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -19568,7 +19330,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 108,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19614,7 +19376,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -19625,7 +19387,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
               "owned_by_role": "leader",
               "word_count": 183,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19715,7 +19477,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 6,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -19726,7 +19488,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 375,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19822,7 +19584,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -19833,7 +19595,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 131,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19904,7 +19666,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -19915,7 +19677,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 98,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -19956,7 +19718,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 226,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20002,7 +19764,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -20013,7 +19775,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 183,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20103,7 +19865,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 6,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -20114,7 +19876,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 375,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20210,7 +19972,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -20221,7 +19983,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 85,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20267,7 +20029,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -20278,7 +20040,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 92,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20337,7 +20099,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 6,
       "children": [
         {
@@ -20369,7 +20131,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -20380,7 +20142,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 85,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -20426,7 +20188,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -20437,7 +20199,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 92,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -20496,7 +20258,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -20507,7 +20269,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
               "owned_by_role": "leader",
               "word_count": 161,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -20597,7 +20359,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 6,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -20608,7 +20370,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 363,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -20704,7 +20466,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -20715,7 +20477,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "leader",
               "word_count": 128,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -20786,7 +20548,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -20797,7 +20559,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "leader",
               "word_count": 103,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -20838,7 +20600,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
           "owned_by_role": "leader",
           "word_count": 209,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20884,7 +20646,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -20895,7 +20657,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
           "owned_by_role": "leader",
           "word_count": 161,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -20985,7 +20747,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 6,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -20996,7 +20758,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 363,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21092,7 +20854,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21103,7 +20865,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 115,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -21162,7 +20924,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21173,7 +20935,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 425,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21239,7 +21001,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21250,7 +21012,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 449,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21316,7 +21078,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21327,7 +21089,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 480,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21386,7 +21148,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21397,7 +21159,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 333,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21456,7 +21218,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21467,7 +21229,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Se extendió y estandarizó la arquitectura del arnés para alinearla con el estándar de la industria en **Scrum / Agile** y **Jira**:",
           "owned_by_role": "spec-author",
           "word_count": 658,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21555,7 +21317,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21566,7 +21328,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 528,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21625,7 +21387,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21636,7 +21398,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 406,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21695,7 +21457,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21706,7 +21468,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Criterio | Estado | Evidencia |",
           "owned_by_role": "spec-author",
           "word_count": 513,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21765,7 +21527,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21776,7 +21538,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Criterio | Estado | Evidencia |",
           "owned_by_role": "spec-author",
           "word_count": 306,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21835,7 +21597,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21846,7 +21608,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Criterio | Estado | Evidencia |",
           "owned_by_role": "spec-author",
           "word_count": 228,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21905,7 +21667,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21916,7 +21678,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 462,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -21975,7 +21737,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -21986,7 +21748,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
           "owned_by_role": "spec-author",
           "word_count": 497,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -22052,7 +21814,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -22063,7 +21825,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 131,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 20:17:24"
         }
       ],
@@ -22122,7 +21884,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:17",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -22133,7 +21895,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 59,
-          "last_saved_at": "2026-11-09 06:01:17",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 21:50:49"
         }
       ],
@@ -22216,7 +21978,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -22248,7 +22010,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -22259,7 +22021,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 143,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 21:50:49"
             }
           ],
@@ -22368,7 +22130,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -22379,7 +22141,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 103,
-              "last_saved_at": "2026-11-09 06:01:17",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 21:50:49"
             }
           ],
@@ -22442,7 +22204,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Campo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 279,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 21:50:49"
         }
       ],
@@ -22580,7 +22342,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -22612,7 +22374,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 2,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -22623,7 +22385,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```",
               "owned_by_role": "spec-author",
               "word_count": 385,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -22706,7 +22468,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 1,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -22717,7 +22479,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 167,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -22756,7 +22518,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Campo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 406,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -22822,7 +22584,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 5,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 2,
       "children": [
         {
@@ -22854,7 +22616,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 1,
           "reading_time_min": 5,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -22865,7 +22627,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "```mermaid",
               "owned_by_role": "spec-author",
               "word_count": 826,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -22956,7 +22718,7 @@ window.__FALLBACK_DATA__ = {
           "diagrams_count": 0,
           "reading_time_min": 3,
           "created_at": "",
-          "updated_at": "2026-11-09 06:01:16",
+          "updated_at": "2026-11-09 14:27:15",
           "nested_pages_count": 0,
           "children": [],
           "versions": [
@@ -22967,7 +22729,7 @@ window.__FALLBACK_DATA__ = {
               "description_stripped": "",
               "owned_by_role": "spec-author",
               "word_count": 566,
-              "last_saved_at": "2026-11-09 06:01:16",
+              "last_saved_at": "2026-11-09 14:27:15",
               "created_at": "2026-11-07 19:36:23"
             }
           ],
@@ -23006,7 +22768,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Campo | Valor |",
           "owned_by_role": "spec-author",
           "word_count": 854,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -23244,7 +23006,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -23255,7 +23017,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 103,
-          "last_saved_at": "2026-11-09 06:01:17",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 21:50:49"
         }
       ],
@@ -23338,7 +23100,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -23349,7 +23111,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 167,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -23408,7 +23170,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -23419,7 +23181,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "spec-author",
           "word_count": 566,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -23478,7 +23240,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -23489,7 +23251,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 623,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -23620,7 +23382,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 16,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -23631,7 +23393,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
           "owned_by_role": "leader",
           "word_count": 3071,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -23918,7 +23680,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 6,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -23929,7 +23691,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 1112,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24216,7 +23978,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24227,7 +23989,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
           "owned_by_role": "leader",
           "word_count": 296,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24273,7 +24035,7 @@ window.__FALLBACK_DATA__ = {
       "title": "data dictionary",
       "summary": "```mermaid",
       "shelf": "architecture",
-      "content_markdown": "# Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)\r\n\r\n> [!NOTE]\r\n> Especificación formal del modelo relacional completo de Plane (28 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`), su grafo de conocimiento (`page_logs`, `page_labels`, `page_versions`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.\r\n\r\n---\r\n\r\n## 1. Diagrama Entidad-Relación (ERD) del Arnés & Plane AI\r\n\r\n```mermaid\r\nerDiagram\r\n  WORKSPACE ||--o{ WORKSPACE_MEMBER : \"agrupa\"\r\n  USER ||--o{ WORKSPACE_MEMBER : \"pertenece\"\r\n  USER ||--o{ API_TOKEN : \"autentica (is_bot=1)\"\r\n  WORKSPACE ||--o{ PROJECT : \"contiene\"\r\n  WORKSPACE ||--o{ AI_CONFIG : \"configura LLM\"\r\n  PROJECT ||--o{ STATE : \"define flujo\"\r\n  PROJECT ||--o{ LABEL : \"clasifica\"\r\n  PROJECT ||--o{ ESTIMATE : \"mide\"\r\n  ESTIMATE ||--o{ ESTIMATE_POINT : \"escala Fibonacci\"\r\n  PROJECT ||--o{ ISSUE_TYPE : \"tipifica\"\r\n  PROJECT ||--o{ CYCLE : \"planifica sprints\"\r\n  PROJECT ||--o{ MODULE : \"delimita dominios\"\r\n  PROJECT ||--o{ ISSUE_VIEW : \"guarda filtros\"\r\n  PROJECT ||--o{ ISSUE : \"gestiona\"\r\n  PROJECT ||--o{ PAGE : \"documenta\"\r\n  ISSUE ||--o{ SUBTASK : \"desglosa DEV/QA\"\r\n  ISSUE ||--o{ ISSUE_ASSIGNEE : \"asigna bot/humano\"\r\n  ISSUE ||--o{ ISSUE_LABEL : \"etiqueta\"\r\n  ISSUE ||--o{ ISSUE_RELATION : \"relaciona / bloquea\"\r\n  ISSUE ||--o{ ISSUE_ACTIVITY : \"audita mutaciones\"\r\n  ISSUE ||--o{ ISSUE_COMMENT : \"comenta skills\"\r\n  ISSUE ||--o{ ISSUE_EVIDENCE : \"vincula QA y capturas\"\r\n  ISSUE ||--o{ AI_RUN : \"registra ejecucion IA\"\r\n  CYCLE ||--o{ CYCLE_ISSUE : \"compromete\"\r\n  MODULE ||--o{ MODULE_ISSUE : \"encapsula\"\r\n  PAGE ||--o{ PAGE_VERSION : \"versiona snapshots\"\r\n  PAGE ||--o{ PAGE_LOG : \"vincula INT/BR/RF/backlinks\"\r\n  PAGE ||--o{ PAGE_LABEL : \"etiqueta semantica\"\r\n\r\n  WORKSPACE {\r\n    string id PK\r\n    string name\r\n    string slug\r\n    string owner_id\r\n    string organization_size\r\n    string timezone\r\n  }\r\n\r\n  USER {\r\n    string id PK\r\n    string username\r\n    string display_name\r\n    string role\r\n    int is_bot\r\n    string bot_type\r\n  }\r\n\r\n  ISSUE {\r\n    string id PK\r\n    string project_id FK\r\n    int sequence_id\r\n    string title\r\n    string state_id FK\r\n    string priority\r\n    string type_id FK\r\n    int point\r\n    string assignee_role\r\n    string cycle_id FK\r\n    string module_id FK\r\n    string branch\r\n  }\r\n\r\n  AI_RUN {\r\n    string id PK\r\n    string issue_id FK\r\n    string page_id FK\r\n    string agent_role\r\n    string skill_name\r\n    string task_type\r\n    string provider\r\n    string model\r\n    string prompt_summary\r\n    string status\r\n  }\r\n\r\n  ISSUE_EVIDENCE {\r\n    string id PK\r\n    string issue_id FK\r\n    string subtask_id\r\n    string type\r\n    string title\r\n    string file_path\r\n    string created_by_skill\r\n  }\r\n\r\n  PAGE {\r\n    string id PK\r\n    string project_id FK\r\n    string file_path\r\n    string title\r\n    string shelf\r\n    int word_count\r\n    int reading_time_min\r\n  }\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo de las 29 Tablas Relacionales SQLite (`project-docs/data/harness.db`)\r\n\r\n### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)\r\n1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).\r\n2. `users`: Usuarios humanos e identidades de subagentes IA (`is_bot = 1`, `bot_type` para `leader`, `spec-author`, `implementer`, `reviewer`).\r\n3. `workspace_members`: Membresía y permisos RBAC por espacio de trabajo.\r\n4. `api_tokens`: Tokens de servicio (`user_type = 1` para bots) empleados por skills y agentes.\r\n5. `ai_configs`: Configuración del motor IA (`LLM_PROVIDER`, `LLM_MODEL`, `DUAL_PERSISTENCE_ENGINE`).\r\n6. `ai_runs`: Registro inmutable de cada invocación de skill o subagente IA, sincronizado automáticamente con `project-docs/knowledge/ai-runs-log.md`.\r\n\r\n### 2.2 Gestión de Proyectos, Tareas y Trazabilidad (`projects`, `issues`, `evidences`)\r\n7. `projects`: Configuración del proyecto (`proj-harness`, identificador `INT`, flags de vistas).\r\n8. `states`: Máquina de estados Kanban (`Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Cancelled`).\r\n9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).\r\n10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.\r\n12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).\r\n13. `cycles`: Sprints de iteración con estados canónicos (`draft`, `upcoming`, `current`, `completed`), fechas de inicio/fin y progreso.\r\n14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).\r\n15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.\r\n16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).\r\n17. `issue_assignees`: Asignación relacional entre tareas y agentes bot/humanos.\r\n18. `issue_labels`: Tabla puente muchos-a-muchos entre `issues` y `labels`.\r\n19. `issue_relations`: Grafo de dependencias entre tareas (`blocked_by`, `blocks`, `relates_to`).\r\n20. `issue_activities`: Bitácora de auditoría (`IssueActivity`) de cada cambio de estado, evidencia o ejecución de skill.\r\n21. `issue_comments`: Comentarios técnicos en Markdown emitidos por agentes o skills.\r\n22. `issue_evidences`: Artefactos de evidencia QA, reportes de verificación, planes API y capturas Playwright E2E vinculados a cada tarea.\r\n23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.\r\n25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.\r\n\r\n### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`, `page_audit`)\r\n26. `collections`: Espacios de conocimiento dinámicos de Plane Wiki (`id`, `project_id`, `workspace_id`, `name`, `description`, `icon`, `color`, `is_private`, `sort_order`, `archived_at`).\r\n27. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` con claves foráneas `FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT` y `FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL`, jerarquía (`parent_id`, `depth <= 4`), slugs únicos (`idx_pages_collection_slug`), autoría (`owner_name`, `owned_by_id`), telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`) y banderas de acceso/bloqueo (`access = 0` Public / `1` Private, `is_locked = 1`, `is_favorite = 1`, `view_props`).\r\n28. `page_versions`: Snapshots históricos de versiones (`id`, `page_id`, `version_number`, `content_markdown`, `description_html`, `description_stripped`, `owned_by_role`, `word_count`, `last_saved_at`, `created_at`) con `FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE` y restauración en un clic (`restorePageVersionInSQLite`).\r\n29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas (`page_labels`).\n30. `page_audit`: Bitácora inmutable de auditoría de ciclo de vida documental (`action = 'created' | 'updated' | 'moved' | 'locked' | 'unlocked' | 'archived' | 'unarchived' | 'version_restored'`, `page_id`, `actor_id`, `actor_role`, `actor_type = 'human' | 'agent'`, `reason`, `created_at`).\r\n\r\n---\r\n\r\n## 3. Catálogo de Esquemas JSON / YAML & Sincronización Dual\r\n\r\n### 3.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)\r\n- `project.name`: Nombre canónico del sistema.\r\n- `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).\r\n- `runtime.language`: Lenguaje de programación principal.\r\n- `checks.build`, `checks.test`, `checks.verify`: Comandos de verificación ejecutables.\r\n\r\n### 3.2 `project-docs/feature_list.json` (Espejo JSON de Tareas)\r\n- Sincronizado bidireccionalmente con las tablas `issues`, `subtasks`, `issue_relations` e `issue_evidences` mediante `project-docs/src/core/sqlite-sync.js`.\r\n\r\n### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)\r\n- Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.\r\n\n\n",
+      "content_markdown": "# Diccionario de Datos & Persistencia Dual (Plane SQLite + Docs-as-Code)\r\n\r\n> [!NOTE]\r\n> Especificación formal del modelo relacional completo de Plane (28 tablas en `project-docs/data/harness.db` con modo WAL), su integración con Inteligencia Artificial (`ai_configs`, `ai_runs`, `users.is_bot`, `api_tokens`), su grafo de conocimiento (`page_logs`, `page_labels`, `page_versions`) y su espejo bidireccional con documentos Markdown (`.md`) y JSON.\r\n\r\n---\r\n\r\n## 1. Diagrama Entidad-Relación (ERD) del Arnés & Plane AI\r\n\r\n```mermaid\r\nerDiagram\r\n  WORKSPACE ||--o{ WORKSPACE_MEMBER : \"agrupa\"\r\n  USER ||--o{ WORKSPACE_MEMBER : \"pertenece\"\r\n  USER ||--o{ API_TOKEN : \"autentica (is_bot=1)\"\r\n  WORKSPACE ||--o{ PROJECT : \"contiene\"\r\n  WORKSPACE ||--o{ AI_CONFIG : \"configura LLM\"\r\n  PROJECT ||--o{ STATE : \"define flujo\"\r\n  PROJECT ||--o{ LABEL : \"clasifica\"\r\n  PROJECT ||--o{ ESTIMATE : \"mide\"\r\n  ESTIMATE ||--o{ ESTIMATE_POINT : \"escala Fibonacci\"\r\n  PROJECT ||--o{ ISSUE_TYPE : \"tipifica\"\r\n  PROJECT ||--o{ CYCLE : \"planifica sprints\"\r\n  PROJECT ||--o{ MODULE : \"delimita dominios\"\r\n  PROJECT ||--o{ ISSUE_VIEW : \"guarda filtros\"\r\n  PROJECT ||--o{ ISSUE : \"gestiona\"\r\n  PROJECT ||--o{ PAGE : \"documenta\"\r\n  ISSUE ||--o{ SUBTASK : \"desglosa DEV/QA\"\r\n  ISSUE ||--o{ ISSUE_ASSIGNEE : \"asigna bot/humano\"\r\n  ISSUE ||--o{ ISSUE_LABEL : \"etiqueta\"\r\n  ISSUE ||--o{ ISSUE_RELATION : \"relaciona / bloquea\"\r\n  ISSUE ||--o{ ISSUE_ACTIVITY : \"audita mutaciones\"\r\n  ISSUE ||--o{ ISSUE_COMMENT : \"comenta skills\"\r\n  ISSUE ||--o{ ISSUE_EVIDENCE : \"vincula QA y capturas\"\r\n  ISSUE ||--o{ AI_RUN : \"registra ejecucion IA\"\r\n  CYCLE ||--o{ CYCLE_ISSUE : \"compromete\"\r\n  MODULE ||--o{ MODULE_ISSUE : \"encapsula\"\r\n  PAGE ||--o{ PAGE_VERSION : \"versiona snapshots\"\r\n  PAGE ||--o{ PAGE_LOG : \"vincula INT/BR/RF/backlinks\"\r\n  PAGE ||--o{ PAGE_LABEL : \"etiqueta semantica\"\r\n\r\n  WORKSPACE {\r\n    string id PK\r\n    string name\r\n    string slug\r\n    string owner_id\r\n    string organization_size\r\n    string timezone\r\n  }\r\n\r\n  USER {\r\n    string id PK\r\n    string username\r\n    string display_name\r\n    string role\r\n    int is_bot\r\n    string bot_type\r\n  }\r\n\r\n  ISSUE {\r\n    string id PK\r\n    string project_id FK\r\n    int sequence_id\r\n    string title\r\n    string state_id FK\r\n    string priority\r\n    string type_id FK\r\n    int point\r\n    string assignee_role\r\n    string cycle_id FK\r\n    string module_id FK\r\n    string branch\r\n  }\r\n\r\n  AI_RUN {\r\n    string id PK\r\n    string issue_id FK\r\n    string page_id FK\r\n    string agent_role\r\n    string skill_name\r\n    string task_type\r\n    string provider\r\n    string model\r\n    string prompt_summary\r\n    string status\r\n  }\r\n\r\n  ISSUE_EVIDENCE {\r\n    string id PK\r\n    string issue_id FK\r\n    string subtask_id\r\n    string type\r\n    string title\r\n    string file_path\r\n    string created_by_skill\r\n  }\r\n\r\n  PAGE {\r\n    string id PK\r\n    string project_id FK\r\n    string file_path\r\n    string title\r\n    string shelf\r\n    int word_count\r\n    int reading_time_min\r\n  }\r\n```\r\n\r\n---\r\n\r\n## 2. Catálogo de las 29 Tablas Relacionales SQLite (`project-docs/data/harness.db`)\r\n\r\n### 2.1 Núcleo Organizacional y Agentes IA (`users`, `api_tokens`, `ai_configs`, `ai_runs`)\r\n1. `workspaces`: Espacio de trabajo soberano (`ws-harness`).\r\n2. `users`: Usuarios humanos e identidades de subagentes IA (`is_bot = 1`, `bot_type` para `leader`, `spec-author`, `implementer`, `reviewer`).\r\n3. `workspace_members`: Membresía y permisos RBAC por espacio de trabajo.\r\n4. `api_tokens`: Tokens de servicio (`user_type = 1` para bots) empleados por skills y agentes.\r\n5. `ai_configs`: Configuración del motor IA (`LLM_PROVIDER`, `LLM_MODEL`, `DUAL_PERSISTENCE_ENGINE`).\r\n6. `ai_runs`: Registro inmutable de cada invocación de skill o subagente IA, sincronizado automáticamente con `project-docs/knowledge/ai-runs-log.md`.\r\n\r\n### 2.2 Gestión de Proyectos, Tareas y Trazabilidad (`projects`, `issues`, `evidences`)\r\n7. `projects`: Configuración del proyecto (`proj-harness`, identificador `INT`, flags de vistas).\r\n8. `states`: Máquina de estados Kanban (`Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Cancelled`).\r\n9. `labels`: Etiquetas semánticas (`feature`, `bugfix`, `sdd-spec`, `tdd-verified`, `qa-evidence`, `screaming-arch`, `ai-agent`).\r\n10. `estimates` y 11. `estimate_points`: Escala Fibonacci (`1, 2, 3, 5, 8, 13` puntos) para estimación ágil.\r\n12. `issue_types`: Tipos de elemento de trabajo (`Feature`, `Bugfix`, `Epic`).\r\n13. `cycles`: Sprints de iteración con estados canónicos (`draft`, `upcoming`, `current`, `completed`), fechas de inicio/fin y progreso.\r\n14. `modules`: Bounded contexts de arquitectura (`Agent Orchestrator`, `Dashboard Visualizer`, `Testing QA Suite`, `Knowledge Engine`, `Harness Core`).\r\n15. `issues`: Unidades de trabajo con historia de usuario Scrum (`as_a`, `i_want`, `so_that`), criterios EARS, puntos Fibonacci y rama Git.\r\n16. `subtasks`: Subtareas técnicas Jira (`DEV` y `QA`).\r\n17. `issue_assignees`: Asignación relacional entre tareas y agentes bot/humanos.\r\n18. `issue_labels`: Tabla puente muchos-a-muchos entre `issues` y `labels`.\r\n19. `issue_relations`: Grafo de dependencias entre tareas (`blocked_by`, `blocks`, `relates_to`).\r\n20. `issue_activities`: Bitácora de auditoría (`IssueActivity`) de cada cambio de estado, evidencia o ejecución de skill.\r\n21. `issue_comments`: Comentarios técnicos en Markdown emitidos por agentes o skills.\r\n22. `issue_evidences`: Artefactos de evidencia QA, reportes de verificación, planes API y capturas Playwright E2E vinculados a cada tarea.\r\n23. `cycle_issues` y 24. `module_issues`: Tablas puente de asociación con sprints y módulos.\r\n25. `issue_views`: Vistas personalizadas con filtros y agrupaciones guardadas.\r\n\r\n### 2.3 Gestión Documental Viva y Grafo de Conocimiento (`collections`, `pages`, `page_versions`, `page_logs`, `page_labels`, `page_audit`)\r\n26. `collections`: Espacios de conocimiento dinámicos de Plane Wiki (`id`, `project_id`, `workspace_id`, `name`, `description`, `icon`, `color`, `is_private`, `sort_order`, `archived_at`).\r\n27. `pages`: Documentos Markdown de `project-docs/knowledge/` y `project-docs/specs/` con claves foráneas `FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT` y `FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL`, jerarquía (`parent_id`, `depth <= 4`), slugs únicos (`idx_pages_collection_slug`), autoría (`owner_name`, `owned_by_id`), telemetría (`word_count`, `char_count`, `paragraph_count`, `diagrams_count`, `reading_time_min`) y banderas de acceso/bloqueo (`access = 0` Public / `1` Private, `is_locked = 1`, `is_favorite = 1`, `view_props`).\r\n28. `page_versions`: Snapshots históricos de versiones (`id`, `page_id`, `version_number`, `content_markdown`, `description_html`, `description_stripped`, `owned_by_role`, `word_count`, `last_saved_at`, `created_at`) con `FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE` y restauración en un clic (`restorePageVersionInSQLite`).\r\n29. `page_logs` y `page_labels`: Grafo relacional de menciones cruzadas (`INT-XXX`, `BR-XXX`, `RF-XXX`, `ADR-XXX`, `CAP-XXX`, `forward_link`, `back_link`) y etiquetas semánticas (`page_labels`).\r\n30. `page_audit`: Bitácora inmutable de auditoría de ciclo de vida documental (`action = 'created' | 'updated' | 'moved' | 'locked' | 'unlocked' | 'archived' | 'unarchived' | 'version_restored'`, `page_id`, `actor_id`, `actor_role`, `actor_type = 'human' | 'agent'`, `reason`, `created_at`).\r\n\r\n---\r\n\r\n## 3. Catálogo de Esquemas JSON / YAML & Sincronización Dual\r\n\r\n### 3.1 `project-docs/project-spec.yaml` (Especificación Técnica del Proyecto)\r\n- `project.name`: Nombre canónico del sistema.\r\n- `project.type`: Tipo de arquitectura (`universal-agentic-harness`, `web-api`, `microservices`).\r\n- `runtime.language`: Lenguaje de programación principal.\r\n- `checks.build`, `checks.test`, `checks.verify`: Comandos de verificación ejecutables.\r\n\r\n### 3.2 `project-docs/feature_list.json` (Espejo JSON de Tareas)\r\n- Sincronizado bidireccionalmente con las tablas `issues`, `subtasks`, `issue_relations` e `issue_evidences` mediante `project-docs/src/core/sqlite-sync.js`.\r\n\r\n### 3.3 `project-docs/knowledge/ai-runs-log.md` (Espejo Markdown de IA)\r\n- Generado y actualizado automáticamente por `recordSkillExecution()` cada vez que una skill SDD ejecuta `node project-docs/cli.js ai log`.\r\n\r\n\r\n",
       "access": 0,
       "is_locked": 1,
       "is_favorite": 0,
@@ -24281,12 +24043,12 @@ window.__FALLBACK_DATA__ = {
       "view_props": "{\"full_width\":true,\"assets\":[{\"id\":\"asset-mermaid-1\",\"type\":\"mermaid\",\"diagram_type\":\"erDiagram\",\"title\":\"Diagrama Mermaid #1 (erDiagram)\",\"preview\":\"erDiagram\"}]}",
       "logo_props": "{\"in_use\":\"icon\",\"icon\":{\"name\":\"file-text\",\"color\":\"#6366f1\"}}",
       "word_count": 998,
-      "char_count": 8635,
+      "char_count": 8655,
       "paragraph_count": 11,
       "diagrams_count": 1,
       "reading_time_min": 5,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24297,7 +24059,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 998,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24388,7 +24150,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24399,7 +24161,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
           "owned_by_role": "leader",
           "word_count": 311,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24445,7 +24207,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24456,7 +24218,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 688,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24683,7 +24445,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24694,7 +24456,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 172,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24777,7 +24539,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24788,7 +24550,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 131,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24862,7 +24624,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24873,7 +24635,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 122,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -24944,7 +24706,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -24955,7 +24717,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 146,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25016,7 +24778,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25027,7 +24789,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 133,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25098,7 +24860,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25109,7 +24871,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 126,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25177,7 +24939,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25188,7 +24950,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 131,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25259,7 +25021,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25270,7 +25032,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 98,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25331,7 +25093,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25342,7 +25104,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 128,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25413,7 +25175,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 1,
       "reading_time_min": 1,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25424,7 +25186,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "```mermaid",
           "owned_by_role": "leader",
           "word_count": 103,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25485,7 +25247,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25496,7 +25258,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
           "owned_by_role": "leader",
           "word_count": 393,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -25754,7 +25516,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 2,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -25765,7 +25527,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
           "owned_by_role": "leader",
           "word_count": 281,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -26124,7 +25886,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 4,
       "reading_time_min": 3,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -26135,7 +25897,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
           "owned_by_role": "leader",
           "word_count": 546,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -26223,7 +25985,7 @@ window.__FALLBACK_DATA__ = {
       "diagrams_count": 0,
       "reading_time_min": 4,
       "created_at": "",
-      "updated_at": "2026-11-09 06:01:16",
+      "updated_at": "2026-11-09 14:27:15",
       "nested_pages_count": 0,
       "children": [],
       "versions": [
@@ -26234,7 +25996,7 @@ window.__FALLBACK_DATA__ = {
           "description_stripped": "",
           "owned_by_role": "leader",
           "word_count": 659,
-          "last_saved_at": "2026-11-09 06:01:16",
+          "last_saved_at": "2026-11-09 14:27:15",
           "created_at": "2026-11-07 19:36:23"
         }
       ],
@@ -31171,33 +30933,13 @@ window.__FALLBACK_DATA__ = {
   ],
   "pageVersions": [
     {
-      "id": "pv-page-specs_019_plane_library_flows_and_ux_refinement_tasks_md-v1",
-      "page_id": "page-specs_019_plane_library_flows_and_ux_refinement_tasks_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "spec-author",
-      "word_count": 103,
-      "last_saved_at": "2026-11-09 06:01:17",
-      "created_at": "2026-11-07 21:50:49"
-    },
-    {
-      "id": "pv-page-specs_019_plane_library_flows_and_ux_refinement_verification-report_md-v1",
-      "page_id": "page-specs_019_plane_library_flows_and_ux_refinement_verification-report_md",
-      "version_number": 1,
-      "description_stripped": "",
-      "owned_by_role": "spec-author",
-      "word_count": 59,
-      "last_saved_at": "2026-11-09 06:01:17",
-      "created_at": "2026-11-07 21:50:49"
-    },
-    {
       "id": "pv-page-knowledge_01-project-overview-and-business_md-v1",
       "page_id": "page-knowledge_01-project-overview-and-business_md",
       "version_number": 1,
       "description_stripped": "El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development —...",
       "owned_by_role": "leader",
       "word_count": 1550,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31207,7 +30949,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (...",
       "owned_by_role": "leader",
       "word_count": 874,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31217,7 +30959,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 1997,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31227,7 +30969,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Core Domain (Dominio Central)**:",
       "owned_by_role": "leader",
       "word_count": 649,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31237,7 +30979,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 623,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31247,7 +30989,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Documento sincronizado automaticamente desde la tabla `ai_runs` en `project-docs/data/harness.db`. Registra toda informacion, especificacion, evidencia y report...",
       "owned_by_role": "leader",
       "word_count": 3071,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31257,7 +30999,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 1112,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31267,7 +31009,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Muestra los límites del arnés, los actores principales y los sistemas externos con los que interactúa:",
       "owned_by_role": "leader",
       "word_count": 433,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31277,7 +31019,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Prohibición de Librerías Fantasma**: Los agentes tienen estrictamente prohibido sugerir, instalar o importar paquetes o librerías que no figuren en `packag...",
       "owned_by_role": "leader",
       "word_count": 296,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31287,7 +31029,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 998,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31297,7 +31039,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Servicio / Herramienta | Tipo | Protocolo | Variables Requeridas | Política de Contingencia / Failover |",
       "owned_by_role": "leader",
       "word_count": 311,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31307,7 +31049,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 688,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31317,7 +31059,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. [Capítulo 1: Visión del Producto, Contexto de Negocio y Stakeholders (IEEE 830)](#capítulo-1-visión-del-producto-contexto-de-negocio-y-stakeholders-ieee-830)",
       "owned_by_role": "leader",
       "word_count": 1788,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31327,7 +31069,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El orquestador interactúa con dos fuentes de persistencia:",
       "owned_by_role": "leader",
       "word_count": 182,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31337,7 +31079,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 451,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31347,7 +31089,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Clase / Agregado | Estereotipo | Responsabilidades | Colaboradores |",
       "owned_by_role": "leader",
       "word_count": 447,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31357,7 +31099,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "owned_by_role": "leader",
       "word_count": 567,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31367,7 +31109,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 172,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31377,7 +31119,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 131,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31387,7 +31129,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Paso 1**: Incorporar telemetría de tiempos de respuesta por subagente en `progress/history.json`.",
       "owned_by_role": "leader",
       "word_count": 152,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31397,7 +31139,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 185,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31407,7 +31149,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 388,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31417,7 +31159,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "owned_by_role": "leader",
       "word_count": 365,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31427,7 +31169,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "owned_by_role": "leader",
       "word_count": 268,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31437,7 +31179,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 122,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31447,7 +31189,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 146,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31457,7 +31199,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Paso 1**: Implementar el switcher de navegación de 3 niveles en `KnowledgeBase.js`.",
       "owned_by_role": "leader",
       "word_count": 174,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31467,7 +31209,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El archivo `knowledge-index.json` persiste:",
       "owned_by_role": "leader",
       "word_count": 111,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31477,7 +31219,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 392,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31487,7 +31229,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "owned_by_role": "leader",
       "word_count": 485,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31497,7 +31239,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "owned_by_role": "leader",
       "word_count": 224,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31507,7 +31249,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 133,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31517,7 +31259,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 126,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31527,7 +31269,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Paso 1**: Implementar compilador de `MASTER-PROJECT-KNOWLEDGE.md` integrado en `sync-data.js`.",
       "owned_by_role": "leader",
       "word_count": 134,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31537,7 +31279,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 82,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31547,7 +31289,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 375,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31557,7 +31299,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "owned_by_role": "leader",
       "word_count": 226,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31567,7 +31309,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "owned_by_role": "leader",
       "word_count": 183,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31577,7 +31319,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 131,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31587,7 +31329,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 98,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31597,7 +31339,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 108,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31607,7 +31349,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 85,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31617,7 +31359,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 363,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31627,7 +31369,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Clase / Componente | Estereotipo | Responsabilidades | Colaboradores |",
       "owned_by_role": "leader",
       "word_count": 209,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31637,7 +31379,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| ID | Severidad | Condición / Fórmula Lógica | Archivo de Validación | Excepción / Fallo |",
       "owned_by_role": "leader",
       "word_count": 161,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31647,7 +31389,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 128,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31657,7 +31399,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "leader",
       "word_count": 103,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31667,7 +31409,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 92,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31677,7 +31419,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| ID Capacidad | Módulo | Capacidad Funcional | Interfaz / Comando | Estado |",
       "owned_by_role": "leader",
       "word_count": 393,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31687,7 +31429,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento Funcional | Regla de Negocio (`BR-*`) | Historia de Usuario | Componente / Archivo | Test Automatizado |",
       "owned_by_role": "leader",
       "word_count": 281,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31697,7 +31439,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:",
       "owned_by_role": "leader",
       "word_count": 546,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31707,7 +31449,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "leader",
       "word_count": 659,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31717,7 +31459,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Refactorización del arnés de ingeniería SDD para desacoplar las dependencias hardcodeadas a `.NET`, erradicar datos mock de comercio electrónico en la base de c...",
       "owned_by_role": "spec-author",
       "word_count": 248,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31727,7 +31469,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 252,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31737,7 +31479,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 144,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31747,7 +31489,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Diseño de la suite integral de aseguramiento de calidad y pruebas automatizadas para el arnés y su tablero de seguimiento interactivo, abarcando pruebas de Acep...",
       "owned_by_role": "spec-author",
       "word_count": 392,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31757,7 +31499,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 383,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31767,7 +31509,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 179,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31777,7 +31519,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Este diseño formaliza la integración de las prácticas de **Scrum / Agile** y **Jira** dentro del ciclo de vida SDD (Spec Driven Development). Se define un model...",
       "owned_by_role": "spec-author",
       "word_count": 645,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31787,7 +31529,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Se extendió y estandarizó la arquitectura del arnés para alinearla con el estándar de la industria en **Scrum / Agile** y **Jira**:",
       "owned_by_role": "spec-author",
       "word_count": 658,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31797,7 +31539,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Antes de iniciar la implementación, se validó que:",
       "owned_by_role": "spec-author",
       "word_count": 582,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31807,7 +31549,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 336,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31817,7 +31559,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```mermaid",
       "owned_by_role": "spec-author",
       "word_count": 826,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31827,7 +31569,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 355,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31837,7 +31579,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Campo | Valor |",
       "owned_by_role": "spec-author",
       "word_count": 854,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31847,7 +31589,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 566,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31857,7 +31599,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Criterio | Estado | Evidencia |",
       "owned_by_role": "spec-author",
       "word_count": 513,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31867,7 +31609,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```",
       "owned_by_role": "spec-author",
       "word_count": 385,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31877,7 +31619,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Nivel de Prueba | Herramienta / Runner | Casos Ejecutados | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 335,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31887,7 +31629,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Campo | Valor |",
       "owned_by_role": "spec-author",
       "word_count": 406,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31897,7 +31639,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 167,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31907,7 +31649,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Criterio | Estado | Evidencia |",
       "owned_by_role": "spec-author",
       "word_count": 306,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31917,7 +31659,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "La plataforma requiere velocidad en consultas relacionales complejas (agrupación por estados, filtros multicriterio, relaciones padre-hijo, ordenamiento por pri...",
       "owned_by_role": "spec-author",
       "word_count": 1257,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31927,7 +31669,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 420,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31937,7 +31679,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El arnés actual cuenta con un tablero de seguimiento visual (`project-docs/index.html`) con una tabla de features, visor 3D Three.js, grafo de dependencias y ba...",
       "owned_by_role": "spec-author",
       "word_count": 1269,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31947,7 +31689,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 425,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31957,7 +31699,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 462,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31967,7 +31709,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El principio rector es **Screaming Architecture**: la estructura de directorios en `project-docs/src/` refleja directamente el dominio de negocio del sistema de...",
       "owned_by_role": "spec-author",
       "word_count": 1205,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31977,7 +31719,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 456,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31987,7 +31729,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Tras la implementación inicial de las vistas de Plane y el motor SQLite en INT-012, el arnés dispone de dos layouts simultáneos (el clásico y el modo Plane).",
       "owned_by_role": "spec-author",
       "word_count": 1231,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -31997,7 +31739,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 449,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32007,7 +31749,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 497,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32017,7 +31759,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "El principio rector es **Screaming Architecture**: la organizacion del codigo grita el proposito del negocio y sus dominios funcionales principales.",
       "owned_by_role": "spec-author",
       "word_count": 764,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32027,7 +31769,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 437,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32037,7 +31779,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Tras la unificacion inicial del tablero con estetica Plane en INT-013, se requiere formalizar y desacoplar la arquitectura frontend siguiendo una estricta **Scr...",
       "owned_by_role": "spec-author",
       "word_count": 858,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32047,7 +31789,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 480,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32057,7 +31799,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 528,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32067,7 +31809,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "```text",
       "owned_by_role": "spec-author",
       "word_count": 409,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32077,7 +31819,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "![Tablero Kanban](evidence/01-plane-kanban-board.png)",
       "owned_by_role": "spec-author",
       "word_count": 345,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32087,7 +31829,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Tras la creacion inicial de los primeros 5 modulos en `src/modules/` en INT-014, coexistia aun la carpeta `src/features/` conteniendo 5 dominios residuales (`ar...",
       "owned_by_role": "spec-author",
       "word_count": 504,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32097,7 +31839,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 333,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32107,7 +31849,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Requerimiento (EARS) | Componente Implementado | Suite de Pruebas | Resultado |",
       "owned_by_role": "spec-author",
       "word_count": 406,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32117,7 +31859,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "Esta especificación extiende el núcleo de datos del arnés (`project-docs/src/core/db.js` y `project-docs/src/core/sqlite-sync.js`), la CLI (`project-docs/cli.js...",
       "owned_by_role": "spec-author",
       "word_count": 461,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32127,7 +31869,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "1. **Esquema Relacional Completo de Plane + IA (`project-docs/src/core/db.js`)**:",
       "owned_by_role": "spec-author",
       "word_count": 258,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32137,7 +31879,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 492,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32147,7 +31889,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 301,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32157,7 +31899,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Criterio | Estado | Evidencia |",
       "owned_by_role": "spec-author",
       "word_count": 228,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 19:36:23"
     },
     {
@@ -32167,7 +31909,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 149,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 20:17:24"
     },
     {
@@ -32177,7 +31919,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 98,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 20:17:24"
     },
     {
@@ -32187,7 +31929,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Atributo | Valor |",
       "owned_by_role": "spec-author",
       "word_count": 361,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 20:17:24"
     },
     {
@@ -32197,7 +31939,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 115,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 20:17:24"
     },
     {
@@ -32207,7 +31949,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 131,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 20:17:24"
     },
     {
@@ -32217,7 +31959,7 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "",
       "owned_by_role": "spec-author",
       "word_count": 143,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 21:50:49"
     },
     {
@@ -32227,7 +31969,27 @@ window.__FALLBACK_DATA__ = {
       "description_stripped": "| Campo | Valor |",
       "owned_by_role": "spec-author",
       "word_count": 279,
-      "last_saved_at": "2026-11-09 06:01:16",
+      "last_saved_at": "2026-11-09 14:27:15",
+      "created_at": "2026-11-07 21:50:49"
+    },
+    {
+      "id": "pv-page-specs_019_plane_library_flows_and_ux_refinement_tasks_md-v1",
+      "page_id": "page-specs_019_plane_library_flows_and_ux_refinement_tasks_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "spec-author",
+      "word_count": 103,
+      "last_saved_at": "2026-11-09 14:27:15",
+      "created_at": "2026-11-07 21:50:49"
+    },
+    {
+      "id": "pv-page-specs_019_plane_library_flows_and_ux_refinement_verification-report_md-v1",
+      "page_id": "page-specs_019_plane_library_flows_and_ux_refinement_verification-report_md",
+      "version_number": 1,
+      "description_stripped": "",
+      "owned_by_role": "spec-author",
+      "word_count": 59,
+      "last_saved_at": "2026-11-09 14:27:15",
       "created_at": "2026-11-07 21:50:49"
     },
     {

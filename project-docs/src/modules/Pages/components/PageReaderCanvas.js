@@ -32,6 +32,35 @@ function escapeAttr(text = '') {
   return String(text).replace(/"/g, '&quot;');
 }
 
+/**
+ * Elimina el primer encabezado H1 si coincide con el título del documento,
+ * evitando que el título aparezca duplicado en la vista de lectura y en el TOC.
+ */
+export function stripLeadingTitleH1(markdown = '', title = '') {
+  if (!markdown) return '';
+  const lines = markdown.split(/\r?\n/);
+  let firstIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() !== '') {
+      firstIdx = i;
+      break;
+    }
+  }
+  if (firstIdx !== -1) {
+    const line = lines[firstIdx].trim();
+    if (line.startsWith('# ')) {
+      const headingText = line.substring(2).trim();
+      const normHeading = headingText.toLowerCase().replace(/[^\w\s]/g, '');
+      const normTitle = (title || '').toLowerCase().replace(/[^\w\s]/g, '');
+      if (!normTitle || normHeading.includes(normTitle) || normTitle.includes(normHeading) || (normTitle.length >= 10 && normHeading.startsWith(normTitle.slice(0, 15)))) {
+        lines.splice(firstIdx, 1);
+        return lines.join('\n');
+      }
+    }
+  }
+  return markdown;
+}
+
 function renderTableOfContentsHtml(toc = []) {
   if (!toc || toc.length === 0) {
     return `<div class="text-[11px] text-gray-400 dark:text-zinc-500 italic py-1">No headings in this page.</div>`;
@@ -245,7 +274,7 @@ export function renderPageReaderCanvas({
 
             <!-- Document Rendered Body with prose-plane -->
             <article id="doc-active-body" class="prose dark:prose-invert prose-plane ${isFullWidth ? 'max-w-[1152px]' : 'max-w-[760px]'} mx-auto text-gray-800 dark:text-zinc-200 leading-relaxed text-sm">
-              ${enrichMarkdownWithSmartChips(renderMarkdown(stripFrontmatter(activeDocContent)), features)}
+              ${enrichMarkdownWithSmartChips(renderMarkdown(stripLeadingTitleH1(stripFrontmatter(activeDocContent), activeDocMeta.title || activePlanePage.title)), features)}
             </article>
           </div>
         </div>
