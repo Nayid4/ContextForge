@@ -40,15 +40,22 @@ export function IssueDetailModal({
   `;
 
   const renderSubtaskItem = (sub) => {
-    const isPassed = sub.status === 'done' || sub.status === 'passed';
+    const isPassed = sub.status === 'done' || sub.status === 'passed' || sub.completed;
     const isQa = sub.type === 'qa';
 
     return `
-      <div class="p-3 rounded-xl border ${isPassed ? 'border-emerald-500/20 bg-emerald-950/10' : 'border-zinc-800 bg-zinc-900/40'} flex items-start justify-between gap-3 text-xs">
+      <div class="p-3 rounded-xl border ${isPassed ? 'border-emerald-500/20 bg-emerald-950/10' : 'border-zinc-800 bg-zinc-900/40'} flex items-start justify-between gap-3 text-xs transition-colors">
         <div class="flex items-start gap-2.5 min-w-0">
-          <span class="p-0.5 rounded ${isPassed ? 'text-emerald-400' : 'text-zinc-500'} mt-0.5 shrink-0">
-            ${isPassed ? Icons.checkCircle('w-4 h-4') : Icons.clock('w-4 h-4')}
-          </span>
+          <button
+            type="button"
+            data-action="toggle-subtask"
+            data-issue-id="${issue.id}"
+            data-subtask-id="${sub.id}"
+            class="p-0.5 rounded ${isPassed ? 'text-emerald-400 hover:text-emerald-300' : 'text-zinc-500 hover:text-zinc-300'} mt-0.5 shrink-0 cursor-pointer"
+            title="Alternar estado de subtarea"
+          >
+            ${isPassed ? Icons.checkCircle('w-4 h-4') : Icons.circle('w-4 h-4')}
+          </button>
           <div class="min-w-0">
             <div class="flex items-center gap-2">
               <span class="font-mono text-[11px] font-semibold text-zinc-300">${sub.id}</span>
@@ -56,13 +63,19 @@ export function IssueDetailModal({
                 ${isQa ? 'QA Subtask' : 'DEV Subtask'}
               </span>
             </div>
-            <p class="text-zinc-200 mt-1 leading-snug">${sub.title}</p>
+            <p class="text-zinc-200 mt-1 leading-snug ${isPassed ? 'line-through text-zinc-400' : ''}">${sub.title}</p>
           </div>
         </div>
 
-        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium shrink-0 ${isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400'}">
-          ${String(sub.status || 'pending').toUpperCase()}
-        </span>
+        <button
+          type="button"
+          data-action="toggle-subtask"
+          data-issue-id="${issue.id}"
+          data-subtask-id="${sub.id}"
+          class="px-2 py-0.5 rounded text-[10px] font-mono font-medium shrink-0 cursor-pointer ${isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}"
+        >
+          ${isPassed ? 'PASSED' : 'PENDING'}
+        </button>
       </div>
     `;
   };

@@ -11,7 +11,8 @@ export const initialPageState = {
   editorMode: 'reader', // 'reader' | 'editor'
   activeShelf: 'all',
   filterTab: 'all', // 'all' | 'favorites' | 'locked' | 'modules'
-  navigationTab: 'public', // Plane TPageNavigationTabs: 'public' | 'private' | 'archived' | 'all'
+  navigationTab: 'all', // Plane TPageNavigationTabs: 'all' | 'created_by_me' | 'favorited' | 'archived' | 'public' | 'private'
+  viewLayout: 'list', // 'list' | 'card'
   orderBy: 'updated_at', // Plane TPageOrderBy: 'updated_at' | 'created_at' | 'name'
   sortBy: 'desc', // Plane TPageSortBy: 'asc' | 'desc'
   filters: {
@@ -86,6 +87,10 @@ export class PageStore {
 
   setNavigationTab(navigationTab) {
     this.setState({ navigationTab });
+  }
+
+  setViewLayout(viewLayout) {
+    this.setState({ viewLayout: viewLayout === 'card' ? 'card' : 'list' });
   }
 
   setOrderBy(orderBy) {
@@ -166,9 +171,15 @@ export class PageStore {
     const { pages, searchQuery, activeShelf, navigationTab, orderBy, sortBy, filters } = this.state;
 
     const filtered = pages.filter(p => {
-      // 1. Navigation Tab (Public / Private / Archived / All)
+      // 1. Navigation Tab (All Pages / Created by me / Favorited / Archived / Public / Private)
       if (navigationTab === 'archived') {
         if (!p.archived_at) return false;
+      } else if (navigationTab === 'favorited' || navigationTab === 'favorites') {
+        if (p.archived_at || !p.is_favorite) return false;
+      } else if (navigationTab === 'created_by_me') {
+        if (p.archived_at) return false;
+        const isMe = p.owned_by_role === 'spec-author' || p.owned_by_id === 'user-spec-author' || p.owned_by_role === 'leader';
+        if (!isMe) return false;
       } else if (navigationTab === 'private') {
         if (p.archived_at || Number(p.access || 0) !== 1) return false;
       } else if (navigationTab === 'public') {
@@ -195,10 +206,10 @@ export class PageStore {
       return (p.title || '').toLowerCase().includes(q) || (p.file_path && p.file_path.toLowerCase().includes(q));
     });
 
-    // 5. Plane OrderBy & SortBy (name, created_at, updated_at)
+    // 5. Plane OrderBy & SortBy (name / title, created_at, updated_at)
     const dir = sortBy === 'asc' ? 1 : -1;
     return filtered.sort((a, b) => {
-      if (orderBy === 'name') {
+      if (orderBy === 'name' || orderBy === 'title') {
         const nameA = (a.title || 'Untitled').toLowerCase();
         const nameB = (b.title || 'Untitled').toLowerCase();
         return nameA.localeCompare(nameB) * dir;

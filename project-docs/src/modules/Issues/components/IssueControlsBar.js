@@ -18,9 +18,9 @@ export function IssueControlsBar({
   ];
 
   return `
-    <div id="plane-issue-controls-bar" class="h-12 border-b border-zinc-800/80 bg-zinc-950 px-6 flex items-center justify-between gap-4 sticky top-14 z-10 select-none">
+    <div id="plane-issue-controls-bar" class="h-12 border-b border-gray-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 px-6 flex items-center justify-between gap-4 sticky top-12 z-10 select-none transition-colors">
       <!-- Left: View Mode Pills -->
-      <div class="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
+      <div class="flex items-center gap-1 bg-gray-100 dark:bg-zinc-900/80 p-1 rounded-xl border border-gray-200 dark:border-zinc-800/80">
         ${views.map(v => {
           const isActive = currentViewMode === v.id;
           const iconFn = Icons[v.icon] || Icons.terminal;
@@ -29,8 +29,8 @@ export function IssueControlsBar({
               data-plane-view-mode="${v.id}"
               class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                 isActive
-                  ? 'bg-zinc-800 text-zinc-100 shadow-xs font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 shadow-xs font-semibold'
+                  : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-200/50 dark:hover:bg-zinc-800/50'
               }"
             >
               ${iconFn('w-3.5 h-3.5')}
@@ -43,9 +43,9 @@ export function IssueControlsBar({
       <!-- Right: GroupBy & Metrics -->
       <div class="flex items-center gap-3 text-xs">
         <!-- GroupBy Selector -->
-        <div class="flex items-center gap-1.5 text-zinc-400">
+        <div class="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400">
           <span class="hidden md:inline text-[11px]">Agrupar:</span>
-          <select id="plane-group-by" class="bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-zinc-300 focus:outline-none cursor-pointer">
+          <select id="plane-group-by" class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-gray-700 dark:text-zinc-300 focus:outline-none cursor-pointer">
             <option value="state" ${groupBy === 'state' ? 'selected' : ''}>Por Estado</option>
             <option value="priority" ${groupBy === 'priority' ? 'selected' : ''}>Por Prioridad</option>
             <option value="assignee" ${groupBy === 'assignee' ? 'selected' : ''}>Por Agente</option>
@@ -53,7 +53,7 @@ export function IssueControlsBar({
         </div>
 
         <!-- Issue Counter Pill -->
-        <span class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono text-[11px]">
+        <span class="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 font-mono text-[11px]">
           ${issueCount} ${issueCount === 1 ? 'tarea' : 'tareas'}
         </span>
       </div>

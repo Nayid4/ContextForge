@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tablero de Seguimiento de IA — Antigravity Harness SDD</title>
 
-  <!-- Inicialización inmediata de tema para evitar FOUC -->
+  <!-- Inicialización inmediata de tema para evitar FOUC (Light mode por defecto estilo Plane) -->
   <script>
     (function() {
       try {
-        var theme = localStorage.getItem('harness_theme') || 'dark';
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-        } else {
+        var theme = localStorage.getItem('harness_theme') || 'light';
+        if (theme === 'dark') {
           document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
         }
       } catch (e) {
-        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('dark');
       }
     })();
   </script>
@@ -26,6 +26,9 @@
 
   <!-- Three.js (para la Constelación 3D) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Estilos y microinteracciones de Plane Theme -->
+  <link rel="stylesheet" href="./theme.css" />
 
   <style type="text/tailwindcss">
     @custom-variant dark (&:where(.dark, .dark *));
@@ -48,17 +51,28 @@
       color-scheme: light;
     }
     html:not(.dark) body {
-      background-color: #f8fafc !important;
-      color: #0f172a !important;
+      background-color: #ffffff !important;
+      color: #111827 !important;
     }
     html.dark body {
-      background-color: #020617 !important;
-      color: #f8fafc !important;
+      background-color: #09090b !important;
+      color: #f4f4f5 !important;
     }
   </style>
 
   <!-- Mermaid.js Runtime para Renderizado Interactivo de Diagramas C4 y UML -->
+  <script>
+    // Configura Mermaid antes de su carga para desactivar auto-ejecución en DOMContentLoaded
+    window.mermaidConfig = { startOnLoad: false, suppressErrorRendering: true };
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+      try {
+        mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true });
+      } catch (_) {}
+    }
+  </script>
 
   <!-- Datos de inicialización y fallback para compatibilidad con protocolo file:/// y offline -->
   <script src="./data-fallback.js"></script>

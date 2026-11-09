@@ -14,16 +14,50 @@ import { Icons } from './Icons.js';
  * 7. Parser bidireccional de bloques visuales (parseMarkdownToBlocks / blocksToMarkdown) estilo ContextForge.
  */
 
+export function stripFrontmatter(md = '') {
+  if (!md || typeof md !== 'string') return '';
+  return md.trimStart().replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+}
+
 export function renderMarkdown(content = '') {
   if (!content || typeof content !== 'string') return '<p class="text-slate-400 italic">Documento vacío.</p>';
-  return parseMarkdownNative(content);
+  return parseMarkdownNative(stripFrontmatter(content));
+}
+
+export function getMarkdownSnippet(markdown = '', maxLines = 3) {
+  if (!markdown || typeof markdown !== 'string') return 'No preview text available.';
+  const clean = stripFrontmatter(markdown)
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#+\s+/gm, '')
+    .replace(/^>\s*\[!.*\]\s*/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/[*_~]{1,3}/g, '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .slice(0, maxLines)
+    .join(' ');
+  return clean || 'No preview text available.';
+}
+
+export function getHeadingSlug(rawText = '') {
+  const clean = String(rawText)
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .trim();
+  return slugify(clean);
 }
 
 /**
  * Extrae la Tabla de Contenidos (TOC) para la navegación flotante (On-This-Page)
  */
 export function extractTableOfContents(md = '') {
-  const lines = md.split(/\r?\n/);
+  const cleanMd = stripFrontmatter(md);
+  const lines = cleanMd.split(/\r?\n/);
   const toc = [];
   let inCode = false;
 
@@ -48,9 +82,8 @@ export function extractTableOfContents(md = '') {
         level = 1;
         text = trimmed.replace(/^#\s+/, '');
       }
-      // Limpiar markdown del texto para la etiqueta
+      const slug = getHeadingSlug(text);
       const cleanText = text.replace(/`([^`]+)`/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
-      const slug = slugify(cleanText);
       toc.push({ id: slug, level, text: cleanText });
     }
   }
@@ -201,7 +234,7 @@ function parseMarkdownNative(md) {
     // 3. Encabezados con slug para navegación TOC
     if (line.startsWith('# ')) {
       const text = line.slice(2);
-      const slug = slugify(text);
+      const slug = getHeadingSlug(text);
       html.push(`<h1 id="${slug}" class="scroll-mt-24 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-10 mb-4 tracking-tight border-b border-slate-200 dark:border-slate-800/80 pb-3 flex items-center justify-between group">
         <span>${formatInline(text)}</span>
         <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-base transition-opacity">#</a>
@@ -210,7 +243,7 @@ function parseMarkdownNative(md) {
     }
     if (line.startsWith('## ')) {
       const text = line.slice(3);
-      const slug = slugify(text);
+      const slug = getHeadingSlug(text);
       html.push(`<h2 id="${slug}" class="scroll-mt-24 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-100 dark:border-slate-800/40 pb-2 flex items-center justify-between group">
         <span>${formatInline(text)}</span>
         <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-sm transition-opacity">#</a>
@@ -219,7 +252,7 @@ function parseMarkdownNative(md) {
     }
     if (line.startsWith('### ')) {
       const text = line.slice(4);
-      const slug = slugify(text);
+      const slug = getHeadingSlug(text);
       html.push(`<h3 id="${slug}" class="scroll-mt-24 text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 mt-6 mb-2 flex items-center justify-between group">
         <span>${formatInline(text)}</span>
         <a href="#${slug}" class="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-indigo-500 text-xs transition-opacity">#</a>
@@ -228,7 +261,7 @@ function parseMarkdownNative(md) {
     }
     if (line.startsWith('#### ')) {
       const text = line.slice(5);
-      const slug = slugify(text);
+      const slug = getHeadingSlug(text);
       html.push(`<h4 id="${slug}" class="scroll-mt-24 text-sm font-bold text-slate-800 dark:text-slate-200 mt-5 mb-1.5">${formatInline(text)}</h4>`);
       continue;
     }
@@ -557,4 +590,72 @@ if (typeof window !== 'undefined') {
       }
     });
   };
+}
+
+/**
+ * Convierte HTML formateado del editor WYSIWYG / Word a Markdown estándar
+ */
+export function htmlToMarkdown(html = '') {
+  if (!html || typeof html !== 'string') return '';
+  if (typeof document === 'undefined') return html;
+
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+
+  function nodeToMd(node) {
+    if (node.nodeType === 3) { // TEXT_NODE
+      return node.textContent;
+    }
+    if (node.nodeType !== 1) return ''; // ELEMENT_NODE
+
+    const tag = node.tagName.toLowerCase();
+    const children = Array.from(node.childNodes).map(nodeToMd).join('');
+
+    switch (tag) {
+      case 'h1': return `\n\n# ${children.trim()}\n\n`;
+      case 'h2': return `\n\n## ${children.trim()}\n\n`;
+      case 'h3': return `\n\n### ${children.trim()}\n\n`;
+      case 'h4': return `\n\n#### ${children.trim()}\n\n`;
+      case 'p': return `\n\n${children.trim()}\n\n`;
+      case 'strong':
+      case 'b': return `**${children.trim()}**`;
+      case 'em':
+      case 'i': return `*${children.trim()}*`;
+      case 'u': return `<u>${children.trim()}</u>`;
+      case 's':
+      case 'del':
+      case 'strike': return `~~${children.trim()}~~`;
+      case 'code':
+        if (node.parentElement && node.parentElement.tagName.toLowerCase() === 'pre') {
+          return children;
+        }
+        return `\`${children}\``;
+      case 'pre': {
+        const lang = node.getAttribute('data-lang') || '';
+        return `\n\n\`\`\`${lang}\n${node.textContent.trim()}\n\`\`\`\n\n`;
+      }
+      case 'blockquote': return `\n\n> ${children.trim().replace(/\n/g, '\n> ')}\n\n`;
+      case 'ul': {
+        const items = Array.from(node.children)
+          .filter(c => c.tagName.toLowerCase() === 'li')
+          .map(li => `- ${Array.from(li.childNodes).map(nodeToMd).join('').trim()}`)
+          .join('\n');
+        return `\n\n${items}\n\n`;
+      }
+      case 'ol': {
+        const items = Array.from(node.children)
+          .filter(c => c.tagName.toLowerCase() === 'li')
+          .map((li, i) => `${i + 1}. ${Array.from(li.childNodes).map(nodeToMd).join('').trim()}`)
+          .join('\n');
+        return `\n\n${items}\n\n`;
+      }
+      case 'hr': return '\n\n---\n\n';
+      case 'br': return '\n';
+      case 'div': return `\n${children}\n`;
+      default: return children;
+    }
+  }
+
+  const rawMd = Array.from(temp.childNodes).map(nodeToMd).join('');
+  return rawMd.replace(/\n{3,}/g, '\n\n').trim();
 }

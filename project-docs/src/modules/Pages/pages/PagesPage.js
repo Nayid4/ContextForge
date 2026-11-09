@@ -33,10 +33,10 @@ export function renderPageHeaderActions({
       <!-- Sync Status Badge -->
       <span
         id="plane-page-sync-badge"
-        class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[10px] font-mono font-semibold text-emerald-300"
+        class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-500/30 text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-300"
         title="Sincronizado bidireccionalmente entre SQLite (harness.db) y archivo físico .md"
       >
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
         <span>SQLite + .md Synced</span>
       </span>
 
@@ -46,16 +46,16 @@ export function renderPageHeaderActions({
         data-action="toggle-page-access"
         data-page-id="${pageId}"
         ${isArchived ? 'disabled' : ''}
-        class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-semibold transition-colors ${
+        class="h-7 inline-flex items-center gap-1 px-2 rounded-md border text-[11px] font-mono font-semibold transition-colors shadow-2xs ${
           isArchived
-            ? 'bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-not-allowed'
+            ? 'bg-gray-100 dark:bg-zinc-900/50 border-gray-200 dark:border-zinc-800/50 text-gray-400 dark:text-zinc-600 cursor-not-allowed'
             : isPrivate
-              ? 'bg-violet-500/15 border-violet-500/40 text-violet-300 cursor-pointer hover:bg-violet-500/25'
-              : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 cursor-pointer'
+              ? 'bg-violet-50 dark:bg-violet-500/15 border-violet-200 dark:border-violet-500/40 text-violet-700 dark:text-violet-300 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-500/25'
+              : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer'
         }"
         title="${isArchived ? 'Restaura la página para cambiar el acceso' : isPrivate ? 'Página Privada (Clic para hacer Pública)' : 'Página Pública (Clic para hacer Privada)'}"
       >
-        ${isPrivate ? Icons.lock('w-3 h-3') : Icons.globe('w-3 h-3 text-indigo-400')}
+        ${isPrivate ? Icons.lock('w-3 h-3 text-violet-600 dark:text-violet-400') : Icons.globe('w-3 h-3 text-indigo-600 dark:text-indigo-400')}
         <span>${isPrivate ? 'Private' : 'Public'}</span>
       </button>
 
@@ -65,14 +65,14 @@ export function renderPageHeaderActions({
           type="button"
           data-action="toggle-page-favorite"
           data-page-id="${pageId}"
-          class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+          class="h-7 w-7 rounded-md border flex items-center justify-center transition-colors cursor-pointer shadow-2xs ${
             isFavorite
-              ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/40 text-amber-600 dark:text-amber-300'
+              : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
           }"
           title="${isFavorite ? 'Quitar de Favoritas' : 'Marcar como Página Favorita'}"
         >
-          ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400' : ''}`)}
+          ${Icons.star(`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400 text-amber-500' : ''}`)}
         </button>
       ` : ''}
 
@@ -81,14 +81,14 @@ export function renderPageHeaderActions({
         type="button"
         data-action="toggle-page-lock"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+        class="h-7 w-7 rounded-md border flex items-center justify-center transition-colors cursor-pointer shadow-2xs ${
           isLocked
-            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+            ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/40 text-amber-600 dark:text-amber-300'
+            : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
         }"
         title="${isLocked ? 'Página Normativa Bloqueada (Clic para desbloquear edición)' : 'Bloquear edición (Página Normativa)'}"
       >
-        ${isLocked ? Icons.lock('w-3.5 h-3.5') : Icons.unlock('w-3.5 h-3.5')}
+        ${isLocked ? Icons.lock('w-3.5 h-3.5 text-amber-500') : Icons.unlock('w-3.5 h-3.5')}
       </button>
 
       <!-- Full Width Toggle (view_props.full_width) -->
@@ -96,10 +96,10 @@ export function renderPageHeaderActions({
         type="button"
         data-action="toggle-page-fullwidth"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+        class="h-7 w-7 rounded-md border flex items-center justify-center transition-colors cursor-pointer shadow-2xs ${
           isFullWidth
-            ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-300'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+            ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-200 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-300'
+            : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
         }"
         title="${isFullWidth ? 'Restaurar ancho centrado editorial' : 'Alternar Ancho Completo (Full Width)'}"
       >
@@ -111,7 +111,7 @@ export function renderPageHeaderActions({
         type="button"
         data-action="copy-page-markdown"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        class="h-7 w-7 rounded-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
         title="Copiar código Markdown al portapapeles"
       >
         ${Icons.copy('w-3.5 h-3.5')}
@@ -122,7 +122,7 @@ export function renderPageHeaderActions({
         type="button"
         data-action="duplicate-page"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        class="h-7 w-7 rounded-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
         title="Hacer una copia de la página (Make a copy)"
       >
         ${Icons.plus('w-3.5 h-3.5')}
@@ -133,10 +133,10 @@ export function renderPageHeaderActions({
         type="button"
         data-action="toggle-page-archive"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+        class="h-7 w-7 rounded-md border flex items-center justify-center transition-colors cursor-pointer shadow-2xs ${
           isArchived
-            ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+            ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/40 text-rose-600 dark:text-rose-300'
+            : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
         }"
         title="${isArchived ? 'Restaurar página archivada (Restore)' : 'Archivar página (Archive)'}"
       >
@@ -148,7 +148,7 @@ export function renderPageHeaderActions({
         type="button"
         data-action="open-export-page-modal"
         data-page-id="${pageId}"
-        class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors cursor-pointer"
+        class="h-7 w-7 rounded-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
         title="Exportar página (Markdown / HTML Report)"
       >
         ${Icons.download('w-3.5 h-3.5')}
@@ -160,10 +160,10 @@ export function renderPageHeaderActions({
           type="button"
           data-action="toggle-page-ai-menu"
           data-page-id="${pageId}"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer shadow-2xs ${
             showAiMenu
               ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-              : 'bg-indigo-600/15 border-indigo-500/35 text-indigo-300 hover:bg-indigo-600/25'
+              : 'bg-indigo-50 dark:bg-indigo-600/15 border-indigo-200 dark:border-indigo-500/35 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-600/25'
           }"
           title="Abrir Asistente IA de Página (Ask Harness AI)"
         >
@@ -174,76 +174,76 @@ export function renderPageHeaderActions({
         ${showAiMenu ? `
           <div
             id="plane-page-ai-popover"
-            class="absolute right-0 top-9 z-50 w-80 sm:w-96 p-4 rounded-xl bg-zinc-900/95 backdrop-blur-md border border-indigo-500/30 shadow-2xl space-y-3 text-left"
+            class="absolute right-0 top-9 z-50 w-80 sm:w-96 p-4 rounded-xl bg-white dark:bg-zinc-900/95 backdrop-blur-md border border-gray-200 dark:border-indigo-500/30 shadow-2xl space-y-3 text-left text-gray-900 dark:text-zinc-100"
           >
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 pb-2">
               <div class="flex items-center gap-2">
-                <span class="p-1 rounded-md bg-indigo-500/20 text-indigo-300">
+                <span class="p-1 rounded-md bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300">
                   ${Icons.sparkles('w-3.5 h-3.5')}
                 </span>
                 <div>
-                  <div class="text-xs font-bold text-zinc-100">Ask Harness AI · Contexto de Página</div>
-                  <div class="text-[10px] font-mono text-zinc-400">Agente: /project-knowledge + SQLite Graph</div>
+                  <div class="text-xs font-bold text-gray-900 dark:text-zinc-100">Ask Harness AI · Contexto de Página</div>
+                  <div class="text-[10px] font-mono text-gray-500 dark:text-zinc-400">Agente: /project-knowledge + SQLite Graph</div>
                 </div>
               </div>
               <button
                 type="button"
                 data-action="toggle-page-ai-menu"
-                class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 cursor-pointer"
               >
                 ${Icons.close('w-3.5 h-3.5')}
               </button>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800/80 space-y-1.5 text-[11px]">
-              <div class="flex items-center justify-between text-zinc-300">
+            <div class="p-2.5 rounded-lg bg-gray-50 dark:bg-zinc-950/90 border border-gray-200 dark:border-zinc-800/80 space-y-1.5 text-[11px]">
+              <div class="flex items-center justify-between text-gray-700 dark:text-zinc-300">
                 <span class="font-semibold">Telemetría Semántica:</span>
-                <span class="font-mono text-indigo-300">${activePage.word_count || 0} palabras · ${activePage.diagrams_count || 0} diagramas</span>
+                <span class="font-mono text-indigo-600 dark:text-indigo-300">${activePage.word_count || 0} palabras · ${activePage.diagrams_count || 0} diagramas</span>
               </div>
-              <div class="flex items-center justify-between text-zinc-400">
+              <div class="flex items-center justify-between text-gray-600 dark:text-zinc-400">
                 <span>Tareas vinculadas (PageLog):</span>
-                <span class="font-mono text-emerald-400">${issueLinks.length} INT-*</span>
+                <span class="font-mono text-emerald-600 dark:text-emerald-400">${issueLinks.length} INT-*</span>
               </div>
-              <div class="flex items-center justify-between text-zinc-400">
+              <div class="flex items-center justify-between text-gray-600 dark:text-zinc-400">
                 <span>Invariantes y Reglas (BR/RF/ADR):</span>
-                <span class="font-mono text-amber-300">${ruleLinks.length} nodos</span>
+                <span class="font-mono text-amber-600 dark:text-amber-300">${ruleLinks.length} nodos</span>
               </div>
             </div>
 
             <div class="space-y-1.5">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Acciones de Agente IA (Plane AI Menu)</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Acciones de Agente IA (Plane AI Menu)</div>
               <button
                 type="button"
                 data-action="switch-page-nav-tab"
                 data-tab="info"
-                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-950/80 hover:bg-indigo-950/40 border border-zinc-800 hover:border-indigo-500/40 text-xs text-zinc-200 transition-colors cursor-pointer"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-950/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-gray-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 text-xs text-gray-800 dark:text-zinc-200 transition-colors cursor-pointer"
               >
                 <span>Inspeccionar Grafo Relacional (PageLog)</span>
-                <span class="font-mono text-[10px] text-indigo-400">${logs.length} vínculos</span>
+                <span class="font-mono text-[10px] text-indigo-600 dark:text-indigo-400">${logs.length} vínculos</span>
               </button>
               <button
                 type="button"
                 data-action="switch-page-nav-tab"
                 data-tab="assets"
-                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-950/80 hover:bg-indigo-950/40 border border-zinc-800 hover:border-indigo-500/40 text-xs text-zinc-200 transition-colors cursor-pointer"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-950/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-gray-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 text-xs text-gray-800 dark:text-zinc-200 transition-colors cursor-pointer"
               >
                 <span>Auditar Diagramas Mermaid & Assets</span>
-                <span class="font-mono text-[10px] text-indigo-400">${activePage.diagrams_count || 0} diagramas</span>
+                <span class="font-mono text-[10px] text-indigo-600 dark:text-indigo-400">${activePage.diagrams_count || 0} diagramas</span>
               </button>
               <button
                 type="button"
                 data-action="switch-page-nav-tab"
                 data-tab="version_history"
-                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-950/80 hover:bg-indigo-950/40 border border-zinc-800 hover:border-indigo-500/40 text-xs text-zinc-200 transition-colors cursor-pointer"
+                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-950/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-gray-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-500/40 text-xs text-gray-800 dark:text-zinc-200 transition-colors cursor-pointer"
               >
                 <span>Consultar Historial de Versiones IA</span>
-                <span class="font-mono text-[10px] text-emerald-400">${(activePage.versions || []).length || 1} snapshots</span>
+                <span class="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">${(activePage.versions || []).length || 1} snapshots</span>
               </button>
             </div>
 
-            <div class="pt-1 border-t border-zinc-800/80">
-              <div class="text-[10px] text-zinc-500 mb-1">Comando CLI para Skill <code class="text-indigo-300">/project-knowledge</code>:</div>
-              <code class="block p-2 rounded bg-zinc-950 border border-zinc-800 text-[10px] font-mono text-emerald-300 break-all select-all">node project-docs/cli.js page upsert --id "${pageId}" --title "${(activePage.title || 'Doc').replace(/"/g, '')}" --shelf "${activePage.shelf || 'architecture'}" --file "project-docs/${activePage.file_path || 'knowledge/c4-model.md'}"</code>
+            <div class="pt-1 border-t border-gray-200 dark:border-zinc-800/80">
+              <div class="text-[10px] text-gray-500 dark:text-zinc-500 mb-1">Comando CLI para Skill <code class="text-indigo-600 dark:text-indigo-300">/project-knowledge</code>:</div>
+              <code class="block p-2 rounded bg-gray-100 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 text-[10px] font-mono text-emerald-600 dark:text-emerald-300 break-all select-all">node project-docs/cli.js page upsert --id "${pageId}" --title "${(activePage.title || 'Doc').replace(/"/g, '')}" --shelf "${activePage.shelf || 'architecture'}" --file "project-docs/${activePage.file_path || 'knowledge/c4-model.md'}"</code>
             </div>
           </div>
         ` : ''}
@@ -253,10 +253,10 @@ export function renderPageHeaderActions({
       <button
         type="button"
         data-action="toggle-page-nav-pane"
-        class="p-1.5 rounded-lg border transition-colors cursor-pointer ${
+        class="p-1.5 rounded-lg border transition-colors cursor-pointer shadow-2xs ${
           showNavigationPane
-            ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-300'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+            ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-200 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-300'
+            : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
         }"
         title="${showNavigationPane ? 'Ocultar Panel de Inspección Derecho' : 'Abrir Panel de Inspección Derecho (Outline, Info, Assets, Historial)'}"
       >

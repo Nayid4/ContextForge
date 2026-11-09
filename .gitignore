@@ -37,3 +37,7 @@ project-docs/kickstart.json
 *.db-journal
 *.db-wal
 *.db-shm
+*.bak
+
+# ─── Scratch / Temporary ──────────────────────────────────────────
+project-docs/scratch/

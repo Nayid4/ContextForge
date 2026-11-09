@@ -8,10 +8,7 @@ const getInitialTheme = () => {
     const saved = localStorage.getItem('harness_theme');
     if (saved) return saved;
   }
-  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
-  return 'dark'; // Dark mode por defecto para el arnés
+  return 'light'; // Light mode por defecto para replicar 1:1 Plane Wiki
 };
 
 export const defaultInitialState = {

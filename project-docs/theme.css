@@ -1,0 +1,239 @@
+/* Theme tokens and microinteractions matching Plane Web & Editor (Pixel-Perfect) */
+
+:root, html:not(.dark) {
+  /* Plane Canvas & Surfaces (Light Mode) */
+  --bg-canvas: #ffffff;
+  --bg-surface-1: #f8fafc;
+  --bg-surface-2: #ffffff;
+  --bg-layer-1: #ffffff;
+  --bg-layer-2: #f1f5f9;
+  --bg-layer-3: #e2e8f0;
+
+  /* Plane Borders & Separators (Light Mode) */
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-width-sm: 1px;
+  --border-width-md: 1.5px;
+
+  /* Plane Typography & Text (Light Mode) */
+  --txt-primary: #0f172a;
+  --txt-secondary: #334155;
+  --txt-tertiary: #64748b;
+  --txt-disabled: #94a3b8;
+  --txt-accent: #2563eb;
+  --txt-danger: #dc2626;
+  --txt-warning: #d97706;
+  --txt-success: #059669;
+
+  /* Fonts */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+html.dark {
+  /* Plane Canvas & Surfaces (Extracted In-Vivo from Plane Dark Mode) */
+  --bg-canvas: #0e0f12;                     /* oklch(0.1689 0.0021 286.18) */
+  --bg-surface-1: #131418;                   /* oklch(0.1917 0.002 286.21) */
+  --bg-surface-2: #17191e;                   /* oklch(0.2158 0.0025 230.82) */
+  --bg-layer-1: #17191e;                     /* oklch(0.2158 0.0025 230.82) */
+  --bg-layer-2: #1c1e24;                     /* oklch(0.2378 0.0029 230.83) */
+  --bg-layer-3: #22242b;                     /* oklch(0.2593 0.0033 230.84) */
+
+  /* Plane Borders & Separators (Dark Mode) */
+  --border-subtle: rgba(255, 255, 255, 0.08); /* oklch(0.2593 0.0033 230.84) */
+  --border-strong: rgba(255, 255, 255, 0.18); /* oklch(0.3999 0.0059 230.87) */
+
+  /* Plane Typography & Text (Dark Mode) */
+  --txt-primary: #eaecee;                    /* oklch(0.9235 0.0017 230.68) */
+  --txt-secondary: #ced1d6;                  /* oklch(0.8455 0.0035 230.72) */
+  --txt-tertiary: #b1b5bc;                   /* oklch(0.7655 0.0054 230.76) */
+  --txt-disabled: #797e88;                   /* oklch(0.5989 0.0096 230.88) */
+  --txt-accent: #3f75f3;                     /* oklch(0.6311 0.1262 238.01) */
+  --txt-danger: #ef4444;                     /* oklch(0.7910 0.0874 23.59) */
+  --txt-warning: #f59e0b;                    /* oklch(0.7724 0.1727 65.36) */
+  --txt-success: #10b981;                    /* oklch(0.7785 0.1398 151.07) */
+}
+
+/* Base Body Styles */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-canvas);
+  color: var(--txt-primary);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 1. Page Title Editor (Matching Plane title-editor.css) */
+.page-title-editor {
+  width: 100%;
+  outline: none;
+  resize: none;
+  border-radius: 0;
+  border: none;
+  background-color: transparent;
+  font-weight: 700;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  letter-spacing: -0.025em;
+  color: var(--txt-primary);
+  padding: 0;
+  margin: 0;
+}
+
+.page-title-editor:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* 2. List Item Microinteractions */
+.plane-page-item {
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plane-page-item .action-buttons-group {
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plane-page-item:hover .action-buttons-group,
+.plane-page-item:focus-within .action-buttons-group {
+  opacity: 1;
+}
+
+/* 3. Underline Tab Active Indicator (Plane Standard) */
+.tab-underline-active {
+  position: relative;
+  color: var(--txt-primary) !important;
+  font-weight: 600;
+}
+
+.tab-underline-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--txt-accent);
+  border-radius: 2px 2px 0 0;
+}
+
+/* 4. Plane Scrollbar Styles */
+.scrollbar-sm::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.scrollbar-sm::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-sm::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.15);
+  border-radius: 4px;
+}
+.scrollbar-sm::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 161, 170, 0.35);
+}
+
+/* 5. Clean Reading Typography (Notion / Plane Editor Canvas) */
+.prose-plane {
+  color: var(--txt-secondary);
+  line-height: 1.75;
+  font-size: 0.9375rem;
+}
+
+.prose-plane h1, .prose-plane h2, .prose-plane h3, .prose-plane h4 {
+  color: var(--txt-primary);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-plane p {
+  margin-bottom: 1rem;
+}
+
+.prose-plane code {
+  font-family: var(--font-mono);
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--txt-primary);
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.85em;
+}
+
+html.dark .prose-plane code {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.prose-plane pre code {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* 6. High-Density Issue Row */
+.plane-issue-row {
+  height: 42px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 150ms ease;
+}
+
+.plane-issue-row:hover {
+  background-color: rgba(255, 255, 255, 0.035);
+}
+
+/* 7. Kanban Board & Cards */
+.plane-kanban-column {
+  width: 320px;
+  flex-shrink: 0;
+  background-color: rgba(19, 20, 24, 0.65);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 12rem);
+}
+
+.plane-kanban-card {
+  background-color: var(--bg-layer-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 150ms ease;
+}
+
+.plane-kanban-card:hover {
+  border-color: var(--border-strong);
+  background-color: #22242b;
+  transform: translateY(-1px);
+}
+
+/* 8. Flyout Drawer / Modal Card */
+.plane-drawer-card {
+  background-color: var(--bg-surface-1);
+  border-left: 1px solid var(--border-subtle);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+/* 9. Editorial Reading Canvas */
+.plane-editorial-canvas {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+.plane-metadata-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}

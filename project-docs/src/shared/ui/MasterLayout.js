@@ -16,7 +16,7 @@ export function renderMasterLayout({
   modalHtml = ''
 } = {}) {
   return `
-    <div id="plane-app-root" class="min-h-screen bg-zinc-950 text-zinc-100 flex flex-row font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div id="plane-app-root" class="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-row font-sans selection:bg-indigo-500/20 selection:text-indigo-900 dark:selection:text-indigo-200">
       <!-- 1. Left Sidebar -->
       ${renderPlaneSidebar(sidebarProps)}
 

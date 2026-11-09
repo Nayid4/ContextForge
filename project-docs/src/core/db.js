@@ -467,6 +467,32 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
     );
   `);
 
+  // 21b. Collections (Plane Wiki Collections Model - Dynamic Spaces)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS collections (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL DEFAULT 'proj-harness',
+      workspace_id TEXT NOT NULL DEFAULT 'ws-harness',
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      icon TEXT DEFAULT 'folder',
+      color TEXT DEFAULT '#f59e0b',
+      is_private INTEGER NOT NULL DEFAULT 0,
+      sort_order REAL DEFAULT 1000,
+      archived_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
+  `);
+  ensureColumn(db, 'collections', 'workspace_id', "TEXT NOT NULL DEFAULT 'ws-harness'");
+  ensureColumn(db, 'collections', 'description', "TEXT DEFAULT ''");
+  ensureColumn(db, 'collections', 'icon', "TEXT DEFAULT 'folder'");
+  ensureColumn(db, 'collections', 'color', "TEXT DEFAULT '#f59e0b'");
+  ensureColumn(db, 'collections', 'is_private', "INTEGER NOT NULL DEFAULT 0");
+  ensureColumn(db, 'collections', 'sort_order', "REAL DEFAULT 1000");
+  ensureColumn(db, 'collections', 'archived_at', "DATETIME");
+
   // 22. Pages (Plane Page / Knowledge Base / Specs Model)
   db.exec(`
     CREATE TABLE IF NOT EXISTS pages (
@@ -476,6 +502,10 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       owned_by_id TEXT DEFAULT 'user-spec-author',
       owned_by_role TEXT DEFAULT 'spec-author',
       updated_by_id TEXT DEFAULT 'user-spec-author',
+      parent_id TEXT,
+      collection_id TEXT NOT NULL DEFAULT 'general',
+      owner_name TEXT DEFAULT 'spec-author',
+      emoji TEXT DEFAULT 'page',
       module_id TEXT,
       file_path TEXT NOT NULL UNIQUE,
       title TEXT NOT NULL,
@@ -497,10 +527,16 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       reading_time_min INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id)
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE RESTRICT,
+      FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL
     );
   `);
   ensureColumn(db, 'pages', 'workspace_id', "TEXT NOT NULL DEFAULT 'ws-harness'");
+  ensureColumn(db, 'pages', 'parent_id', 'TEXT');
+  ensureColumn(db, 'pages', 'collection_id', "TEXT NOT NULL DEFAULT 'general'");
+  ensureColumn(db, 'pages', 'owner_name', "TEXT DEFAULT 'spec-author'");
+  ensureColumn(db, 'pages', 'emoji', "TEXT DEFAULT 'page'");
   ensureColumn(db, 'pages', 'owned_by_id', "TEXT DEFAULT 'user-spec-author'");
   ensureColumn(db, 'pages', 'owned_by_role', "TEXT DEFAULT 'spec-author'");
   ensureColumn(db, 'pages', 'updated_by_id', "TEXT DEFAULT 'user-spec-author'");
@@ -517,7 +553,20 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
   ensureColumn(db, 'pages', 'char_count', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'paragraph_count', 'INTEGER NOT NULL DEFAULT 0');
   ensureColumn(db, 'pages', 'diagrams_count', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'pages', 'slug', 'TEXT');
+  ensureColumn(db, 'pages', 'sort_order', 'REAL DEFAULT 1000');
+  ensureColumn(db, 'pages', 'depth', 'INTEGER DEFAULT 0');
   ensureColumn(db, 'pages', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
+
+  // Indexes for Knowledge Base & Wiki Performance
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pages_collection_id ON pages(collection_id);
+    CREATE INDEX IF NOT EXISTS idx_pages_parent_id ON pages(parent_id);
+    CREATE INDEX IF NOT EXISTS idx_pages_archived_at ON pages(archived_at);
+    CREATE INDEX IF NOT EXISTS idx_pages_favorite ON pages(is_favorite);
+    CREATE INDEX IF NOT EXISTS idx_collections_proj ON collections(project_id, workspace_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_pages_collection_slug ON pages(collection_id, slug);
+  `);
 
   // 23. Page Versions (Plane PageVersion Historical Snapshot Model)
   db.exec(`
@@ -535,7 +584,6 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
     );
   `);
-
   // 24. Page Logs (Plane PageLog Model: Entity Mentions, Issues INT-XXX, Rules BR-*, Backlinks)
   db.exec(`
     CREATE TABLE IF NOT EXISTS page_logs (
@@ -550,6 +598,8 @@ export function initDatabase(dbPath = DEFAULT_DB_PATH) {
       FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
     );
   `);
+  ensureColumn(db, 'page_logs', 'action', "TEXT DEFAULT 'mention'");
+  ensureColumn(db, 'page_logs', 'log_message', "TEXT DEFAULT ''");
 
   // 25. Page Labels (Plane PageLabel Model: Knowledge Base Tagging)
   db.exec(`

@@ -12,7 +12,15 @@ export { PageShelfTree } from './components/PageShelfTree.js';
 export { PageReader, enrichMarkdownWithSmartChips } from './components/PageReader.js';
 export { PageNavigationPane, renderFloatingOutlineBars } from './components/PageNavigationPane.js';
 export { DualMarkdownEditor } from './components/DualMarkdownEditor.js';
-export { renderKnowledgeBase, getPageName } from './components/KnowledgeBase.js';
+export { renderKnowledgeBase, getPageName, renderPageCard } from './components/KnowledgeBase.js';
+export { renderPagesHeader } from './components/PagesHeader.js';
+export { renderPageListRow } from './components/PageListBlock.js';
+export { renderPageReaderCanvas } from './components/PageReaderCanvas.js';
+export { renderPagePerspectives } from './components/PagePerspectives.js';
+export { renderPageModals } from './components/PageModals.js';
+
+// Controller
+export { PagesController } from './controllers/PagesController.js';
 
 // Master Page
 import { PagesPage, renderPageHeaderActions } from './pages/PagesPage.js';

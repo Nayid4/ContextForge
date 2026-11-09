@@ -28,8 +28,8 @@ export function renderPlaneControlsBar({
   const renderViewModeBtn = (m) => `
     <button data-view-mode="${m.id}" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
       currentViewMode === m.id
-        ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/80 font-semibold'
-        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent'
+        ? 'bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 shadow-xs border border-gray-200 dark:border-zinc-700/80 font-semibold'
+        : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 hover:bg-gray-200/50 dark:hover:bg-zinc-900 border border-transparent'
     }">
       ${(Icons[m.icon] || Icons.terminal)('w-3.5 h-3.5')}
       <span>${m.label}</span>
@@ -37,9 +37,9 @@ export function renderPlaneControlsBar({
   `;
 
   return `
-    <div id="plane-controls-bar" class="border-b border-zinc-800/80 bg-zinc-950/60 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs sticky top-14 z-10 backdrop-blur-sm">
+    <div id="plane-controls-bar" class="border-b border-gray-200 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-950/60 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs sticky top-12 z-10 backdrop-blur-sm transition-colors">
       <!-- Left: View Mode Pills -->
-      <div class="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-zinc-800">
+      <div class="flex items-center gap-1 bg-gray-100 dark:bg-zinc-900/90 p-0.5 rounded-lg border border-gray-200 dark:border-zinc-800">
         ${renderList(viewModes, renderViewModeBtn)}
       </div>
 
@@ -52,9 +52,9 @@ export function renderPlaneControlsBar({
             id="plane-issue-search"
             value="${searchQuery}"
             placeholder="Filtrar tareas..."
-            class="pl-8 pr-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 focus:border-indigo-500 focus:outline-none text-xs text-zinc-200 placeholder-zinc-500 w-48 sm:w-60 transition-all shadow-inner"
+            class="pl-8 pr-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 focus:border-indigo-500 focus:outline-none text-xs text-gray-800 dark:text-zinc-200 placeholder-gray-400 dark:placeholder-zinc-500 w-48 sm:w-60 transition-all shadow-2xs"
           />
-          <div class="absolute left-2.5 top-2 text-zinc-500 pointer-events-none">
+          <div class="absolute left-2.5 top-2 text-gray-400 dark:text-zinc-500 pointer-events-none">
             ${Icons.search('w-3.5 h-3.5')}
           </div>
         </div>

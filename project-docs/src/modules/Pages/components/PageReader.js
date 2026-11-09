@@ -6,8 +6,9 @@
  */
 import { Icons } from '../../../shared/ui/Icons.js';
 import { renderList } from '../../../shared/utils/renderList.js';
-import { renderMarkdown } from '../../../shared/utils/markdown.js';
+import { renderMarkdown, escapeHtml } from '../../../shared/utils/markdown.js';
 import { PageNavigationPane, renderFloatingOutlineBars } from './PageNavigationPane.js';
+import { formatTimeAgo } from '../../../shared/utils/dates.js';
 
 /**
  * Transforma referencias técnicas (INT-XXX, BR-XXX, RF-XXX, ADR-XXX, CAP-XXX) en Smart Entity Chips
@@ -102,10 +103,41 @@ export function PageReader({
 
   return `
     <div class="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden relative">
-      <!-- Reading Column (Centered or Full Width per Plane view_props) -->
-      <article class="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto ${viewPropsFullWidth ? 'max-w-none w-full' : 'max-w-4xl mx-auto w-full'} selection:bg-indigo-500/20 selection:text-indigo-200 transition-all">
+      <!-- Reading Column (Centered max-w-[760px] or Full Width max-w-[1152px] per Plane view_props) -->
+      <article class="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto ${viewPropsFullWidth ? 'max-w-[1152px] mx-auto w-full' : 'max-w-[760px] mx-auto w-full'} selection:bg-indigo-500/20 selection:text-indigo-200 transition-all">
+        <!-- Plane Icon & Cover Controls -->
+        <div class="flex items-center gap-2 mb-3">
+          <button
+            type="button"
+            data-action="add-page-icon"
+            class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors cursor-pointer"
+          >
+            ${Icons.smile('w-3.5 h-3.5')}
+            <span>Add icon</span>
+          </button>
+          <button
+            type="button"
+            data-action="add-page-cover"
+            class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors cursor-pointer"
+          >
+            ${Icons.image('w-3.5 h-3.5')}
+            <span>Add cover</span>
+          </button>
+        </div>
+
+        <!-- Plane Editable H1 Title -->
+        <div class="mb-3">
+          <input
+            type="text"
+            id="article-editable-title"
+            value="${escapeHtml(page.title || 'Untitled')}"
+            placeholder="Untitled"
+            class="w-full bg-transparent border-0 text-3xl font-bold tracking-tight text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-0 transition-colors py-1"
+          />
+        </div>
+
         <!-- Document Meta Badge & Plane Labels -->
-        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400 font-mono mb-4 pb-4 border-b border-zinc-800/60">
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400 font-mono mb-6 pb-4 border-b border-zinc-800/60">
           <div class="flex flex-wrap items-center gap-2.5">
             <span class="flex items-center gap-1.5 text-indigo-400">
               ${Icons.fileText('w-3.5 h-3.5')}
@@ -115,6 +147,13 @@ export function PageReader({
             <span>${words} palabras</span>
             <span class="text-zinc-600">·</span>
             <span>${readingTime} min de lectura</span>
+            ${page.updated_at ? `
+              <span class="text-zinc-600">·</span>
+              <span class="inline-flex items-center gap-1 text-zinc-400">
+                ${Icons.clock('w-3 h-3 text-zinc-500')}
+                <span>${formatTimeAgo(page.updated_at)}</span>
+              </span>
+            ` : ''}
             ${isLocked ? `
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-semibold">
                 ${Icons.lock('w-3 h-3')}

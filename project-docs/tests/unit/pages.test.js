@@ -261,6 +261,18 @@ test('Plane Library UI/UX Suite: renderKnowledgeBase incluye pestañas Public/Pr
   assert.ok(html.includes('data-page-access-tab="public"'));
   assert.ok(html.includes('data-page-access-tab="private"'));
   assert.ok(html.includes('data-page-access-tab="archived"'));
+  assert.ok(html.includes('data-page-tab="all"'));
+  assert.ok(html.includes('data-page-tab="created_by_me"'));
+  assert.ok(html.includes('data-page-tab="favorited"'));
+  assert.ok(html.includes('btn-view-layout-list'));
+  assert.ok(html.includes('btn-view-layout-card'));
+  assert.ok(html.includes('kb-pages-grid-container'));
+  assert.ok(html.includes('btn-new-page-main'));
+  assert.ok(html.includes('new-page-dropdown-menu'));
+  assert.ok(html.includes('article-editable-title'));
+  assert.ok(html.includes('Add icon'));
+  assert.ok(html.includes('Add cover'));
+  assert.ok(html.includes('plane-page-card'));
   assert.ok(html.includes('kb-sort-by-select'));
   assert.ok(html.includes('kb-filters-popover'));
   assert.ok(html.includes('export-page-modal'));

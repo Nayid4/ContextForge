@@ -78,6 +78,14 @@ export const DEFAULT_MODULES = [
   { id: 'mod-core', name: 'Harness Core', description: 'Scripts verify.sh, configuraciones y reglas del arnes', lead_role: 'leader', status: 'completed' }
 ];
 
+export const DEFAULT_COLLECTIONS = [
+  { id: 'general', name: 'General', description: 'Contexto de negocio, visión, estándares y glosario transversal', icon: 'folder', color: '#6b7280', is_private: 0, sort_order: 10 },
+  { id: 'engineering', name: 'Engineering', description: 'Arquitectura AS-IS, modelo C4, diagramas UML, base de datos y contratos de integración', icon: 'flag', color: '#f59e0b', is_private: 0, sort_order: 20 },
+  { id: 'product', name: 'Product', description: 'Visión del producto, especificaciones funcionales (SRS), epics y user stories', icon: 'monitor', color: '#f97316', is_private: 1, sort_order: 30 },
+  { id: 'design', name: 'Design', description: 'Sistema de diseño, tokens UI, especificaciones UX y maquetación de componentes', icon: 'palette', color: '#a855f7', is_private: 0, sort_order: 40 },
+  { id: 'customer_support', name: 'Customer support', description: 'Guías de soporte, procedimientos de despliegue, troubleshooting e incidentes', icon: 'messageSquare', color: '#10b981', is_private: 0, sort_order: 50 }
+];
+
 export const DEFAULT_VIEWS = [
   {
     id: 'view-all-issues',
@@ -325,6 +333,16 @@ export function syncFilesToSQLite(db) {
   `);
   for (const m of DEFAULT_MODULES) {
     modStmt.run(m.id, m.name, m.description, mapRoleToUserId(m.lead_role), m.lead_role, m.status);
+  }
+
+  // 9b. Collections (Plane Wiki Dynamic Spaces)
+  const colStmt = db.prepare(`
+    INSERT INTO collections (id, project_id, workspace_id, name, description, icon, color, is_private, sort_order)
+    VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO NOTHING;
+  `);
+  for (const c of DEFAULT_COLLECTIONS) {
+    colStmt.run(c.id, c.name, c.description, c.icon, c.color, c.is_private, c.sort_order);
   }
 
   // 10. Issue Views & AI Configs
@@ -660,12 +678,17 @@ export function syncFilesToSQLite(db) {
   // 13. Pages, PageVersions, PageLogs & PageLabels desde Markdown (knowledge/ y specs/)
   const pageStmt = db.prepare(`
     INSERT INTO pages (
-      id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
+      id, project_id, workspace_id, parent_id, collection_id, owner_name, emoji,
+      owned_by_id, owned_by_role, updated_by_id, module_id,
       file_path, title, summary, shelf, content_markdown, description_stripped,
       is_locked, is_favorite, view_props,
       word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
-    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
+      parent_id = excluded.parent_id,
+      collection_id = excluded.collection_id,
+      owner_name = excluded.owner_name,
+      emoji = excluded.emoji,
       title = excluded.title,
       summary = excluded.summary,
       shelf = excluded.shelf,
@@ -708,6 +731,98 @@ export function syncFilesToSQLite(db) {
       entity_type = excluded.entity_type;
   `);
 
+  function parseFrontmatter(content = '') {
+    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+    if (!match) return { frontmatter: {}, body: content };
+    const rawYaml = match[1];
+    const body = content.slice(match[0].length);
+    const frontmatter = {};
+    for (const line of rawYaml.split(/\r?\n/)) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx > -1) {
+        const key = line.slice(0, colonIdx).trim();
+        let val = line.slice(colonIdx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        } else if (val === 'true') {
+          val = true;
+        } else if (val === 'false') {
+          val = false;
+        } else if (!isNaN(Number(val)) && val !== '') {
+          val = Number(val);
+        }
+        frontmatter[key] = val;
+      }
+    }
+    return { frontmatter, body };
+  }
+
+  function deriveCollection(relPath, frontmatter = {}) {
+    if (frontmatter.collection) {
+      const c = String(frontmatter.collection).toLowerCase().trim().replace(/[- ]+/g, '_');
+      if (['product', 'engineering', 'general', 'design', 'customer_support'].includes(c)) return c;
+      if (c === 'support') return 'customer_support';
+    }
+    const low = relPath.toLowerCase();
+    if (low.startsWith('knowledge/product/') || low.includes('/product/')) return 'product';
+    if (low.startsWith('knowledge/engineering/') || low.includes('/engineering/')) return 'engineering';
+    if (low.startsWith('knowledge/general/') || low.includes('/general/')) return 'general';
+    if (low.startsWith('knowledge/design/') || low.includes('/design/')) return 'design';
+    if (low.startsWith('knowledge/customer_support/') || low.includes('customer_support') || low.includes('/support/')) return 'customer_support';
+
+    if (low.includes('overview') || low.includes('business') || low.includes('requirements') || low.includes('capabilities') || low.includes('stories') || low.includes('roadmap') || low.includes('prd')) return 'product';
+    if (low.includes('c4') || low.includes('architecture') || low.includes('uml') || low.includes('data-dictionary') || low.includes('coding-standards') || low.includes('traceability') || low.includes('modules/')) return 'engineering';
+    if (low.includes('design') || low.includes('tokens') || low.includes('ui-') || low.includes('components')) return 'design';
+    if (low.includes('runbook') || low.includes('troubleshooting') || low.includes('incident') || low.includes('verify.sh')) return 'customer_support';
+    return 'general';
+  }
+
+  function deriveEmoji(relPath, frontmatter = {}) {
+    if (frontmatter.emoji) return String(frontmatter.emoji).replace(/[^\w-]/g, '') || 'page';
+    if (frontmatter.icon) return String(frontmatter.icon).replace(/[^\w-]/g, '') || 'page';
+    const low = relPath.toLowerCase();
+    if (low.includes('launch') || low.includes('deploy')) return 'rocket';
+    if (low.includes('prd') || low.includes('doc')) return 'fileText';
+    if (low.includes('roadmap') || low.includes('goal')) return 'target';
+    if (low.includes('interview') || low.includes('survey')) return 'clipboard';
+    if (low.includes('pricing') || low.includes('finance')) return 'creditCard';
+    if (low.includes('c4') || low.includes('diagram')) return 'layers';
+    if (low.includes('architecture')) return 'architecture';
+    if (low.includes('data') || low.includes('dictionary') || low.includes('sqlite') || low.includes('erd')) return 'database';
+    if (low.includes('uml') || low.includes('classes') || low.includes('sequence')) return 'barChart';
+    if (low.includes('rule') || low.includes('invariants')) return 'shield';
+    if (low.includes('standard') || low.includes('guardrail')) return 'shield';
+    if (low.includes('traceability') || low.includes('rtm')) return 'link';
+    if (low.includes('service') || low.includes('api')) return 'link';
+    if (low.includes('master') || low.includes('wiki')) return 'book';
+    if (low.includes('design') || low.includes('ui') || low.includes('ux')) return 'palette';
+    if (low.includes('support') || low.includes('troubleshoot') || low.includes('verify')) return 'tool';
+    return 'page';
+  }
+
+  function deriveOwnerName(relPath, frontmatter = {}, ownerRole = 'spec-author') {
+    if (frontmatter.owner) return frontmatter.owner;
+    if (frontmatter.author) return frontmatter.author;
+    const low = relPath.toLowerCase();
+    if (low.includes('overview') || low.includes('roadmap') || low.includes('launch')) return 'Aria';
+    if (low.includes('prd') || low.includes('invite') || low.includes('enterprise')) return 'Marcus';
+    if (low.includes('matrix') || low.includes('permission')) return 'Ana';
+    if (low.includes('interview')) return 'Priya Sharma';
+    if (low.includes('scim') || low.includes('rotation')) return 'Alex';
+    if (low.includes('pricing')) return 'Jordan Kim';
+    if (low.includes('c4') || low.includes('architecture')) return 'Lead Architect';
+    if (low.includes('data-dictionary')) return 'Data Lead';
+    if (low.includes('uml')) return 'spec-author';
+    if (low.includes('business-rules')) return 'Governance Bot';
+    if (low.includes('coding-standards')) return 'reviewer';
+    if (low.includes('traceability')) return 'QA Lead';
+    if (low.includes('external-services')) return 'Cloud Lead';
+    if (low.includes('master')) return 'Knowledge Bot';
+    if (low.includes('design')) return 'Product Designer';
+    if (low.includes('verify')) return 'DevOps Lead';
+    return ownerRole === 'reviewer' ? 'reviewer' : ownerRole === 'leader' ? 'leader' : 'spec-author';
+  }
+
   function classifyShelf(filename) {
     if (filename.startsWith('modules/') || filename.includes('/modules/')) return 'modules';
     if (filename.includes('architecture') || filename.includes('c4') || filename.includes('diagrams') || filename.includes('data-dictionary')) return 'architecture';
@@ -719,6 +834,7 @@ export function syncFilesToSQLite(db) {
   }
 
   const forwardLinksToResolve = [];
+  const parentsToResolve = [];
 
   function indexDirectory(dir, prefix = '', shelfOverride = null) {
     if (!fs.existsSync(dir)) return;
@@ -731,9 +847,10 @@ export function syncFilesToSQLite(db) {
         const relPath = prefix ? `${prefix}/${ent.name}` : ent.name;
         try {
           const content = fs.readFileSync(full, 'utf8');
-          const lines = content.split(/\r?\n/);
-          let title = '';
-          let summary = '';
+          const { frontmatter, body } = parseFrontmatter(content);
+          const lines = body.split(/\r?\n/);
+          let title = frontmatter.title || '';
+          let summary = frontmatter.summary || '';
           for (const l of lines) {
             const tr = l.trim();
             if (!title && tr.startsWith('# ')) {
@@ -750,11 +867,18 @@ export function syncFilesToSQLite(db) {
           const telemetry = extractPageTelemetryAndLogs(content, relPath);
           const pageId = `page-${relPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
           const shelf = shelfOverride || classifyShelf(relPath);
+          const collectionId = deriveCollection(relPath, frontmatter);
+          const emoji = deriveEmoji(relPath, frontmatter);
           const ownerRole = shelf === 'specs' ? 'spec-author' : 'leader';
+          const ownerName = deriveOwnerName(relPath, frontmatter, ownerRole);
           const ownerId = mapRoleToUserId(ownerRole);
 
           pageStmt.run(
             pageId,
+            null,
+            collectionId,
+            ownerName,
+            emoji,
             ownerId,
             ownerRole,
             ownerId,
@@ -774,6 +898,16 @@ export function syncFilesToSQLite(db) {
             telemetry.diagramsCount,
             telemetry.readingTime
           );
+
+          if (frontmatter.parent) {
+            parentsToResolve.push({ pageId, parentTarget: frontmatter.parent });
+          } else if (relPath.includes('/modules/') && !relPath.endsWith('module-spec.md')) {
+            const modDir = path.dirname(relPath);
+            parentsToResolve.push({ pageId, parentTarget: `${modDir}/module-spec.md` });
+          } else if (relPath.startsWith('specs/') && (relPath.endsWith('tasks.md') || relPath.endsWith('design.md'))) {
+            const specDir = path.dirname(relPath);
+            parentsToResolve.push({ pageId, parentTarget: `${specDir}/requirements.md` });
+          }
 
           pageVersionStmt.run(
             `pv-${pageId}-v1`,
@@ -807,7 +941,7 @@ export function syncFilesToSQLite(db) {
   indexDirectory(SPECS_DIR, 'specs', 'specs');
 
   // Resolve reciprocal back_links between pages
-  const allIndexedPages = db.prepare('SELECT id, file_path FROM pages').all();
+  const allIndexedPages = db.prepare('SELECT id, file_path, title FROM pages').all();
   for (const fl of forwardLinksToResolve) {
     const targetPage = allIndexedPages.find(p =>
       p.file_path === fl.targetPath ||
@@ -819,6 +953,80 @@ export function syncFilesToSQLite(db) {
       const backLogId = `plog-${targetPage.id}-backlink-${cleanSrc}`;
       pageLogStmt.run(backLogId, targetPage.id, `tx-back-${cleanSrc}`, fl.sourcePath, 'back_link', 'page');
     }
+  }
+
+  // Resolve nested parent_id relationships
+  const updateParentStmt = db.prepare('UPDATE pages SET parent_id = ? WHERE id = ?');
+  for (const pr of parentsToResolve) {
+    const parentPage = allIndexedPages.find(p =>
+      p.file_path === pr.parentTarget ||
+      p.file_path.endsWith(`/${path.basename(pr.parentTarget)}`) ||
+      path.basename(p.file_path) === path.basename(pr.parentTarget) ||
+      p.title.toLowerCase() === String(pr.parentTarget).toLowerCase()
+    );
+    if (parentPage && parentPage.id !== pr.pageId) {
+      updateParentStmt.run(parentPage.id, pr.pageId);
+    }
+  }
+
+  // Backfill and resolve slug and depth for all pages (BR-PAGE-10 and BR-PAGE-08)
+  backfillSlugAndDepth(db);
+}
+
+export function backfillSlugAndDepth(db) {
+  const pages = db.prepare('SELECT id, title, collection_id, parent_id, file_path FROM pages').all();
+  const slugCounts = new Map();
+
+  // 1. Calculate and backfill slugs (BR-PAGE-10: Unique slug per collection)
+  const updateSlugStmt = db.prepare('UPDATE pages SET slug = ? WHERE id = ?');
+  for (const p of pages) {
+    const rawName = p.title || path.basename(p.file_path, '.md');
+    let baseSlug = rawName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'page';
+
+    const colKey = p.collection_id || 'general';
+    const comboKey = `${colKey}:${baseSlug}`;
+    let finalSlug = baseSlug;
+
+    if (slugCounts.has(comboKey)) {
+      const count = slugCounts.get(comboKey) + 1;
+      slugCounts.set(comboKey, count);
+      finalSlug = `${baseSlug}-${count}`;
+    } else {
+      slugCounts.set(comboKey, 1);
+    }
+
+    updateSlugStmt.run(finalSlug, p.id);
+    p.slug = finalSlug;
+  }
+
+  // 2. Calculate depth (BR-PAGE-08: Max 4 levels, 1: root, 2: subpage, 3: sub-subpage, 4: max)
+  const pageMap = new Map(pages.map(p => [p.id, p]));
+  const updateDepthStmt = db.prepare('UPDATE pages SET depth = ? WHERE id = ?');
+
+  for (const p of pages) {
+    let depth = 1;
+    let currParentId = p.parent_id;
+    const visited = new Set([p.id]);
+
+    while (currParentId) {
+      if (visited.has(currParentId)) {
+        // Break cycle if detected during backfill
+        db.prepare('UPDATE pages SET parent_id = NULL WHERE id = ?').run(p.id);
+        break;
+      }
+      visited.add(currParentId);
+      depth++;
+      const parent = pageMap.get(currParentId);
+      currParentId = parent ? parent.parent_id : null;
+    }
+
+    const finalDepth = Math.min(depth, 4);
+    updateDepthStmt.run(finalDepth, p.id);
   }
 }
 
@@ -1101,7 +1309,9 @@ export function syncPageToFile(db, pageId) {
   if (!page) return;
 
   let filePath = '';
-  if (page.file_path.startsWith('knowledge/')) {
+  if (path.isAbsolute(page.file_path)) {
+    filePath = page.file_path;
+  } else if (page.file_path.startsWith('knowledge/')) {
     filePath = path.join(PROJECT_DOCS_DIR, page.file_path);
   } else if (page.file_path.startsWith('specs/')) {
     filePath = path.join(PROJECT_DOCS_DIR, page.file_path);
@@ -1356,9 +1566,14 @@ export function getPageName(title = '') {
 }
 
 export function upsertPageInSQLite(db, {
+  id = null,
   file_path,
   title,
   shelf = 'standards',
+  parent_id = null,
+  collection_id = null,
+  owner_name = null,
+  emoji = null,
   content_markdown = '',
   owned_by_role = 'spec-author',
   access = null,
@@ -1370,13 +1585,70 @@ export function upsertPageInSQLite(db, {
   module_id = null
 } = {}) {
   const cleanRelPath = file_path.replace(/^project-docs[\\/]/, '').replace(/\\/g, '/');
-  const pageId = `page-${cleanRelPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const existingByPath = db.prepare('SELECT id FROM pages WHERE file_path = ?').get(cleanRelPath);
+  const pageId = id || existingByPath?.id || `page-${cleanRelPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
   const safeTitle = getPageName(title);
   const telemetry = extractPageTelemetryAndLogs(content_markdown, cleanRelPath);
   const summary = content_markdown
     .split(/\r?\n/)
     .map(l => l.trim())
     .find(l => l && !l.startsWith('#') && !l.startsWith('>')) || safeTitle;
+
+  const finalCollection = collection_id || (function() {
+    const low = cleanRelPath.toLowerCase();
+    if (low.startsWith('knowledge/product/') || low.includes('/product/')) return 'product';
+    if (low.startsWith('knowledge/engineering/') || low.includes('/engineering/')) return 'engineering';
+    if (low.startsWith('knowledge/general/') || low.includes('/general/')) return 'general';
+    if (low.startsWith('knowledge/design/') || low.includes('/design/')) return 'design';
+    if (low.startsWith('knowledge/customer_support/') || low.includes('customer_support') || low.includes('/support/')) return 'customer_support';
+    if (low.includes('overview') || low.includes('business') || low.includes('requirements') || low.includes('capabilities') || low.includes('stories') || low.includes('roadmap') || low.includes('prd')) return 'product';
+    if (low.includes('c4') || low.includes('architecture') || low.includes('uml') || low.includes('data-dictionary') || low.includes('coding-standards') || low.includes('traceability') || low.includes('modules/')) return 'engineering';
+    if (low.includes('design') || low.includes('tokens') || low.includes('ui-') || low.includes('components')) return 'design';
+    if (low.includes('runbook') || low.includes('troubleshooting') || low.includes('incident') || low.includes('verify.sh')) return 'customer_support';
+    return 'general';
+  })();
+
+  const finalEmoji = emoji ? String(emoji).replace(/[^\w-]/g, '') : (function() {
+    const low = cleanRelPath.toLowerCase();
+    if (low.includes('launch') || low.includes('deploy')) return 'rocket';
+    if (low.includes('prd') || low.includes('doc')) return 'fileText';
+    if (low.includes('roadmap') || low.includes('goal')) return 'target';
+    if (low.includes('interview') || low.includes('survey')) return 'clipboard';
+    if (low.includes('pricing') || low.includes('finance')) return 'creditCard';
+    if (low.includes('c4') || low.includes('diagram')) return 'layers';
+    if (low.includes('architecture')) return 'architecture';
+    if (low.includes('data') || low.includes('dictionary') || low.includes('sqlite') || low.includes('erd')) return 'database';
+    if (low.includes('uml') || low.includes('classes') || low.includes('sequence')) return 'barChart';
+    if (low.includes('rule') || low.includes('invariants')) return 'shield';
+    if (low.includes('standard') || low.includes('guardrail')) return 'shield';
+    if (low.includes('traceability') || low.includes('rtm')) return 'link';
+    if (low.includes('service') || low.includes('api')) return 'link';
+    if (low.includes('master') || low.includes('wiki')) return 'book';
+    if (low.includes('design') || low.includes('ui') || low.includes('ux')) return 'palette';
+    if (low.includes('support') || low.includes('troubleshoot') || low.includes('verify')) return 'tool';
+    return 'page';
+  })();
+
+  const finalOwnerName = owner_name || (function() {
+    const low = cleanRelPath.toLowerCase();
+    if (low.includes('overview') || low.includes('roadmap') || low.includes('launch')) return 'Aria';
+    if (low.includes('prd') || low.includes('invite') || low.includes('enterprise')) return 'Marcus';
+    if (low.includes('matrix') || low.includes('permission')) return 'Ana';
+    if (low.includes('interview')) return 'Priya Sharma';
+    if (low.includes('scim') || low.includes('rotation')) return 'Alex';
+    if (low.includes('pricing')) return 'Jordan Kim';
+    if (low.includes('c4') || low.includes('architecture')) return 'Lead Architect';
+    if (low.includes('data-dictionary')) return 'Data Lead';
+    if (low.includes('uml')) return 'spec-author';
+    if (low.includes('business-rules')) return 'Governance Bot';
+    if (low.includes('coding-standards')) return 'reviewer';
+    if (low.includes('traceability')) return 'QA Lead';
+    if (low.includes('external-services')) return 'Cloud Lead';
+    if (low.includes('master')) return 'Knowledge Bot';
+    if (low.includes('design')) return 'Product Designer';
+    if (low.includes('verify')) return 'DevOps Lead';
+    return owned_by_role === 'reviewer' ? 'reviewer' : owned_by_role === 'leader' ? 'leader' : 'spec-author';
+  })();
 
   const finalAccess = access !== null && access !== undefined ? (Number(access) === 1 ? 1 : 0) : 0;
   const finalLocked = is_locked !== null && is_locked !== undefined ? (is_locked ? 1 : 0) : telemetry.isLocked;
@@ -1393,12 +1665,17 @@ export function upsertPageInSQLite(db, {
 
   db.prepare(`
     INSERT INTO pages (
-      id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
+      id, project_id, workspace_id, parent_id, collection_id, owner_name, emoji,
+      owned_by_id, owned_by_role, updated_by_id, module_id,
       file_path, title, summary, shelf, content_markdown, description_stripped,
       access, is_locked, is_favorite, archived_at, view_props,
       word_count, char_count, paragraph_count, diagrams_count, reading_time_min, updated_at
-    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ) VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
+      parent_id = COALESCE(excluded.parent_id, pages.parent_id),
+      collection_id = COALESCE(excluded.collection_id, pages.collection_id),
+      owner_name = COALESCE(excluded.owner_name, pages.owner_name),
+      emoji = COALESCE(excluded.emoji, pages.emoji),
       title = excluded.title,
       summary = excluded.summary,
       shelf = excluded.shelf,
@@ -1419,6 +1696,10 @@ export function upsertPageInSQLite(db, {
       updated_at = CURRENT_TIMESTAMP;
   `).run(
     pageId,
+    parent_id,
+    finalCollection,
+    finalOwnerName,
+    finalEmoji,
     ownerId,
     owned_by_role,
     ownerId,
@@ -1512,6 +1793,11 @@ export function duplicatePageInSQLite(db, pageId, actorRole = 'spec-author') {
 }
 
 export function updatePagePropertiesInSQLite(db, pageId, {
+  title,
+  parent_id,
+  collection_id,
+  owner_name,
+  emoji,
   access,
   is_favorite,
   is_locked,
@@ -1528,6 +1814,29 @@ export function updatePagePropertiesInSQLite(db, pageId, {
 
   const targetId = page.id;
 
+  // Server-side enforcement of BR-PAGE-02: Lock & Archive Guard
+  const isTargetLocked = Boolean(page.is_locked);
+  const isTargetArchived = Boolean(page.archived_at);
+  const isUnlockingAction = is_locked === 0 || is_locked === false;
+  const isRestoringAction = archived === false || archived_at === null;
+
+  if (isTargetLocked && !isUnlockingAction) {
+    if (content_markdown !== undefined || (title !== undefined && title !== page.title)) {
+      throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of locked page '${targetId}' without unlocking first.`);
+    }
+  }
+
+  if (isTargetArchived && !isRestoringAction) {
+    if (content_markdown !== undefined || (title !== undefined && title !== page.title)) {
+      throw new Error(`BR-PAGE-02 Violation: Cannot edit content or title of archived page '${targetId}'.`);
+    }
+  }
+
+  // Server-side enforcement of BR-PAGE-04: Archive Access Immutability
+  if (isTargetArchived && access !== undefined && Number(access) !== Number(page.access)) {
+    throw new Error(`BR-PAGE-04 Violation: Cannot change access visibility of archived page '${targetId}'.`);
+  }
+
   if (duplicate) {
     return duplicatePageInSQLite(db, targetId, actor_role);
   }
@@ -1538,6 +1847,12 @@ export function updatePagePropertiesInSQLite(db, pageId, {
       content_markdown = ver.content_markdown;
     }
   }
+
+  let nextTitle = title !== undefined ? getPageName(title) : page.title;
+  let nextParentId = parent_id !== undefined ? parent_id : page.parent_id;
+  let nextCollectionId = collection_id !== undefined ? collection_id : page.collection_id;
+  let nextOwnerName = owner_name !== undefined ? owner_name : page.owner_name;
+  let nextEmoji = emoji !== undefined ? emoji : page.emoji;
 
   let nextArchivedAt = page.archived_at || null;
   if (archived !== undefined) {
@@ -1562,8 +1877,13 @@ export function updatePagePropertiesInSQLite(db, pageId, {
 
   if (typeof content_markdown === 'string') {
     return upsertPageInSQLite(db, {
+      id: targetId,
       file_path: page.file_path,
-      title: page.title,
+      title: nextTitle,
+      parent_id: nextParentId,
+      collection_id: nextCollectionId,
+      owner_name: nextOwnerName,
+      emoji: nextEmoji,
       shelf: page.shelf,
       content_markdown,
       owned_by_role: actor_role,
@@ -1585,9 +1905,10 @@ export function updatePagePropertiesInSQLite(db, pageId, {
 
   db.prepare(`
     UPDATE pages
-    SET access = ?, is_favorite = ?, is_locked = ?, archived_at = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
+    SET title = ?, parent_id = ?, collection_id = ?, owner_name = ?, emoji = ?,
+        access = ?, is_favorite = ?, is_locked = ?, archived_at = ?, view_props = ?, updated_by_id = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(nextAccess, nextFav, nextLock, nextArchivedAt, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
+  `).run(nextTitle, nextParentId, nextCollectionId, nextOwnerName, nextEmoji, nextAccess, nextFav, nextLock, nextArchivedAt, JSON.stringify(vp), mapRoleToUserId(actor_role), targetId);
 
   return db.prepare('SELECT * FROM pages WHERE id = ?').get(targetId);
 }
@@ -1605,6 +1926,7 @@ export function getPlaneData(db) {
   const issueTypes = db.prepare('SELECT * FROM issue_types ORDER BY level ASC').all();
   const cycles = db.prepare('SELECT * FROM cycles ORDER BY start_date ASC').all();
   const modules = db.prepare('SELECT * FROM modules ORDER BY name ASC').all();
+  const collections = db.prepare('SELECT * FROM collections WHERE archived_at IS NULL ORDER BY sort_order ASC, name ASC').all();
   const views = db.prepare('SELECT * FROM issue_views ORDER BY sort_order ASC').all();
   const aiConfigs = db.prepare('SELECT * FROM ai_configs ORDER BY category ASC, key ASC').all();
   const aiRuns = db.prepare('SELECT * FROM ai_runs ORDER BY created_at DESC, id DESC LIMIT 100').all();
@@ -1637,7 +1959,8 @@ export function getPlaneData(db) {
   const issueEvidences = db.prepare('SELECT * FROM issue_evidences ORDER BY created_at ASC').all();
 
   const pages = db.prepare(`
-    SELECT id, project_id, workspace_id, owned_by_id, owned_by_role, updated_by_id, module_id,
+    SELECT id, project_id, workspace_id, parent_id, collection_id, owner_name, emoji,
+           owned_by_id, owned_by_role, updated_by_id, module_id,
            file_path, title, summary, shelf, content_markdown, access, is_locked, is_favorite,
            archived_at, view_props, logo_props,
            word_count, char_count, paragraph_count, diagrams_count, reading_time_min,
@@ -1676,7 +1999,19 @@ export function getPlaneData(db) {
   const logsByPage = groupByKey(pageLogs, 'page_id');
   const labelsByPage = groupByKey(pageLabels, 'page_id');
 
+  const childCountMap = {};
+  const childrenMap = {};
+  for (const p of pages) {
+    if (p.parent_id) {
+      childCountMap[p.parent_id] = (childCountMap[p.parent_id] || 0) + 1;
+      if (!childrenMap[p.parent_id]) childrenMap[p.parent_id] = [];
+      childrenMap[p.parent_id].push(p);
+    }
+  }
+
   for (const page of pages) {
+    page.nested_pages_count = childCountMap[page.id] || 0;
+    page.children = childrenMap[page.id] || [];
     page.versions = versionsByPage[page.id] || [];
     page.logs = logsByPage[page.id] || [];
     page.labels = labelsByPage[page.id] || [];
@@ -1719,6 +2054,7 @@ export function getPlaneData(db) {
     issueTypes,
     cycles,
     modules,
+    collections,
     views,
     aiConfigs,
     aiRuns,
@@ -1728,4 +2064,235 @@ export function getPlaneData(db) {
     pageLabels,
     pageVersions
   };
+}
+
+export function createCollectionInSQLite(db, { id, name, description = '', icon = 'folder', color = '#f59e0b', is_private = 0, sort_order = 1000 }) {
+  const colId = (id || name || 'collection').toLowerCase().trim().replace(/[^a-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+  if (!name || !name.trim()) throw new Error('Collection name cannot be empty');
+  
+  db.prepare(`
+    INSERT INTO collections (id, project_id, workspace_id, name, description, icon, color, is_private, sort_order)
+    VALUES (?, 'proj-harness', 'ws-harness', ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      name = excluded.name,
+      description = excluded.description,
+      icon = excluded.icon,
+      color = excluded.color,
+      is_private = excluded.is_private,
+      sort_order = excluded.sort_order,
+      archived_at = NULL,
+      updated_at = CURRENT_TIMESTAMP
+  `).run(colId, name.trim(), description.trim(), icon, color, is_private ? 1 : 0, sort_order);
+
+  return db.prepare('SELECT * FROM collections WHERE id = ?').get(colId);
+}
+
+export function updateCollectionInSQLite(db, collectionId, updates = {}) {
+  const col = db.prepare('SELECT * FROM collections WHERE id = ?').get(collectionId);
+  if (!col) throw new Error(`Collection not found: ${collectionId}`);
+
+  const nextName = updates.name !== undefined ? updates.name.trim() : col.name;
+  const nextDesc = updates.description !== undefined ? updates.description : col.description;
+  const nextIcon = updates.icon !== undefined ? updates.icon : col.icon;
+  const nextColor = updates.color !== undefined ? updates.color : col.color;
+  const nextPrivate = updates.is_private !== undefined ? (updates.is_private ? 1 : 0) : col.is_private;
+  const nextSort = updates.sort_order !== undefined ? Number(updates.sort_order) : col.sort_order;
+
+  db.prepare(`
+    UPDATE collections
+    SET name = ?, description = ?, icon = ?, color = ?, is_private = ?, sort_order = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(nextName, nextDesc, nextIcon, nextColor, nextPrivate, nextSort, collectionId);
+
+  return db.prepare('SELECT * FROM collections WHERE id = ?').get(collectionId);
+}
+
+/**
+ * BR-PAGE-07: Collection Lifecycle Guard
+ * Cannot archive or delete a collection that contains active (non-archived) pages.
+ */
+export function archiveCollectionInSQLite(db, collectionId) {
+  const activeCountRow = db.prepare(`
+    SELECT COUNT(*) as count FROM pages
+    WHERE collection_id = ? AND archived_at IS NULL
+  `).get(collectionId);
+
+  if (activeCountRow && activeCountRow.count > 0) {
+    throw new Error(`BR-PAGE-07 Violation: Cannot archive collection '${collectionId}' because it contains ${activeCountRow.count} active page(s). Move or archive its pages first.`);
+  }
+
+  db.prepare(`
+    UPDATE collections
+    SET archived_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(collectionId);
+
+  return true;
+}
+
+/**
+ * BR-PAGE-08: Hierarchy Invariant, Cycle Prevention & Depth Limit
+ * Checks that targetParentId is not pageId itself, nor any descendant of pageId.
+ * Enforces maximum nesting depth of 4 levels (0: root, 1: page, 2: subpage, 3: sub-subpage, 4: max).
+ */
+export function movePageInSQLite(db, pageId, targetCollectionId = null, targetParentId = null) {
+  const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  if (!page) throw new Error(`Page not found: ${pageId}`);
+
+  if (targetParentId) {
+    if (targetParentId === pageId) {
+      throw new Error(`BR-PAGE-08 Violation: A page cannot be its own parent (${pageId}).`);
+    }
+
+    // Check target parent exists
+    const targetParent = db.prepare('SELECT * FROM pages WHERE id = ?').get(targetParentId);
+    if (!targetParent) throw new Error(`Target parent page not found: ${targetParentId}`);
+
+    // Cycle check: climb upwards from targetParentId
+    let curr = targetParent;
+    let depthCount = 1;
+    while (curr && curr.parent_id) {
+      if (curr.parent_id === pageId) {
+        throw new Error(`BR-PAGE-08 Violation: Cyclic hierarchy detected! Page '${targetParentId}' is a descendant of '${pageId}'.`);
+      }
+      depthCount++;
+      curr = db.prepare('SELECT * FROM pages WHERE id = ?').get(curr.parent_id);
+    }
+
+    // Depth check
+    if (depthCount >= 4) {
+      throw new Error(`BR-PAGE-08 Violation: Maximum nesting depth of 4 levels exceeded (attempted depth: ${depthCount + 1}).`);
+    }
+  }
+
+  const nextColId = targetCollectionId || (targetParentId ? db.prepare('SELECT collection_id FROM pages WHERE id = ?').get(targetParentId)?.collection_id : page.collection_id) || page.collection_id;
+
+  db.prepare(`
+    UPDATE pages
+    SET collection_id = ?, parent_id = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(nextColId, targetParentId, pageId);
+
+  // Propagate collection change to all descendants recursively
+  function updateDescendantsCol(parentId, newCol) {
+    const children = db.prepare('SELECT id FROM pages WHERE parent_id = ?').all(parentId);
+    for (const ch of children) {
+      db.prepare('UPDATE pages SET collection_id = ? WHERE id = ?').run(newCol, ch.id);
+      updateDescendantsCol(ch.id, newCol);
+    }
+  }
+  updateDescendantsCol(pageId, nextColId);
+
+  return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+}
+
+/**
+ * BR-PAGE-09: Cascade Archive for Page Hierarchy
+ * Archiving a parent cascades archived_at and clears is_favorite for all descendants.
+ */
+export function archivePageCascadeInSQLite(db, pageId) {
+  const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+  if (!page) throw new Error(`Page not found: ${pageId}`);
+
+  const nowIso = new Date().toISOString();
+  db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, pageId);
+
+  function cascadeArchive(parentId) {
+    const children = db.prepare('SELECT id FROM pages WHERE parent_id = ? AND archived_at IS NULL').all(parentId);
+    for (const ch of children) {
+      db.prepare('UPDATE pages SET archived_at = ?, is_favorite = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso, ch.id);
+      cascadeArchive(ch.id);
+    }
+  }
+  cascadeArchive(pageId);
+
+  return true;
+}
+
+/**
+ * Restore Version Snapshot
+ */
+export function restorePageVersionInSQLite(db, pageId, versionNumber) {
+  const version = db.prepare('SELECT * FROM page_versions WHERE page_id = ? AND version_number = ?').get(pageId, versionNumber);
+  if (!version) throw new Error(`Version ${versionNumber} not found for page ${pageId}`);
+
+  const maxVerRow = db.prepare('SELECT MAX(version_number) as max_v FROM page_versions WHERE page_id = ?').get(pageId);
+  const nextVer = (maxVerRow?.max_v || versionNumber) + 1;
+
+  db.prepare(`
+    INSERT INTO page_versions (id, page_id, version_number, content_markdown, description_html, description_stripped, owned_by_role, word_count)
+    VALUES (?, ?, ?, ?, ?, ?, 'restored-version', ?)
+  `).run(
+    `pv-${pageId}-v${nextVer}-${Date.now().toString(36)}`,
+    pageId,
+    nextVer,
+    version.content_markdown,
+    version.description_html || '',
+    version.description_stripped || '',
+    version.word_count || 0
+  );
+
+  db.prepare(`
+    UPDATE pages
+    SET content_markdown = ?, word_count = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(version.content_markdown, version.word_count || 0, pageId);
+
+  return db.prepare('SELECT * FROM pages WHERE id = ?').get(pageId);
+}
+
+/**
+ * Operación separada de Desbloqueo (Auditada en page_logs)
+ */
+export function unlockPageInSQLite(db, pageId, { actorRole = 'human', reason = 'Manual unlock confirmation' } = {}) {
+  const page = db.prepare('SELECT id, is_locked, title FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
+  if (!page) throw new Error(`Page ${pageId} not found`);
+
+  db.prepare(`
+    UPDATE pages
+    SET is_locked = 0, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(page.id);
+
+  const txId = `tx-${Date.now().toString(36)}`;
+  db.prepare(`
+    INSERT INTO page_logs (id, workspace_id, page_id, transaction_id, entity_identifier, entity_name, entity_type, action, log_message)
+    VALUES (?, 'ws-harness', ?, ?, ?, 'page_lock', 'page', 'unlocked', ?)
+  `).run(
+    `log-unlock-${page.id}-${Date.now().toString(36)}`,
+    page.id,
+    txId,
+    actorRole,
+    `Documento normativo desbloqueado por [${actorRole}]: ${reason}`
+  );
+
+  return db.prepare('SELECT * FROM pages WHERE id = ?').get(page.id);
+}
+
+/**
+ * Operación separada de Bloqueo (Auditada en page_logs)
+ */
+export function lockPageInSQLite(db, pageId, { actorRole = 'human', reason = 'Normative lock' } = {}) {
+  const page = db.prepare('SELECT id, is_locked, title FROM pages WHERE id = ? OR file_path = ?').get(pageId, pageId);
+  if (!page) throw new Error(`Page ${pageId} not found`);
+
+  db.prepare(`
+    UPDATE pages
+    SET is_locked = 1, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(page.id);
+
+  const txId = `tx-${Date.now().toString(36)}`;
+  db.prepare(`
+    INSERT INTO page_logs (id, workspace_id, page_id, transaction_id, entity_identifier, entity_name, entity_type, action, log_message)
+    VALUES (?, 'ws-harness', ?, ?, ?, 'page_lock', 'page', 'locked', ?)
+  `).run(
+    `log-lock-${page.id}-${Date.now().toString(36)}`,
+    page.id,
+    txId,
+    actorRole,
+    `Documento normativo bloqueado por [${actorRole}]: ${reason}`
+  );
+
+  return db.prepare('SELECT * FROM pages WHERE id = ?').get(page.id);
 }

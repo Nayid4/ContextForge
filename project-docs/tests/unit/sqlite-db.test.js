@@ -1,5 +1,13 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import { initDatabase } from '../../src/core/db.js';
 import {
   syncFilesToSQLite,
@@ -12,11 +20,20 @@ import {
   recordIssueComment,
   recordIssueRelation,
   extractPageTelemetryAndLogs,
-  updatePagePropertiesInSQLite
+  updatePagePropertiesInSQLite,
+  createCollectionInSQLite,
+  updateCollectionInSQLite,
+  archiveCollectionInSQLite,
+  movePageInSQLite,
+  archivePageCascadeInSQLite,
+  restorePageVersionInSQLite,
+  backfillSlugAndDepth,
+  unlockPageInSQLite,
+  lockPageInSQLite
 } from '../../src/core/sqlite-sync.js';
 
-describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA (28 Tablas)', () => {
-  test('initDatabase crea las 28 tablas relacionales requeridas para Plane, Pages Graph e IA', () => {
+describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA (29 Tablas)', () => {
+  test('initDatabase crea las 29 tablas relacionales requeridas para Plane, Pages Graph e IA', () => {
     const db = initDatabase(':memory:');
     const tables = db.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;
@@ -26,6 +43,7 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
       'ai_configs',
       'ai_runs',
       'api_tokens',
+      'collections',
       'cycle_issues',
       'cycles',
       'estimate_points',
@@ -216,5 +234,170 @@ describe('Suite de Base de Datos Relacional SQLite (node:sqlite) para Plane & IA
         VALUES ('SUB-INVALID', 'INT-999-INEXISTENTE', 'dev', 'Test', 'leader', 'pending', 1);
       `).run();
     }, /FOREIGN KEY constraint failed/);
+  });
+
+  test('Wiki & Pages Relational Business Rules Suite: BR-PAGE-07, BR-PAGE-08 y BR-PAGE-09', () => {
+    const db = initDatabase(':memory:');
+    syncFilesToSQLite(db);
+
+    // 1. Colecciones dinámicas CRUD
+    const newCol = createCollectionInSQLite(db, {
+      name: 'QA Automation',
+      description: 'Planes y pruebas automatizadas',
+      icon: 'checkCircle',
+      color: '#06b6d4'
+    });
+    assert.strictEqual(newCol.id, 'qa_automation');
+    assert.strictEqual(newCol.name, 'QA Automation');
+
+    updateCollectionInSQLite(db, 'qa_automation', { description: 'Actualizado' });
+    const updatedCol = db.prepare('SELECT * FROM collections WHERE id = ?').get('qa_automation');
+    assert.strictEqual(updatedCol.description, 'Actualizado');
+
+    // 2. BR-PAGE-07: No se puede archivar una colección que contiene páginas activas
+    // Insertamos una página activa en qa_automation
+    db.prepare(`
+      INSERT INTO pages (id, project_id, collection_id, file_path, title, shelf, content_markdown)
+      VALUES ('p-qa-active', 'proj-harness', 'qa_automation', 'knowledge/qa.md', 'Plan de QA', 'standards', '# Plan')
+    `).run();
+
+    assert.throws(() => {
+      archiveCollectionInSQLite(db, 'qa_automation');
+    }, /BR-PAGE-07 Violation/);
+
+    // Si archivamos la página activa, ahora sí permite archivar la colección
+    db.prepare('UPDATE pages SET archived_at = CURRENT_TIMESTAMP WHERE id = ?').run('p-qa-active');
+    assert.strictEqual(archiveCollectionInSQLite(db, 'qa_automation'), true);
+
+    // 3. BR-PAGE-08: Prevención de ciclos en jerarquía padre-hijo y límite de profundidad
+    db.prepare(`
+      INSERT INTO pages (id, project_id, collection_id, file_path, title, shelf, content_markdown)
+      VALUES ('p-parent', 'proj-harness', 'engineering', 'knowledge/p1.md', 'Parent', 'standards', '# P1'),
+             ('p-child', 'proj-harness', 'engineering', 'knowledge/p2.md', 'Child', 'standards', '# P2')
+    `).run();
+
+    // Auto-paternidad prohibida
+    assert.throws(() => {
+      movePageInSQLite(db, 'p-parent', 'engineering', 'p-parent');
+    }, /BR-PAGE-08 Violation: A page cannot be its own parent/);
+
+    // Establecer hijo válido
+    movePageInSQLite(db, 'p-child', 'engineering', 'p-parent');
+    const child = db.prepare('SELECT * FROM pages WHERE id = ?').get('p-child');
+    assert.strictEqual(child.parent_id, 'p-parent');
+
+    // Intento de ciclo: hacer a p-parent hijo de p-child
+    assert.throws(() => {
+      movePageInSQLite(db, 'p-parent', 'engineering', 'p-child');
+    }, /BR-PAGE-08 Violation: Cyclic hierarchy detected/);
+
+    // 4. BR-PAGE-09: Cascade Archive de jerarquía
+    archivePageCascadeInSQLite(db, 'p-parent');
+    const archParent = db.prepare('SELECT archived_at, is_favorite FROM pages WHERE id = ?').get('p-parent');
+    const archChild = db.prepare('SELECT archived_at, is_favorite FROM pages WHERE id = ?').get('p-child');
+    assert.ok(archParent.archived_at);
+    assert.ok(archChild.archived_at);
+    assert.strictEqual(archParent.is_favorite, 0);
+    assert.strictEqual(archChild.is_favorite, 0);
+
+    // 5. Restauración de Versiones Históricas
+    db.prepare(`
+      INSERT INTO page_versions (id, page_id, version_number, content_markdown)
+      VALUES ('pv-1', 'p-parent', 1, '# Versión Original')
+    `).run();
+    const restored = restorePageVersionInSQLite(db, 'p-parent', 1);
+    assert.strictEqual(restored.content_markdown, '# Versión Original');
+  });
+
+  test('Server-side SQLite enforcement of BR-PAGE-02 (Lock Guard) y BR-PAGE-04 (Archive Access Immutability)', () => {
+    const db = initDatabase(':memory:');
+    syncFilesToSQLite(db);
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-safe-test-'));
+    const testFile = path.join(tmpDir, 'test-locked.md');
+    fs.writeFileSync(testFile, '# Locked Doc Init', 'utf8');
+
+    try {
+      db.prepare(`
+        INSERT INTO pages (id, project_id, collection_id, file_path, title, shelf, content_markdown, is_locked, access, archived_at)
+        VALUES ('p-srv-locked', 'proj-harness', 'engineering', ?, 'Locked Doc', 'standards', '# Locked', 1, 0, NULL),
+               ('p-srv-archived', 'proj-harness', 'engineering', 'tmp-safe/test-archived.md', 'Archived Doc', 'standards', '# Arch', 0, 0, '2026-11-01T10:00:00Z')
+      `).run(testFile);
+
+      // 1. BR-PAGE-02: Intento de editar contenido de página bloqueada debe lanzar excepción
+      assert.throws(() => {
+        updatePagePropertiesInSQLite(db, 'p-srv-locked', { content_markdown: '# Nuevo Contenido Bloqueado' });
+      }, /BR-PAGE-02 Violation: Cannot edit content or title of locked page/);
+
+      // Intento de cambiar título de página bloqueada debe lanzar excepción
+      assert.throws(() => {
+        updatePagePropertiesInSQLite(db, 'p-srv-locked', { title: 'Nuevo Titulo Hackeado' });
+      }, /BR-PAGE-02 Violation: Cannot edit content or title of locked page/);
+
+      // 1b. Operación separada de Desbloqueo (unlockPageInSQLite) auditada en page_logs
+      const unlocked = unlockPageInSQLite(db, 'p-srv-locked', { actorRole: 'reviewer', reason: 'Auditoría aprobada' });
+      assert.strictEqual(unlocked.is_locked, 0);
+
+      const unlockLog = db.prepare("SELECT * FROM page_logs WHERE page_id = 'p-srv-locked' AND action = 'unlocked'").get();
+      assert.ok(unlockLog);
+      assert.strictEqual(unlockLog.entity_identifier, 'reviewer');
+      assert.ok(unlockLog.log_message.includes('Auditoría aprobada'));
+
+      // Ahora que está desbloqueada en una operación separada, sí permite edición
+      const edited = updatePagePropertiesInSQLite(db, 'p-srv-locked', {
+        content_markdown: '# Contenido Modificado Tras Desbloquear'
+      });
+      assert.strictEqual(edited.content_markdown, '# Contenido Modificado Tras Desbloquear');
+
+      // Re-bloqueo auditado
+      const relocked = lockPageInSQLite(db, 'p-srv-locked', { actorRole: 'lead-architect', reason: 'Re-bloqueo tras edición' });
+      assert.strictEqual(relocked.is_locked, 1);
+      const lockLog = db.prepare("SELECT * FROM page_logs WHERE page_id = 'p-srv-locked' AND action = 'locked'").get();
+      assert.ok(lockLog);
+
+      // 2. BR-PAGE-02: Intento de editar contenido de página archivada debe fallar
+      assert.throws(() => {
+        updatePagePropertiesInSQLite(db, 'p-srv-archived', { content_markdown: '# Hackeando Archivada' });
+      }, /BR-PAGE-02 Violation: Cannot edit content or title of archived page/);
+
+      // 3. BR-PAGE-04: Intento de alternar access en página archivada debe fallar
+      assert.throws(() => {
+        updatePagePropertiesInSQLite(db, 'p-srv-archived', { access: 1 });
+      }, /BR-PAGE-04 Violation: Cannot change access visibility of archived page/);
+    } finally {
+      if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('BR-PAGE-10: Slugs únicos por colección y backfill de depth jerárquico', () => {
+    const db = initDatabase(':memory:');
+    syncFilesToSQLite(db);
+
+    const pages = db.prepare('SELECT id, slug, depth, parent_id, collection_id FROM pages').all();
+    assert.ok(pages.length > 0);
+
+    // Todo documento debe tener un slug no vacío y depth >= 1
+    for (const p of pages) {
+      assert.ok(p.slug && p.slug.length > 0, `Page ${p.id} debe tener slug`);
+      assert.ok(p.depth >= 1 && p.depth <= 4, `Page ${p.id} depth fuera de rango: ${p.depth}`);
+      if (!p.parent_id) {
+        assert.strictEqual(p.depth, 1, `Página raíz ${p.id} debe tener depth=1`);
+      }
+    }
+
+    // Probar prevención de colisión de slug dentro de la misma colección
+    db.prepare(`
+      INSERT INTO pages (id, project_id, collection_id, file_path, title, shelf, content_markdown)
+      VALUES ('p-dup-1', 'proj-harness', 'product', 'knowledge/dup1.md', 'Roadmap Q4', 'standards', '# R1'),
+             ('p-dup-2', 'proj-harness', 'product', 'knowledge/dup2.md', 'Roadmap Q4', 'standards', '# R2')
+    `).run();
+
+    // Re-ejecutar backfill
+    backfillSlugAndDepth(db);
+
+    const slug1 = db.prepare('SELECT slug FROM pages WHERE id = ?').get('p-dup-1').slug;
+    const slug2 = db.prepare('SELECT slug FROM pages WHERE id = ?').get('p-dup-2').slug;
+    assert.strictEqual(slug1, 'roadmap-q4');
+    assert.strictEqual(slug2, 'roadmap-q4-2');
   });
 });

@@ -38,13 +38,15 @@ export class Router {
 
     // Normalización de dominios Screaming Architecture
     let route = 'issues';
+    let isAnchor = false;
+
     if (['features', 'issues', 'plane', 'plane-issues'].includes(rawRoute)) {
       route = 'issues';
     } else if (['cycles', 'plane-cycles'].includes(rawRoute)) {
       route = 'cycles';
     } else if (['modules', 'plane-modules'].includes(rawRoute)) {
       route = 'modules';
-    } else if (['pages', 'knowledge', 'plane-pages'].includes(rawRoute)) {
+    } else if (['pages', 'knowledge', 'plane-pages', 'library', 'wiki'].includes(rawRoute)) {
       route = 'pages';
     } else if (['architecture', 'c4', 'stack'].includes(rawRoute)) {
       route = 'architecture';
@@ -57,27 +59,32 @@ export class Router {
     } else if (['agents', 'harness', 'orchestrator'].includes(rawRoute)) {
       route = 'harness';
     } else {
-      route = rawRoute;
+      // Si no es un dominio conocido, es un anchor dentro del documento activo (e.g. #3-ambito-del-producto...)
+      isAnchor = true;
+      params.anchor = cleanHash;
+      route = this.currentRoute || 'pages';
     }
 
-    return { route, params, rawHash: cleanHash };
+    return { route, params, rawHash: cleanHash, isAnchor };
   }
 
-  _dispatch(route, rawHash, params) {
-    this.currentRoute = route;
+  _dispatch(route, rawHash, params, isAnchor = false) {
+    if (!isAnchor) {
+      this.currentRoute = route;
+    }
     this.currentParams = params;
 
     // Disparar callbacks globales
     for (const cb of this.callbacks) {
       try {
-        cb(route, rawHash, params);
+        cb(route, rawHash, params, isAnchor);
       } catch (err) {
         console.error('Error en router callback global:', err);
       }
     }
 
     // Disparar handlers específicos de ruta
-    if (this.routeHandlers.has(route)) {
+    if (!isAnchor && this.routeHandlers.has(route)) {
       const handlers = Array.from(this.routeHandlers.get(route));
       for (const handler of handlers) {
         try {
@@ -100,8 +107,8 @@ export class Router {
 
     const handleHashChange = () => {
       const rawHash = (typeof window !== 'undefined' && window.location?.hash) ? window.location.hash : '';
-      const { route, params } = this.parseHash(rawHash);
-      this._dispatch(route, rawHash, params);
+      const { route, params, isAnchor } = this.parseHash(rawHash);
+      this._dispatch(route, rawHash, params, isAnchor);
     };
 
     if (typeof window !== 'undefined' && !this.isListening) {

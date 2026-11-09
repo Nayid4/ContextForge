@@ -13,8 +13,14 @@ export function slugify(text = '') {
     .replace(/(^-|-$)+/g, '') || 'section';
 }
 
+export function stripFrontmatter(md = '') {
+  if (!md || typeof md !== 'string') return '';
+  return md.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+}
+
 export function extractTableOfContents(md = '') {
-  const lines = (md || '').split(/\r?\n/);
+  const cleanMd = stripFrontmatter(md);
+  const lines = (cleanMd || '').split(/\r?\n/);
   const toc = [];
   let inCode = false;
 
@@ -51,6 +57,25 @@ export function extractTableOfContents(md = '') {
   return toc;
 }
 
+export function getMarkdownSnippet(markdown = '', maxLines = 3) {
+  if (!markdown || typeof markdown !== 'string') return 'No preview text available.';
+  const clean = markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#+\s+/gm, '')
+    .replace(/^>\s*\[!.*\]\s*/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/[*_~]{1,3}/g, '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .slice(0, maxLines)
+    .join(' ');
+  return clean || 'No preview text available.';
+}
+
 export function escapeHtml(str = '') {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -73,7 +98,7 @@ export function renderMarkdown(content = '') {
     return '<p class="text-zinc-500 italic">Documento vacío.</p>';
   }
 
-  const lines = content.split(/\r?\n/);
+  const lines = stripFrontmatter(content).split(/\r?\n/);
   const out = [];
   let inCode = false;
   let codeLang = '';
@@ -260,4 +285,88 @@ export function blocksToMarkdown(blocks = []) {
     if (b.type === 'paragraph') return `${b.content}\n`;
     return '';
   }).join('\n');
+}
+
+export function htmlToMarkdown(html = '') {
+  if (!html || typeof html !== 'string') return '';
+  if (typeof document !== 'undefined') {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    return nodeToMarkdown(doc.body).trim();
+  }
+  return html
+    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '# $1\n\n')
+    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, '## $1\n\n')
+    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, '### $1\n\n')
+    .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, '#### $1\n\n')
+    .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**')
+    .replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, '**$1**')
+    .replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, '*$1*')
+    .replace(/<i[^>]*>([\s\S]*?)<\/i>/gi, '*$1*')
+    .replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, '<u>$1</u>')
+    .replace(/<(strike|s|del)[^>]*>([\s\S]*?)<\/\1>/gi, '~~$2~~')
+    .replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, '> $1\n\n')
+    .replace(/<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, '```\n$1\n```\n\n')
+    .replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`')
+    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n')
+    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<div[^>]*>([\s\S]*?)<\/div>/gi, '$1\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function nodeToMarkdown(node) {
+  if (!node) return '';
+  if (node.nodeType === 3) return node.nodeValue;
+  if (node.nodeType !== 1) return '';
+
+  const tag = node.tagName.toLowerCase();
+  const childrenMd = Array.from(node.childNodes).map(nodeToMarkdown).join('');
+
+  switch (tag) {
+    case 'h1': return `# ${childrenMd.trim()}\n\n`;
+    case 'h2': return `## ${childrenMd.trim()}\n\n`;
+    case 'h3': return `### ${childrenMd.trim()}\n\n`;
+    case 'h4': return `#### ${childrenMd.trim()}\n\n`;
+    case 'p': return `${childrenMd.trim()}\n\n`;
+    case 'strong':
+    case 'b': return `**${childrenMd}**`;
+    case 'em':
+    case 'i': return `*${childrenMd}*`;
+    case 'u': return `<u>${childrenMd}</u>`;
+    case 'strike':
+    case 's':
+    case 'del': return `~~${childrenMd}~~`;
+    case 'code':
+      if (node.parentElement && node.parentElement.tagName.toLowerCase() === 'pre') return childrenMd;
+      return `\`${childrenMd}\``;
+    case 'pre': return `\`\`\`\n${childrenMd.trim()}\n\`\`\`\n\n`;
+    case 'blockquote': return `> ${childrenMd.trim()}\n\n`;
+    case 'ul':
+    case 'ol': return `${childrenMd}\n`;
+    case 'li': {
+      const isOl = node.parentElement && node.parentElement.tagName.toLowerCase() === 'ol';
+      const index = Array.from(node.parentElement ? node.parentElement.children : []).indexOf(node) + 1;
+      return `${isOl ? `${index}.` : '-'} ${childrenMd.trim()}\n`;
+    }
+    case 'table': {
+      const rows = Array.from(node.querySelectorAll('tr'));
+      if (rows.length === 0) return '';
+      return rows.map((tr, rIdx) => {
+        const cells = Array.from(tr.querySelectorAll('th, td')).map(c => c.textContent.trim());
+        const rowStr = `| ${cells.join(' | ')} |`;
+        if (rIdx === 0) {
+          const sep = `| ${cells.map(() => '---').join(' | ')} |`;
+          return `${rowStr}\n${sep}`;
+        }
+        return rowStr;
+      }).join('\n') + '\n\n';
+    }
+    case 'hr': return `---\n\n`;
+    case 'br': return '\n';
+    case 'div': return `${childrenMd}\n`;
+    default: return childrenMd;
+  }
 }

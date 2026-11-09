@@ -12,37 +12,67 @@ Actúa como un **Principal Software Engineer, Enterprise Solutions Architect y L
 - **Desglose Funcional Jerárquico y Deep Linking (Patrón DeepWiki / OpenDeepWiki)**: Descompone el sistema en capacidades de alto nivel y features granulares, acompañadas de un Mapa Mental visual en Mermaid (`mindmap`), flujos de usuario de extremo a extremo (*User Journeys*) y vínculos directos al código fuente (*Deep Source Linking*) para que agentes de IA y desarrolladores naveguen la solución sin puntos ciegos.
 - **Rigor Estándar IEEE Std. 830-1998 / ISO 29148**: Cubre íntegramente las Secciones 1 (Introducción y Ámbito), 2 (Descripción General, Perspectiva del Producto, Características de Usuarios, Restricciones y Asunciones) y 3 (Requisitos Funcionales, de Interfaces Externas UI/HW/SW/Comunicaciones, Ejecución y Atributos de Calidad FURPS+).
 - **Marcos Ágiles, DDD y XP**: Historias de usuario INVEST, desglose SPIDR, Tareas de Ingeniería (`TI-*`), Tarjetas CRC (*Class-Responsibility-Collaborator*), Lenguaje Ubicuo y detección de inconsistencias, ambigüedades o requisitos faltantes.
-- **Soberanía Documental Dual**: Genera todos los archivos modulares en `project-docs/knowledge/` y compila adicionalmente el megadocumento unificado `MASTER-PROJECT-KNOWLEDGE.md` (con el 100% del contenido sin resumir).
+- **Soberanía Documental Dual y Taxonomía Plane**: Genera todos los archivos modulares en `project-docs/knowledge/` clasificados en las 5 Colecciones de Plane (`general`, `engineering`, `product`, `design`, `customer_support`) con metadatos Frontmatter estándar y compila adicionalmente el megadocumento unificado `MASTER-PROJECT-KNOWLEDGE.md` (con el 100% del contenido sin resumir).
 
 ---
 
-## 2. Estructura Dual de Salida (`project-docs/knowledge/`)
+## 2. Estructura de Salida y Taxonomía Plane (`project-docs/knowledge/`)
+
+El motor organiza la base de conocimiento estructurándola en las colecciones nativas de **Plane Wiki**:
 
 ```text
 project-docs/knowledge/
 ├── MASTER-PROJECT-KNOWLEDGE.md          # [MEGADOCUMENTO ÚNICO] Contiene TODA la base de conocimiento consolidada de principio a fin
 ├── knowledge-index.json                 # Índice maestro, métricas reales detectadas y Grafo de Conocimiento (Nodos y Aristas)
-├── 01-project-overview-and-business.md  # ¿De qué trata el proyecto?: Contexto del negocio, Problema, Objetivos, Qué hace/Qué NO hace, Usuarios y Glosario (IEEE 830 Secciones 1 y 2)
-├── 02-architecture-and-patterns.md      # Diagnóstico AS-IS de la Arquitectura implementada, Flujos de Datos (Data Flows), Catálogo de Patrones detectados y ADRs
-├── 03-capabilities-and-features.md      # [DEEPWIKI PATTERN] Desglose funcional jerárquico, Mapa Mental (Mermaid mindmap), User Journeys y Deep Source Linking
-├── 04-domain-ddd-and-crc.md             # Modelo Conceptual del Dominio, Subdominios, Lenguaje Ubicuo, Context Map y Tarjetas CRC globales
-├── 05-uml-diagrams.md                   # Atlas UML 2.5: Casos de Uso, Clases, Secuencias Transaccionales, Máquinas de Estado y Actividades (Swimlanes)
-├── 06-architecture-diagrams.md          # Atlas de Diagramas de Arquitectura: C4 (C1-C4), Flujos de Datos, Paquetes y Resiliencia
-├── 07-functional-requirements-srs.md    # SRS IEEE 830 Sección 3: RF-* (sintaxis formal + Gherkin), Interfaces Externas (UI/HW/SW/Com) y RNF-* (FURPS+)
-├── 08-agile-stories-and-tasks.md        # Product Backlog: Historias INVEST (HU-*), partición SPIDR, Tareas de Ingeniería (TI-*), MVP, DoR/DoD y TDD
-├── 09-data-dictionary-and-erd.md        # Diccionario de Datos, ERD Crow's Foot, mecanismo de persistencia (SQL/ORM/NoSQL/BC), concurrencia y auditoría
-├── 10-business-rules-catalog.md         # Catálogo formal de Reglas de Negocio (BR-*), fórmulas matemáticas/legales y manejo de excepciones
-├── 11-external-services-and-apis.md     # Integraciones externas, contratos API, seguridad (RBAC/JWT), RFC 7807 ProblemDetails y resiliencia
-├── 12-code-quality-and-traceability.md  # Estándares detectados, Hotspots de deuda técnica, plan de mejora y Matriz RTM Bidireccional completa
-└── modules/                             # Radiografía profunda por cada Módulo / Dominio detectado en el proyecto
-    ├── {modulo_1}/
-    │   ├── module-spec.md               # Qué hace el módulo, Lenguaje Ubicuo local, Patrones usados, Tarjetas CRC, Endpoints/Vistas y DTOs
-    │   ├── requirements-and-rules.md    # RF-*, BR-*, Historias (HU-*) y Tareas de Ingeniería (TI-*) del módulo
-    │   ├── data-and-transactions.md     # Tablas/Colecciones leídas o escritas, queries, fronteras transaccionales y eventos
-    │   ├── diagrams.md                  # 6 Diagramas exclusivos del módulo (Arquitectura interna C3, Clases, Secuencia, Estados, Actividades y sub-ERD)
-    │   └── technical-debt-refactoring.md# Auditoría de estado (Cubierto / Parcial / Pendiente), code smells y plan de refactorización
-    └── {modulo_N}/
-        └── ... (los 5 archivos por módulo)
+├── general/                             # Colección General (Contexto, Negocio, Dominio DDD, Estándares)
+│   ├── 01-project-overview-and-business.md # Contexto del negocio, Problema, Objetivos, Usuarios y Glosario (IEEE 830 Secciones 1 y 2)
+│   ├── 04-domain-ddd-and-crc.md            # Modelo Conceptual del Dominio, Subdominios, Lenguaje Ubicuo, Context Map y Tarjetas CRC
+│   └── coding-standards.md                 # Estándares canónicos de código y directrices anti-sesgo
+├── engineering/                         # Colección Engineering (Arquitectura, C4, UML, Datos, Reglas de Negocio, Módulos)
+│   ├── 02-architecture-and-patterns.md     # Diagnóstico AS-IS de la Arquitectura, Flujos de Datos, Catálogo de Patrones y ADRs
+│   ├── c4-model.md                         # Atlas de Arquitectura C4 (C1 Contexto, C2 Contenedores, C3 Componentes, C4 Código)
+│   ├── uml-diagrams.md                     # Atlas UML 2.5: Casos de Uso, Clases, Secuencias Transaccionales, Estados y Actividades
+│   ├── 09-data-dictionary-and-erd.md       # Diccionario de Datos, ERD Crow's Foot, mecanismo de persistencia, concurrencia y auditoría
+│   ├── 10-business-rules-catalog.md        # Catálogo formal de Reglas de Negocio (BR-*), invariantes y manejo de excepciones
+│   ├── 11-external-services-and-apis.md    # Integraciones externas, contratos API, seguridad (RBAC/JWT), ProblemDetails y resiliencia
+│   ├── 12-code-quality-and-traceability.md # Calidad de código, hotspots de deuda técnica y Matriz RTM Bidireccional completa
+│   └── modules/                            # Radiografía profunda por cada Módulo / Dominio detectado en el proyecto
+│       ├── {modulo_1}/
+│       │   ├── module-spec.md              # Qué hace el módulo, Lenguaje Ubicuo local, Patrones usados, Tarjetas CRC, Endpoints y DTOs
+│       │   ├── requirements-and-rules.md   # RF-*, BR-*, Historias (HU-*) y Tareas de Ingeniería (TI-*) del módulo
+│       │   ├── data-and-transactions.md    # Tablas/Colecciones leídas o escritas, queries, fronteras transaccionales y eventos
+│       │   ├── diagrams.md                 # 6 Diagramas exclusivos del módulo (Arquitectura C3, Clases, Secuencia, Estados, Actividades y sub-ERD)
+│       │   └── technical-debt-refactoring.md # Auditoría de estado (Cubierto / Parcial / Pendiente), code smells y plan de refactorización
+│       └── {modulo_N}/...
+├── product/                             # Colección Product (DeepWiki, Requisitos SRS, Historias INVEST)
+│   ├── 03-capabilities-and-features.md     # [DEEPWIKI PATTERN] Desglose funcional jerárquico, Mapa Mental (Mermaid mindmap), User Journeys
+│   ├── 07-functional-requirements-srs.md   # SRS IEEE 830 Sección 3: RF-* (sintaxis formal + Gherkin), Interfaces Externas y RNF-* (FURPS+)
+│   └── 08-agile-stories-and-tasks.md       # Product Backlog: Historias INVEST (HU-*), partición SPIDR, Tareas TI-*, MVP, DoR/DoD
+├── design/                              # Colección Design (Design System, Tokens, UI/UX)
+│   └── design-system-and-ui.md             # Guía de estilos, tokens CSS, componentes UI, wireframes y microinteracciones
+└── customer_support/                    # Colección Customer Support (Operaciones, Runbooks, SLAs)
+    └── runbooks-and-operations.md          # Manuales de soporte operativo, solución de incidentes, SLAs y verificación
+
+> **Nota de compatibilidad**: Los archivos pueden organizarse en los subdirectorios anteriores (`general/`, `engineering/`, etc.) o mantenerse en la raíz de `project-docs/knowledge/`. En ambos casos, el motor de sincronización (`sqlite-sync.js`) y Plane Wiki detectan automáticamente la colección mediante la propiedad `collection` del Frontmatter o por la ruta física del archivo.
+```
+
+### Formato Estándar de Metadatos YAML (Frontmatter Plane)
+
+Todo archivo Markdown generado por esta skill DEBE iniciar con el bloque de metadatos YAML estructurado para Plane Wiki:
+
+```yaml
+---
+title: "Título Descriptivo de la Página"
+collection: engineering # product | engineering | general | design | customer_support
+parent: "c4-model.md" # Slug/nombre del documento padre para anidación jerárquica en Plane (opcional)
+owner: "Aria" # Nombre del responsable o agente bot (ej. Aria, Marcus, Ana, AI Spec Author)
+icon: "architecture" # Identificador vectorial de icono Plane (ej. rocket, fileText, target, clipboard, creditCard, layers, architecture, database, barChart, shield, link, book, palette, tool, page)
+access: public # public (0) | private (1)
+is_locked: true # true para bloqueo normativo (BR-PAGE-02) contra ediciones accidentales
+is_favorite: true # true para fijar en barra lateral Favorites y en cabecera de la Wiki
+full_width: true # true para expandir el lienzo de lectura de 760px a 1152px
+labels: [c4-model, architecture, ieee-830] # Etiquetas semánticas para filtrado en Plane
+---
 ```
 
 ---
@@ -206,49 +236,72 @@ Cubre rigurosamente toda la estructura del estándar IEEE 830 Sección 3:
 
 ---
 
-### Paso 6: Compilación del Megadocumento Único (`MASTER-PROJECT-KNOWLEDGE.md`), Organización en Plane Library y Sincronización
+### Paso 6: Compilación del Megadocumento Único (`MASTER-PROJECT-KNOWLEDGE.md`), Organización en Plane Wiki y Sincronización Automática
 
 1. **Generación de `MASTER-PROJECT-KNOWLEDGE.md`**:
    - Ensambla en un único archivo Markdown maestro (con Tabla de Contenidos navegable) la totalidad de los documentos `01` al `12` más el contenido íntegro de todos los módulos en `modules/{modulo}/*`.
    - Prohibido resumir o recortar diagramas o tablas al crear el archivo maestro; debe funcionar como el *gemelo cognitivo* completo del software en un solo archivo.
 
-2. **Taxonomía y Reglas de Negocio de Plane Library (`BR-PAGE-01`..`BR-PAGE-06`)**:
-   Cada documento generado en `project-docs/knowledge/` debe organizarse siguiendo exactamente el modelo operativo de **Library (Pages)** de Plane:
+2. **Taxonomía, Colecciones y Reglas de Negocio de Plane Wiki (`BR-PAGE-01`..`BR-PAGE-06`)**:
+   Cada documento generado en `project-docs/knowledge/` debe organizarse siguiendo el modelo de **Plane Wiki**:
+   - **Las 5 Colecciones Principales (`collection`)**:
+     * `engineering`: Arquitectura AS-IS, C4, UML, Diccionario de datos, ERD, Reglas de negocio (BR-*), Contratos de API/Servicios, Deuda técnica y Módulos.
+     * `product`: Visión del producto, Desglose DeepWiki, Mapa mental, Requisitos SRS (IEEE 830 RF-*), Historias INVEST (HU-*) y Backlog.
+     * `general`: Resumen general, Contexto de negocio, Dominio DDD, Lenguaje Ubicuo, CRC, Estándares de código y el Megadocumento maestro.
+     * `design`: Design System, Tokens de diseño CSS, Librería de componentes UI/UX, Wireframes y especificaciones visuales.
+     * `customer_support`: Manuales de operación, SLAs, Runbooks, Solución de incidentes y scripts de verificación (`verify.sh`).
+   - **Jerarquía y Páginas Anidadas (`parent` / `parent_id`)**:
+     * Permite anidar páginas secundarias bajo una página padre (ej. las vistas C1-C4 bajo `c4-model.md`, o los 5 archivos de un módulo bajo su página principal del módulo) especificando `parent: "nombre-padre.md"`.
+     * En la interfaz de Plane Wiki, estas páginas se renderizan de forma interactiva con chevron expandible (`▶`/`▼`), sangría visual (`pl-9`) y conector jerárquico `└`.
    - **Visibilidad (`access`: `0` Public vs `1` Private — `BR-PAGE-01`, `BR-PAGE-04`)**:
-     * **Public (`--access public`, `access = 0`)**: Documentos canónicos compartidos con todo el proyecto y los subagentes (`c4-model.md`, `uml-diagrams.md`, `business-rules.md`, `coding-standards.md`, `external-services.md`, `MASTER-PROJECT-KNOWLEDGE.md` y especificaciones de módulos `modules/{modulo}/*`).
-     * **Private (`--access private`, `access = 1`)**: Borradores de exploración forense, notas de deuda técnica en curso o borradores de refactorización antes de convertirse en ADRs públicos.
-     * **Archived (`archived_at`)**: Documentos históricos o deprecados que se conservan por auditoría mediante `node project-docs/cli.js page archive <slug>`. Archivar una página desmarca automáticamente `is_favorite = 0` (`BR-PAGE-03`) e impide cambiar su visibilidad o editar su contenido hasta restaurarla (`BR-PAGE-02`, `BR-PAGE-04`).
+     * **Public (`access: public` / `0`)**: Documentos canónicos compartidos con todo el proyecto y los subagentes (`c4-model.md`, `uml-diagrams.md`, `business-rules.md`, `coding-standards.md`, `external-services.md`, `MASTER-PROJECT-KNOWLEDGE.md` y especificaciones de módulos).
+     * **Private (`access: private` / `1`)**: Borradores de exploración forense, notas de deuda técnica en curso o propuestas en borrador.
+     * **Archived (`archived_at`)**: Documentos históricos o deprecados. Archivar una página desmarca automáticamente `is_favorite = 0` (`BR-PAGE-03`) e impide cambiar su visibilidad o editar su contenido hasta restaurarla (`BR-PAGE-02`, `BR-PAGE-04`).
    - **Bloqueo Normativo (`is_locked` — `BR-PAGE-02`)**:
-     * Los documentos de gobierno arquitectónico (`c4-model.md`, `business-rules.md`, `coding-standards.md`, `MASTER-PROJECT-KNOWLEDGE.md`) se registran con `--locked` (`is_locked = 1`) para impedir ediciones accidentales en el editor sin desbloqueo explícito.
+     * Los documentos de gobierno arquitectónico (`c4-model.md`, `business-rules.md`, `coding-standards.md`, `MASTER-PROJECT-KNOWLEDGE.md`) se registran con `is_locked: true` para impedir ediciones accidentales en el editor sin desbloqueo explícito.
    - **Favoritos Fijados (`is_favorite`) y Ancho Completo (`full_width`)**:
-     * Los documentos de consulta permanente se marcan con `--favorite` para aparecer fijados en la barra lateral de Plane (`Favorites`) y en la franja superior de Library.
-     * Los pliegos con diagramas C4, UML o mapas mentales Mermaid se marcan con `--full-width` para expandir el lienzo de lectura de `720px` a `1152px`.
-   - **Estantes Canónicos (`shelf`) y Etiquetas (`page_labels`)**:
-     * Clasifica cada página en su estante correspondiente (`architecture`, `business_rules`, `requirements`, `adrs`, `standards`, `modules`, `specs`) y asigna etiquetas semánticas (`ieee-830`, `c4-model`, `uml-2.5`, `ddd`, `deepwiki`, `invariants`, `erd`).
+     * Los documentos de consulta permanente se marcan con `is_favorite: true` para aparecer fijados en la barra lateral de Plane (`Favorites`) y en el filtro rápido superior.
+     * Los pliegos con diagramas C4, UML o mapas mentales Mermaid se marcan con `full_width: true` para expandir el lienzo de lectura de `760px` a `1152px`.
 
-3. **Actualización de `knowledge-index.json` e Ingesta en el Modelo Relacional Plane (`pages`, `page_versions`, `page_logs`, `page_labels`, `ai_runs`)**:
-   - Actualiza `project-docs/knowledge/knowledge-index.json` con todos los documentos, conteos reales y el grafo de relaciones.
-   - Al escribir los documentos Markdown, utiliza menciones explícitas a tareas (`INT-001`..`INT-NNN`), reglas (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`) y capacidades (`CAP-XXX`) para que el motor Plane SQLite construya automáticamente el grafo bidireccional en `page_logs` y los renderice como **Smart Entity Chips** interactivos en `PageReader.js` y en las 4 pestañas (**Outline / Info / Assets / Historial**) de `PageNavigationPane.js`.
-   - Registra las páginas clave con sus metadatos Plane (`--access public|private`, `--locked`, `--favorite`, `--full-width`, `--labels`, `--module`) y ejecuta la sincronización completa:
-     ```bash
-     node project-docs/cli.js page upsert --id "page-kb-c4-model_md" --title "Modelo de Arquitectura C4 (C1-C4)" --shelf "architecture" --access public --file "project-docs/knowledge/c4-model.md" --locked --favorite --full-width --labels "c4-model,architecture,mermaid"
-     node project-docs/cli.js page upsert --id "page-kb-business-rules_md" --title "Catalogo de Reglas de Negocio (BR-*)" --shelf "business_rules" --access public --file "project-docs/knowledge/business-rules.md" --locked --favorite --labels "business-rules,invariants,ddd"
-     node project-docs/cli.js page upsert --id "page-kb-coding-standards_md" --title "Estandares de Codigo y Guardrails Anti-Sesgo" --shelf "standards" --access public --file "project-docs/knowledge/coding-standards.md" --locked --labels "coding-standards,guardrails,clean-code"
-     node project-docs/cli.js page upsert --id "page-kb-MASTER-PROJECT-KNOWLEDGE_md" --title "Dossier Maestro Consolidado (Single-File Context)" --shelf "architecture" --access public --file "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md" --locked --favorite --full-width --labels "master-bundle,ieee-830,c4-model,deepwiki"
-     node project-docs/cli.js sync
-     node project-docs/cli.js ai log --skill project-knowledge --role spec-author --type KNOWLEDGE_EXTRACTION --summary "Extraccion de base de conocimiento soberana C4, UML, reglas BR-*, organizacion Plane Library (Public/Private/Archived) y grafo page_logs" --artifacts "project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md,project-docs/knowledge/knowledge-index.json"
-     node project-docs/sync-data.js
-     ```
+3. **Gestión Integral desde la Interfaz Web de Plane Wiki**:
+   Toda la base de conocimiento extraída puede gestionarse directamente desde la interfaz de usuario:
+   - **Navegación por Colecciones**: Acceso directo desde la barra lateral izquierda a `Product`, `Engineering`, `General`, `Design`, `Customer support`, `Home`, `Library`, `Favorites`, `Shared` y `Private`.
+   - **Búsqueda en Tiempo Real**: Filtrado interactivo instantáneo de páginas por título, autor o identificador (`#kb-collection-search-input`).
+   - **Lector de Documentos con Smart Entity Chips**: Detección automática y navegación clicable de menciones a tareas (`INT-XXX`), reglas de negocio (`BR-XXX`), requisitos (`RF-XXX`), decisiones (`ADR-XXX`) y capacidades (`CAP-XXX`).
+   - **Editor Dual y Persistencia Bidireccional**: Edición fluida en Markdown y en bloques visuales (ContextForge) con sincronización automática en la base de datos SQLite (`harness.db`) y archivos `.md`.
+   - **Panel de Inspección Derecho (`PageNavigationPane`)**:
+     * *Pestaña Outline*: Tabla de contenidos interactiva (H1-H3) con mini-barras flotantes.
+     * *Pestaña Info*: Métricas de lectura (palabras, caracteres, párrafos, tiempo de lectura), responsable, etiquetas y grafo de relaciones/backlinks.
+     * *Pestaña Assets*: Índice navegable de todos los diagramas Mermaid e imágenes de evidencia.
+     * *Pestaña Historial*: Control de versiones (`page_versions`) con autor, fecha y restauración.
+   - **Menú Contextual de Fila (`···`)**: Acciones rápidas para abrir en lector, editar en lienzo, añadir sub-página anidada, alternar favorito, alternar bloqueo, alternar visibilidad pública/privada, copiar enlace y archivar/restaurar.
+   - **Botón `Add page` / `New page`**: Creación de nuevas páginas en blanco o a partir de plantillas (PRD, Arquitectura, ADR, Regla de Negocio).
+
+4. **Sincronización Automática e Ingesta Relacional en SQLite (`harness.db`)**:
+   Tras generar o actualizar cualquier documento de la base de conocimiento, es OBLIGATORIO ejecutar el comando de sincronización integral:
+   ```bash
+   node project-docs/sync-data.js
+   ```
+   Este comando ejecuta de forma autónoma:
+   - Extracción de frontmatter YAML (`collection`, `parent`, `owner`, `icon`, `access`, `is_locked`, `is_favorite`, `full_width`, `labels`).
+   - Inserción y actualización en la tabla relacional `pages` de SQLite (`harness.db`).
+   - Resolución de jerarquías padre-hijo (`parent_id`) para páginas anidadas.
+   - Cálculo automático de telemetría: palabras (`word_count`), caracteres (`char_count`), párrafos (`paragraph_count`) y conteo de diagramas Mermaid (`diagrams_count`).
+   - Generación del grafo de relaciones bidireccional en `page_logs` e indexación de etiquetas en `page_labels`.
+   - Reconstrucción de `project-docs/knowledge/knowledge-index.json`.
+   - Compilación del bundle de distribución web (`project-docs/dist/app.bundle.js`).
 
 ---
 
 ## 4. Puerta de Auditoría de Calidad (Self-Audit Checklist)
 
-Antes de finalizar, verifica obligatoriamente:
+Antes de finalizar la ejecución de la skill, verifica obligatoriamente:
 
 - [ ] **Agnosticismo y Fidelidad al Proyecto Real**: Se analizaron tanto las partes modernas como las legacy (si existen), sin inventar tecnologías que no estén en el repositorio.
 - [ ] **Manejo de Archivos Masivos**: Si hubo archivos >800 líneas, se inspeccionaron por símbolos y rangos sin perder reglas de negocio.
 - [ ] **Doble Salida Completa**: Existen todos los archivos divididos en `project-docs/knowledge/` **Y** existe el megadocumento unificado `project-docs/knowledge/MASTER-PROJECT-KNOWLEDGE.md`.
+- [ ] **Metadatos Frontmatter Estándar**: Cada archivo Markdown cuenta con su encabezado YAML válido (`title`, `collection`, `owner`, `icon`, `access`, `is_locked`, `is_favorite`, `full_width`, `labels`).
 - [ ] **Módulos Profundos (5 archivos + 6 diagramas por módulo)**: Cada módulo en `modules/{modulo}/` cuenta con `module-spec.md`, `requirements-and-rules.md`, `data-and-transactions.md`, `diagrams.md` y `technical-debt-refactoring.md`.
 - [ ] **12 Tipos de Diagramas con Geometría Exacta**: Todos los diagramas Mermaid usan las formas geométricas correctas (cilindros, hexágonos, subrutinas, banderas, rombos) y tienen IDs alfanuméricos limpios con etiquetas entrecomilladas.
-- [ ] **Organización Plane Library y Grafo Relacional (`pages`, `page_logs`, `page_labels`, `page_versions`)**: Cada página tiene asignado su `shelf`, `access` (`public` o `private`), `is_locked`, `is_favorite`, `full_width`, `page_labels` y vínculos cruzados `page_logs` hacia `INT-*`, `BR-*`, `RF-*`, `ADR-*` y `CAP-*`, sincronizados con `node project-docs/cli.js sync` y `node project-docs/sync-data.js`.
+- [ ] **Organización en Colecciones Plane y Páginas Anidadas**: Se clasificó cada documento en su colección (`engineering`, `product`, `general`, `design`, `customer_support`) y se establecieron relaciones padre-hijo con `parent` donde aplique.
+- [ ] **Sincronización Exitosa con `sync-data.js`**: Se ejecutó `node project-docs/sync-data.js` con código de salida 0, confirmando que la base de datos SQLite y el bundle web reflejan de inmediato el 100% de la base de conocimiento para su gestión desde la Wiki.
