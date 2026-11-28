@@ -1,0 +1,15 @@
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+    <div>
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white">Conexión Universal MCP por Cliente (Cursor, Claude Desktop, Claude Code y STDIO)</h2>
+      <p class="text-xs text-slate-500">En <code class="font-mono">AUTH_MODE=enterprise_rbac</code>, el endpoint <code class="font-mono">/mcp/sse</code> exige la cabecera <code class="font-mono">X-API-Key</code> (BR-18).</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+      <button type="button" @click="mcpClient = 'cursor'" :class="mcpClient === 'cursor' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-semibold cursor-pointer">Cursor</button>
+      <button type="button" @click="mcpClient = 'claude_desktop'" :class="mcpClient === 'claude_desktop' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-semibold cursor-pointer">Claude Desktop</button>
+      <button type="button" @click="mcpClient = 'claude_cli'" :class="mcpClient === 'claude_cli' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-semibold cursor-pointer">Claude Code CLI</button>
+      <button type="button" @click="copyCode(getMcpSnippet(), 'Configuración MCP')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold cursor-pointer">Copiar</button>
+    </div>
+  </div>
+  <pre class="p-4 rounded-xl bg-slate-950 text-emerald-300 font-mono text-xs overflow-x-auto" x-text="getMcpSnippet()"></pre>
+</div>

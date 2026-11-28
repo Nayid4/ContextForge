@@ -1,0 +1,38 @@
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+    <div>
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white">Widget Chatbot Embebible Seguro (<code class="font-mono text-xs">cf_pub_*</code> → JWT Efímero)</h2>
+      <p class="text-xs text-slate-500">Por seguridad (BR-18), solo los agentes con visibilidad <code class="font-mono">public</code> (sin motor CLI) pueden incrustarse en portales web.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" @click="testWidgetInPage()" :disabled="!isSelectedAgentPublic()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-45 disabled:cursor-not-allowed text-white text-xs font-semibold cursor-pointer">Probar Widget aquí</button>
+      <button type="button" @click="copyCode(getWidgetSnippet(), 'Código del Widget')" :disabled="!isSelectedAgentPublic()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 disabled:opacity-45 disabled:cursor-not-allowed text-white text-xs font-semibold cursor-pointer">Copiar código</button>
+    </div>
+  </div>
+
+  <!-- Explicit Guard when selected agent is NOT public (INT-05) -->
+  <template x-if="!isSelectedAgentPublic()">
+    <div role="alert" class="p-4 rounded-xl border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200 space-y-2">
+      <div class="font-bold flex items-center gap-1.5">
+        <i class="fa-solid fa-lock text-amber-500"></i>
+        <span>El agente seleccionado (<code class="font-mono" x-text="`${selectedProject}/${selectedAgent}`"></code>) NO es público.</span>
+      </div>
+      <p>
+        Su visibilidad actual es <strong class="font-mono" x-text="selectedAgentObj()?.visibility || 'internal'"></strong>. Si incrustas un snippet con este agente, <code class="font-mono">POST /api/v1/widget/session</code> lo rechazará con <strong>403 Forbidden</strong>.
+        Selecciona arriba un agente <code class="font-mono">public</code> o cambia su visibilidad en <a href="/agents" class="underline font-semibold">Agent Studio (/agents)</a>.
+      </p>
+      <template x-if="publicProjectAgents().length > 0">
+        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+          <span>Agentes públicos disponibles:</span>
+          <template x-for="pa in publicProjectAgents()" :key="pa.slug">
+            <button type="button" @click="selectedAgent = pa.slug" class="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-mono text-[11px] cursor-pointer" x-text="pa.slug"></button>
+          </template>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <template x-if="isSelectedAgentPublic()">
+    <pre class="p-4 rounded-xl bg-slate-950 text-sky-300 font-mono text-xs overflow-x-auto" x-text="getWidgetSnippet()"></pre>
+  </template>
+</div>

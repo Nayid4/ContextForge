@@ -1,0 +1,167 @@
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-5 shadow-xs">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+    <div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white" x-text="getCurrentConfig().name || 'Proveedor LLM'"></h3>
+        <span
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+          :class="getCurrentConfig().egress_class === 'local' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'"
+        >
+          <i :class="getCurrentConfig().egress_class === 'local' ? 'fa-solid fa-house-lock text-[9px]' : 'fa-solid fa-cloud-arrow-up text-[9px]'"></i>
+          <span x-text="getCurrentConfig().egress_class === 'local' ? 'Egreso Local (sin salida a internet)' : 'Egreso Nube (aplica redacción DLP)'"></span>
+        </span>
+        <template x-if="getCurrentConfig().env_configured">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            <i class="fa-solid fa-shield-halved text-[9px]"></i>
+            <span x-text="`Secreto activo vía .env (${getCurrentConfig().env_var_name})`"></span>
+          </span>
+        </template>
+      </div>
+      <template x-if="getCurrentConfig().egress_class === 'cloud'">
+        <p class="text-[11px] text-amber-700 dark:text-amber-300 mt-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>
+            Este motor tiene <strong>egreso a la nube</strong> (bloqueado en proyectos con <code class="font-mono">sovereign_only</code>).
+            <span x-show="getCurrentConfig().engine_type === 'local_cli'"> Además, los motores CLI no pueden usarse en agentes con visibilidad <code class="font-mono">public</code> (BR-17/BR-18).</span>
+          </span>
+        </p>
+      </template>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Al probar conexión se envía un prompt real (<code class="font-mono">OK</code>) al modelo seleccionado. Las claves en UI se cifran con AES-256-GCM o pueden quedarse ocultas en <code class="font-mono">.env</code>.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" @click="testConnection(getCurrentConfig())" :disabled="testing" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold cursor-pointer transition disabled:opacity-50">
+        <i class="fa-solid fa-plug-circle-check mr-1 text-indigo-500" :class="testing ? 'animate-spin' : ''"></i>
+        <span x-text="testing ? 'Enviando prompt de prueba...' : 'Probar modelo'"></span>
+      </button>
+      <button type="button" @click="saveConfig(getCurrentConfig())" :disabled="saving" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer transition">
+        <i class="fa-solid fa-floppy-disk mr-1"></i>Guardar
+      </button>
+      <button type="button" @click="activateProvider(getCurrentConfig().provider)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer transition">
+        Activar
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+    <!-- Base URL (HTTP / Cloud providers) -->
+    <template x-if="getCurrentConfig().engine_type !== 'local_cli'">
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Endpoint / Base URL</label>
+        <input type="text" x-model="getCurrentConfig().base_url" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      </div>
+    </template>
+
+    <!-- CLI Command & Args (Local CLI providers like Antigravity agy, Claude Code, Gemini CLI) -->
+    <template x-if="getCurrentConfig().engine_type === 'local_cli'">
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Comando binario CLI</label>
+        <input type="text" x-model="getCurrentConfig().cli_command" placeholder="ej. agy, claude, gemini, codex" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      </div>
+    </template>
+
+    <!-- Searchable Model Combobox + Live Model Detection -->
+    <div class="relative" @click.outside="modelComboOpen = false">
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <label class="block font-medium text-slate-600 dark:text-slate-300">Modelo a utilizar (buscable o personalizado)</label>
+        <button
+          type="button"
+          @click="discoverModelsForCurrent(false)"
+          :disabled="discoveringModels"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 text-[10px] font-semibold cursor-pointer transition disabled:opacity-50"
+          title="Consultar los modelos disponibles en vivo para este proveedor (CLI, HTTP o Cloud API)"
+        >
+          <i class="fa-solid fa-arrows-rotate text-[9px]" :class="discoveringModels ? 'animate-spin' : ''"></i>
+          <span x-text="discoveringModels ? 'Buscando...' : 'Detectar modelos'"></span>
+        </button>
+      </div>
+      <button
+        type="button"
+        @click="openModelCombo()"
+        class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 hover:border-indigo-500/50 font-mono text-xs text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition"
+      >
+        <span class="truncate" x-text="getCurrentConfig().default_model || 'Seleccionar modelo...'"></span>
+        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+      </button>
+
+      <div x-show="modelComboOpen" x-transition style="display: none;" class="absolute left-0 right-0 z-40 mt-1.5 rounded-xl bg-white dark:bg-[#0d0f17] border border-slate-200 dark:border-[#232738] shadow-xl p-2 space-y-1.5">
+        <div class="relative">
+          <input
+            type="text"
+            x-ref="modelSearchInput"
+            x-model="modelSearch"
+            @keydown.enter.prevent="if (modelSearch.trim()) { getCurrentConfig().default_model = modelSearch.trim(); modelSearch = ''; modelComboOpen = false; }"
+            placeholder="Buscar por nombre o escribir ID del modelo..."
+            class="w-full pl-7 pr-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161922] border border-slate-200 dark:border-[#232738] font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-slate-400 pointer-events-none"></i>
+        </div>
+        <div x-show="modelDiscoveryNote" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between gap-2">
+          <span class="truncate" x-text="modelDiscoveryNote"></span>
+          <span x-show="modelDiscoverySource === 'live'" class="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">En vivo</span>
+        </div>
+        <div class="max-h-52 overflow-y-auto space-y-0.5 custom-scrollbar">
+          <template x-for="m in filteredModels()" :key="m.id">
+            <button
+              type="button"
+              @click="getCurrentConfig().default_model = m.id; modelSearch = ''; modelComboOpen = false"
+              :class="getCurrentConfig().default_model === m.id ? 'bg-indigo-50 dark:bg-indigo-600/25 text-indigo-700 dark:text-indigo-200 font-semibold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+              class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 cursor-pointer"
+            >
+              <div class="min-w-0">
+                <div class="font-mono text-[11px] truncate" x-text="m.id"></div>
+                <div x-show="m.label && m.label !== m.id" class="text-[10px] text-slate-400 truncate" x-text="m.label"></div>
+              </div>
+              <i x-show="getCurrentConfig().default_model === m.id" class="fa-solid fa-check text-indigo-500 text-[10px] shrink-0"></i>
+            </button>
+          </template>
+          <template x-if="modelSearch.trim() && !filteredModels().some(m => m.id === modelSearch.trim())">
+            <button
+              type="button"
+              @click="getCurrentConfig().default_model = modelSearch.trim(); modelSearch = ''; modelComboOpen = false"
+              class="w-full text-left px-2.5 py-1.5 rounded-lg font-mono text-xs text-indigo-600 dark:text-indigo-300 border border-dashed border-indigo-400/50 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+            >
+              <i class="fa-solid fa-plus mr-1"></i>Usar modelo "<strong x-text="modelSearch.trim()"></strong>"
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <template x-if="getCurrentConfig().engine_type === 'local_cli'">
+      <div class="md:col-span-2">
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Argumentos CLI</label>
+        <input type="text" x-model="getCurrentConfig().cli_args" placeholder="ej. chat -p" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      </div>
+    </template>
+
+    <template x-if="getCurrentConfig().engine_type !== 'local_cli' && getCurrentConfig().engine_type !== 'extractive_fallback'">
+      <div class="md:col-span-2">
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">
+          API Key (AES-256-GCM en reposo)
+          <span x-show="getCurrentConfig().env_var_name" class="font-mono text-[11px] text-slate-400" x-text="`· Opcional si defines ${getCurrentConfig().env_var_name} en .env`"></span>
+        </label>
+        <input
+          type="password"
+          x-model="getCurrentConfig().api_key"
+          :placeholder="getCurrentConfig().env_configured ? 'Secreto provisto automáticamente desde .env (dejar vacío para usar .env)' : 'Dejar vacío para conservar clave actual o si es motor local'"
+          class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+      </div>
+    </template>
+  </div>
+
+  <template x-if="testResult">
+    <div class="p-3.5 rounded-xl border text-xs flex flex-wrap items-center justify-between gap-2" :class="testResult.healthy ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300'">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid" :class="testResult.healthy ? 'fa-circle-check text-emerald-500' : 'fa-circle-xmark text-rose-500'"></i>
+        <span class="font-medium" x-text="testResult.message"></span>
+      </div>
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span x-show="testResult.key_source === 'env'" class="px-1.5 py-0.5 rounded bg-emerald-500/15">vía .env</span>
+        <span x-text="`${testResult.latency_ms} ms`"></span>
+      </div>
+    </div>
+  </template>
+</div>

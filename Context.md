@@ -855,8 +855,8 @@ sequenceDiagram
 - `/knowledge-health` — Tablero de Salud del Conocimiento, Vacíos Documentales (con *Documentar este vacío* y acciones masivas) y Documentos Vencidos.
 - `/bundles` — Context Bundler y exportación de reglas CLI.
 - `/projects` — Gestión de proyectos y sincronización Docs-as-Code.
-- `/docs/integration-guide` — Integración MCP, Widget y Postman.
-- `/settings` — Consola Multi-LLM, RAG, API Keys, DLQ y Auditoría.
+- `/docs/integration-guide` — Guía interactiva de Integración Externa (Gateway OpenAI `/v1/*`, MCP por cliente Cursor/Claude Desktop/CLI con `X-API-Key`, Widget solo agentes `public`, Webhooks HMAC + anti-replay, Feedback/Vacíos/`/metrics`, Postman v2.1 sin credenciales fijas y prueba de conexión en vivo).
+- `/settings` — Consola de Configuración separada en **Workspace** (Motores IA con chip `egress_class` Local/Nube, todos los parámetros `settings` + reindexado de embeddings, diagnóstico BD/Storage reales, claves `cf_live_*`/`cf_pub_*` + botón `Verificar cadena SHA-256` + cola de reintentos fallidos + estado `AUTH_MODE`/`/metrics`) y **Proyecto** (Webhooks HTTPS, portabilidad Export/Import y acceso a Miembros).
 
 ---
 
@@ -926,5 +926,5 @@ Esta sección lista **exclusivamente elementos aún NO implementados** y deuda t
 
 ### 15.3 Ecosistema, UX Avanzada y CI
 1. **Sincronización bidireccional con Git remoto:** Pull/push automatizado contra repositorios GitHub/GitLab con creación de Pull Requests desde el editor.
-2. **UX avanzada en Workspace y Studio:** Comparador visual lado a lado entre dos versiones de un agente, separación visual de ajustes globales de Workspace vs Proyecto en `/settings` y asistente guiado de onboarding de primer uso.
+2. **UX avanzada en Workspace y Studio:** Comparador visual lado a lado entre dos versiones de un agente y asistente guiado de onboarding de primer uso.
 3. **Operación empresarial y CI:** Runbook automatizado de backup/restore cifrado, pipeline CI con reporte de cobertura total sobre `src/` y suite E2E Playwright en navegador real.

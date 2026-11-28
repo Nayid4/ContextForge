@@ -1,0 +1,218 @@
+{% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
+
+{% block title %}Integración y MCP | ContextForge{% endblock %}
+{% block page_crumb %}Integración{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-5xl mx-auto" x-data="integrationDocsApp()">
+
+  {% call page_header(
+    'fa-solid fa-plug',
+    'Integración Externa',
+    'Conecta tus agentes IA, SDKs OpenAI, editores MCP, webhooks HTTPS o widget web usando el proyecto y agente reales.',
+    active_slug,
+    'teal'
+  ) %}
+    <button type="button" @click="testLiveConnection()" :disabled="testingConnection" class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-xl transition cursor-pointer">
+      <i class="fa-solid fa-bolt" :class="testingConnection ? 'animate-spin' : ''"></i>
+      <span x-text="testingConnection ? 'Probando...' : 'Probar conexión en vivo'"></span>
+    </button>
+    <a href="/api/docs" target="_blank" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition">
+      <i class="fa-solid fa-book text-indigo-500"></i>
+      <span>Swagger API</span>
+    </a>
+  {% endcall %}
+
+  <!-- Live Context Selector Bar (Project + Agent + Base URL + Auth Mode - INT-01) -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs shadow-xs">
+    <div>
+      <label for="int-proj-sel" class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Proyecto</label>
+      <select id="int-proj-sel" x-model="selectedProject" @change="syncAgentForProject()" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono">
+        <template x-for="p in projects" :key="p.slug">
+          <option :value="p.slug" x-text="`${p.name} (${p.slug})`"></option>
+        </template>
+      </select>
+    </div>
+    <div>
+      <label for="int-agent-sel" class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+        Agente
+        <template x-if="selectedAgentObj()">
+          <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-mono" :class="selectedAgentObj().visibility === 'public' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'" x-text="selectedAgentObj().visibility"></span>
+        </template>
+      </label>
+      <select id="int-agent-sel" x-model="selectedAgent" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono">
+        <template x-for="a in projectAgents()" :key="a.slug">
+          <option :value="a.slug" x-text="`${a.name} (${a.slug} · ${a.visibility})`"></option>
+        </template>
+        <template x-if="projectAgents().length === 0">
+          <option value="assistant">assistant (sin agentes en este proyecto)</option>
+        </template>
+      </select>
+    </div>
+    <div>
+      <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">URL Base y Autenticación</label>
+      <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono flex items-center justify-between gap-2">
+        <span class="truncate" x-text="baseUrl"></span>
+        <span class="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 text-[10px] shrink-0" x-text="authMode"></span>
+      </div>
+    </div>
+  </div>
+
+  <template x-if="liveTestResult">
+    <div role="status" aria-live="polite" class="p-3.5 rounded-xl border text-xs flex flex-wrap items-center justify-between gap-2" :class="liveTestResult.ok ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300'">
+      <span x-text="liveTestResult.message"></span>
+      <span class="font-mono text-[11px]" x-text="`${liveTestResult.latencyMs} ms`"></span>
+    </div>
+  </template>
+
+  <!-- Complete Goal-Oriented Tabs (INT-02, INT-03, INT-04, INT-05, INT-06, INT-07, INT-09) -->
+  <div class="inline-flex flex-wrap p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 gap-1">
+    <button type="button" @click="switchSection('openai')" :class="activeSection === 'openai' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-bolt text-[11px]"></i><span>Gateway OpenAI (/v1/*)</span>
+    </button>
+    <button type="button" @click="switchSection('mcp')" :class="activeSection === 'mcp' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-robot text-[11px]"></i><span>IDEs y MCP</span>
+    </button>
+    <button type="button" @click="switchSection('widget')" :class="activeSection === 'widget' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-message text-[11px]"></i><span>Widget Web</span>
+    </button>
+    <button type="button" @click="switchSection('webhooks')" :class="activeSection === 'webhooks' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-webhook text-[11px]"></i><span>Webhooks, Ops y Auth</span>
+    </button>
+    <button type="button" @click="switchSection('api')" :class="activeSection === 'api' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-code text-[11px]"></i><span>API REST y Postman</span>
+    </button>
+    <button type="button" @click="switchSection('arch')" :class="activeSection === 'arch' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-diagram-project text-[11px]"></i><span>Arquitectura</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: OPENAI-COMPATIBLE GATEWAY (/v1/*) (INT-02) -->
+  <div x-show="activeSection === 'openai'" x-transition class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div>
+        <h2 class="text-sm font-bold text-slate-900 dark:text-white">Gateway OpenAI-Compatible (<code class="font-mono">/v1/models</code> y <code class="font-mono">/v1/chat/completions</code>)</h2>
+        <p class="text-xs text-slate-500">Conecta cualquier SDK OpenAI usando <code class="font-mono" x-text="`model='${selectedProject}/${selectedAgent}'`"></code> con streaming SSE real token-a-token y validación de citas en vivo.</p>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs">
+        <button type="button" @click="openaiLang = 'python'" :class="openaiLang === 'python' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-mono cursor-pointer">Python SDK</button>
+        <button type="button" @click="openaiLang = 'node'" :class="openaiLang === 'node' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-mono cursor-pointer">Node SDK</button>
+        <button type="button" @click="openaiLang = 'curl'" :class="openaiLang === 'curl' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-mono cursor-pointer">cURL SSE</button>
+        <button type="button" @click="copyCode(getOpenAiSnippet(), 'Snippet OpenAI')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold cursor-pointer">Copiar</button>
+      </div>
+    </div>
+    <pre class="p-4 rounded-xl bg-slate-950 text-indigo-200 font-mono text-xs overflow-x-auto" x-text="getOpenAiSnippet()"></pre>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+      <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-1">
+        <div class="font-semibold text-slate-800 dark:text-white">Límites de entrada y seguridad</div>
+        <p class="text-slate-500">Máximo <strong>50 mensajes</strong> y <strong>32,000 caracteres</strong> totales por solicitud. Los mensajes <code class="font-mono">role="system"</code> enviados por el cliente se descartan para proteger los límites de tema del agente.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-1">
+        <div class="font-semibold text-slate-800 dark:text-white">Contrato de error OpenAI (HTTP 400)</div>
+        <p class="text-slate-500">Enviar parámetros no soportados (<code class="font-mono">tools</code>, <code class="font-mono">n != 1</code>, <code class="font-mono">response_format</code>) devuelve HTTP <strong>400</strong> con formato estándar <code class="font-mono">{"error": {"message", "type", "param", "code"}}</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: MCP BY CLIENT (INT-06) -->
+  <div x-show="activeSection === 'mcp'" x-transition style="display: none;" class="space-y-6">
+    {% include "features/integrations/components/mcp_guide_section.html" %}
+  </div>
+
+  <!-- TAB 3: EMBEDDABLE CHATBOT WIDGET (PUBLIC AGENTS ONLY - INT-05) -->
+  <div x-show="activeSection === 'widget'" x-transition style="display: none;" class="space-y-6">
+    {% include "features/integrations/components/integration_widget_section.html" %}
+  </div>
+
+  <!-- TAB 4: WEBHOOKS HMAC, FEEDBACK/GAPS, /metrics & AUTH MODES (INT-03, INT-04) -->
+  <div x-show="activeSection === 'webhooks'" x-transition style="display: none;" class="space-y-5">
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 dark:text-white">Webhooks HTTPS Firmados (HMAC-SHA256 + Ventana Anti-Replay)</h2>
+          <p class="text-xs text-slate-500">Eventos: <code class="font-mono">document.published</code> y <code class="font-mono">document.indexed</code>. Solo acepta <code class="font-mono">https://</code> público sin redirects (BR-22).</p>
+        </div>
+        <button type="button" @click="copyCode(getWebhookVerifySnippet(), 'Verificación HMAC')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold cursor-pointer">Copiar verificación Python</button>
+      </div>
+      <pre class="p-4 rounded-xl bg-slate-950 text-emerald-300 font-mono text-xs overflow-x-auto" x-text="getWebhookVerifySnippet()"></pre>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 space-y-2 shadow-xs">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">API de Feedback, Vacíos y Salud</h3>
+        <ul class="space-y-1.5 font-mono text-[11px] text-slate-600 dark:text-slate-300">
+          <li>POST /api/v1/projects/<span x-text="selectedProject"></span>/feedback</li>
+          <li>GET  /api/v1/projects/<span x-text="selectedProject"></span>/knowledge-gaps</li>
+          <li>POST /api/v1/projects/<span x-text="selectedProject"></span>/knowledge-gaps/report</li>
+          <li>GET  /api/v1/projects/<span x-text="selectedProject"></span>/knowledge-health</li>
+          <li>GET  /metrics <span class="text-amber-600 dark:text-amber-400">(Prometheus v0.0.4 · solo Admin en enterprise_rbac)</span></li>
+        </ul>
+      </div>
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 space-y-2 shadow-xs">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Autenticación por Modo</h3>
+        <p class="text-slate-500"><strong>AUTH_MODE=local:</strong> Uso exclusivo en <code class="font-mono">127.0.0.1</code> sin cabecera obligatoria.</p>
+        <p class="text-slate-500"><strong>AUTH_MODE=enterprise_rbac:</strong> Exige <code class="font-mono">Authorization: Bearer &lt;JWT&gt;</code> o <code class="font-mono">X-API-Key: cf_live_...</code> en REST, Gateway <code class="font-mono">/v1/*</code>, MCP y <code class="font-mono">/metrics</code>; el Widget usa <code class="font-mono">cf_pub_...</code> → <code class="font-mono">POST /api/v1/widget/session</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: REST API & POSTMAN v2.1 (INT-07, INT-08) -->
+  <div x-show="activeSection === 'api'" x-transition style="display: none;" class="space-y-6">
+    <div class="rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-white dark:bg-slate-900/60 p-5 space-y-4 shadow-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 dark:text-white">Colección Postman (v2.1 Completa y Sin Credenciales Fijas)</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Incluye Auth, Gateway OpenAI /v1/*, Agentes/Evals, Widget, Miembros, Salud/Vacíos, Webhooks, Export/Import, Auditoría, /metrics y MCP.</p>
+        </div>
+        <a :href="`/api/v1/integrations/postman-collection?base_url=${encodeURIComponent(baseUrl)}&project=${encodeURIComponent(selectedProject)}`" download="ContextForge.postman_collection.json" class="inline-flex items-center px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold transition gap-1.5">
+          <i class="fa-solid fa-download"></i><span>Descargar JSON</span>
+        </a>
+      </div>
+      <div class="flex items-center justify-between text-xs">
+        <span class="text-slate-600 dark:text-slate-400 font-medium">Ejecución en terminal (Newman):</span>
+        <button type="button" @click="copyCode(`newman run ContextForge.postman_collection.json --env-var baseUrl=${baseUrl} --env-var project_slug=${selectedProject}`, 'Comando Newman')" class="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">Copiar comando</button>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-900 text-orange-200 text-xs font-mono overflow-x-auto">
+        <code x-text="`newman run ContextForge.postman_collection.json --env-var &quot;baseUrl=${baseUrl}&quot; --env-var &quot;project_slug=${selectedProject}&quot;`"></code>
+      </div>
+    </div>
+
+    {% include "features/integrations/components/integration_rest_snippets.html" %}
+  </div>
+
+  <!-- TAB 6: UPDATED ARCHITECTURE DIAGRAM (INT-09) -->
+  <div id="cf-arch-diagram-panel" x-show="activeSection === 'arch'" x-transition style="display: none;" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+    <h2 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <i class="fa-solid fa-network-wired text-teal-500"></i>
+      <span>Arquitectura Real Multi-Protocolo (AS-IS)</span>
+    </h2>
+    <div id="cf-arch-mermaid-host" role="img" aria-label="Diagrama de arquitectura de ContextForge con Gateway OpenAI, MCP autenticado, Widget con JWT efímero, SQLite FTS5, Embeddings Densos y Webhooks HTTPS" class="p-4 bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-[#1e2235] rounded-xl flex justify-center overflow-x-auto min-h-[260px]">
+      <pre><code class="language-mermaid">flowchart TD
+    SDKs["Apps Externas y OpenAI SDK"] -->|"POST /v1/chat/completions"| OAIGateway["Gateway OpenAI /v1/*"]
+    IDEs["Cursor / Claude Desktop / CLI"] -->|"MCP SSE + X-API-Key"| MCPGateway["Servidor MCP (/mcp/sse)"]
+    Portal["Portales Web Externos"] -->|"cf_pub_* -> JWT Efimero"| WidgetAuth["Widget Session (/widget/session)"]
+    OAIGateway --> Exec["AgentChatExecutor + QueryRewriter + Citas Streaming"]
+    MCPGateway --> Exec
+    WidgetAuth --> Exec
+    Exec --> Retrieval["SQLite FTS5 + Embeddings Densos / 4-Gram"]
+    Exec --> Policy["Grounding BR-08 + DLP BR-13 + Egreso Local/Nube BR-21"]
+    Policy --> LLMs["Motores LLM (Ollama Local / Cloud API / CLI Sandbox)"]
+    Retrieval --> Storage["SQLite WAL (25 tablas) + Docs Markdown + Anexos"]
+    Storage --> Hooks["Webhooks HTTPS Firmados HMAC-SHA256 (Anti-SSRF)"]</code></pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+window.__CF_INT_BOOT__ = {
+  activeProject: {{ active_slug | tojson }},
+  baseUrl: {{ base_url | tojson }},
+  authMode: {{ auth_mode | tojson }},
+  projects: {{ projects | tojson }},
+  agents: {{ agents | tojson }}
+};
+</script>
+<script src="/static/js/modules/integration_guide_1.js?v=8"></script>
+{% endblock %}

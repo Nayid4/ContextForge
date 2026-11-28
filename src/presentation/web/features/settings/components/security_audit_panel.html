@@ -1,0 +1,218 @@
+<div class="space-y-6">
+  <!-- Auth Mode, Health & Prometheus /metrics Strip (SET-11) -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+    <div class="space-y-1">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Seguridad de Arranque y Observabilidad</h3>
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border" :class="authMode === 'enterprise_rbac' ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'" x-text="`AUTH_MODE=${authMode}`"></span>
+      </div>
+      <p class="text-xs text-slate-500">
+        <span x-show="authMode === 'local'">Modo local monousuario en <code class="font-mono" x-text="bindHost"></code>. Activa <code class="font-mono">AUTH_MODE=enterprise_rbac</code> para equipos en red.</span>
+        <span x-show="authMode === 'enterprise_rbac'">Modo equipo activo: toda petición exige JWT o clave API verificada.</span>
+      </p>
+      <template x-if="bindWarning">
+        <p class="text-xs font-semibold text-rose-600 dark:text-rose-400">
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i>Advertencia: AUTH_MODE=local expuesto fuera de 127.0.0.1 otorga rol Admin sin autenticación.
+        </p>
+      </template>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      <a href="/health/ready" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-semibold">Salud (/health/ready)</a>
+      <a href="/metrics" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold">Métricas Prometheus (/metrics)</a>
+    </div>
+  </div>
+
+  <!-- Permission Gate Banner (SET-08 / SET-09) -->
+  <template x-if="securityForbidden">
+    <div class="rounded-2xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 p-5 text-xs text-amber-800 dark:text-amber-200">
+      <strong>Sin permiso:</strong> La gestión de Claves API y la Bitácora de Auditoría están reservadas exclusivamente para usuarios con rol <strong>Admin</strong>.
+    </div>
+  </template>
+
+  <!-- API Keys Issuance (cf_live_* & cf_pub_* with origins, agents, daily quota & last_used_at - SET-08) -->
+  <div x-show="!securityForbidden" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <span>Claves API Privadas (<code class="font-mono text-xs">cf_live_*</code>) y Publicables de Widget (<code class="font-mono text-xs">cf_pub_*</code>)</span>
+          <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-mono text-[11px] text-slate-600 dark:text-slate-300" x-text="apiKeysTotal"></span>
+        </h3>
+        <p class="text-xs text-slate-500">Emite credenciales acotadas por proyecto, orígenes web permitidos, agentes públicos y cuota diaria.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs bg-slate-50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Nombre de la clave *</label>
+        <input type="text" x-model="newKeyName" placeholder="ej. Cursor IDE o Portal Web" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+      </div>
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Tipo y Rol</label>
+        <div class="flex items-center gap-2">
+          <select x-model="newKeyRole" :disabled="newKeyPublishable" class="flex-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono">
+            <option value="AgentClient">AgentClient</option>
+            <option value="Consumer">Consumer</option>
+            <option value="Curator">Curator</option>
+            <option value="Admin">Admin</option>
+          </select>
+          <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold cursor-pointer whitespace-nowrap">
+            <input type="checkbox" x-model="newKeyPublishable" @change="if (newKeyPublishable) newKeyRole = 'AgentClient'" class="rounded">
+            <span>Publicable (<code class="font-mono">cf_pub_*</code>)</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Cuota diaria (solicitudes)</label>
+        <input type="number" min="10" max="100000" x-model.number="newKeyDailyQuota" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono">
+      </div>
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Proyectos permitidos (CSV o *)</label>
+        <input type="text" x-model="newKeyProjectsCsv" placeholder="default" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono">
+      </div>
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Agentes permitidos (ej. default/assistant)</label>
+        <input type="text" x-model="newKeyAgentsCsv" placeholder="default/assistant (o *)" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono">
+      </div>
+      <div>
+        <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Orígenes permitidos (Widget <code class="font-mono">cf_pub_*</code>)</label>
+        <input type="text" x-model="newKeyOriginsCsv" placeholder="https://app.miempresa.com" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono">
+      </div>
+      <div class="md:col-span-3 flex justify-end">
+        <button type="button" @click="issueApiKey()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer">
+          <i class="fa-solid fa-key mr-1.5"></i>Generar clave API
+        </button>
+      </div>
+    </div>
+
+    <template x-if="issuedPlainKey">
+      <div class="p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-xs font-mono text-emerald-700 dark:text-emerald-300 flex items-center justify-between gap-3">
+        <span class="break-all">Nueva API Key (cópiala ahora, no volverá a mostrarse): <strong x-text="issuedPlainKey"></strong></span>
+        <button type="button" @click="window.cfCopyText && window.cfCopyText(issuedPlainKey, 'API Key')" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold shrink-0 cursor-pointer">Copiar</button>
+      </div>
+    </template>
+
+    <div class="space-y-2 text-xs">
+      <template x-for="k in apiKeys" :key="k.key_id">
+        <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex flex-wrap items-center justify-between gap-2">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-semibold text-slate-900 dark:text-white" x-text="k.name"></span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold" :class="k.is_publishable ? 'bg-teal-500/15 text-teal-700 dark:text-teal-300' : 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'" x-text="k.is_publishable ? 'Publicable (cf_pub)' : 'Privada (cf_live)'"></span>
+              <span class="font-mono text-[11px] text-slate-400" x-text="`${k.key_prefix}... · ${k.role_scope}`"></span>
+            </div>
+            <div class="text-[11px] font-mono text-slate-500 flex flex-wrap gap-3">
+              <span x-text="`Cuota: ${k.daily_quota_requests || 1000}/día`"></span>
+              <span x-text="`Último uso: ${k.last_used_at ? k.last_used_at.slice(0, 16).replace('T', ' ') : 'Nunca'}`"></span>
+              <template x-if="(k.allowed_origins || []).length > 0"><span x-text="`Orígenes: ${k.allowed_origins.join(', ')}`"></span></template>
+              <template x-if="(k.allowed_agents || []).length > 0"><span x-text="`Agentes: ${k.allowed_agents.join(', ')}`"></span></template>
+            </div>
+          </div>
+          <button type="button" @click="revokeApiKey(k.key_id, k.name)" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-600 text-rose-600 hover:text-white text-[11px] font-semibold cursor-pointer transition">Revocar</button>
+        </div>
+      </template>
+      <template x-if="apiKeys.length === 0">
+        <p class="text-xs text-slate-400 italic py-3 text-center">No hay claves API emitidas todavía.</p>
+      </template>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span x-text="`Total: ${apiKeysTotal} claves · Página ${apiKeysPage} de ${apiKeysTotalPages}`"></span>
+        <select x-model.number="apiKeysPageSize" @change="loadApiKeys(1)" class="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[11px] font-mono cursor-pointer">
+          <option value="5">5 / pág</option>
+          <option value="10">10 / pág</option>
+          <option value="20">20 / pág</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button type="button" @click="loadApiKeys(apiKeysPage - 1)" :disabled="!apiKeysHasPrev" class="px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium disabled:opacity-45 cursor-pointer">Anterior</button>
+        <button type="button" @click="loadApiKeys(apiKeysPage + 1)" :disabled="!apiKeysHasNext" class="px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium disabled:opacity-45 cursor-pointer">Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Failed Indexing Queue (DLQ fixed lowercase filter + error_detail list - SET-10) -->
+  <div x-show="!securityForbidden" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Cola de Reintentos Fallidos de Indexación (DLQ)</h3>
+        <p class="text-xs text-slate-500">Documentos que fallaron tras agotar reintentos automáticos en el proyecto activo (<code class="font-mono" x-text="activeProject"></code>).</p>
+      </div>
+      <button type="button" @click="retryDlqJobs()" :disabled="dlqJobs.length === 0" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-45 text-white text-xs font-semibold cursor-pointer">
+        Reintentar fallidos (<span x-text="dlqJobs.length"></span>)
+      </button>
+    </div>
+    <div class="space-y-2 text-xs">
+      <template x-for="job in dlqJobs" :key="job.job_id">
+        <div class="p-3 rounded-xl border border-rose-500/30 bg-rose-50/40 dark:bg-rose-950/20 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div class="font-mono font-semibold text-slate-900 dark:text-white" x-text="job.path"></div>
+            <div class="text-[11px] text-rose-700 dark:text-rose-300" x-text="job.error_detail || 'Error de indexación no especificado'"></div>
+          </div>
+          <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-rose-500/15 text-rose-700 dark:text-rose-300" x-text="`${job.attempts} intentos`"></span>
+        </div>
+      </template>
+      <template x-if="dlqJobs.length === 0">
+        <p class="text-xs text-slate-400 italic py-2">Sin trabajos de indexación fallidos en la cola de reintentos.</p>
+      </template>
+    </div>
+  </div>
+
+  <!-- Cryptographic Audit Chain with Explicit Verification Button (SET-09) -->
+  <div x-show="!securityForbidden" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Bitácora Inmutable SHA-256 (BR-14)</h3>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold" :class="auditChainValid ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-500'" x-text="auditChainValid ? 'Cadena SHA-256 íntegra' : 'Alerta de integridad'"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" @click="verifyAuditChain()" :disabled="verifyingAudit" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer">
+          <i class="fa-solid fa-shield-check mr-1"></i>
+          <span x-text="verifyingAudit ? 'Verificando...' : 'Verificar cadena SHA-256'"></span>
+        </button>
+        <button type="button" @click="loadSecurityAndAudit()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold cursor-pointer">Refrescar</button>
+      </div>
+    </div>
+
+    <template x-if="auditVerifyReport">
+      <div role="status" aria-live="polite" class="p-3 rounded-xl border text-xs flex flex-wrap items-center justify-between gap-2" :class="auditVerifyReport.chain_valid ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'">
+        <span x-text="auditVerifyReport.chain_valid ? `Verificación criptográfica exitosa: ${auditVerifyReport.total_entries} registros encadenados sin alteraciones.` : `Integridad comprometida en la secuencia #${auditVerifyReport.broken_at_seq}.`"></span>
+        <span class="font-mono text-[10px]" x-text="`Último hash: ${(auditVerifyReport.last_hash || '').slice(0, 16)}...`"></span>
+      </div>
+    </template>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="text-[11px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800">
+          <tr><th class="py-2 pr-3">Operación</th><th class="py-2 pr-3">Actor</th><th class="py-2 pr-3">Recurso</th><th class="py-2 pr-3">Estado</th><th class="py-2">Hash SHA-256</th></tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
+          <template x-for="log in auditLogs" :key="log.log_id">
+            <tr>
+              <td class="py-2 pr-3 font-mono font-semibold text-slate-800 dark:text-slate-200" x-text="log.operation"></td>
+              <td class="py-2 pr-3 text-slate-500" x-text="`${log.actor_id} (${log.role})`"></td>
+              <td class="py-2 pr-3 font-mono text-slate-500 truncate max-w-[160px]" x-text="log.resource_id"></td>
+              <td class="py-2 pr-3"><span class="px-1.5 py-0.5 rounded text-[10px] font-mono" :class="log.succeeded ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'" x-text="log.succeeded ? 'OK' : (log.error_code || 'ERR')"></span></td>
+              <td class="py-2 font-mono text-[10px] text-slate-400" x-text="(log.entry_hash || '').slice(0, 14)"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span x-text="`Total: ${auditTotal} eventos · Página ${auditPage} de ${auditTotalPages}`"></span>
+        <select x-model.number="auditPageSize" @change="loadAuditLogs(1)" class="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[11px] font-mono cursor-pointer">
+          <option value="10">10 / pág</option>
+          <option value="20">20 / pág</option>
+          <option value="50">50 / pág</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button type="button" @click="loadAuditLogs(auditPage - 1)" :disabled="!auditHasPrev" class="px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium disabled:opacity-45 cursor-pointer">Anterior</button>
+        <button type="button" @click="loadAuditLogs(auditPage + 1)" :disabled="!auditHasNext" class="px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium disabled:opacity-45 cursor-pointer">Siguiente</button>
+      </div>
+    </div>
+  </div>
+</div>

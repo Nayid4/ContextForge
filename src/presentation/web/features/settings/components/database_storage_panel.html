@@ -1,0 +1,58 @@
+<div class="space-y-4">
+  <div class="rounded-xl border border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-950/20 px-4 py-3 text-xs text-indigo-800 dark:text-indigo-200 flex items-center gap-2.5">
+    <i class="fa-solid fa-circle-info text-indigo-500"></i>
+    <span>Los motores de Base de Datos (<strong>SQLite WAL</strong> o <strong>PostgreSQL</strong>) y Storage (<strong>Local FS</strong> o <strong>S3/MinIO/R2</strong>) se configuran mediante variables en <code class="font-mono">.env</code> al iniciar el servidor. Usa estos paneles para diagnosticar conectividad en vivo.</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Database Diagnostic Card (Real supported adapters only: SQLite WAL & PostgreSQL) -->
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Base de Datos (SQLite WAL / PostgreSQL)</h3>
+          <p class="text-xs text-slate-500">Diagnóstico de conectividad contra tu motor relacional.</p>
+        </div>
+        <button type="button" @click="testDbConnection(getCurrentDb())" :disabled="testingDb" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer">
+          <span x-text="testingDb ? 'Probando...' : 'Probar BD'"></span>
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        <template x-for="db in dbConfigs" :key="db.provider">
+          <button type="button" @click="selectDb(db)" :class="selectedDatabase === db.provider ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'" class="px-2.5 py-1 rounded-lg text-xs font-mono cursor-pointer" x-text="db.name"></button>
+        </template>
+      </div>
+      <div class="space-y-3 text-xs">
+        <label class="block font-medium text-slate-600 dark:text-slate-300">URL de conexión (solo diagnóstico)</label>
+        <input type="text" x-model="getCurrentDb().connection_url" placeholder="sqlite+aiosqlite:///./data/database/contextforge.db" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs">
+        <template x-if="dbTestResult">
+          <div role="status" aria-live="polite" class="p-3 rounded-xl border text-xs" :class="dbTestResult.healthy ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300'" x-text="`${dbTestResult.message} (${dbTestResult.latency_ms} ms)`"></div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Storage Diagnostic Card (Real supported adapters only: Local FS & S3/MinIO/R2) -->
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Storage de Anexos (Local FS / S3)</h3>
+          <p class="text-xs text-slate-500">Verifica permisos de escritura y configuración del almacenamiento.</p>
+        </div>
+        <button type="button" @click="testStorageConnection(getCurrentStorage())" :disabled="testingStorage" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer">
+          <span x-text="testingStorage ? 'Probando...' : 'Probar Storage'"></span>
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        <template x-for="st in storageConfigs" :key="st.provider">
+          <button type="button" @click="selectStorage(st)" :class="selectedStorage === st.provider ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'" class="px-2.5 py-1 rounded-lg text-xs font-mono cursor-pointer" x-text="st.name"></button>
+        </template>
+      </div>
+      <div class="space-y-3 text-xs">
+        <label class="block font-medium text-slate-600 dark:text-slate-300">Ruta base o Bucket S3</label>
+        <input type="text" x-model="getCurrentStorage().base_path" placeholder="./data/storage" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs">
+        <template x-if="storageTestResult">
+          <div role="status" aria-live="polite" class="p-3 rounded-xl border text-xs" :class="storageTestResult.healthy ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300'" x-text="`${storageTestResult.message} (${storageTestResult.latency_ms} ms)`"></div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>

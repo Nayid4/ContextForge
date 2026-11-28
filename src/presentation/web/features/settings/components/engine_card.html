@@ -1,0 +1,22 @@
+<div
+  @click="selectProvider(c)"
+  :class="selectedProvider === c.provider ? 'border-indigo-500 ring-1 ring-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/25' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-indigo-400/50'"
+  class="p-4 rounded-2xl border transition cursor-pointer space-y-2 shadow-xs"
+>
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="c.name"></span>
+    <span x-show="c.is_active" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Activo</span>
+  </div>
+  <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate" x-text="c.default_model || c.provider"></div>
+  <div class="flex items-center justify-between gap-1 text-[10px]">
+    <span
+      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border font-semibold"
+      :class="c.egress_class === 'local' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'"
+      :title="c.egress_class === 'local' ? 'Los datos permanecen 100% en tu equipo' : 'Envía fragmentos a nube externa (aplica DLP; bloqueado en proyectos sovereign_only)'"
+    >
+      <i :class="c.egress_class === 'local' ? 'fa-solid fa-house-lock text-[9px]' : 'fa-solid fa-cloud-arrow-up text-[9px]'"></i>
+      <span x-text="c.egress_class === 'local' ? 'Local' : 'Nube'"></span>
+    </span>
+    <span x-show="detectedCliMap[c.provider]" class="text-emerald-600 dark:text-emerald-400 font-semibold">CLI OK</span>
+  </div>
+</div>

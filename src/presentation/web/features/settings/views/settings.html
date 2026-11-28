@@ -1,0 +1,270 @@
+{% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
+
+{% block title %}Configuración | ContextForge{% endblock %}
+{% block page_crumb %}Configuración{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="llmSettingsApp()">
+
+  {% call page_header(
+    'fa-solid fa-sliders',
+    'Configuración',
+    'Separa ajustes globales del Workspace (motores IA, RAG, seguridad) y ajustes del Proyecto activo (webhooks, portabilidad).'
+  ) %}
+    <button
+      type="button"
+      @click="discoverCliEngines()"
+      :disabled="discoveringCli"
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-500/30 rounded-xl transition cursor-pointer"
+    >
+      <i class="fa-solid fa-terminal text-emerald-500" :class="{ 'animate-pulse': discoveringCli }"></i>
+      <span x-text="discoveringCli ? 'Buscando CLIs...' : 'Detectar CLIs'"></span>
+    </button>
+  {% endcall %}
+
+  {% if success_message %}
+  <div class="rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2.5">
+    <i class="fa-solid fa-circle-check text-emerald-500"></i>
+    <span>{{ success_message }}</span>
+  </div>
+  {% endif %}
+
+  <!-- Compact Active Engine & Scope Summary Strip -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+    <div class="flex items-center gap-2.5 text-xs flex-wrap">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+      <span class="text-slate-500 dark:text-slate-400">Motor activo:</span>
+      <span class="font-bold uppercase font-mono text-slate-900 dark:text-white" x-text="activeProvider"></span>
+      <span class="font-mono text-indigo-600 dark:text-indigo-400" x-text="getActiveConfig().default_model"></span>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border" :class="getActiveConfig().egress_class === 'local' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'" x-text="getActiveConfig().egress_class === 'local' ? 'Egreso Local' : 'Egreso Nube'"></span>
+    </div>
+    <div class="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 flex-wrap">
+      <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">AUTH: <strong class="text-slate-800 dark:text-slate-200" x-text="authMode"></strong></span>
+      <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">Proyecto: <strong class="text-indigo-600 dark:text-indigo-300" x-text="activeProject"></strong></span>
+    </div>
+  </div>
+
+  <!-- Workspace vs Project Separated Tabs (SET-12) -->
+  <div class="inline-flex flex-wrap p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 gap-1">
+    <button type="button" @click="settingsTab = 'llm'" :class="settingsTab === 'llm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-microchip text-[11px]"></i><span>Workspace: Motores IA</span>
+    </button>
+    <button type="button" @click="settingsTab = 'rag'; loadEmbeddingStatus()" :class="settingsTab === 'rag' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-brain text-[11px]"></i><span>Workspace: RAG y Embeddings</span>
+    </button>
+    <button type="button" @click="settingsTab = 'storage'" :class="settingsTab === 'storage' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-database text-[11px]"></i><span>Workspace: BD y Storage</span>
+    </button>
+    <button type="button" @click="settingsTab = 'security'; loadSecurityAndAudit()" :class="settingsTab === 'security' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-shield-halved text-[11px]"></i><span>Workspace: Seguridad RBAC y Auditoría</span>
+    </button>
+    <button type="button" @click="settingsTab = 'project'; loadProjectWebhooks()" :class="settingsTab === 'project' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+      <i class="fa-solid fa-folder-gear text-[11px]"></i><span>Proyecto: Webhooks y Portabilidad</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: WORKSPACE LLM PROVIDERS (SET-01) -->
+  <div x-show="settingsTab === 'llm'" x-transition class="space-y-6">
+    <div class="space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Selecciona un proveedor para configurar o activar</h2>
+        <div class="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+          <button type="button" @click="activeCategory = 'all'" :class="activeCategory === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-400'" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer">
+            Todos (<span x-text="configs.length"></span>)
+          </button>
+          <button type="button" @click="activeCategory = 'local_http'" :class="activeCategory === 'local_http' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-400'" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-house-lock text-[10px]"></i><span>HTTP Local</span>
+          </button>
+          <button type="button" @click="activeCategory = 'cloud_api'" :class="activeCategory === 'cloud_api' ? 'bg-sky-600 text-white' : 'text-slate-600 dark:text-slate-400'" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-cloud text-[10px]"></i><span>Cloud API</span>
+          </button>
+          <button type="button" @click="activeCategory = 'local_cli'" :class="activeCategory === 'local_cli' ? 'bg-amber-600 text-white' : 'text-slate-600 dark:text-slate-400'" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer" title="Herramientas CLI instaladas en tu host; la mayoría tiene egreso a la nube (BR-21)">
+            <i class="fa-solid fa-terminal text-[10px]"></i><span>CLI (Nube / Local)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+        <template x-for="c in filteredConfigs()" :key="c.provider">
+          {% include "features/settings/components/engine_card.html" %}
+        </template>
+      </div>
+    </div>
+
+    {% include "features/settings/components/connection_panel.html" %}
+    {% include "features/settings/components/ollama_models_grid.html" %}
+  </div>
+
+  <!-- TAB 2: WORKSPACE KNOWLEDGE & RAG PARAMETERS (SET-06 — all 7 settings fields + embeddings reindex banner) -->
+  <div x-show="settingsTab === 'rag'" x-transition style="display: none;" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-xs space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900 dark:text-white">Parámetros Globales de Conocimiento, RAG y Privacidad</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos de la tabla <code class="font-mono">settings</code> persisten en BD (BR-08, BR-13, BR-16).</p>
+      </div>
+      <button
+        type="button"
+        @click="saveSystemSettings()"
+        :disabled="savingSystemSettings"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+      >
+        <i class="fa-solid fa-floppy-disk" :class="{ 'animate-spin': savingSystemSettings }"></i>
+        <span x-text="savingSystemSettings ? 'Guardando...' : 'Guardar parámetros'"></span>
+      </button>
+    </div>
+
+    <!-- Embeddings Reindex Status & Warning Banner (F2 + SET-06) -->
+    <template x-if="embeddingStatus">
+      <div class="p-4 rounded-xl border text-xs flex flex-wrap items-center justify-between gap-3" :class="embeddingStatus.needs_reindex ? 'border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200' : 'border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-200'">
+        <div class="space-y-0.5">
+          <div class="font-semibold flex items-center gap-1.5">
+            <i :class="embeddingStatus.needs_reindex ? 'fa-solid fa-triangle-exclamation text-amber-500' : 'fa-solid fa-circle-check text-emerald-500'"></i>
+            <span x-text="embeddingStatus.needs_reindex ? 'Reindexado de embeddings recomendado' : 'Índice vectorial sincronizado'"></span>
+          </div>
+          <p x-text="embeddingStatus.warning_message || `Fragmentos indexados: ${embeddingStatus.chunks_total} · Modelo activo: ${embeddingStatus.active_embedding_model}`"></p>
+        </div>
+        <button type="button" @click="triggerEmbeddingReindex()" :disabled="reindexingEmbeddings" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold cursor-pointer">
+          <i class="fa-solid fa-arrows-rotate mr-1" :class="reindexingEmbeddings ? 'animate-spin' : ''"></i>
+          <span x-text="reindexingEmbeddings ? 'Reindexando...' : 'Reindexar documentos'"></span>
+        </button>
+      </div>
+    </template>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+      <div>
+        <label for="st-docs-path" class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">Ruta raíz de documentos</label>
+        <input id="st-docs-path" type="text" x-model="systemSettings.docs_path" placeholder="./docs" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl font-mono">
+        <p class="text-[11px] text-slate-500 mt-1">Directorio local donde se sincronizan los archivos Markdown.</p>
+      </div>
+
+      <div>
+        <label for="st-ollama-url" class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">URL de Ollama Local</label>
+        <input id="st-ollama-url" type="text" x-model="systemSettings.ollama_url" placeholder="http://127.0.0.1:11434" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl font-mono">
+        <p class="text-[11px] text-slate-500 mt-1">Endpoint loopback para inferencia y embeddings 100% soberanos.</p>
+      </div>
+
+      <div>
+        <label for="st-emb-model" class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">Modelo de embeddings</label>
+        <input id="st-emb-model" type="text" x-model="systemSettings.embedding_model" placeholder="nomic-embed-text" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl font-mono">
+        <p class="text-[11px] text-slate-500 mt-1">Al cambiar este modelo, ejecuta <strong>Reindexar documentos</strong> para actualizar los vectores.</p>
+      </div>
+
+      <div>
+        <label for="st-grounding" class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+          Umbral mínimo de evidencia (BR-08): <span class="font-bold text-indigo-600 dark:text-indigo-400 font-mono" x-text="systemSettings.min_grounding_score"></span>
+        </label>
+        <input id="st-grounding" type="range" min="0.05" max="0.80" step="0.05" x-model.number="systemSettings.min_grounding_score" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg accent-indigo-500 cursor-pointer">
+        <p class="text-[11px] text-slate-500 mt-1">Si ningún fragmento supera este puntaje, el asistente se abstiene en vez de alucinar.</p>
+      </div>
+
+      <div>
+        <label for="st-temp" class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+          Temperatura de respuesta: <span class="font-bold text-indigo-600 dark:text-indigo-400 font-mono" x-text="systemSettings.temperature"></span>
+        </label>
+        <input id="st-temp" type="range" min="0.0" max="1.0" step="0.05" x-model.number="systemSettings.temperature" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg accent-indigo-500 cursor-pointer">
+        <p class="text-[11px] text-slate-500 mt-1">Valores bajos (0.0 – 0.2) producen respuestas técnicas más fieles.</p>
+      </div>
+
+      <div class="space-y-3 pt-1">
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" x-model="systemSettings.enable_dlp_redaction" class="mt-0.5 rounded">
+          <span>
+            <strong class="text-slate-800 dark:text-white block">Redacción DLP obligatoria en egreso Nube (BR-13)</strong>
+            <span class="text-[11px] text-slate-500">Anonimiza correos, API keys y secretos antes de enviar contexto a cualquier motor cloud.</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" x-model="systemSettings.enable_extractive_fallback" class="mt-0.5 rounded">
+          <span>
+            <strong class="text-slate-800 dark:text-white block">Degradación automática a Motor Extractivo (BR-16)</strong>
+            <span class="text-[11px] text-slate-500">Si el proveedor LLM falla o vence timeout, responde citando fragmentos literales sin red.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: WORKSPACE DATABASE & STORAGE -->
+  <div x-show="settingsTab === 'storage'" x-transition style="display: none;" class="space-y-6">
+    {% include "features/settings/components/database_storage_panel.html" %}
+  </div>
+
+  <!-- TAB 4: WORKSPACE SECURITY, API KEYS, DLQ & AUDIT -->
+  <div x-show="settingsTab === 'security'" x-transition style="display: none;" class="space-y-6">
+    {% include "features/settings/components/security_audit_panel.html" %}
+  </div>
+
+  <!-- TAB 5: PROJECT SETTINGS (Webhooks HTTPS/HMAC, Export/Import & Members Link - SET-12) -->
+  <div x-show="settingsTab === 'project'" x-transition style="display: none;" class="space-y-6">
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 dark:text-white">Webhooks HTTPS Firmados (HMAC-SHA256 + Anti-SSRF)</h2>
+          <p class="text-xs text-slate-500">Notifica a tus sistemas cuando se publica documentación en <code class="font-mono" x-text="activeProject"></code>. Solo acepta <code class="font-mono">https://</code> público.</p>
+        </div>
+        <a href="/projects" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">Administrar Miembros y Roles</a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <input type="url" x-model="newWebhookUrl" placeholder="https://hooks.tuempresa.com/contextforge" class="md:col-span-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono">
+        <input type="password" x-model="newWebhookSecret" placeholder="Secreto HMAC (cifrado AES-256-GCM)" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono">
+      </div>
+      <div class="flex justify-end">
+        <button type="button" @click="createProjectWebhook()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer">Registrar Webhook HTTPS</button>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <template x-for="wh in projectWebhooks" :key="wh.webhook_id">
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between gap-2">
+            <div>
+              <div class="font-mono font-semibold text-slate-900 dark:text-white" x-text="wh.url"></div>
+              <div class="text-[11px] text-slate-500" x-text="`Eventos: ${(wh.events || []).join(', ')} · Secreto cifrado: ${wh.has_secret ? 'Sí' : 'No'}`"></div>
+            </div>
+            <button type="button" @click="deleteProjectWebhook(wh.webhook_id)" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-600 text-rose-600 hover:text-white text-[11px] font-semibold cursor-pointer">Eliminar</button>
+          </div>
+        </template>
+        <template x-if="projectWebhooks.length === 0">
+          <p class="text-xs text-slate-400 italic py-2">No hay webhooks registrados para este proyecto.</p>
+        </template>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+      <div class="space-y-1">
+        <h2 class="text-sm font-bold text-slate-900 dark:text-white">Portabilidad del Proyecto (Exportar / Importar)</h2>
+        <p class="text-xs text-slate-500">La exportación excluye automáticamente webhooks, claves API y secretos. Todo documento importado entra en estado <strong>borrador (draft)</strong> y los agentes como <strong>private</strong>.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a :href="`/api/v1/projects/${encodeURIComponent(activeProject)}/export`" :download="`${activeProject}-bundle.json`" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">
+          <i class="fa-solid fa-download mr-1.5"></i>Exportar proyecto JSON
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.__CF_BOOT__ = {
+  activeProject: {{ active_project | tojson }},
+  authMode: {{ auth_mode | tojson }},
+  bindHost: {{ bind_host | tojson }},
+  bindWarning: {{ bind_warning | tojson }},
+  configs: {{ llm_configs | tojson }},
+  activeProvider: {{ active_llm.provider | tojson }},
+  docsPath: {{ settings.docs_path | tojson }},
+  ollamaUrl: {{ settings.ollama_url | tojson }},
+  embeddingModel: {{ settings.embedding_model | tojson }},
+  temperature: {{ settings.temperature }},
+  minGroundingScore: {{ settings.min_grounding_score }},
+  enableDlpRedaction: {{ settings.enable_dlp_redaction | tojson }},
+  enableExtractiveFallback: {{ settings.enable_extractive_fallback | tojson }},
+  dbConfigs: {{ (db_configs or []) | tojson }},
+  activeDatabase: {{ (active_db.provider if active_db else 'sqlite') | tojson }},
+  storageConfigs: {{ (storage_configs or []) | tojson }},
+  activeStorage: {{ (active_storage.provider if active_storage else 'local_fs') | tojson }}
+};
+</script>
+<script src="/static/js/modules/settings_infra_mixin.js?v=8"></script>
+<script src="/static/js/modules/settings_app.js?v=8"></script>
+{% endblock %}

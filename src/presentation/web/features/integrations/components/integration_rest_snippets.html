@@ -1,0 +1,12 @@
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+    <h2 class="text-sm font-bold text-slate-900 dark:text-white">Ejemplos de Consumo REST y Streaming SSE</h2>
+    <div class="flex items-center gap-1.5 text-xs">
+      <button type="button" @click="restLang = 'curl'" :class="restLang === 'curl' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-mono cursor-pointer">cURL</button>
+      <button type="button" @click="restLang = 'python'" :class="restLang === 'python' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-mono cursor-pointer">Python</button>
+      <button type="button" @click="restLang = 'js'" :class="restLang === 'js' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="px-2.5 py-1 rounded-lg font-mono cursor-pointer">JavaScript</button>
+      <button type="button" @click="copyCode(getRestSnippet(), 'Snippet REST')" class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold cursor-pointer">Copiar</button>
+    </div>
+  </div>
+  <pre class="p-4 rounded-xl bg-slate-950 text-indigo-200 font-mono text-xs overflow-x-auto" x-text="getRestSnippet()"></pre>
+</div>
