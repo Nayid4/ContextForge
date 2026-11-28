@@ -128,8 +128,15 @@ async def seed_initial_data(session_maker: async_sessionmaker[AsyncSession], doc
             if (await session.execute(select(TaxonomyItemORM).where(TaxonomyItemORM.id == tid))).scalar_one_or_none() is None:
                 session.add(TaxonomyItemORM(id=tid, project_slug=pslug, kind=kind, slug=slug, name=name, color=color))
 
-        # 5. Multi-LLM Presets (+ migrate legacy agy cli_args if present)
+        # 5. Multi-LLM Presets (+ explicit egress_class + migrate legacy agy cli_args if present)
+        from domain.rag import SovereignRoutingPolicy
+
         for prov, etype, name, url, model, cli_cmd, cli_args, active in SEED_LLM_PROVIDERS:
+            egress = SovereignRoutingPolicy.classify_egress(
+                provider_engine_type=etype,
+                base_url=cli_cmd if etype == "local_cli" else url,
+                provider_name=prov,
+            )
             existing_llm = (await session.execute(select(LlmConfigurationORM).where(LlmConfigurationORM.provider == prov))).scalar_one_or_none()
             if existing_llm is None:
                 session.add(
@@ -141,11 +148,15 @@ async def seed_initial_data(session_maker: async_sessionmaker[AsyncSession], doc
                         default_model=model,
                         cli_command=cli_cmd,
                         cli_args=cli_args,
+                        egress_class=egress,
                         is_active=active,
                     )
                 )
-            elif prov == "antigravity_cli" and existing_llm.cli_args in {"", "chat -p", "-p --disable-slash-commands"}:
-                existing_llm.cli_args = cli_args
+            else:
+                if not getattr(existing_llm, "egress_class", ""):
+                    existing_llm.egress_class = egress
+                if prov == "antigravity_cli" and existing_llm.cli_args in {"", "chat -p", "-p --disable-slash-commands"}:
+                    existing_llm.cli_args = cli_args
 
         # 6. Default Project Membership (RBAC por proyecto — BR-23 Owner inicial)
         if (await session.execute(select(ProjectMemberORM).where(ProjectMemberORM.project_slug == "default", ProjectMemberORM.user_id == "usr-admin"))).scalar_one_or_none() is None:

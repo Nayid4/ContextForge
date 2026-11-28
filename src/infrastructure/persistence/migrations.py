@@ -82,6 +82,12 @@ SQLITE_INCREMENTAL_COLUMNS: dict[str, tuple[tuple[str, str], ...]] = {
     "users": (
         ("must_change_password", "BOOLEAN NOT NULL DEFAULT 0"),
     ),
+    "llm_configurations": (
+        ("egress_class", "VARCHAR(16) NOT NULL DEFAULT ''"),
+    ),
+    "webhooks": (
+        ("secret_encrypted", "TEXT NOT NULL DEFAULT ''"),
+    ),
 }
 
 

@@ -57,6 +57,8 @@ def verify_context_drift() -> list[str]:
             "tokens_used",
             "retrieved_chunk_ids_json",
             "must_change_password",
+            "egress_class",
+            "secret_encrypted",
         ]
         for col in required_er_columns:
             if not re.search(rf"\b{re.escape(col)}\b", er_block):

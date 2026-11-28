@@ -18,5 +18,6 @@ class LlmProviderConfigEntity:
     cli_args: str = ""
     temperature: float = 0.2
     max_tokens: int = 4096
+    egress_class: str = ""  # 'local' | 'cloud' (explicit BR-21 classification)
     is_active: bool = False
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
