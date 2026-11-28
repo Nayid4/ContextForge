@@ -41,6 +41,159 @@ pip install -e ".[web]"
 
 ---
 
+## Ejecutar la Plataforma Web en Local (sin Docker)
+
+Levanta la aplicación completa (SPA web + API REST `/api/v1` + servidor MCP `/mcp`) con SQLite WAL y ChromaDB embebidos. Al arrancar aplica migraciones y, si `AUTO_SEED_DATA=true`, carga datos iniciales.
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/Nayid4/ContextForge.git
+cd ContextForge
+```
+
+### 2. Crear el entorno virtual e instalar dependencias
+
+**Windows (PowerShell):**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+**Linux / macOS:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+> `requirements.txt` instala el componente en modo editable (`-e .`) más todo el runtime web (FastAPI, ChromaDB, SQLAlchemy, JWT, etc.) y las herramientas de pruebas.
+
+### 3. Configurar variables de entorno
+
+```bash
+# Windows (PowerShell)
+Copy-Item .env.example .env
+
+# Linux / macOS
+cp .env.example .env
+```
+
+Valores relevantes en `.env`:
+
+| Variable | Valor por defecto | Descripción |
+|----------|-------------------|-------------|
+| `AUTH_MODE` | `local` | `local` para desarrollo; `enterprise_rbac` exige JWT / `X-API-Key` |
+| `DATABASE_URL` | `sqlite+aiosqlite:///./data/database/contextforge.db` | Base de datos (SQLite por defecto) |
+| `DOCS_ROOT_PATH` | `./docs` | Carpeta Markdown indexada como base de conocimiento |
+| `AI_PROVIDER` | `ollama` | `ollama`, `openai`, `gemini`, `anthropic`, `extractive_fallback`, etc. |
+| `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | URL de Ollama si usas modelos locales |
+| `JWT_SECRET_KEY` / `MASTER_VAULT_KEY` | valores de ejemplo | **Cámbialos** fuera de desarrollo |
+
+> Si no tienes Ollama ni claves de API, usa `AI_PROVIDER=extractive_fallback` para que el RAG responda de forma extractiva sin LLM. Para usar Ollama: `ollama pull llama3.1:8b` y `ollama pull nomic-embed-text`.
+
+### 4. Iniciar el servidor
+
+```bash
+uvicorn main:app --app-dir src --host 127.0.0.1 --port 8000 --reload
+```
+
+| Recurso | URL |
+|---------|-----|
+| Aplicación web | http://127.0.0.1:8000 |
+| Documentación OpenAPI (Swagger) | http://127.0.0.1:8000/docs |
+| Health check | http://127.0.0.1:8000/health/ready |
+| Servidor MCP (SSE) | http://127.0.0.1:8000/mcp |
+
+### 5. (Opcional) Servidor MCP por STDIO para Claude Code / Cursor / Antigravity
+
+```bash
+python run_mcp.py
+```
+
+### 6. Ejecutar las pruebas
+
+```bash
+pytest
+pytest tests/unit/test_contextforge_component.py --cov=contextforge --cov-report=term-missing
+```
+
+---
+
+## Ejecutar con Docker
+
+Requisitos: [Docker](https://docs.docker.com/get-docker/) con Docker Compose v2 (`docker compose`).
+
+### 1. Preparar la configuración
+
+```bash
+cp .env.example .env        # En PowerShell: Copy-Item .env.example .env
+```
+
+El `docker-compose.yml` ya fija las rutas internas (`/app/docs`, `/app/data`). Por defecto el servicio arranca con `AUTH_MODE=enterprise_rbac`; para pruebas locales sin autenticación define `AUTH_MODE=local` en `.env`.
+
+### 2. Construir y levantar (SQLite WAL, modo standalone)
+
+```bash
+docker compose up -d --build
+```
+
+La aplicación queda disponible en http://127.0.0.1:8000 (el puerto se cambia con `CONTEXTFORGE_PORT` y la interfaz con `CONTEXTFORGE_BIND_HOST`). Los datos persisten en el volumen `cf_data` y la carpeta `./docs` se monta como base de conocimiento.
+
+> Por defecto el contenedor busca Ollama en tu máquina (`http://host.docker.internal:11434`).
+
+### 3. Perfiles opcionales
+
+**Con PostgreSQL:**
+
+```bash
+# Linux / macOS
+DB_PROVIDER=postgresql \
+DATABASE_URL=postgresql+asyncpg://cfadmin:cfsecret@postgres:5432/contextforge \
+docker compose --profile postgres up -d --build
+```
+
+```powershell
+# Windows (PowerShell)
+$env:DB_PROVIDER="postgresql"
+$env:DATABASE_URL="postgresql+asyncpg://cfadmin:cfsecret@postgres:5432/contextforge"
+docker compose --profile postgres up -d --build
+```
+
+**Con Ollama dentro de Docker (100% air-gapped):**
+
+```bash
+# Linux / macOS
+OLLAMA_BASE_URL=http://ollama:11434 docker compose --profile ollama up -d --build
+docker exec -it contextforge-ollama ollama pull llama3.1:8b
+docker exec -it contextforge-ollama ollama pull nomic-embed-text
+```
+
+```powershell
+# Windows (PowerShell)
+$env:OLLAMA_BASE_URL="http://ollama:11434"
+docker compose --profile ollama up -d --build
+docker exec -it contextforge-ollama ollama pull llama3.1:8b
+docker exec -it contextforge-ollama ollama pull nomic-embed-text
+```
+
+### 4. Comandos útiles
+
+```bash
+docker compose ps                         # Estado y healthcheck
+docker compose logs -f contextforge       # Logs de la aplicación
+docker compose restart contextforge       # Reiniciar tras cambiar .env
+docker compose down                       # Detener (conserva datos)
+docker compose down -v                    # Detener y BORRAR volúmenes de datos
+```
+
+---
+
 ## Ejemplo de Uso Rápido (Solo API Pública)
 
 ```python
