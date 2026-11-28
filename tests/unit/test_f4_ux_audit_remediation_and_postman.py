@@ -98,3 +98,55 @@ def test_all_web_html_templates_have_safe_alpine_attributes() -> None:
             if "=>" in match.group(1):
                 violations.append(f"{html_file}: arrow function (=>) inside inline x-data attribute")
     assert violations == []
+
+
+@pytest.mark.asyncio
+async def test_scoped_document_handler_exposes_fallback_reason_and_cli_timeout_floor() -> None:
+    from application.rag.queries.AskScopedDocument import AskScopedDocumentQuery, AskScopedDocumentQueryHandler
+    from domain.users import LlmProviderConfigEntity
+    from infrastructure.integrations.llm.ai_strategy_factory import AIStrategyFactory
+    from infrastructure.integrations.llm.extractive_fallback_adapter import ExtractiveFallbackAdapter
+
+    class _TimeoutLlm:
+        provider_name = "antigravity_cli"
+        engine_type = "local_cli"
+        base_url = "cli://agy"
+
+        async def generate(self, prompt: str, *, system_prompt: str | None = None, model: str | None = None) -> str:
+            raise RuntimeError("Tiempo agotado (180s) ejecutando CLI")
+
+        async def stream_generate(self, prompt: str, *, system_prompt: str | None = None, model: str | None = None):
+            yield ""
+
+        async def check_health(self):
+            return False, "timeout", 1.0
+
+    handler = AskScopedDocumentQueryHandler(_TimeoutLlm(), ExtractiveFallbackAdapter())
+    starter_doc = "---\ntitle: Guía de Arquitectura\nmodule: architecture\n---\n# Guía de Arquitectura\n## Contexto\n- Regla 1"
+    res = await handler.handle(
+        AskScopedDocumentQuery(
+            question="ayudame a realizar un documento sobre arquitectura limpia y solid con diagramas",
+            document_title="Guía de Arquitectura",
+            document_path="guia.md",
+            content_markdown=starter_doc,
+            project_slug="tecnologia",
+        )
+    )
+    assert res.is_error is False
+    data = res.value
+    assert data["degraded_fallback"] is True
+    assert "Tiempo agotado" in data["fallback_reason"]
+    assert "module: architecture" not in data["answer"]
+
+    cli_cfg = LlmProviderConfigEntity(
+        provider="antigravity_cli",
+        engine_type="local_cli",
+        name="Antigravity CLI",
+        base_url="cli://agy",
+        default_model="default",
+        cli_command="agy",
+        cli_args="--disable-slash-commands -p",
+        egress_class="cloud",
+    )
+    adapter = AIStrategyFactory.create(cli_cfg, get_container().vault, timeout_sec=30.0)
+    assert getattr(adapter, "_timeout", 0.0) >= 120.0
