@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import pathlib
+import re
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -67,3 +70,31 @@ async def test_settings_and_integration_guide_remediate_all_phase0_audit_finding
         assert "Claude Desktop" in i_html
         assert "isSelectedAgentPublic" in i_html
         assert "SQLite FTS5" in i_html
+
+        # 3) /knowledge-health & /projects render clean external Alpine modules (no broken HTML from inline x-data/tojson)
+        kh_resp = await client.get("/knowledge-health")
+        assert kh_resp.status_code == 200
+        assert 'x-data="knowledgeHealthApp($el.dataset.project)"' in kh_resp.text
+        assert "knowledge_health_app.js" in kh_resp.text
+        assert "x !== id" not in kh_resp.text
+
+        pr_resp = await client.get("/projects")
+        assert pr_resp.status_code == 200
+        assert 'x-data="projectsListApp()"' in pr_resp.text
+        assert "projects_list_app.js" in pr_resp.text
+
+        assert (await client.get("/static/js/modules/knowledge_health_app.js")).status_code == 200
+        assert (await client.get("/static/js/modules/projects_list_app.js")).status_code == 200
+
+
+def test_all_web_html_templates_have_safe_alpine_attributes() -> None:
+    root = pathlib.Path("src/presentation/web")
+    violations: list[str] = []
+    for html_file in sorted(root.rglob("*.html")):
+        text = html_file.read_text(encoding="utf-8")
+        if re.search(r'="[^"]*\|\s*tojson[^"]*"', text):
+            violations.append(f"{html_file}: tojson inside double-quoted HTML attribute")
+        for match in re.finditer(r'x-data\s*=\s*"([^"]*)"', text, re.S):
+            if "=>" in match.group(1):
+                violations.append(f"{html_file}: arrow function (=>) inside inline x-data attribute")
+    assert violations == []
