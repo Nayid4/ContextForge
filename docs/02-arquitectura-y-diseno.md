@@ -17,240 +17,41 @@
 
 ### Nivel 1: Diagrama de Contexto del Sistema
 
-```mermaid
-flowchart TB
-    App["Aplicación Consumidora<br/>(Chat IA, CLI, Microservicio, FastAPI)"]
-    Dev["Equipo Externo / Integrador<br/>(Extiende contratos sin editar código)"]
-    CF["Componente ContextForge v1.0.0<br/>(Base de Conocimiento, RAG Híbrido y Context Bundles)"]
-    FS["Archivos Markdown<br/>(Docs-as-Code)"]
-    LLM["Proveedor LLM Externo<br/>(Ollama, Gemini, OpenAI o Stub)"]
+![C4 Nivel 1 Contexto](diagramas/componente/02_c4_contexto_n1.png)
 
-    Dev -->|"Implementa contratos OCP"| CF
-    App -->|"Usa API Pública (from contextforge import ...)"| CF
-    CF -->|"Lee opcionalmente"| FS
-    CF -->|"Delega generación vía ILLMProvider"| LLM
-```
+> Editable en Draw.io: [diagramas/componente/02_c4_contexto_n1.drawio](diagramas/componente/02_c4_contexto_n1.drawio)
 
 **Justificación**: El sistema consumidor depende únicamente de la frontera pública de `ContextForge`, aislando su lógica de negocio de los detalles de indexación, fusión de puntajes y proveedores generativos.
 
 ### Nivel 2: Diagrama de Contenedores
 
-```mermaid
-flowchart LR
-    Consumer["Código Cliente / App Ejemplo<br/>(examples/agent_knowledge_cli.py)"]
-    subgraph Pkg["Paquete Python Instalable: contextforge v1.0.0"]
-        PublicAPI["API Pública<br/>(__init__, client, builder, contracts, models, exceptions)"]
-        Internal["Núcleo Interno Privado<br/>(contextforge._internal)"]
-    end
-    OptionalWeb["Host Web Opcional<br/>(FastAPI + Screaming Web en src/presentation/web/)"]
+![C4 Nivel 2 Contenedores](diagramas/componente/03_c4_contenedores_n2.png)
 
-    Consumer -->|"Importa solo símbolos en __all__"| PublicAPI
-    OptionalWeb -->|"Consume y adapta"| PublicAPI
-    PublicAPI -->|"Orquesta mediante interfaces"| Internal
-```
+> Editable en Draw.io: [diagramas/componente/03_c4_contenedores_n2.drawio](diagramas/componente/03_c4_contenedores_n2.drawio)
 
 **Justificación**: La separación física en subpaquete `_internal/` impide acoplamientos accidentales a clases concretas y permite evolucionar estructuras internas (p. ej. cambiar el índice BM25 o el vectorizador) preservando compatibilidad semántica (`v1.x`).
 
 ### Nivel 3: Diagrama de Componentes Internos
 
-```mermaid
-flowchart TD
-    Builder["ContextForgeBuilder<br/>(Builder)"] -->|"Ensambla"| Facade["ContextForge<br/>(Facade)"]
-    Facade -->|"Envuelve operaciones"| AuditDec["AuditingOperationDecorator<br/>(Decorator)"]
-    Facade -->|"Valida documentos"| Rules["DocumentRuleChain<br/>(Chain of Responsibility)"]
-    Facade -->|"Resuelve estrategias"| StratFac["StrategyFactory<br/>(Factory)"]
-    Facade -->|"Ejecuta recuperación"| RetFac["RetrieverFactory<br/>(Factory)"]
-    Facade -->|"Exporta bundles"| ExpReg["BundleExporterRegistry<br/>(Factory)"]
-    Facade -->|"Emite eventos"| Bus["KnowledgeEventBus<br/>(Observer)"]
+![C4 Nivel 3 Componentes Internos](diagramas/componente/04_c4_componentes_n3.png)
 
-    StratFac --> Chunker["IChunkingStrategy<br/>(HeadingAware / SlidingWindow)"]
-    StratFac --> Ranker["IHybridRankingStrategy<br/>(RRF / Weighted)"]
-    RetFac --> Lex["ILexicalStore<br/>(InMemoryLexicalStore)"]
-    RetFac --> Vec["IVectorStore<br/>(InMemoryVectorStore)"]
-    Facade --> LLM["ILLMProvider<br/>(ExtractiveFallback / Externo)"]
-```
+> Editable en Draw.io: [diagramas/componente/04_c4_componentes_n3.drawio](diagramas/componente/04_c4_componentes_n3.drawio)
 
 ---
 
 ## 3. Diagramas UML
 
-### 3.1 Diagrama de Clases UML (API Pública y Colaboradores Internos)
+### 3.1 Diagrama de Clases UML (API Pública, Colaboradores y Patrones GoF)
 
-```mermaid
-classDiagram
-    class ContextForge {
-        +ingest(documents, chunking_strategy) IngestionReport
-        +ingest_directory(directory, pattern) IngestionReport
-        +search(query, top_k, mode, ranking, collection) list~SearchHit~
-        +ask(question, top_k, mode, ranking, system_prompt) RagResponse
-        +compile_bundle(name, query, document_ids, max_tokens, export_format) ContextBundle
-        +register_chunking_strategy(strategy)
-        +register_ranking_strategy(strategy)
-        +register_exporter(exporter)
-        +register_rule(rule)
-        +subscribe(observer)
-        +set_llm_provider(provider)
-    }
+![Diagrama de Clases UML con Patrones GoF](diagramas/componente/05_uml_clases_gof.png)
 
-    class ContextForgeBuilder {
-        +with_config(config) ContextForgeBuilder
-        +with_stores(lexical_store, vector_store) ContextForgeBuilder
-        +with_llm_provider(provider) ContextForgeBuilder
-        +with_chunking_strategy(strategy) ContextForgeBuilder
-        +with_ranking_strategy(strategy) ContextForgeBuilder
-        +with_exporter(exporter) ContextForgeBuilder
-        +with_rule(rule) ContextForgeBuilder
-        +with_observer(observer) ContextForgeBuilder
-        +build() ContextForge
-    }
-
-    class IChunkingStrategy {
-        <<interface>>
-        +name str
-        +chunk(document) list~DocumentChunk~
-    }
-    class HeadingAwareChunkingStrategy
-    class SlidingWindowChunkingStrategy
-
-    class IHybridRankingStrategy {
-        <<interface>>
-        +name str
-        +fuse(lexical_hits, vector_hits, top_k) list~SearchHit~
-    }
-    class ReciprocalRankFusionStrategy
-    class WeightedLinearRankingStrategy
-
-    class IBundleExporter {
-        <<interface>>
-        +format_name str
-        +export(name, documents, estimated_tokens, max_tokens) str
-    }
-    class MarkdownBundleExporter
-    class JsonBundleExporter
-    class XmlBundleExporter
-
-    class ILLMProvider {
-        <<interface>>
-        +provider_name str
-        +generate(prompt, system_prompt) str
-    }
-    class ExtractiveFallbackLLMProvider
-
-    class IDocumentRule {
-        <<interface>>
-        +rule_name str
-        +validate(document) None
-    }
-    class DocumentRuleChain {
-        +add_rule(rule)
-        +validate_all(document)
-    }
-
-    class ILexicalStore {
-        <<interface>>
-        +index(chunks)
-        +search(query, top_k) list~SearchHit~
-        +clear()
-    }
-    class InMemoryLexicalStore
-
-    class IVectorStore {
-        <<interface>>
-        +index(chunks)
-        +search(query, top_k) list~SearchHit~
-        +clear()
-    }
-    class InMemoryVectorStore
-
-    class IKnowledgeObserver {
-        <<interface>>
-        +on_event(event) None
-    }
-    class KnowledgeEventBus {
-        +subscribe(observer)
-        +publish(event_type, payload) KnowledgeEvent
-    }
-
-    class StrategyFactory {
-        +get_chunker(name) IChunkingStrategy
-        +get_ranker(name) IHybridRankingStrategy
-    }
-    class RetrieverFactory {
-        +retrieve(query, top_k, mode, ranking_strategy) list~SearchHit~
-    }
-    class BundleExporterRegistry {
-        +register(exporter)
-        +get(format_name) IBundleExporter
-    }
-    class AuditingOperationDecorator {
-        +execute() TResult
-    }
-
-    ContextForgeBuilder ..> ContextForge : builds
-    ContextForge --> AuditingOperationDecorator : wraps ops
-    ContextForge --> StrategyFactory
-    ContextForge --> RetrieverFactory
-    ContextForge --> BundleExporterRegistry
-    ContextForge --> DocumentRuleChain
-    ContextForge --> KnowledgeEventBus
-    ContextForge --> ILLMProvider
-    RetrieverFactory --> ILexicalStore
-    RetrieverFactory --> IVectorStore
-    RetrieverFactory --> StrategyFactory
-    StrategyFactory --> IChunkingStrategy
-    StrategyFactory --> IHybridRankingStrategy
-    BundleExporterRegistry --> IBundleExporter
-    DocumentRuleChain --> IDocumentRule
-    KnowledgeEventBus --> IKnowledgeObserver
-
-    HeadingAwareChunkingStrategy ..|> IChunkingStrategy
-    SlidingWindowChunkingStrategy ..|> IChunkingStrategy
-    ReciprocalRankFusionStrategy ..|> IHybridRankingStrategy
-    WeightedLinearRankingStrategy ..|> IHybridRankingStrategy
-    MarkdownBundleExporter ..|> IBundleExporter
-    JsonBundleExporter ..|> IBundleExporter
-    XmlBundleExporter ..|> IBundleExporter
-    ExtractiveFallbackLLMProvider ..|> ILLMProvider
-    InMemoryLexicalStore ..|> ILexicalStore
-    InMemoryVectorStore ..|> IVectorStore
-```
+> Editable en Draw.io: [diagramas/componente/05_uml_clases_gof.drawio](diagramas/componente/05_uml_clases_gof.drawio)
 
 ### 3.2 Diagrama de Secuencia UML — Funcionalidad Principal `ask()` (RAG Híbrido con Citas)
 
-```mermaid
-sequenceDiagram
-    actor Client as Aplicación / Agente IA
-    participant CF as ContextForge (Facade)
-    participant Dec as AuditingOperationDecorator
-    participant Ret as RetrieverFactory
-    participant Lex as ILexicalStore
-    participant Vec as IVectorStore
-    participant Rank as IHybridRankingStrategy
-    participant Pipe as execute_rag_pipeline
-    participant LLM as ILLMProvider
-    participant Bus as KnowledgeEventBus
+![Diagrama de Secuencia UML ask()](diagramas/componente/06_uml_secuencia_ask.png)
 
-    Client->>CF: ask("¿Cuál es la política de reintentos?", top_k=3)
-    CF->>Dec: execute("ask")
-    Dec->>CF: _retrieve(question, top_k=3, mode="hybrid", ranking="rrf")
-    CF->>Ret: retrieve(query, top_k=3, mode="hybrid", ranking_strategy="rrf")
-    Ret->>Lex: search(query, top_k=10)
-    Lex-->>Ret: lexical_hits
-    Ret->>Vec: search(query, top_k=10)
-    Vec-->>Ret: vector_hits
-    Ret->>Rank: fuse(lexical_hits, vector_hits, top_k=3)
-    Rank-->>Ret: ranked_hits
-    Ret-->>CF: ranked_hits
-    CF->>Pipe: execute_rag_pipeline(question, hits, llm_provider, ...)
-    Pipe->>Pipe: construir SourceCitation[] y prompt fundamentado
-    Pipe->>LLM: generate(prompt, system_prompt)
-    LLM-->>Pipe: answer
-    Pipe-->>CF: RagResponse
-    CF->>Bus: publish("knowledge.rag_answered", payload)
-    Dec->>Dec: registrar AuditRecord (operation="ask", latency_ms, succeeded=True)
-    Dec-->>CF: RagResponse
-    CF-->>Client: RagResponse(answer, citations, grounded=True)
-```
+> Editable en Draw.io: [diagramas/componente/06_uml_secuencia_ask.drawio](diagramas/componente/06_uml_secuencia_ask.drawio)
 
 ---
 

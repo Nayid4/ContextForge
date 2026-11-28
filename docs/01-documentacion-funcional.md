@@ -21,21 +21,9 @@ Los equipos que integran **agentes de IA, copilotos técnicos o chats conversaci
 
 ## 2. Requerimientos Funcionales y Casos de Uso de la API
 
-```mermaid
-flowchart LR
-    Dev["Aplicación Consumidora / Agente IA"]
-    UC1["RF-01: Ingestar e Indexar Documentos<br/>ingest() / ingest_directory()"]
-    UC2["RF-02: Búsqueda Híbrida<br/>search()"]
-    UC3["RF-03: Consulta RAG con Citas<br/>ask()"]
-    UC4["RF-04: Compilar Context Bundle<br/>compile_bundle()"]
-    UC5["RF-05: Registrar Extensiones<br/>register_* / ContextForgeBuilder"]
+![Diagrama de Casos de Uso API Pública](diagramas/componente/01_casos_de_uso_api.png)
 
-    Dev --> UC1
-    Dev --> UC2
-    Dev --> UC3
-    Dev --> UC4
-    Dev --> UC5
-```
+> Archivo editable Draw.io: [diagramas/componente/01_casos_de_uso_api.drawio](diagramas/componente/01_casos_de_uso_api.drawio)
 
 | ID | Caso de Uso / Operación API | Descripción | Criterios de Aceptación |
 | :--- | :--- | :--- | :--- |

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
+  <diagram id="c4_comp_n2" name="C4 Nivel 2 Contenedores - ContextForge v1.0.0">
+    <mxGraphModel dx="1460" dy="740" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1460" pageHeight="740" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_5" value="Paquete Distribuible Python: contextforge v1.0.0  (pyproject.toml · dependencies = [])" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#DBEAFE;swimlaneFillColor=#F8FAFC;strokeColor=#1B365D;fontColor=#1B365D;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="470" y="125" width="930" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="n_2" value="&lt;b&gt;Modelo C4 — Nivel 2: Contenedores del Paquete contextforge (v1.0.0)&lt;/b&gt;&lt;br&gt;Frontera estricta entre API Pública exportada (__all__) e Implementación Interna Privada (_internal/)" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1400" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="n_3" value="&lt;b&gt;App de Ejemplo / Cliente&lt;/b&gt;&lt;br&gt;[Python &gt;= 3.11]&lt;br&gt;examples/agent_knowledge_cli.py&lt;br&gt;Usa exclusivamente la API pública." style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="185" width="310" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="n_4" value="&lt;b&gt;Plataforma Web Opcional&lt;/b&gt;&lt;br&gt;[Extra .[web] · FastAPI + MCP]&lt;br&gt;src/presentation/web/ y /api/v1&lt;br&gt;Host self-hosted con UI y Docker." style="whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#334155;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="60" y="445" width="310" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="n_6" value="&lt;b&gt;API Pública (Frontera __all__)&lt;/b&gt;&lt;br&gt;[src/contextforge/]&lt;br&gt;&lt;br&gt;• &lt;b&gt;client.py&lt;/b&gt;: Facade ContextForge&lt;br&gt;• &lt;b&gt;builder.py&lt;/b&gt;: ContextForgeBuilder&lt;br&gt;• &lt;b&gt;contracts.py&lt;/b&gt;: 8 interfaces ABC&lt;br&gt;• &lt;b&gt;models.py&lt;/b&gt;: DTOs inmutables&lt;br&gt;• &lt;b&gt;exceptions.py&lt;/b&gt;: Errores tipados&lt;br&gt;&lt;br&gt;&lt;i&gt;Contrato estable v1.x (mypy --strict)&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="525" y="200" width="360" height="415" as="geometry" />
+        </mxCell>
+        <mxCell id="n_7" value="&lt;b&gt;Núcleo Privado Encapsulado&lt;/b&gt;&lt;br&gt;[src/contextforge/_internal/]&lt;br&gt;&lt;br&gt;• &lt;b&gt;stores.py&lt;/b&gt;: BM25 + Vector coseno&lt;br&gt;• &lt;b&gt;strategies.py&lt;/b&gt;: Chunking y RRF/Weighted&lt;br&gt;• &lt;b&gt;factories.py&lt;/b&gt;: Strategy &amp; Retriever&lt;br&gt;• &lt;b&gt;exporters.py&lt;/b&gt;: MD, JSON, XML + Registry&lt;br&gt;• &lt;b&gt;rules.py&lt;/b&gt;: DocumentRuleChain&lt;br&gt;• &lt;b&gt;decorators.py&lt;/b&gt;: Auditoría y latencia&lt;br&gt;• &lt;b&gt;events.py&lt;/b&gt;: KnowledgeEventBus&lt;br&gt;• &lt;b&gt;pipelines.py&lt;/b&gt;: RAG + Context Bundler" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="985" y="200" width="360" height="415" as="geometry" />
+        </mxCell>
+        <mxCell id="e_8" value="Importa solo __all__" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="257" />
+              <mxPoint x="420" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_9" value="Consume y adapta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="517" />
+              <mxPoint x="420" y="465" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_10" value="Orquesta vía&#10;contratos ABC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_6" target="n_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
