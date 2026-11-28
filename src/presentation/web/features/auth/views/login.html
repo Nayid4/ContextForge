@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión | ContextForge</title>
+  <script>
+    (function() {
+      const saved = localStorage.getItem('contextforge_theme') || 'dark';
+      document.documentElement.classList.toggle('dark', saved !== 'light');
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-[#0a0b10] text-slate-900 dark:text-zinc-100 flex items-center justify-center p-4">
+  <main class="w-full max-w-md rounded-2xl border border-slate-200 dark:border-[#1e2235] bg-white dark:bg-[#11131a] p-7 shadow-xl space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-sm">
+          <i class="fa-solid fa-layer-group"></i>
+        </span>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">ContextForge</h1>
+          <p class="text-xs text-slate-500 dark:text-zinc-400">Base de Conocimiento y Agentes IA</p>
+        </div>
+      </div>
+      <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold {% if auth_mode == 'enterprise_rbac' %}bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30{% else %}bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30{% endif %}">
+        {{ auth_mode }}
+      </span>
+    </div>
+
+    <div class="space-y-1">
+      <h2 class="text-base font-bold text-slate-900 dark:text-white">Iniciar sesión en tu equipo</h2>
+      <p class="text-xs text-slate-500 dark:text-zinc-400">
+        Ingresa tus credenciales asignadas por el Administrador. Si es tu primer acceso, te pediremos cambiar tu contraseña temporal.
+      </p>
+    </div>
+
+    <div id="login-error" role="alert" aria-live="assertive" class="hidden rounded-xl border border-rose-500/40 bg-rose-50 dark:bg-rose-950/40 p-3 text-xs text-rose-700 dark:text-rose-200 space-y-1"></div>
+
+    <form id="cf-login-form" class="space-y-4" novalidate>
+      <input type="hidden" id="login-next" value="{{ next_url }}">
+      <div>
+        <label for="login-email" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">Correo electrónico</label>
+        <input id="login-email" name="email" type="email" autocomplete="username" required placeholder="tu.nombre@empresa.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161922] border border-slate-300 dark:border-[#232738] text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label for="login-password" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">Contraseña</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Ingresa tu contraseña" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161922] border border-slate-300 dark:border-[#232738] text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <button id="login-submit" type="submit" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold shadow-sm transition cursor-pointer flex items-center justify-center gap-2">
+        <i id="login-spinner" class="fa-solid fa-spinner animate-spin hidden"></i>
+        <span>Entrar</span>
+      </button>
+    </form>
+
+    {% if auth_mode == 'local' %}
+    <div class="pt-3 border-t border-slate-200 dark:border-[#1e2235] flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
+      <span>Modo local activo en 127.0.0.1</span>
+      <a href="/docs/browser" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Continuar al espacio local</a>
+    </div>
+    {% endif %}
+  </main>
+
+  <script>
+    document.getElementById('cf-login-form').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const errBox = document.getElementById('login-error');
+      const btn = document.getElementById('login-submit');
+      const spin = document.getElementById('login-spinner');
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const nextUrl = document.getElementById('login-next').value || '/docs/browser';
+
+      errBox.classList.add('hidden');
+      if (!email || !password) {
+        errBox.textContent = 'Completa tu correo electrónico y contraseña antes de continuar.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      btn.disabled = true;
+      spin.classList.remove('hidden');
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const trace = data.trace_id ? ` (ID de solicitud: ${data.trace_id})` : '';
+          errBox.textContent = (data.detail || 'No fue posible iniciar sesión. Verifica tus credenciales.') + trace;
+          errBox.classList.remove('hidden');
+          return;
+        }
+        if (data.must_change_password) {
+          window.location.href = '/change-password';
+          return;
+        }
+        window.location.href = nextUrl;
+      } catch {
+        errBox.textContent = 'Error de conexión con el servidor ContextForge. Verifica que el servicio esté activo.';
+        errBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        spin.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+# ==============================================================================
+# ContextForge — Self-Hosted Knowledge Hub (Grafana / Vault Deployment Pattern)
+# ==============================================================================
+# Uso rápido (standalone con SQLite WAL + secretos desde .env):
+#   docker compose up -d
+#
+# Uso enterprise con PostgreSQL embebido:
+#   DB_PROVIDER=postgresql DATABASE_URL=postgresql+asyncpg://cfadmin:cfsecret@postgres:5432/contextforge \
+#   docker compose --profile postgres up -d
+#
+# Uso 100% air-gapped con Ollama dentro de Docker:
+#   OLLAMA_BASE_URL=http://ollama:11434 docker compose --profile ollama up -d
+# ==============================================================================
+services:
+  contextforge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: contextforge:latest
+    container_name: contextforge-hub
+    ports:
+      - "${CONTEXTFORGE_BIND_HOST:-127.0.0.1}:${CONTEXTFORGE_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-prod}
+      - AUTH_MODE=${AUTH_MODE:-enterprise_rbac}
+      - CONTEXTFORGE_STRICT_BIND_CHECK=${CONTEXTFORGE_STRICT_BIND_CHECK:-true}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
+      - DB_PROVIDER=${DB_PROVIDER:-sqlite}
+      - DATABASE_URL=${DATABASE_URL:-sqlite+aiosqlite:////app/data/database/contextforge.db}
+      - DOCS_ROOT_PATH=/app/docs
+      - CHROMA_PERSIST_DIR=/app/data/database/chroma
+      - LOCAL_STORAGE_PATH=/app/data/storage
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    volumes:
+      - ./docs:/app/docs
+      - cf_data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: contextforge-postgres
+    profiles: ["postgres"]
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-cfadmin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cfsecret}
+      - POSTGRES_DB=${POSTGRES_DB:-contextforge}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - cf_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cfadmin} -d ${POSTGRES_DB:-contextforge}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: contextforge-ollama
+    profiles: ["ollama"]
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - cf_ollama:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  cf_data:
+  cf_pgdata:
+  cf_ollama:

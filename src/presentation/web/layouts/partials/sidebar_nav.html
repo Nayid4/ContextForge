@@ -1,0 +1,159 @@
+  <!-- CLAUDE-STYLE COLLAPSIBLE SIDEBAR -->
+  <aside
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+    class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-[#11131a] border-r border-slate-200 dark:border-[#1e2235] flex flex-col transition-transform duration-200 ease-in-out shrink-0"
+  >
+    <!-- Brand -->
+    <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-[#1e2235]">
+      <a href="/docs/browser" class="flex items-center space-x-2.5 group">
+        <span class="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-sm shadow-emerald-600/30 group-hover:scale-105 transition">
+          <i class="fa-solid fa-layer-group text-sm"></i>
+        </span>
+        <div class="leading-none">
+          <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white block">ContextForge</span>
+          <span class="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">Knowledge &amp; Agents</span>
+        </div>
+      </a>
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Ejecución 100% local">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+        Local
+      </span>
+    </div>
+
+    <!-- Active Project Selector -->
+    <div class="p-3 border-b border-slate-200 dark:border-[#1e2235] bg-slate-50/70 dark:bg-[#0d0f15]/70">
+      <div class="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 px-1">Proyecto Activo</div>
+      <div id="navbar-project-container" hx-get="/ui/projects/navbar-selector" hx-trigger="load" hx-swap="innerHTML">
+        <div class="h-8 bg-slate-200 dark:bg-[#161922] rounded-lg animate-pulse flex items-center px-2 text-xs text-slate-500 dark:text-zinc-500 font-mono">
+          Cargando...
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Search Button (Ctrl+K) -->
+    <div class="px-3 pt-3">
+      <button
+        type="button"
+        onclick="window.toggleCommandPalette && window.toggleCommandPalette()"
+        class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#161922] dark:hover:bg-[#1c202d] border border-slate-200 dark:border-[#232738] hover:border-indigo-500/40 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition shadow-xs cursor-pointer"
+      >
+        <span class="flex items-center space-x-2">
+          <i class="fa-solid fa-magnifying-glass text-indigo-500 dark:text-indigo-400 text-xs"></i>
+          <span>Buscar rápido...</span>
+        </span>
+        <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] rounded text-slate-500 dark:text-zinc-400">Ctrl K</kbd>
+      </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" x-data="{ currentPath: window.location.pathname }">
+      <div class="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider px-2 py-1 mb-0.5">Flujo Principal</div>
+
+      <a
+        href="/docs/browser"
+        :class="currentPath.startsWith('/docs/browser') || currentPath.startsWith('/docs/view')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-book-open text-indigo-500 dark:text-indigo-400 w-4 text-center"></i>
+        <span>Documentos</span>
+      </a>
+
+      <a
+        href="/books/editor"
+        :class="currentPath.startsWith('/books/editor') || currentPath.startsWith('/docs/new')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-pen-fancy text-violet-500 dark:text-violet-400 w-4 text-center"></i>
+        <span>Editor</span>
+      </a>
+
+      <a
+        href="/agents"
+        :class="currentPath.startsWith('/agents')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-robot text-indigo-500 dark:text-indigo-400 w-4 text-center"></i>
+        <span>Agentes IA</span>
+      </a>
+
+      <a
+        href="/chat"
+        :class="currentPath.startsWith('/chat') || currentPath.startsWith('/asistente-ia')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-comments text-sky-500 dark:text-sky-400 w-4 text-center"></i>
+        <span>Chat IA</span>
+      </a>
+
+      <a
+        href="/bundles"
+        :class="currentPath.startsWith('/bundles')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-box-archive text-amber-500 dark:text-amber-400 w-4 text-center"></i>
+        <span>Context Bundler</span>
+      </a>
+
+      <div class="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider px-2 py-1 pt-4 mb-0.5">Administración</div>
+
+      <a
+        href="/projects"
+        :class="currentPath.startsWith('/projects')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-layer-group text-emerald-500 dark:text-emerald-400 w-4 text-center"></i>
+        <span>Proyectos</span>
+      </a>
+
+      <a
+        href="/settings"
+        :class="currentPath.startsWith('/settings')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-sliders text-slate-500 dark:text-zinc-400 w-4 text-center"></i>
+        <span>Configuración</span>
+      </a>
+
+      <a
+        href="/docs/integration-guide"
+        :class="currentPath.startsWith('/docs/integration-guide')
+          ? 'bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-white font-semibold border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs'
+          : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1d29] border border-transparent'"
+        class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition group"
+      >
+        <i class="fa-solid fa-plug text-teal-500 dark:text-teal-400 w-4 text-center"></i>
+        <span>Integración y MCP</span>
+      </a>
+    </nav>
+
+    <!-- Footer Status & Team Session -->
+    <div class="p-3 border-t border-slate-200 dark:border-[#1e2235] bg-slate-50/80 dark:bg-[#0d0f15]/80 space-y-2" x-data="{ me: null }" x-init="fetch('/api/v1/auth/me').then(r => r.ok ? r.json() : null).then(d => me = d).catch(() => {})">
+      <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
+        <span class="flex items-center space-x-1.5 truncate">
+          <i class="fa-solid fa-user-shield text-emerald-500"></i>
+          <span class="truncate" x-text="me ? `${me.display_name} (${me.role})` : 'ContextForge'"></span>
+        </span>
+        <span class="font-mono text-[10px] text-slate-400 dark:text-zinc-400">v2.0.0</span>
+      </div>
+      <div class="flex items-center justify-between text-[10px]">
+        <a href="/login" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Sesión / Cambiar cuenta</a>
+        <template x-if="me && me.auth_scheme === 'jwt'">
+          <button type="button" @click="fetch('/api/v1/auth/logout', {method:'POST'}).then(() => window.location.href='/login')" class="text-rose-500 hover:underline font-semibold cursor-pointer">Salir</button>
+        </template>
+      </div>
+    </div>
+  </aside>

@@ -1,0 +1,389 @@
+{% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
+{% from "shared/components/pagination.html" import pagination %}
+{% from "shared/components/search_input.html" import debounced_search %}
+
+{% block title %}Proyectos | ContextForge{% endblock %}
+{% block page_crumb %}Proyectos{% endblock %}
+
+{% block content %}
+<div
+  id="projects-container"
+  class="space-y-6"
+  x-data="{
+    modalOpen: false,
+    membersModalOpen: false,
+    membersProjectSlug: '',
+    membersList: [],
+    teamUsers: [],
+    membersLoading: false,
+    membersError: '',
+    membersForbidden: false,
+    memberUserId: '',
+    memberRole: 'Curator',
+    memberSaving: false,
+    newName: '',
+    newSlug: '',
+    slugEdited: false,
+    computeSlug(val) {
+      return (val || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+    },
+    async openMembersModal(slug) {
+      this.membersProjectSlug = slug;
+      this.membersModalOpen = true;
+      this.membersLoading = true;
+      this.membersError = '';
+      this.membersForbidden = false;
+      try {
+        const [mRes, uRes] = await Promise.all([
+          fetch(`/api/v1/projects/${encodeURIComponent(slug)}/members`),
+          fetch('/api/v1/auth/users'),
+        ]);
+        if (mRes.status === 403 || mRes.status === 401) {
+          this.membersForbidden = true;
+          return;
+        }
+        const mData = await mRes.json();
+        this.membersList = mData.items || [];
+        if (uRes.ok) {
+          const uData = await uRes.json();
+          this.teamUsers = uData.items || [];
+          if (!this.memberUserId && this.teamUsers.length > 0) this.memberUserId = this.teamUsers[0].user_id;
+        }
+      } catch {
+        this.membersError = 'No se pudieron cargar los miembros del proyecto.';
+      } finally {
+        this.membersLoading = false;
+      }
+    },
+    async addOrUpdateMember() {
+      if (!this.memberUserId) return;
+      this.memberSaving = true;
+      this.membersError = '';
+      try {
+        const res = await fetch(`/api/v1/projects/${encodeURIComponent(this.membersProjectSlug)}/members`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: this.memberUserId, role: this.memberRole }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          this.membersError = data.detail || 'No tienes permiso para modificar miembros.';
+          return;
+        }
+        window.$toast?.success?.('Rol de miembro actualizado.', 'Miembros');
+        await this.openMembersModal(this.membersProjectSlug);
+      } finally {
+        this.memberSaving = false;
+      }
+    },
+    async removeMember(userId) {
+      this.membersError = '';
+      const res = await fetch(`/api/v1/projects/${encodeURIComponent(this.membersProjectSlug)}/members/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        this.membersError = data.detail || 'No se pudo quitar el miembro.';
+        return;
+      }
+      window.$toast?.info?.('Miembro retirado del proyecto.', 'Miembros');
+      await this.openMembersModal(this.membersProjectSlug);
+    }
+  }"
+  @keydown.escape.window="modalOpen = false; membersModalOpen = false"
+>
+
+  {% call page_header(
+    'fa-solid fa-layer-group',
+    'Proyectos',
+    'Organiza tu documentación en proyectos independientes para tus agentes IA.',
+    total_projects ~ ' total'
+  ) %}
+    <button
+      type="button"
+      @click="modalOpen = true; $nextTick(() => $refs.projectNameInput?.focus())"
+      class="inline-flex items-center px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm shadow-indigo-600/20 transition cursor-pointer"
+    >
+      <i class="fa-solid fa-plus mr-2"></i>Nuevo proyecto
+    </button>
+  {% endcall %}
+
+  <!-- Search & Per-Page Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur shadow-xs">
+    <div class="flex-1 max-w-md">
+      {{ debounced_search(
+        "projects-search-input",
+        "q",
+        search_query,
+        "Buscar proyectos por nombre o descripción...",
+        "/projects",
+        "#projects-container",
+        "#per-page-select",
+        "/projects?per_page=" ~ per_page ~ "&q="
+      ) }}
+    </div>
+
+    <div class="flex items-center justify-end gap-2.5 text-xs text-slate-500 dark:text-slate-400">
+      <select
+        id="per-page-select"
+        name="per_page"
+        aria-label="Proyectos por página"
+        hx-get="/projects"
+        hx-trigger="change"
+        hx-target="#projects-container"
+        hx-select="#projects-container"
+        hx-push-url="true"
+        hx-include="#projects-search-input"
+        class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono cursor-pointer"
+      >
+        <option value="6" {% if per_page == 6 %}selected{% endif %}>6 / pág</option>
+        <option value="9" {% if per_page == 9 %}selected{% endif %}>9 / pág</option>
+        <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / pág</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  {% if projects | length > 0 %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for item in projects %}
+    {% set p = item.entity %}
+    <div class="rounded-2xl border p-5 flex flex-col justify-between transition-all duration-200 group {% if item.is_current %}border-indigo-500/60 bg-gradient-to-b from-indigo-50/50 dark:from-indigo-950/25 to-white dark:to-slate-900/90 shadow-md ring-1 ring-indigo-500/25{% else %}border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-indigo-400/50 hover:-translate-y-0.5 shadow-xs{% endif %}">
+      <div class="space-y-3">
+        <div class="flex items-center justify-between text-xs gap-2">
+          <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            {{ p.slug }}
+          </span>
+          {% if item.is_current %}
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Activo</span>
+          </span>
+          {% endif %}
+        </div>
+
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition">{{ p.name }}</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{{ p.description or 'Sin descripción.' }}</p>
+        </div>
+
+        {% if item.modules and item.modules | length > 0 %}
+        <div class="flex items-center flex-wrap gap-1">
+          {% for mod in item.modules[:3] %}
+          <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{{ mod }}</span>
+          {% endfor %}
+          {% if item.modules | length > 3 %}
+          <span class="text-[10px] font-mono text-slate-400">+{{ (item.modules | length) - 3 }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <span><strong class="text-slate-800 dark:text-slate-200">{{ item.doc_count }}</strong> docs</span>
+          <span><strong class="text-slate-800 dark:text-slate-200">{{ item.modules | length }}</strong> módulos</span>
+        </div>
+      </div>
+
+      <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-2">
+        {% if not item.is_current %}
+        <form method="POST" action="/ui/projects/switch" class="flex-1 m-0">
+          <input type="hidden" name="project_slug" value="{{ p.slug }}">
+          <button type="submit" class="w-full py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-indigo-600 dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-700 hover:text-white dark:text-slate-200 transition cursor-pointer">
+            Activar
+          </button>
+        </form>
+        {% else %}
+        <span class="flex-1 py-2 px-3 text-center rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+          Proyecto actual
+        </span>
+        {% endif %}
+
+        <button type="button" @click="openMembersModal('{{ p.slug }}')" class="py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition shrink-0 cursor-pointer" title="Administrar miembros y roles Owner/Curator/Consumer (BR-23)">
+          <i class="fa-solid fa-users text-[11px] mr-1"></i>Miembros
+        </button>
+
+        <a href="/docs/browser?project={{ p.slug }}" class="py-2 px-3 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition shrink-0">
+          Abrir
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-12 text-center space-y-3 shadow-xs">
+    <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 text-xl">
+      <i class="fa-solid fa-folder-open"></i>
+    </div>
+    <h3 class="text-base font-bold text-slate-900 dark:text-white">No se encontraron proyectos</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400">
+      {% if search_query %}Sin resultados para "{{ search_query }}".{% else %}Crea tu primer proyecto para comenzar.{% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  {{ pagination(
+      current_page,
+      total_pages,
+      total_projects,
+      per_page,
+      has_prev,
+      has_next,
+      "/projects",
+      "#projects-container",
+      "&q=" ~ (search_query or ''),
+      "proyectos"
+  ) }}
+
+  <!-- Accessible Modal (ESC + Backdrop Click + Live Slug Preview) -->
+  <div
+    x-show="modalOpen"
+    x-transition.opacity
+    @click.self="modalOpen = false"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+    style="display: none;"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-new-project-title"
+  >
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h2 id="modal-new-project-title" class="text-base font-bold text-slate-900 dark:text-white">Nuevo proyecto</h2>
+        <button type="button" @click="modalOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer" aria-label="Cerrar modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="/projects/new" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nombre *</label>
+          <input
+            type="text"
+            name="name"
+            x-ref="projectNameInput"
+            x-model="newName"
+            @input="if (!slugEdited) newSlug = computeSlug(newName)"
+            placeholder="ej. Plataforma de Pagos"
+            required
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Identificador (slug)</label>
+          <input
+            type="text"
+            name="slug"
+            x-model="newSlug"
+            @input="slugEdited = true"
+            placeholder="se-genera-automaticamente"
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 font-mono"
+          >
+          <p class="text-[11px] text-slate-400 mt-1 font-mono">Carpeta: ./docs/<span x-text="newSlug || 'mi-proyecto'"></span>/</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Descripción</label>
+          <textarea name="description" rows="2" placeholder="Propósito y contexto del proyecto..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"></textarea>
+        </div>
+
+        <label class="flex items-center space-x-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
+          <input type="checkbox" name="sovereign_only" value="true" class="rounded border-slate-300 dark:border-slate-700 text-emerald-600">
+          <span>Modo Soberano estricto (bloquear LLMs en nube externa)</span>
+        </label>
+        <label class="flex items-center space-x-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
+          <input type="checkbox" name="make_active" value="true" checked class="rounded border-slate-300 dark:border-slate-700 text-indigo-600">
+          <span>Activar inmediatamente</span>
+        </label>
+
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button type="button" @click="modalOpen = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer">
+            Crear proyecto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Project Members & Owner RBAC Modal (BR-23) -->
+  <div
+    x-show="membersModalOpen"
+    x-transition.opacity
+    @click.self="membersModalOpen = false"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+    style="display: none;"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-members-title"
+  >
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h2 id="modal-members-title" class="text-base font-bold text-slate-900 dark:text-white">Miembros y Roles del Proyecto</h2>
+          <p class="text-xs text-slate-500 font-mono" x-text="membersProjectSlug"></p>
+        </div>
+        <button type="button" @click="membersModalOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer" aria-label="Cerrar miembros">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <template x-if="membersError">
+        <div role="alert" class="p-3 rounded-xl border border-rose-500/40 bg-rose-50 dark:bg-rose-950/30 text-xs text-rose-700 dark:text-rose-200" x-text="membersError"></div>
+      </template>
+
+      <template x-if="membersForbidden">
+        <div class="p-4 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 text-xs text-amber-800 dark:text-amber-200">
+          Sin permiso: solo un <strong>Admin</strong> o un <strong>Owner</strong> del proyecto puede administrar miembros.
+        </div>
+      </template>
+
+      <template x-if="!membersForbidden">
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <select x-model="memberUserId" aria-label="Usuario" class="flex-1 min-w-[160px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs">
+              <template x-for="u in teamUsers" :key="u.user_id">
+                <option :value="u.user_id" x-text="`${u.full_name} (${u.email})`"></option>
+              </template>
+            </select>
+            <select x-model="memberRole" aria-label="Rol en el proyecto" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+              <option value="Owner">Owner</option>
+              <option value="Curator">Curator</option>
+              <option value="Consumer">Consumer</option>
+            </select>
+            <button type="button" @click="addOrUpdateMember()" :disabled="memberSaving || !memberUserId" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer">
+              Asignar
+            </button>
+          </div>
+
+          <div x-show="membersLoading" class="py-4 text-center text-xs text-slate-400">Cargando miembros...</div>
+
+          <div x-show="!membersLoading" class="space-y-2 max-h-64 overflow-y-auto">
+            <template x-for="m in membersList" :key="m.user_id">
+              <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between gap-2 text-xs">
+                <div class="min-w-0">
+                  <div class="font-semibold text-slate-900 dark:text-white truncate" x-text="m.full_name"></div>
+                  <div class="text-[11px] text-slate-500 font-mono truncate" x-text="m.email || m.user_id"></div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold" :class="m.role === 'Owner' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : (m.role === 'Curator' ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300')" x-text="m.role"></span>
+                  <button
+                    type="button"
+                    @click="removeMember(m.user_id)"
+                    :disabled="m.is_last_owner"
+                    :title="m.is_last_owner ? 'No puedes quitar al último Owner del proyecto (BR-23)' : 'Retirar miembro del proyecto'"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition"
+                    :class="m.is_last_owner ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-rose-500/10 hover:bg-rose-600 text-rose-600 hover:text-white cursor-pointer'"
+                  >Quitar</button>
+                </div>
+              </div>
+            </template>
+            <template x-if="!membersLoading && membersList.length === 0">
+              <p class="py-4 text-center text-xs text-slate-400 italic">No hay miembros asignados todavía. Agrega al menos un Owner.</p>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+{% endblock %}
