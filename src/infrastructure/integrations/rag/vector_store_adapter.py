@@ -84,6 +84,8 @@ class SovereignVectorStoreAdapter(IVectorStorePort):
                         status TEXT NOT NULL,
                         headers_json TEXT NOT NULL,
                         text TEXT NOT NULL,
+                        token_count INTEGER NOT NULL DEFAULT 0,
+                        chunk_index INTEGER NOT NULL DEFAULT 0,
                         dense_vec_json TEXT NULL,
                         embedding_model TEXT NOT NULL DEFAULT '',
                         embedding_dim INTEGER NOT NULL DEFAULT 0
@@ -91,6 +93,10 @@ class SovereignVectorStoreAdapter(IVectorStorePort):
                     """
                 )
                 cols = {row[1] for row in conn.execute("PRAGMA table_info(vector_chunks)").fetchall()}
+                if "token_count" not in cols:
+                    conn.execute("ALTER TABLE vector_chunks ADD COLUMN token_count INTEGER NOT NULL DEFAULT 0")
+                if "chunk_index" not in cols:
+                    conn.execute("ALTER TABLE vector_chunks ADD COLUMN chunk_index INTEGER NOT NULL DEFAULT 0")
                 if "embedding_model" not in cols:
                     conn.execute("ALTER TABLE vector_chunks ADD COLUMN embedding_model TEXT NOT NULL DEFAULT ''")
                 if "embedding_dim" not in cols:
@@ -154,16 +160,17 @@ class SovereignVectorStoreAdapter(IVectorStorePort):
 
         with closing(sqlite3.connect(self._db_path)) as conn:
             with conn:
-                for ch, text_blob, dense in zip(chunks, texts, dense_vecs):
+                for chunk_idx, (ch, text_blob, dense) in enumerate(zip(chunks, texts, dense_vecs)):
                     sparse = self._embed_sparse(text_blob)
                     dim = len(dense) if dense is not None else 0
                     stored_model = emb_model if dense is not None else ""
+                    tok_count = max(1, len(ch.text.split()))
                     bucket[ch.chunk_id] = (ch, sparse, dense, stored_model, dim)
                     conn.execute(
                         """
                         INSERT OR REPLACE INTO vector_chunks
-                        (chunk_id, doc_id, project_slug, path, title, module_name, status, headers_json, text, dense_vec_json, embedding_model, embedding_dim)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        (chunk_id, doc_id, project_slug, path, title, module_name, status, headers_json, text, token_count, chunk_index, dense_vec_json, embedding_model, embedding_dim)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             ch.chunk_id,
@@ -175,6 +182,8 @@ class SovereignVectorStoreAdapter(IVectorStorePort):
                             ch.status,
                             json.dumps(list(ch.headers), ensure_ascii=False),
                             ch.text,
+                            tok_count,
+                            chunk_idx,
                             json.dumps(dense) if dense is not None else None,
                             stored_model,
                             dim,

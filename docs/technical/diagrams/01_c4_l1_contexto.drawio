@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-11-28T09:00:00.000Z" agent="ContextForge-DiagramGen" version="24.7.17">
+  <diagram id="diag-01_c4_l1_contexto" name="Modelo C4 — Nivel 1: Diagrama de Context">
+    <mxGraphModel dx="1360" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="780" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title_banner" value="&lt;b&gt;Modelo C4 — Nivel 1: Diagrama de Contexto del Sistema (ContextForge)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:11px;color:#475569'&gt;Actores humanos, integradores externos, componente reutilizable v1.0.0, plataforma v2.1.0 y sistemas externos&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;fontFamily=Segoe UI;fontSize=16;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="30" y="16" width="1300" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="act_team" value="&lt;b&gt;Equipo de Ingeniería / QA / Soporte&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Admin, Owner, Curator, Consumer&lt;br/&gt;Redacta docs, gestiona agentes y vacíos&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef2ff;strokeColor=#4f46e5;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#1e1b4b;" vertex="1" parent="1">
+          <mxGeometry x="50" y="95" width="290" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_dev" value="&lt;b&gt;Desarrollador / Integrador Externo&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Instala paquete 'contextforge' (0 deps)&lt;br/&gt;Extiende contratos OCP sin modificar núcleo&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef2ff;strokeColor=#4f46e5;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#1e1b4b;" vertex="1" parent="1">
+          <mxGeometry x="410" y="95" width="290" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ide" value="&lt;b&gt;IDEs y Agentes Externos (MCP / OpenAI)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Cursor, Claude Desktop, Apps SDK&lt;br/&gt;Consumen /v1/* y /mcp/sse&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#0891b2;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#164e63;" vertex="1" parent="1">
+          <mxGeometry x="770" y="95" width="265" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_web" value="&lt;b&gt;Portal Externo / Usuario Final&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Widget Chatbot Embebible&lt;br/&gt;Clave cf_pub_* -&amp;gt; JWT efímero&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#064e3b;" vertex="1" parent="1">
+          <mxGeometry x="1075" y="95" width="240" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="sys_cf" value="&lt;b&gt;ContextForge — Plataforma y Componente Reutilizable&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:12px'&gt;Base de Conocimiento Docs-as-Code + Motor RAG Híbrido (FTS5 + Vectorial) + Agent Studio (v2.1.0)&lt;br/&gt;Paquete Python 'contextforge' v1.0.0 (API Pública + Builder + 8 Contratos) + Ciclo de Conocimiento BR-24&lt;br/&gt;Gobernanza RBAC, Soberanía por Egreso (BR-21), Auditoría SHA-256 Append-Only (BR-14)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312e81;strokeColor=#1e1b4b;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=14;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="270" y="290" width="820" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_llm_local" value="&lt;b&gt;Motores IA Locales (Egreso Local)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Ollama / LM Studio / Fallback Extractivo&lt;br/&gt;Permitido en proyectos sovereign_only&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#14532d;" vertex="1" parent="1">
+          <mxGeometry x="50" y="560" width="285" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_llm_cloud" value="&lt;b&gt;APIs y CLIs IA Nube (Egreso Cloud)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Gemini, OpenAI, Anthropic, CLIs sandbox&lt;br/&gt;DLP activo; CLIs bloqueados en agentes public&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#78350f;" vertex="1" parent="1">
+          <mxGeometry x="380" y="560" width="295" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_fs" value="&lt;b&gt;Repositorio Docs-as-Code / Storage&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Archivos Markdown (.md), adjuntos PDF/DOCX&lt;br/&gt;Local FS o S3 / MinIO / R2&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="720" y="560" width="275" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_hooks" value="&lt;b&gt;Sistemas Destino (Webhooks / O11y)&lt;/b&gt;&lt;br/&gt;&lt;font style='font-size:10px'&gt;Webhooks HTTPS firmados HMAC-SHA256&lt;br/&gt;Anti-SSRF DNS + Métricas Prometheus /metrics&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=2;verticalAlign=middle;align=center;spacing=8;fontFamily=Segoe UI;fontSize=12;fontColor=#831843;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="560" width="275" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="Web UI / REST v1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.18;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="act_team" target="sys_cf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="import contextforge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.4;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="act_dev" target="sys_cf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="/v1/* y MCP SSE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.68;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="act_ide" target="sys_cf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="Widget cf_pub_*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.88;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="act_web" target="sys_cf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="ILLMProvider (local)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#15803d;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.18;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="sys_cf" target="ext_llm_local">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="HTTP / CLI sandbox + DLP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.42;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="sys_cf" target="ext_llm_cloud">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="Sync 3-Way / Adjuntos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.68;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="sys_cf" target="ext_fs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="HTTPS HMAC + /metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#db2777;strokeWidth=1.8;endArrow=classic;endFill=1;exitX=0.88;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;fontFamily=Segoe UI;fontSize=10;fontColor=#1e293b;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="sys_cf" target="ext_hooks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
