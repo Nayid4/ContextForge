@@ -107,6 +107,13 @@ class DependencyContainer:
     async def index_document_callback(self, doc: DocumentAggregate) -> None:
         from application.rag.commands.IndexDocumentIncremental import IndexDocumentIncrementalCommand
         await self.mediator.send(IndexDocumentIncrementalCommand(document=doc))
+        if doc.status.value == "published":
+            try:
+                await self.feedback_repo.auto_resolve_gaps_for_document(
+                    doc.project_slug, doc.path, doc.title, doc.content_markdown
+                )
+            except Exception:
+                pass
         try:
             hooks = await self.webhook_repo.list_webhooks(doc.project_slug, active_only=True)
             if hooks:

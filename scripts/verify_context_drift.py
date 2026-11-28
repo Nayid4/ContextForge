@@ -59,6 +59,12 @@ def verify_context_drift() -> list[str]:
             "must_change_password",
             "egress_class",
             "secret_encrypted",
+            "steward_user_id",
+            "review_interval_days",
+            "last_reviewed_at",
+            "assigned_to",
+            "ignored_reason",
+            "resolved_by_doc_path",
         ]
         for col in required_er_columns:
             if not re.search(rf"\b{re.escape(col)}\b", er_block):
@@ -91,10 +97,10 @@ def verify_context_drift() -> list[str]:
         if token in text:
             errors.append(f"Identificador obsoleto encontrado ('{token}'): {reason}")
 
-    # 4. Verify Business Rules BR-01 .. BR-23
-    if "BR-01` a `BR-23" not in text:
-        errors.append("El encabezado de §8 debe abarcar exactamente `BR-01` a `BR-23`.")
-    for idx in range(1, 24):
+    # 4. Verify Business Rules BR-01 .. BR-24
+    if "BR-01` a `BR-24" not in text:
+        errors.append("El encabezado de §8 debe abarcar exactamente `BR-01` a `BR-24`.")
+    for idx in range(1, 25):
         code = f"**BR-{idx:02d}**"
         if code not in text:
             errors.append(f"Falta la regla de negocio {code} en §8.")
@@ -146,7 +152,7 @@ def main() -> int:
         for e in errs:
             print(f"  - {e}")
         return 1
-    print("OK: Context.md is 100% aligned with live SQLAlchemy ORM (25 tables), FastAPI routes, BR-01..BR-23 & RBAC.")
+    print("OK: Context.md is 100% aligned with live SQLAlchemy ORM (25 tables), FastAPI routes, BR-01..BR-24 & RBAC.")
     return 0
 
 

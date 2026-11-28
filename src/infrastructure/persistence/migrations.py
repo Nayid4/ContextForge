@@ -66,6 +66,9 @@ SQLITE_INCREMENTAL_COLUMNS: dict[str, tuple[tuple[str, str], ...]] = {
         ("published_version", "INTEGER NULL"),
         ("last_synced_hash", "VARCHAR(64) NOT NULL DEFAULT ''"),
         ("sync_status", "VARCHAR(24) NOT NULL DEFAULT 'synced'"),
+        ("steward_user_id", "VARCHAR(64) NOT NULL DEFAULT ''"),
+        ("review_interval_days", "INTEGER NOT NULL DEFAULT 90"),
+        ("last_reviewed_at", "DATETIME NULL"),
     ),
     "chat_sessions": (
         ("agent_id", "VARCHAR(64) NULL"),
@@ -87,6 +90,12 @@ SQLITE_INCREMENTAL_COLUMNS: dict[str, tuple[tuple[str, str], ...]] = {
     ),
     "webhooks": (
         ("secret_encrypted", "TEXT NOT NULL DEFAULT ''"),
+    ),
+    "knowledge_gaps": (
+        ("assigned_to", "VARCHAR(64) NOT NULL DEFAULT ''"),
+        ("ignored_reason", "TEXT NOT NULL DEFAULT ''"),
+        ("resolved_by_doc_path", "VARCHAR(300) NOT NULL DEFAULT ''"),
+        ("suggested_module", "VARCHAR(100) NOT NULL DEFAULT 'general'"),
     ),
 }
 

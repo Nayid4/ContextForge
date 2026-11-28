@@ -178,7 +178,7 @@ La plataforma aplica **Clean Architecture / Hexagonal (4 capas)**, **CQRS** (Com
 
 ---
 
-## 8. Reglas de Negocio (Invariantes `BR-01` a `BR-23`)
+## 8. Reglas de Negocio (Invariantes `BR-01` a `BR-24`)
 
 | Código | Nombre | Regla Verificada en el Sistema |
 | :--- | :--- | :--- |
@@ -205,6 +205,7 @@ La plataforma aplica **Clean Architecture / Hexagonal (4 capas)**, **CQRS** (Com
 | **BR-21** | Soberanía por Destino de Egreso (`local` vs `cloud`), `egress_class` y Embeddings | Cada motor LLM persiste explícitamente `egress_class` (`local` \| `cloud`) y `SovereignRoutingPolicy.classify_egress()` clasifica tanto LLMs como proveedores de embeddings por su **destino real de egreso**: únicamente `extractive_fallback`, `local_http` en loopback (`localhost`/`127.0.0.1`/`::1`/`host.docker.internal`) y `ollama` son `local`. Todos los CLIs cloud (`agy`, `claude`, `gemini`, `codex`, `opencode`, `aider`) y APIs remotas son `cloud`, quedan bloqueados cuando `project.sovereign_only = true` y reciben DLP obligatorio (`BR-13`). Además, `vector_store.sqlite3` almacena `embedding_model` y `embedding_dim` para jamás comparar vectores densos incompatibles, y `GET /api/v1/settings/embeddings/status` avisa si un cambio de modelo requiere reindexar (`POST /api/v1/settings/embeddings/reindex`). |
 | **BR-22** | Webhooks HTTPS/SSRF/Anti-Replay/Cifrado, Importación Segura en `draft`, Cuotas Eval y `/metrics` | `WebhookDispatcher.is_valid_url()` exige **exclusivamente `https://`**, realiza resolución DNS validando cada IP resuelta contra todos los rangos prohibidos (`0.0.0.0/8`, `10.0.0.0/8`, `100.64.0.0/10`, `127.0.0.0/8`, `169.254.0.0/16`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`, `fe80::/10`, `::1`, IPv4 mapeado en IPv6, `localhost`, `.internal`), deshabilita redirects (`follow_redirects=False`), cifra el secreto en reposo en `webhooks.secret_encrypted` (AES-256-GCM) y firma `"{timestamp}." + raw_body` incluyendo `X-ContextForge-Timestamp`. `GET /api/v1/projects/{slug}/export` excluye webhooks, claves API y secretos; `POST /api/v1/projects/import` impone límites (`<= 500` docs, `<= 50` agentes, `<= 25 MB`), bloquea path traversal, crea **todos los documentos importados en estado `draft`** y fuerza `visibility="private"` en agentes importados. `POST .../evals/run` aplica cuota diaria y `GET /metrics` exige `READ_AUDIT_LOGS` (`Admin`) en `enterprise_rbac`. |
 | **BR-23** | Modo Equipo, Bootstrap Seguro del Primer Admin y Protección del Último `Owner` | El rol de proyecto **`Owner`** administra documentos, agentes, miembros y gobierno del proyecto sin privilegios globales de infraestructura (`/settings`, `/metrics`, auditoría). Queda prohibido eliminar o degradar al **último `Owner`** de un proyecto (`409 Conflict` `last_owner_protected`). En `enterprise_rbac`/`prod`, el primer `Admin` se crea usando `CONTEXTFORGE_BOOTSTRAP_ADMIN_PASSWORD` o generando una contraseña aleatoria de un solo uso con `must_change_password=true`, bloqueando el resto de la API y UI hasta completar `/change-password` (`POST /api/v1/auth/change-password`). |
+| **BR-24** | Ciclo de Conocimiento Vivo: Vacíos Documentales, Stewards y Frescura | Todo documento publicado puede declarar un responsable (`steward_user_id`), intervalo de revisión (`review_interval_days`, default `90`) y fecha verificada (`last_reviewed_at`), calculando su frescura (`fresh` / `expiring_soon` / `expired`). Los vacíos documentales (`knowledge_gaps`) soportan asignación (`assigned_to`), descarte justificado (`ignored_reason`), acciones masivas, generación de borrador (`## Debe responder` en `/books/editor?from_gap=`) y **resolución automática** al publicar un documento que cubra su tópico (`resolved_by_doc_path`). El tablero `/knowledge-health` (`GET /api/v1/projects/{slug}/knowledge-health`) consolida vacíos abiertos, documentos vencidos, ratio Útil/No útil, tasa de abstención, conflictos y borradores pendientes; el Chat muestra fecha de revisión en citas, `"Reportar vacío"` y `"Preguntar al responsable"`. |
 
 ### 8.1 Matriz de Permisos (Roles Globales y Alcance por Proyecto / Token)
 
@@ -435,6 +436,9 @@ erDiagram
         string content_hash
         string last_synced_hash
         string sync_status
+        string steward_user_id
+        int review_interval_days
+        datetime last_reviewed_at
         datetime created_at
         datetime updated_at
     }
@@ -614,6 +618,10 @@ erDiagram
         string topic_cluster
         int occurrences
         string status
+        string assigned_to
+        text ignored_reason
+        string resolved_by_doc_path
+        string suggested_module
         datetime last_asked_at
     }
 
@@ -826,7 +834,7 @@ sequenceDiagram
 | Grupo | Endpoints Principales |
 | :--- | :--- |
 | **Agentes IA (Stateless)** | `GET /api/v1/agents/templates`, `GET/POST /api/v1/projects/{slug}/agents`, `GET/PUT/DELETE /api/v1/projects/{slug}/agents/{agent_slug}`, `GET .../versions`, `POST .../rollback`, `POST .../chat`, `GET .../preview-doc-count`, `GET/POST/DELETE .../evals`, `POST .../evals/run`. |
-| **Operaciones, Feedback y Gaps** | `GET/POST /api/v1/projects/{slug}/feedback`, `GET /api/v1/projects/{slug}/knowledge-gaps`, `POST .../knowledge-gaps/report`, `PATCH .../knowledge-gaps/{id}/resolve`, `GET/POST/DELETE /api/v1/projects/{slug}/webhooks`, `GET /api/v1/projects/{slug}/export`, `POST /api/v1/projects/import`. |
+| **Operaciones, Salud, Feedback y Gaps** | `GET /api/v1/projects/{slug}/knowledge-health`, `PATCH /api/v1/projects/{slug}/documents/governance`, `GET/POST /api/v1/projects/{slug}/feedback`, `GET /api/v1/projects/{slug}/knowledge-gaps`, `POST .../knowledge-gaps/report`, `POST .../knowledge-gaps/bulk`, `POST .../knowledge-gaps/{id}/draft`, `PATCH .../knowledge-gaps/{id}/assign`, `PATCH .../knowledge-gaps/{id}/ignore`, `PATCH .../knowledge-gaps/{id}/resolve`, `GET/POST/DELETE /api/v1/projects/{slug}/webhooks`, `GET /api/v1/projects/{slug}/export`, `POST /api/v1/projects/import`. |
 | **Proyectos y Membresía** | `GET/POST /api/v1/projects`, `POST /api/v1/projects/{slug}/activate`, `POST /api/v1/projects/{slug}/sync`, `GET/POST/DELETE /api/v1/projects/{slug}/members`, `GET /api/v1/projects/{slug}/documents`, `GET/POST /api/v1/projects/{slug}/taxonomy`. |
 | **Documentos** | `GET/POST/PUT/DELETE /api/v1/documents`, `GET /api/v1/documents/detail`, `PATCH /api/v1/documents/state`, `POST /api/v1/documents/draft-revision`, `POST /api/v1/documents/sync-resolve`, `GET /api/v1/documents/versions`, `GET /api/v1/documents/diff`, `POST /api/v1/documents/rollback`, `POST /api/v1/documents/attachments`. |
 | **RAG y Búsqueda** | `GET /api/v1/rag/search`, `POST /api/v1/rag/ask`, `GET/POST /api/v1/rag/stream`, `POST /api/v1/rag/scoped`, `GET/DELETE /api/v1/rag/sessions/{id}`, `GET /api/v1/rag/jobs`, `POST /api/v1/rag/dlq/retry`. |
@@ -843,7 +851,8 @@ sequenceDiagram
 - `/docs/view/{path}` — Lector documental GFM/Mermaid + versiones + comentarios.
 - `/books/editor` *(alias legacy: `/docs/new`)* — Editor Tri-Modal + adjuntos + asistente IA.
 - `/agents` — **Agent Studio** (Configuración, Playground + Retrieval Inspector, Desplegar con **vista previa en vivo del widget**, Evals, Versiones/Rollback).
-- `/chat` *(alias legacy: `/asistente-ia`)* — Chat IA SSE con selector de Agente.
+- `/chat` *(alias legacy: `/asistente-ia`)* — Chat SSE con selector de Agente, citas con fecha de revisión, *Reportar vacío* y *Preguntar al responsable*.
+- `/knowledge-health` — Tablero de Salud del Conocimiento, Vacíos Documentales (con *Documentar este vacío* y acciones masivas) y Documentos Vencidos.
 - `/bundles` — Context Bundler y exportación de reglas CLI.
 - `/projects` — Gestión de proyectos y sincronización Docs-as-Code.
 - `/docs/integration-guide` — Integración MCP, Widget y Postman.

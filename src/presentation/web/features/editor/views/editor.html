@@ -1,0 +1,200 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{% if existing_doc %}Editar: {{ existing_doc.title }}{% else %}Nuevo Documento{% endif %} | ContextForge{% endblock %}
+{% block page_crumb %}{% if existing_doc %}Editar{% else %}Nuevo Documento{% endif %}{% endblock %}
+{% block header_cta %}{% endblock %}
+
+{% block content %}
+<div class="space-y-5 pb-12" x-data="dualEditorApp()">
+
+  <!-- Compact Sticky Editor Bar -->
+  <div class="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white/95 dark:bg-[#12151e]/95 backdrop-blur border border-slate-200 dark:border-[#232738] rounded-2xl shadow-xs">
+    <div class="flex items-center space-x-2.5 min-w-0">
+      <a href="/docs/browser" class="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#161922] hover:bg-slate-200 dark:hover:bg-[#1c202d] shrink-0">
+        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+        <span>Documentos</span>
+      </a>
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-xs font-semibold text-slate-800 dark:text-zinc-100 truncate max-w-[220px]" x-text="doc.title || 'Sin título'"></span>
+        <span x-show="isDirty" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0" style="display: none;">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span>Sin guardar</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <label
+        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/70 border border-violet-200 dark:border-violet-500/40 transition cursor-pointer"
+        title="Adjuntar imagen, PDF, Word, Excel o archivo al documento"
+      >
+        <i class="fa-solid fa-paperclip text-[11px]"></i>
+        <span>Adjuntar</span>
+        <input type="file" class="hidden" @change="uploadAttachmentFile($event)">
+      </label>
+
+      <button
+        type="button"
+        @click="openScopedChatForDoc()"
+        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 border border-indigo-200 dark:border-indigo-500/40 transition cursor-pointer"
+        title="Pedir ayuda a la IA con la redacción o diagramas"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+        <span>Asistente IA</span>
+      </button>
+
+      <!-- 3-Mode Editor Switcher: Markdown | Visual WYSIWYG | Bloques -->
+      <div class="inline-flex rounded-xl p-0.5 bg-slate-100 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738]">
+        <button
+          type="button"
+          @click="switchMode('markdown')"
+          :class="mode === 'markdown' ? 'bg-indigo-600 text-white font-semibold shadow-xs' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'"
+          class="px-3 py-1.5 rounded-lg text-xs transition inline-flex items-center space-x-1.5 cursor-pointer"
+        >
+          <i class="fa-brands fa-markdown text-sm"></i>
+          <span>Markdown</span>
+        </button>
+        <button
+          type="button"
+          @click="switchMode('visual')"
+          :class="mode === 'visual' ? 'bg-indigo-600 text-white font-semibold shadow-xs' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'"
+          class="px-3 py-1.5 rounded-lg text-xs transition inline-flex items-center space-x-1.5 cursor-pointer"
+        >
+          <i class="fa-solid fa-pen-nib text-xs"></i>
+          <span>Visual</span>
+        </button>
+        <button
+          type="button"
+          @click="switchMode('blocks')"
+          :class="mode === 'blocks' ? 'bg-indigo-600 text-white font-semibold shadow-xs' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'"
+          class="px-3 py-1.5 rounded-lg text-xs transition inline-flex items-center space-x-1.5 cursor-pointer"
+        >
+          <i class="fa-solid fa-cubes text-xs"></i>
+          <span>Bloques</span>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        @click="saveDocument()"
+        :disabled="saving"
+        class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-sm shadow-emerald-600/25 transition cursor-pointer"
+        title="Guardar e indexar (Ctrl+S)"
+      >
+        <i class="fa-solid fa-floppy-disk" :class="saving ? 'animate-spin' : ''"></i>
+        <span x-text="saving ? 'Guardando...' : 'Guardar'"></span>
+        <kbd class="hidden sm:inline ml-1 px-1 py-0.5 text-[9px] font-mono bg-emerald-700/60 rounded text-emerald-100">Ctrl S</kbd>
+      </button>
+    </div>
+  </div>
+
+  {% include "features/editor/components/editor_metadata_card.html" %}
+
+  <!-- Uploaded & Linked Attachments Strip (Available across all 3 Editor Modes with Live Preview) -->
+  <div x-show="doc.attachments && doc.attachments.length > 0" style="display: none;" class="rounded-2xl border border-violet-200 dark:border-violet-500/30 bg-violet-50/40 dark:bg-[#121522] p-3.5 space-y-2.5 shadow-xs">
+    <div class="flex items-center justify-between text-xs">
+      <span class="font-semibold text-slate-700 dark:text-zinc-200 inline-flex items-center gap-2">
+        <i class="fa-solid fa-paperclip text-violet-500"></i>
+        <span>Archivos adjuntos (<span x-text="doc.attachments.length"></span>)</span>
+      </span>
+      <label class="text-[11px] font-semibold text-violet-600 dark:text-violet-400 hover:underline cursor-pointer inline-flex items-center gap-1">
+        <i class="fa-solid fa-plus text-[10px]"></i><span>Añadir otro</span>
+        <input type="file" class="hidden" @change="uploadAttachmentFile($event)">
+      </label>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <template x-for="(att, aIdx) in doc.attachments" :key="att.file_path + '-' + aIdx">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-[#161922] border border-slate-200 dark:border-[#232738] text-xs shadow-2xs">
+          <i class="fa-regular text-indigo-500" :class="att.is_image ? 'fa-file-image text-emerald-500' : 'fa-file-lines'"></i>
+          <span class="font-medium text-slate-800 dark:text-zinc-100 max-w-[180px] truncate" x-text="att.file_name"></span>
+          <button
+            type="button"
+            @click="openPreviewForBlock(att)"
+            class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-semibold cursor-pointer inline-flex items-center gap-1 transition"
+          >
+            <i class="fa-solid fa-eye text-[9px]"></i><span>Vista previa</span>
+          </button>
+          <button
+            type="button"
+            @click="removeAttachmentItem(aIdx)"
+            class="text-slate-400 hover:text-rose-500 cursor-pointer px-1"
+            title="Quitar de la lista"
+          >
+            <i class="fa-solid fa-xmark text-[10px]"></i>
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- MAIN CANVAS: MODE 1 (MARKDOWN) -->
+  <div x-show="mode === 'markdown'" class="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-[560px]">
+    <div class="flex flex-col space-y-2">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
+        <span class="font-semibold text-slate-700 dark:text-zinc-300 flex items-center space-x-1.5">
+          <i class="fa-brands fa-markdown text-indigo-500 dark:text-indigo-400"></i>
+          <span>Contenido Markdown</span>
+        </span>
+        <div class="flex items-center gap-3">
+          <button type="button" x-show="!doc.doc_path" @click="insertStarterTemplate()" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+            Insertar plantilla guía
+          </button>
+          <span class="text-[11px] font-mono text-slate-400" x-text="`${wordCount()} palabras`"></span>
+        </div>
+      </div>
+      <textarea
+        x-model="doc.rawMarkdown"
+        @input="markDirty()"
+        @input.debounce.250ms="onMarkdownInput()"
+        rows="24"
+        placeholder="# Título del documento&#10;&#10;Escribe aquí tus reglas, arquitectura o guía técnica en Markdown..."
+        class="w-full flex-1 p-4 bg-white dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] rounded-2xl font-mono text-xs text-slate-900 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-y leading-relaxed shadow-xs"
+      ></textarea>
+    </div>
+
+    <div class="flex flex-col space-y-2">
+      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
+        <span class="font-semibold text-slate-700 dark:text-zinc-300 flex items-center space-x-1.5">
+          <i class="fa-solid fa-eye text-emerald-500 dark:text-emerald-400"></i>
+          <span>Vista previa</span>
+        </span>
+        <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          En vivo
+        </span>
+      </div>
+      <div
+        id="markdown-preview-box"
+        class="prose-dark w-full flex-1 p-6 bg-white dark:bg-[#0e1017] border border-slate-200 dark:border-[#232738] rounded-2xl overflow-y-auto max-h-[660px] shadow-xs"
+        x-html="renderedHtml"
+      ></div>
+    </div>
+  </div>
+
+  {% include "features/editor/components/editor_wysiwyg_canvas.html" %}
+  {% include "features/editor/components/editor_blocks_canvas.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.__CF_BOOT__ = {
+  doc: {
+    doc_path: {{ (existing_doc.path if existing_doc else (gap_prefill.path if gap_prefill else "")) | tojson }},
+    title: {{ (existing_doc.title if existing_doc else (gap_prefill.title if gap_prefill else "")) | tojson }},
+    library_id: {{ (existing_doc.project_slug if existing_doc else active_project) | tojson }},
+    module: {{ (existing_doc.module_name if existing_doc else (gap_prefill.module if gap_prefill else "architecture")) | tojson }},
+    tags: {{ (existing_doc.tags | list if existing_doc else []) | tojson }},
+    description: {{ (existing_doc.summary if existing_doc else (gap_prefill.summary if gap_prefill else "")) | tojson }},
+    rawMarkdown: {{ (existing_doc.content_markdown if existing_doc else (gap_prefill.markdown if gap_prefill else "")) | tojson }}
+  },
+  projects: [{% for p in projects %}{ slug: {{ p.slug | tojson }}, name: {{ p.name | tojson }} },{% endfor %}],
+  modules: [{% for m in available_modules %}{ slug: {{ m.slug | tojson }}, name: {{ m.name | tojson }}, icon: {{ m.icon | tojson }}, color: {{ m.color | tojson }} },{% endfor %}],
+  tags: [{% for t in available_tags %}{ slug: {{ t.slug | tojson }}, name: {{ t.name | tojson }}, color: {{ t.color | tojson }} },{% endfor %}],
+  tagsInput: {{ (existing_doc.tags | join(", ") if existing_doc and existing_doc.tags else "") | tojson }}
+};
+</script>
+<script src="/static/js/modules/editor_taxonomy_mixin.js?v=6"></script>
+<script src="/static/js/modules/editor_wysiwyg_mixin.js?v=6"></script>
+<script src="/static/js/modules/editor_app.js?v=6"></script>
+{% endblock %}

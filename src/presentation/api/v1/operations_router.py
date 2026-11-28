@@ -16,6 +16,10 @@ from domain.users import AuthPrincipal, DlpRedactionStrategy, PermissionAction
 from infrastructure.di import DependencyContainer, get_container
 from presentation.api.dependencies import require_permission
 from presentation.api.v1.schemas.answer_feedback_payload import AnswerFeedbackPayload
+from presentation.api.v1.schemas.document_governance_payload import DocumentGovernancePayload
+from presentation.api.v1.schemas.gap_assign_payload import GapAssignPayload
+from presentation.api.v1.schemas.gap_bulk_action_payload import GapBulkActionPayload
+from presentation.api.v1.schemas.gap_ignore_payload import GapIgnorePayload
 from presentation.api.v1.schemas.knowledge_gap_report_payload import KnowledgeGapReportPayload
 from presentation.api.v1.schemas.project_import_payload import ProjectImportPayload
 from presentation.api.v1.schemas.webhook_create_payload import WebhookCreatePayload
@@ -103,6 +107,10 @@ async def list_knowledge_gaps(
                 "topic_cluster": g.topic_cluster,
                 "occurrences": g.occurrences,
                 "status": g.status,
+                "assigned_to": g.assigned_to,
+                "ignored_reason": g.ignored_reason,
+                "resolved_by_doc_path": g.resolved_by_doc_path,
+                "suggested_module": g.suggested_module,
                 "last_asked_at": g.last_asked_at.isoformat(),
             }
             for g in gaps
@@ -135,13 +143,226 @@ async def report_knowledge_gap(
 async def resolve_knowledge_gap(
     slug: str,
     gap_id: str,
+    request: Request,
     principal: AuthPrincipal = Depends(require_permission(PermissionAction.WRITE_DOCUMENT, project_param="slug")),
     c: DependencyContainer = Depends(get_container),
 ) -> dict[str, Any]:
     ok = await c.feedback_repo.resolve_gap(gap_id)
     if not ok:
         raise DomainException(DomainError.not_found("gap_not_found", f"Vacío documental '{gap_id}' no encontrado."))
+    await c.event_store.append_audit(
+        actor_id=principal.subject_id,
+        role=principal.role.value,
+        project_slug=slug,
+        operation="knowledge_gap.resolve",
+        resource_id=gap_id,
+        succeeded=True,
+        latency_ms=0.0,
+        client_ip=request.client.host if request.client else "local",
+    )
     return {"resolved": True, "gap_id": gap_id}
+
+
+@router.patch("/projects/{slug}/knowledge-gaps/{gap_id}/assign")
+async def assign_knowledge_gap(
+    slug: str,
+    gap_id: str,
+    payload: GapAssignPayload,
+    request: Request,
+    principal: AuthPrincipal = Depends(require_permission(PermissionAction.WRITE_DOCUMENT, project_param="slug")),
+    c: DependencyContainer = Depends(get_container),
+) -> dict[str, Any]:
+    ok = await c.feedback_repo.assign_gap(gap_id, payload.assigned_to)
+    if not ok:
+        raise DomainException(DomainError.not_found("gap_not_found", f"Vacío documental '{gap_id}' no encontrado."))
+    await c.event_store.append_audit(
+        actor_id=principal.subject_id,
+        role=principal.role.value,
+        project_slug=slug,
+        operation="knowledge_gap.assign",
+        resource_id=f"{gap_id}:{payload.assigned_to}",
+        succeeded=True,
+        latency_ms=0.0,
+        client_ip=request.client.host if request.client else "local",
+    )
+    return {"assigned": True, "gap_id": gap_id, "assigned_to": payload.assigned_to.strip()}
+
+
+@router.patch("/projects/{slug}/knowledge-gaps/{gap_id}/ignore")
+async def ignore_knowledge_gap(
+    slug: str,
+    gap_id: str,
+    payload: GapIgnorePayload,
+    request: Request,
+    principal: AuthPrincipal = Depends(require_permission(PermissionAction.WRITE_DOCUMENT, project_param="slug")),
+    c: DependencyContainer = Depends(get_container),
+) -> dict[str, Any]:
+    ok = await c.feedback_repo.ignore_gap(gap_id, payload.reason)
+    if not ok:
+        raise DomainException(DomainError.not_found("gap_not_found", f"Vacío documental '{gap_id}' no encontrado."))
+    await c.event_store.append_audit(
+        actor_id=principal.subject_id,
+        role=principal.role.value,
+        project_slug=slug,
+        operation="knowledge_gap.ignore",
+        resource_id=gap_id,
+        succeeded=True,
+        latency_ms=0.0,
+        client_ip=request.client.host if request.client else "local",
+    )
+    return {"ignored": True, "gap_id": gap_id, "reason": payload.reason.strip()}
+
+
+@router.post("/projects/{slug}/knowledge-gaps/bulk")
+async def bulk_knowledge_gaps_action(
+    slug: str,
+    payload: GapBulkActionPayload,
+    request: Request,
+    principal: AuthPrincipal = Depends(require_permission(PermissionAction.WRITE_DOCUMENT, project_param="slug")),
+    c: DependencyContainer = Depends(get_container),
+) -> dict[str, Any]:
+    if payload.action == "ignore" and len(payload.reason.strip()) < 3:
+        raise DomainException(DomainError.validation("ignore_reason_required", "Debes indicar un motivo (mínimo 3 caracteres) para ignorar vacíos."))
+    if payload.action == "assign" and not payload.assigned_to.strip():
+        raise DomainException(DomainError.validation("assignee_required", "Debes indicar el usuario responsable para asignar vacíos."))
+    affected = 0
+    for gid in payload.gap_ids:
+        if payload.action == "resolve":
+            ok = await c.feedback_repo.resolve_gap(gid)
+        elif payload.action == "ignore":
+            ok = await c.feedback_repo.ignore_gap(gid, payload.reason)
+        else:
+            ok = await c.feedback_repo.assign_gap(gid, payload.assigned_to)
+        if ok:
+            affected += 1
+    await c.event_store.append_audit(
+        actor_id=principal.subject_id,
+        role=principal.role.value,
+        project_slug=slug,
+        operation=f"knowledge_gap.bulk_{payload.action}",
+        resource_id=f"{slug}:{affected}",
+        succeeded=True,
+        latency_ms=0.0,
+        client_ip=request.client.host if request.client else "local",
+    )
+    return {"action": payload.action, "affected": affected}
+
+
+@router.post("/projects/{slug}/knowledge-gaps/{gap_id}/draft")
+async def generate_gap_draft(
+    slug: str,
+    gap_id: str,
+    principal: AuthPrincipal = Depends(require_permission(PermissionAction.WRITE_DOCUMENT, project_param="slug")),
+    c: DependencyContainer = Depends(get_container),
+) -> dict[str, Any]:
+    gap = await c.feedback_repo.get_gap(gap_id)
+    if gap is None:
+        raise DomainException(DomainError.not_found("gap_not_found", f"Vacío documental '{gap_id}' no encontrado."))
+    clean_title = gap.topic_cluster.replace("-", " ").title() if gap.topic_cluster != "general" else "Guía de Referencia"
+    suggested_path = f"{gap.suggested_module}/{re.sub(r'[^a-z0-9_-]+', '_', gap.topic_cluster.lower()).strip('_') or 'guia'}.md"
+    base_md = (
+        f"# {clean_title}\n\n"
+        f"## Debe responder\n"
+        f"- {gap.question}\n\n"
+        f"## Contexto y Reglas Clave\n"
+        f"_Completa aquí la explicación oficial verificada por el equipo para cerrar este vacío documental._\n\n"
+        f"## Procedimiento / Ejemplos\n"
+        f"1. Paso inicial.\n"
+        f"2. Verificación esperada.\n"
+    )
+    return {
+        "gap_id": gap.gap_id,
+        "suggested_title": clean_title,
+        "suggested_module": gap.suggested_module,
+        "suggested_path": suggested_path,
+        "draft_markdown": base_md,
+    }
+
+
+@router.patch("/projects/{slug}/documents/governance")
+async def update_document_governance(
+    slug: str,
+    payload: DocumentGovernancePayload,
+    request: Request,
+    principal: AuthPrincipal = Depends(require_permission(PermissionAction.WRITE_DOCUMENT, project_param="slug")),
+    c: DependencyContainer = Depends(get_container),
+) -> dict[str, Any]:
+    doc = await c.doc_repo.get_by_path(payload.path, project_slug=slug)
+    if doc is None:
+        raise DomainException(DomainError.not_found("document_not_found", f"Documento '{payload.path}' no encontrado."))
+    doc.update_governance(
+        steward_user_id=payload.steward_user_id,
+        review_interval_days=payload.review_interval_days,
+        mark_reviewed=payload.mark_reviewed,
+    )
+    saved = await c.doc_repo.save(doc, write_to_disk=False)
+    await c.event_store.append_audit(
+        actor_id=principal.subject_id,
+        role=principal.role.value,
+        project_slug=slug,
+        operation="document.governance_update",
+        resource_id=saved.path,
+        succeeded=True,
+        latency_ms=0.0,
+        client_ip=request.client.host if request.client else "local",
+    )
+    return {
+        "path": saved.path,
+        "steward_user_id": saved.steward_user_id,
+        "review_interval_days": saved.review_interval_days,
+        "last_reviewed_at": saved.last_reviewed_at.isoformat() if saved.last_reviewed_at else None,
+        "freshness_status": saved.freshness_status,
+    }
+
+
+@router.get("/projects/{slug}/knowledge-health")
+async def get_project_knowledge_health(
+    slug: str,
+    principal: AuthPrincipal = Depends(require_permission(PermissionAction.READ_KNOWLEDGE, project_param="slug")),
+    c: DependencyContainer = Depends(get_container),
+) -> dict[str, Any]:
+    docs = await c.doc_repo.list_all(project_slug=slug, only_published=False)
+    gaps = await c.feedback_repo.list_gaps(slug)
+    feedback = await c.feedback_repo.list_feedback(slug, limit=200)
+    users_map = {u.user_id: u for u in await c.user_repo.list_users()}
+
+    expired_docs = [
+        {
+            "path": d.path,
+            "title": d.title,
+            "module_name": d.module_name,
+            "steward_user_id": d.steward_user_id,
+            "steward_name": users_map[d.steward_user_id].full_name if d.steward_user_id in users_map else (d.steward_user_id or "Sin responsable"),
+            "review_interval_days": d.review_interval_days,
+            "last_reviewed_at": d.last_reviewed_at.isoformat() if d.last_reviewed_at else None,
+        }
+        for d in docs
+        if d.is_expired
+    ]
+    open_gaps = [g for g in gaps if g.status == "open"]
+    up_cnt = sum(1 for f in feedback if f.vote == "up")
+    down_cnt = sum(1 for f in feedback if f.vote == "down")
+    fb_total = up_cnt + down_cnt
+    useful_ratio = round((up_cnt / fb_total) * 100.0, 1) if fb_total else 100.0
+    total_gap_occ = sum(g.occurrences for g in gaps)
+    abstention_denom = total_gap_occ + fb_total
+    abstention_rate = round((total_gap_occ / abstention_denom) * 100.0, 1) if abstention_denom else 0.0
+    conflicts_cnt = sum(1 for d in docs if d.sync_status in ("in_conflict", "deleted_on_disk"))
+    pending_drafts_cnt = sum(1 for d in docs if d.status in (EditorialStatus.DRAFT, EditorialStatus.IN_REVIEW))
+
+    return {
+        "project_slug": slug,
+        "total_docs": len(docs),
+        "open_gaps_count": len(open_gaps),
+        "expired_docs_count": len(expired_docs),
+        "expired_docs": expired_docs,
+        "feedback_up": up_cnt,
+        "feedback_down": down_cnt,
+        "useful_ratio_pct": useful_ratio,
+        "abstention_rate_pct": abstention_rate,
+        "sync_conflicts_count": conflicts_cnt,
+        "pending_drafts_count": pending_drafts_cnt,
+    }
 
 
 # --- Project Webhooks (HMAC-SHA256 Signed) ---
