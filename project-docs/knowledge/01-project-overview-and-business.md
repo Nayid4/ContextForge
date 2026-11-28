@@ -1,10 +1,9 @@
 ---
 id: "page-knowledge_01-project-overview-and-business_md"
-title: "Visión del Producto, Contexto de Negocio y Stakeholders"
+title: "Visión del Producto, Contexto de Negocio y Stakeholders — ContextForge"
 collection: "general"
 parent: null
 owner: "leader"
-module: "global"
 status: "Publicado"
 version: "4.0.0"
 access: "public"
@@ -12,123 +11,101 @@ is_locked: false
 is_favorite: true
 full_width: true
 archived_at: null
-last_updated: "2026-11-09"
-tags: ["ieee-830","business-context","product-vision","stakeholders","raci"]
+last_updated: "2026-11-25"
+tags: []
 labels: ["ieee-830","business-context","product-vision","stakeholders","raci","general"]
+icon: "rocket"
 ---
 
 # Visión del Producto, Contexto de Negocio y Stakeholders (IEEE Std. 830-1998)
 
 > [!NOTE]
-> Especificación formal del propósito, alcance, límites, usuarios y gobernanza del **AI Agentic SDD Engineering Harness** bajo el estándar IEEE Std. 830-1998 / ISO/IEC/IEEE 29148.
+> Especificación formal del propósito, alcance, límites, perfiles de usuario y gobernanza de **ContextForge (IntegrationLibrary)** — plataforma soberana de gestión de conocimiento técnico, recuperación híbrida RAG y construcción de contexto para agentes de IA bajo el paradigma **Docs-as-Code**.
 
 ---
 
 ## 1. Naturaleza y Propósito del Proyecto
 
-El **AI Agentic SDD Engineering Harness** es un arnés universal y agnóstico de ingeniería de software dirigido por especificaciones (**Spec-Driven Development — SDD**) diseñado para permitir la colaboración autónoma, segura y determinista entre ingenieros humanos y agentes de inteligencia artificial (Google Antigravity, GitHub Copilot y OpenCode).
+**ContextForge** (`contextforge` v0.1.0) es una plataforma full-stack **100% soberana (Zero-Leakage / On-Premise)** diseñada para gestionar, indexar, consultar y empaquetar conocimiento técnico de ingeniería en formato **Markdown plano (`.md`)** junto con anexos multiformato (PDF, DOCX, XLSX/CSV, imágenes y audio).
 
 ### 1.1 Formulación del Problema
 
 #### Dolor de Negocio
-- **Fricción Cognitiva y Pérdida de Productividad**: En organizaciones de software, la rotación de desarrolladores y el conocimiento tácito atrapado en silos (*Bus Factor = 1*) provocan que los ingenieros senior pierdan entre 1.5 y 2.5 horas diarias respondiendo dudas operativas y validando reglas de negocio no documentadas.
-- **Alucinaciones y Regresiones por IA**: Los asistentes de programación tradicionales generan código sintácticamente correcto pero funcionalmente incompatible cuando carecen de un modelo formal del dominio, rompiendo invariantes de base de datos, violando reglas de negocio (`BR-*`) o importando librerías no autorizadas.
+- **Dependencia Oral y Bus Factor Crítico**: El conocimiento arquitectónico, las reglas de negocio y las políticas de integración suelen dispersarse en wikis desactualizadas, chats efímeros o en la memoria de desarrolladores senior.
+- **Riesgo de Fuga de Propiedad Intelectual**: Subir especificaciones propietarias, ADRs o documentos internos a servicios SaaS de IA en la nube viola políticas de confidencialidad y cumplimiento corporativo.
+- **Alucinaciones de Asistentes de Código**: Los IDEs y agentes de IA (Cursor, Claude Code, Antigravity, OpenCode) generan implementaciones incompatibles cuando carecen de acceso estructurado y verificable a la documentación real del proyecto.
 
 #### Dolor Técnico
-- **Ceguera de Contexto en Proyectos Extensos**: A partir de 50.000 líneas de código, cargar archivos planos en prompts satura la atención del modelo y causa omisiones catastróficas.
-- **Falta de Trazabilidad RTM**: Ausencia de vinculación bidireccional entre requerimientos funcionales (`RF-*`), reglas de negocio (`BR-*`), historias de usuario (`HU-*`), código fuente y suites de prueba automatizadas.
+- **Búsqueda Semántica vs. Léxica Incompleta**: Las búsquedas puramente vectoriales fallan con identificadores exactos (`BR-PAY-001`, códigos HTTP, slugs), mientras que las búsquedas puramente léxicas pierden intención conceptual.
+- **Acoplamiento a un Único Proveedor de IA o Persistencia**: Los equipos necesitan alternar sin fricción entre motores locales offline (Ollama, LM Studio, vLLM), agentes CLI soberanos (`agy`, `claude`, `opencode`, `codex`, `gemini`, `aider`) y APIs comerciales (Gemini, OpenAI, Anthropic, DeepSeek).
 
 ---
 
 ## 2. Declaración Formal de la Visión del Producto
 
-> **PARA** ingenieros de software, arquitectos de soluciones y equipos de desarrollo asistidos por IA,  
-> **QUIENES** experimentan alucinaciones, código desalineado con el dominio y regresiones al usar agentes de programación en bases de código medianas y complejas,  
-> **EL** AI Agentic SDD Engineering Harness,  
-> **QUE ES UN** arnés de ingeniería de software agnóstico basado en Docs-as-Code, orquestación multi-agente y verificación formal en 8 niveles,  
-> **QUE** garantiza una precisión funcional $\ge 95\%$ en el código generado por IA mediante un ciclo cerrado y determinista (Especificación EARS $\to$ Puerta Humana $\to$ Implementación TDD/SDD $\to$ Revisión Imparcial $\to$ Verificación Automatizada), triple sincronización de skills y tablero visual offline.
+> **PARA** equipos de ingeniería de software, arquitectos de soluciones y desarrolladores asistidos por IA,  
+> **QUIENES** necesitan centralizar documentación técnica viva, consultar reglas de negocio con atribución exacta de fuentes y suministrar contexto determinista a agentes de código sin fugar datos propietarios,  
+> **EL** sistema **ContextForge (IntegrationLibrary)**,  
+> **QUE ES UNA** plataforma soberana de conocimiento técnico Docs-as-Code, RAG Híbrido (ChromaDB + BM25Plus) y servidor universal MCP,  
+> **QUE** mantiene archivos Markdown como única fuente de verdad, ofrece editor dual (Markdown Pro + Bloques visuales), recuperación híbrida con *Zero-RAG Bypass* ($\le 32.000$ caracteres), orquestación de 15 motores de IA y exportación directa de bundles de contexto (`.cursorrules` y MCP SSE/STDIO).
 
 ---
 
 ## 3. Ámbito del Producto (IEEE 830 Secciones 1.2 y 2.2)
 
 ### 3.1 Qué HACE el Sistema (Alcance Incluido)
-1. **Orquestación Multi-Agente Homologada**: Provee 4 roles especializados (`leader`, `spec-author`, `implementer`, `reviewer`) con responsabilidades estrictamente delimitadas.
-2. **Gobernanza de Ramas y Commits**: Impone la convención obligatoria `{feature|bugfix}/INT-{numero}/{nombre_rama}` con longitud máxima de 80 caracteres y commits semánticos (`feat`, `fix`).
-3. **Puertas de Decisión Humana Infranqueables**: Utiliza herramientas nativas (`ask_question`) para congelar la ejecución hasta obtener aprobación explícita del humano antes de implementar o integrar código.
-4. **Triple Sincronización de 18 Skills**: Mantiene paridad absoluta e instantánea entre la fuente de verdad (`.opencode/skills/`) y los espejos (`.github/skills/` y `.agents/skills/`).
-
-| Skill | Descripción | Rol Exclusivo |
-|---|---|---|
-| `technical-audit` | Auditoría técnica de proyecto | Generar project-spec.yaml |
-| `project-knowledge` | Extracción de base de conocimiento y arquitectura | Generar modelo C4, UML, reglas de negocio y estándares anti-sesgo |
-| `generate-verify` | Generar verify.sh | Crear script de verificación integral |
-| `verification` | Documentación de verificación | Consultar estructura de testing |
-| `api-test-plan` | Plan de pruebas API REST | Generar plan markdown + archivos .http |
-| `execute-api-test-plan` | Ejecutar plan de pruebas API | Correr pruebas con curl y documentar hallazgos |
-| `acceptance-testing` | Pruebas de aceptación (Playwright), caja blanca/negra, sistema y carga | Automatización integral de QA y verificación end-to-end |
-| `requirements-analysis` | Análisis de requerimientos | Generar feature_list.json |
-| `generate-spec` | Generar spec técnico de una feature | Crear spec.md/tasks.md/decisions.md en project-docs + recomendar tdd/sdd/ftd |
-| `implement-tdd` | Implementar un spec con TDD (tests primero) | Lógica con ramas y rutas de error |
-| `implement-sdd` | Implementar un spec con SDD (spec → código) | Multi-módulo, migraciones, integraciones |
-| `implement-ftd` | Implementar un cambio pequeño sin lógica nueva | Constantes, labels, estilos, config, tweaks UI |
-| `write-unit-tests` | Escribir tests unitarios (agnóstico al lenguaje) | Cubrir código de un spec antes de verificarlo |
-| `targeted-qa` | Pruebas focalizadas de QA bajo demanda | Diseñar y ejecutar suites de prueba puntuales (E2E, BVA, API, carga, a11y) a solicitud de QA |
-| `verify-spec` | Verificar cierre completo de un spec (agnóstico al lenguaje) | Acceptance criteria, tasks, tests unitarios y verify.sh |
-| `sync-skills` | Sincronizar skills hacia los espejos (Copilot y Antigravity) | Propaga de `.opencode/skills/` a `.github/skills/` y `.agents/skills/` |
-| `sdd-workflow` | Orquestación del ciclo SDD completo | Guía el flujo multi-agente de inicio a fin |
-| `start-feature` | Iniciar o reanudar feature | Punto de entrada para el ciclo SDD de una tarea |
-5. **Base de Conocimiento Soberana (Docs-as-Code)**: Elicita y estructura modelos C4, diagramas UML, diccionario de datos/ERD, catálogo de reglas de negocio (`BR-*`), ADRs y radiografía granular de módulos.
-6. **Tablero Visual Offline-First (`project-docs/`)**: Aplicación web en Vanilla JS y Tailwind v4 con arquitectura screaming, lector editorial, editor dual Markdown/Bloques ContextForge, grafos de dependencias y constelación 3D en Three.js con soporte nativo para protocolo `file:///`.
-7. **Pipeline de Calidad en 8 Niveles (`project-docs/verify.sh`)**: Ejecuta pruebas unitarias, ATDD smoke, caja blanca, caja negra (BVA/resiliencia), integración/sistema, carga concurrente y aceptación E2E con Playwright.
+1. **Gestión Multi-Proyecto / Multi-Librería Aislada**: Particionamiento físico de documentos (`./docs/{project_slug}/`), colecciones vectoriales (`cf_project_{slug}`) e índices léxicos BM25Plus por proyecto.
+2. **Autoría Dual Docs-as-Code**: Editor Markdown Pro con vista previa HTMX en tiempo real y Constructor Dinámico de Bloques compilado bidireccionalmente a Markdown, más scaffolding asistido por IA mediante Blueprints (ADR, Business Flow, API Integration, Troubleshooting).
+3. **Ingesta Multiformato y File Watcher**: Extracción estructurada de anexos PDF (`pypdf`), DOCX (`python-docx`), XLSX/CSV (`openpyxl`/`pandas`), soporte de audio/imágenes en visor modal y sincronización automática con `watchdog` (debounce `1.5s`).
+4. **Motor RAG Híbrido y Chat Focalizado (Scoped RAG)**: Fusión *Reciprocal Rank Fusion* (RRF $k=60$) entre ChromaDB y BM25Plus, *Zero-RAG Bypass* para documentos $\le 32.000$ caracteres, streaming SSE y atribución obligatoria de citas.
+5. **Orquestación Multi-LLM Universal (15 Proveedores)**: Soporte unificado para servidores locales HTTP (Ollama, LM Studio, vLLM, LocalAI), APIs Cloud (Gemini, OpenAI, Anthropic, DeepSeek) y agentes CLI locales (`agy`, `claude`, `opencode`, `codex`, `gemini`, `aider`, `ollama`) con persistencia en SQLite.
+6. **Context Bundler & Servidor Universal MCP**: Compilación de archivos `.cursorrules`/`.md`, widget de chat embebible (`widget.js`), colección Postman auto-generada y servidor `FastMCP` sobre SSE (`/mcp/sse`) y STDIO (`run_mcp.py`).
+7. **Taxonomía Dinámica y Capa Social**: Gestión de módulos y etiquetas (`modules`, `tags`), hilos de discusión (`discussion_threads`), comentarios (`document_comments`) y calificaciones (`ratings`).
 
 ### 3.2 Qué NO HACE el Sistema (Exclusiones Explícitas)
-- **No Toma Decisiones de Arquitectura Autónomas**: Las decisiones de diseño, aprobación de especificaciones e integración a la rama base requieren siempre autorización del humano.
-- **No Realiza Push Remoto no Autorizado**: Queda terminantemente prohibido ejecutar `git push` a repositorios remotos sin confirmación explícita del usuario.
-- **No Modifica Código Durante la Fase de Revisión**: El subagente `reviewer` audita de forma imparcial y jamás edita código fuente ni tests.
-- **No Acopla el Proyecto a un Framework Específico**: El arnés es agnóstico al lenguaje (Node.js, .NET, Python, Go, Java, Rust); solo la carpeta de configuración `.agents/` y `project-docs/` forman el arnés.
+- **No sustituye a Git**: ContextForge gestiona archivos locales en `./docs/` preparados para versionamiento Git, pero no ejecuta `git push` ni reemplaza flujos de Pull Request.
+- **No incluye autenticación empresarial SSO/OAuth2 nativa**: Opera orientado a entornos locales/intranet confiables; la exposición pública requiere un reverse proxy externo con autenticación.
+- **No entrena ni realiza fine-tuning de modelos**: Utiliza inferencia RAG sobre modelos existentes (locales o cloud).
 
 ---
 
-## 4. Catálogo de Stakeholders y Matriz RACI (IEEE 830 Sección 2.3)
+## 4. Catálogo de Stakeholders, Perfiles de Usuario y Matriz RACI
 
-### 4.1 Catálogo de Interesados
+### 4.1 Stakeholders y Perfiles (IEEE 830 Sección 2.3)
 
-| Stakeholder | Rol en el Sistema | Responsabilidad | Intereses Principales | Necesidades Clave |
+| Stakeholder / Perfil | Formación y Experiencia | Responsabilidad Principal | Dolor / Necesidad Clave |
+|---|---|---|---|
+| **Arquitecto de Software / Tech Lead** | Ingeniería de Sistemas / >7 años | Definir ADRs, taxonomía de módulos y estándares de contexto | Evitar desalineación arquitectónica y mantener documentación viva |
+| **Desarrollador Backend / Full-Stack** | Ingeniería o técnico / 1–6 años | Consultar reglas de negocio, redactar specs y consumir bundles en IDE | Reducir tiempo de búsqueda y obtener citas verificables sin interrumpir seniors |
+| **Agente de IA / IDE (Cursor, Antigravity, Claude Code)** | Cliente automatizado MCP / REST | Consultar `search_project_context`, `get_document_full`, `list_project_structure` | Recibir contexto exacto y sin ruido antes de generar código |
+| **QA / Especialista de Integración** | Ingeniería QA / 2–5 años | Validar contratos API, descargar colección Postman y auditar anexos | Acceder a endpoints documentados y pruebas reproducibles |
+
+### 4.2 Matriz RACI
+
+| Capacidad / Proceso | Tech Lead | Desarrollador | Agente IA (MCP) | QA |
 |---|---|---|---|---|
-| **Tech Lead / Arquitecto** | Sponsor & Owner | Diseñar la arquitectura base y aprobar specs/ADRs | Mantenibilidad, reducción de deuda técnica | Documentación AS-IS fidedigna, cero alucinaciones de IA |
-| **Ingeniero de Software (Dev)** | Usuario Directo | Implementar features y refactorizaciones | Velocidad de desarrollo, contexto claro | Búsqueda rápida de reglas BR-*, especificaciones unívocas |
-| **Agentes de IA (AGY/Copilot)** | Ejecutores Asistidos | Redactar specs, implementar código y auditar | Contexto sin truncamiento, instrucciones deterministas | YAML frontmatter, tarjetas CRC, lista blanca de dependencias |
-| **QA Automation Specialist** | Usuario Directo | Diseñar y supervisar la suite de pruebas | Cobertura en ramas, confiabilidad de regresión | Matriz RTM completa, pruebas BVA y Playwright E2E |
-| **Product Manager / Negocio** | Usuario Indirecto | Priorizar features y validar aceptación | Time-to-market, alineación con negocio | Visibilidad visual de progreso en el tablero interactivo |
-
-### 4.2 Matriz RACI de Componentes del Sistema
-
-| Componente / Proceso | Tech Lead | Dev Humano | Leader Agent | Implementer | Reviewer | QA |
-|---|---|---|---|---|---|---|
-| **Definición de Requerimientos** | A | C | R | I | C | C |
-| **Aprobación de Spec (Puerta)** | A / R | A / R | C | I | I | I |
-| **Implementación de Código** | I | C | C | R | I | I |
-| **Auditoría de Calidad / Review** | I | I | C | I | R | C |
-| **Ejecución de project-docs/verify.sh** | I | C | I | R | R | A / R |
-| **Integración a Rama Base** | A | R | C | I | I | I |
-
-*Convención: R = Responsable de ejecutar, A = Aprobador final, C = Consultado, I = Informado.*
+| **Gobernanza de Proyectos y Taxonomía** | A / R | C | I | I |
+| **Autoría y Mantenimiento Docs-as-Code** | A | R | C | C |
+| **Configuración de Motores LLM / Storage** | A / R | C | I | I |
+| **Consumo RAG / Scoped Chat / MCP** | C | R | R | R |
+| **Validación API y Regresión (`pytest`/`mypy`)** | A | R | C | R |
 
 ---
 
-## 5. Perfiles de Usuario y Personas (IEEE 830 Sección 2.3)
+## 5. Restricciones, Asunciones y Glosario Canónico
 
-### Persona 1: Ingeniero Senior / Tech Lead
-- **Formación**: Licenciatura / Maestría en Ciencias de la Computación o Ingeniería de Sistemas.
-- **Experiencia**: >8 años en desarrollo de software y arquitectura distribuida.
-- **Punto de Dolor**: Dedica demasiado tiempo explicando arquitectura histórica y corrigiendo PRs generados por IA que inventan dependencias o violan reglas de negocio.
-- **Objetivo con el Arnés**: Disponer de un arnés que obligue a los agentes a ceñirse al contexto soberano antes de escribir una sola línea de código.
+### 5.1 Restricciones y Asunciones (IEEE 830 Secciones 2.4 y 2.5)
+- **Runtime**: Python `>=3.11` (validado en Python 3.13) con tipado estricto (`mypy --strict src` = 0 errores en 302 archivos).
+- **Soberanía de Datos**: SQLite (`./data/contextforge.db`) y ChromaDB (`./data/chroma`) operan localmente sin requerir conectividad externa; las APIs cloud son estrictamente opcionales.
+- **Compatibilidad Windows/Linux/macOS**: El adaptador `CLIProcessClient` resuelve ejecutables por SO y aplica `WindowsProactorEventLoopPolicy` más fallback multihilo `subprocess.Popen` ante `NotImplementedError`.
 
-### Persona 2: Desarrollador Junior / Nuevo Integrante
-- **Formación**: Grado en Ingeniería o egresado de Bootcamp técnico.
-- **Experiencia**: 6 meses a 2 años en programación.
-- **Punto de Dolor**: Alta fricción cognitiva al incorporarse a proyectos grandes; miedo a romper reglas tácitas no documentadas.
-- **Objetivo con el Arnés**: Reducir su *time-to-first-PR* a menos de una semana gracias a la documentación interactiva y las tarjetas CRC.
+### 5.2 Glosario Canónico (IEEE 830 Sección 1.3)
 
-
+| Término / Sigla | Definición Canónica en ContextForge |
+|---|---|
+| **Docs-as-Code** | Paradigma donde los archivos Markdown en `./docs/{project_slug}/` son la única fuente de verdad documental. |
+| **Zero-RAG Bypass** | Estrategia de `ScopedChatService` que inyecta el documento completo al LLM cuando su tamaño es $\le 32.000$ caracteres, evitando fragmentación innecesaria. |
+| **RRF ($k=60$)** | *Reciprocal Rank Fusion*, algoritmo determinista que combina rankings semánticos (ChromaDB) y léxicos (BM25Plus). |
+| **Context Bundle** | Paquete compilado en `.cursorrules` o `.md` que consolida documentos seleccionados de un proyecto para inyección directa en IDEs. |
+| **MCP (Model Context Protocol)** | Protocolo JSON-RPC 2.0 expuesto por `FastMCP` en `/mcp/sse` y `run_mcp.py` (STDIO) para consumo nativo por agentes IA. |
+| **ProjectSlug** | Value Object normalizado (`^[a-z0-9][a-z0-9-_]*[a-z0-9]$`, máx. 50 chars) que aísla cada librería/proyecto. |

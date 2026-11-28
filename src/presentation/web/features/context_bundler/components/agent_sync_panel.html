@@ -1,0 +1,115 @@
+{# Reusable Local CLI Agent Rules Synchronization Panel #}
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 p-6 space-y-5 shadow-xs" x-data="agentRulesSyncApp('{{ active_project }}')">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+    <div class="flex items-center space-x-3">
+      <span class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+        <i class="fa-solid fa-terminal text-base"></i>
+      </span>
+      <div>
+        <h2 class="text-sm font-bold text-slate-900 dark:text-white">Sincronización directa con Agentes CLI</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Escribe automáticamente los archivos de reglas en la raíz del proyecto para tus asistentes de código.
+        </p>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      @click="syncAgentRules()"
+      :disabled="syncing || targets.length === 0"
+      class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold shadow-sm shadow-emerald-600/25 transition inline-flex items-center gap-2 cursor-pointer shrink-0"
+    >
+      <i class="fa-solid fa-arrows-rotate" :class="{ 'animate-spin': syncing }"></i>
+      <span x-text="syncing ? 'Sincronizando...' : `Sincronizar (${targets.length})`"></span>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 cursor-pointer hover:border-indigo-500/40 transition">
+      <div class="flex items-center space-x-2.5">
+        <input type="checkbox" value="CLAUDE.md" x-model="targets" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-indigo-600">
+        <div>
+          <span class="text-xs font-bold text-slate-900 dark:text-white font-mono">CLAUDE.md</span>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Claude Code CLI</p>
+        </div>
+      </div>
+      <i class="fa-solid fa-robot text-slate-400 text-xs"></i>
+    </label>
+
+    <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 cursor-pointer hover:border-indigo-500/40 transition">
+      <div class="flex items-center space-x-2.5">
+        <input type="checkbox" value=".cursorrules" x-model="targets" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-indigo-600">
+        <div>
+          <span class="text-xs font-bold text-slate-900 dark:text-white font-mono">.cursorrules</span>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Cursor IDE</p>
+        </div>
+      </div>
+      <i class="fa-solid fa-terminal text-slate-400 text-xs"></i>
+    </label>
+
+    <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 cursor-pointer hover:border-indigo-500/40 transition">
+      <div class="flex items-center space-x-2.5">
+        <input type="checkbox" value="AGENTS.md" x-model="targets" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-indigo-600">
+        <div>
+          <span class="text-xs font-bold text-slate-900 dark:text-white font-mono">AGENTS.md</span>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Antigravity / OpenCode</p>
+        </div>
+      </div>
+      <i class="fa-solid fa-wand-magic-sparkles text-slate-400 text-xs"></i>
+    </label>
+  </div>
+
+  <template x-if="generatedFiles.length > 0">
+    <div class="pt-3 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <template x-for="f in generatedFiles" :key="f.filename">
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#0c0e14] border border-emerald-500/30 flex items-center justify-between text-xs">
+          <div class="min-w-0">
+            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-300 truncate" x-text="f.filename"></div>
+            <div class="text-[10px] text-slate-500 dark:text-zinc-400 font-mono" x-text="`~${f.token_estimate} tokens`"></div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-mono">Listo</span>
+        </div>
+      </template>
+    </div>
+  </template>
+</div>
+
+<script>
+function agentRulesSyncApp(projectSlug) {
+  return {
+    projectSlug: projectSlug || 'default',
+    targets: ['CLAUDE.md', '.cursorrules', 'AGENTS.md'],
+    syncing: false,
+    generatedFiles: [],
+    async syncAgentRules() {
+      if (!this.targets.length) {
+        window.$toast.warning('Selecciona al menos un archivo de destino.');
+        return;
+      }
+      this.syncing = true;
+      try {
+        const checkedModules = Array.from(document.querySelectorAll('.module-checkbox:checked')).map(cb => cb.value);
+        const res = await fetch('/api/v1/bundles/export-agent-rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project_slug: this.projectSlug,
+            targets: this.targets,
+            selected_modules: checkedModules,
+            write_to_project_root: true
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.files) {
+          this.generatedFiles = data.files;
+          window.$toast.success(`Generados: ${data.files.map(f => f.filename).join(', ')}`, 'Sincronizado');
+        } else {
+          window.$toast.error(data.detail || 'Error al sincronizar archivos.');
+        }
+      } catch (err) {
+        window.$toast.error('Error de red: ' + err.message);
+      } finally { this.syncing = false; }
+    }
+  };
+}
+</script>

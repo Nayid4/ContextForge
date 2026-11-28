@@ -1,98 +1,111 @@
 ---
-id: "DOC-ARCH-PATTERNS"
-title: "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones"
+id: "DOC-02-ARCHITECTURE-AND-PATTERNS_MD"
+title: "Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Patrones — ContextForge"
 collection: "engineering"
 parent: "c4-model.md"
 owner: "leader"
-module: "global"
 status: "Publicado"
 version: "4.0.0"
 access: "public"
 is_locked: false
 is_favorite: false
-full_width: false
-last_updated: "2026-11-03"
-tags: ["architecture-as-is","design-patterns","gof","screaming-architecture","data-flows"]
-labels: ["architecture-as-is","design-patterns","gof","screaming-architecture","data-flows","engineering"]
+full_width: true
+last_updated: "2026-11-25"
+tags: []
+labels: ["architecture-as-is","clean-architecture","cqrs","design-patterns","screaming-ui","engineering"]
+icon: "architecture"
 ---
 
 # Diagnóstico AS-IS de Arquitectura, Flujos de Datos y Catálogo de Patrones
 
 > [!NOTE]
-> Diagnóstico forense de la arquitectura real implementada en el repositorio, dirección de dependencias, flujos de datos paso a paso y matriz de patrones de diseño verificados en el código fuente.
+> Diagnóstico forense real (*AS-IS*) de los **302 archivos Python** en `src/` y **28 plantillas HTML** en `src/presentation/frontend/` de **ContextForge (IntegrationLibrary)**.
 
 ---
 
 ## 1. Diagnóstico del Estilo Arquitectónico Implementado (AS-IS)
 
-### 1.1 Organización por Screaming Architecture
-El repositorio implementa una **Arquitectura que Grita su Propósito (Screaming Architecture)**. El código no está organizado por capas genéricas superficiales (`controllers/`, `views/`), sino que separa claramente el motor del arnés, las configuraciones de agentes y los slices de dominio de la aplicación:
+ContextForge implementa una **Arquitectura Híbrida Clean Architecture + Hexagonal (Puertos y Adaptadores) + CQRS Granular + Screaming Frontend**, en estado de convivencia controlada con una capa `src/core/` de transición (patrón *Strangler Fig*):
+
+### 1.1 Organización de Directorios y Dirección de Dependencias
 
 ```text
-harness_anginnering/
-├── .agents/             # Dominio: Orquestación Antigravity 2.0 (Reglas, Roles y Skills)
-├── .github/             # Dominio: Espejo GitHub Copilot (Instructions y Skills)
-├── .opencode/           # Dominio: Fuente Canónica OpenCode (Rules y Skills fuente de verdad)
-├── project-docs/        # Aplicación: Tablero de Seguimiento Interactivo & Docs-as-Code
-│   ├── src/             # Frontend Modular en Vanilla JS + Tailwind v4 (Screaming Architecture)
-│   │   ├── core/        # Núcleo técnico (store Observer Pub-Sub, router hash, event-bus, api-client, db)
-│   │   ├── modules/     # Dominios de Negocio Screaming (Projects, Issues, Cycles, Pages, Harness)
-│   │   ├── shared/      # Componentes UI reutilizables (Badge, BaseModal, Icons SVG, MasterLayout, utils)
-│   │   └── features/    # Adaptadores y puentes de compatibilidad hacia atrás
-│   ├── data/            # Persistencia Relacional SQLite WAL (harness.db)
-│   ├── knowledge/       # Base de Conocimiento Soberana (Docs-as-Code)
-│   ├── specs/           # Especificaciones Técnicas SDD, Subtareas Jira DEV/QA y Evidencias
-│   └── dist/            # Bundle autocontenido IIFE (app.bundle.js)
-└── tests/               # Suite de Verificación en 9 Niveles (Unit, E2E Smoke, Whitebox, Blackbox, System, Load, Acceptance Playwright, Sync)
+src/
+├── main.py                      # Composition Root: FastAPI Factory, Lifespan, CORS, Timing, RFC 7807, Mount /mcp
+├── domain/                      # CAPA 1: Dominio Puro (12 bounded contexts, 0 dependencias de framework)
+│   ├── book_registry/           # DraftBook, DocumentBlock, Attachment, BlockType
+│   ├── catalog/                 # Book, Library, IBookRepository, ILibraryRepository
+│   ├── chat/                    # ChatMessage, ScopedChatSession, DocumentSourceRef
+│   ├── context_builder/         # ContextBundle, IBundleStorageRepository
+│   ├── infrastructure_config/   # DatabaseConfiguration, StorageConfiguration (Hexagonal)
+│   ├── knowledge_docs/          # Document, DocumentChunk, IDocumentRepository
+│   ├── llm/                     # LLMConfiguration, LLMProvider (15), EngineType, ILLMClient
+│   ├── rag_engine/              # RetrievalResult, Citation, PromptContext, IOllamaClient
+│   ├── settings/                # SystemSettings, ISettingsRepository
+│   ├── shared_kernel/           # Entity, ValueObject, DomainException
+│   ├── social/                  # Comment, Rating, DiscussionThread, ISocialRepository
+│   └── taxonomy/                # ModuleEntity, TagEntity, ITaxonomyRepository
+├── application/                 # CAPA 2: Casos de Uso CQRS Granular (commands/queries/validators/handlers)
+│   ├── commons/                 # Mediator, IUnitOfWork, Behaviors (Validation, Logging, Transaction)
+│   ├── book_registry/           # create_book_from_blocks, save_raw_markdown, upload_attachment
+│   ├── catalog/                 # get_library_catalog, get_books, update_book_status
+│   ├── chat/                    # ask_project_context, ask_scoped_document, send_scoped_message, ScopedChatService
+│   ├── context_bridge/          # export_agent_rules, mcp_query_context
+│   ├── context_builder/         # ContextBundleCompiler
+│   ├── knowledge_docs/          # IngestDocsCommand, CreateDocumentCommand, GetDocumentsQuery
+│   ├── rag_engine/              # HybridSearchService (RRF k=60), PromptBuilder, AskRagQueryHandler
+│   ├── settings/                # SaveLLMConfig, ActivateLLMProvider, TestLLMConnection, DiscoverCLIEngines
+│   └── social/                  # add_comment, moderate_comment, get_book_comments
+├── core/                        # CAPA LEGACY EN TRANSICIÓN (Strangler Fig): ProjectSlug, Blueprints, ScaffoldDocUseCase
+├── infrastructure/              # CAPA 3: Adaptadores Concretos
+│   ├── database/                # AsyncEngine SQLite/SQLAlchemy, auto-migraciones DDL, seed inicial
+│   ├── persistence/             # ORM models desacoplados (models/*.py), DatabaseFactory + strategies
+│   ├── storage/                 # StorageFactory + strategies (local_fs, supabase_storage, s3, firebase)
+│   ├── repositories/            # Sql*, LocalFilesystem, ChromaVector, BM25Lexical, JsonInfraConfig, mongo/, firebase/
+│   ├── external/                # llm/ (LLMFactory + strategies + CLIProcessClient + HTTP clients), extractors/ (PDF/DOCX/XLSX)
+│   └── services/                # BackgroundDocsWatcher (watchdog con debounce 1.5s)
+└── presentation/                # CAPA 4: Presentación Híbrida (REST v1 + MCP + Screaming UI)
+    ├── api/v1/                  # 14 routers REST + RFC 7807 ProblemDetails + DI (dependencies.py)
+    ├── mcp/                     # FastMCP server (SSE /mcp/sse y STDIO run_mcp.py)
+    └── frontend/                # Screaming UI: Jinja2 + HTMX + Alpine.js + Tailwind v4 (8 módulos)
 ```
 
-### 1.2 Topología Macro y Persistencia Dual (SQLite WAL + Markdown en Disco)
-- **Modo Servidor Local HTTP**: Servidor nativo de Node.js (`project-docs/serve.js`) con base de datos SQLite relacional (`harness.db`) en modo WAL, endpoints REST `/api/plane/*` y sincronización bidireccional automática hacia archivos Markdown.
-- **Modo Offline-First Puro (`file:///`)**: Invariante `BR-DASH-001`. El tablero web puede abrirse con doble clic directamente en el navegador sin servidor web ni conexión a internet, alimentado por el módulo de respaldo `project-docs/data-fallback.js` sincronizado automáticamente por `sync-data.js`.
+### 1.2 Estado de Evolución Arquitectónica
+- **Migrado a Clean Architecture + CQRS Granular**: `book_registry`, `catalog`, `chat`, `social`, `context_bridge`, `llm`, `settings`, `taxonomy`, `infrastructure_config`.
+- **Capa `src/core/` (Transición Activa)**: Mantiene `ProjectSlug`, `Project`, `blueprints.py`, `IngestDocsUseCase` y `ScaffoldDocUseCase`, consumidos desde `presentation/api/dependencies.py`. Planificada su consolidación paulatina en `src/domain/` y `src/application/`.
 
 ---
 
 ## 2. Catálogo Forense de Patrones de Diseño Detectados
 
-| Patrón de Diseño | Categoría | Archivo / Componente | Propósito y Problema que Resuelve en el Arnés |
+| Patrón de Diseño | Categoría | Archivo / Clase Exacta | Problema que Resuelve en ContextForge |
 |---|---|---|---|
-| **Reactive Store (Pub/Sub)** | Comportamiento | `project-docs/src/core/store.js` | Mantiene el estado inmutable del tablero y notifica reactivamente a los componentes suscritos ante cambios. |
-| **Fallback Data Cache** | Resiliencia / Datos | `project-docs/src/core/api.js` y `data-fallback.js` | Garantiza funcionamiento 100% offline y silencia errores CORS cuando el navegador ejecuta bajo protocolo `file:///`. |
-| **Triple Mirror Sync** | Arquitectónico | `.opencode/rules/skills-sync.md` y `sync-skills` | Mantiene una única fuente de verdad canónica (`.opencode/`) y replica unidireccionalmente hacia Copilot y Antigravity. |
-| **Dual Editor Mode** | UI / Interacción | `project-docs/src/shared/MarkdownViewer.js` | Permite alternar bidireccionalmente entre edición Markdown textual y bloques visuales interactivos con scroll sincronizado. |
-| **Component Factory / Renderer** | Creacional | `project-docs/src/shared/` (`Badge.js`, `Button.js`, `Icons.js`, `MermaidViewer.js`) | Genera elementos HTML vectoriales estándar con parametrización de estilos y sin dependencias de frameworks externos. |
-| **Asynchronous Retry Guard** | Resiliencia | `project-docs/src/main.js` (`initMermaidDiagrams`) | Reintenta de forma controlada la inicialización de librerías CDN (Mermaid) para evitar diagramas en blanco si la carga tarda milisegundos. |
-| **Separation of Concerns (SoC)** | Arquitectónico | `.agents/agents/` | Separa la especificación (`spec-author`), implementación (`implementer`) y revisión imparcial (`reviewer`) sin permitir edición cruzada. |
+| **Clean / Hexagonal (Ports & Adapters)** | Arquitectónico | `src/domain/*/repositories.py` + `src/infrastructure/` | Desacopla reglas de negocio de SQLite, ChromaDB, Ollama, APIs Cloud y CLIs. |
+| **CQRS Granular** | Arquitectónico | `src/application/{mod}/commands/*`, `queries/*` | Separa lecturas y escrituras en DTOs inmutables, validadores y handlers atómicos. |
+| **Factory + Strategy + Options + Registry** | Creacional / Comportamiento | `src/infrastructure/external/llm/llm_factory.py`, `database_factory.py`, `storage_factory.py` | Instancia dinámicamente 15 proveedores LLM, 4 estrategias de embeddings, 6 BD y 4 storages bajo principio Open/Closed. |
+| **Repository Pattern** | Persistencia | `src/infrastructure/repositories/sql_*_repo.py`, `chroma_vector_repo.py`, `bm25_lexical_repo.py` | Abstrae consultas SQL, búsqueda vectorial, búsqueda léxica y filesystem Docs-as-Code. |
+| **Unit of Work** | Persistencia | `src/application/commons/interfaces/unit_of_work.py`, `SqlAlchemyUnitOfWork` | Garantiza atomicidad transaccional sobre sesiones asíncronas de SQLAlchemy. |
+| **Pipeline / Chain of Responsibility** | Comportamiento | `src/application/commons/behaviors/` (`Validation`, `Logging`, `Transaction`), `src/main.py` middlewares | Encadena validación, logging, timing (`X-Response-Time-Ms`) y captura RFC 7807. |
+| **Adapter Pattern** | Estructural | `CLIProcessClient`, `GeminiHttpClient`, `AnthropicHttpClient`, `OpenAIHttpClient` | Uniformiza 15 motores heterogéneos (HTTP y procesos CLI) tras la interfaz única `ILLMClient`. |
+| **Facade / Orchestrator** | Estructural | `HybridSearchService`, `ScopedChatService`, `ContextBundleCompiler` | Coordina múltiples repositorios (Chroma + BM25 + LLM) tras una fachada simple. |
+| **Observer / Debounced File Watcher** | Comportamiento | `src/infrastructure/services/fs_watcher.py` (`BackgroundDocsWatcher`) | Detecta cambios en `./docs/` vía `watchdog` y dispara reindexación incremental tras debounce de `1.5s`. |
+| **Zero-RAG Bypass (Adaptive Strategy)** | Dominio / IA | `src/application/chat/services/scoped_chat_service.py` | Inyecta el documento entero cuando tiene $\le 32.000$ caracteres y activa RAG focalizado cuando lo supera. |
+| **RFC 7807 Problem Details** | Resiliencia / API | `src/presentation/api/middlewares/problem_details_middleware.py` | Normaliza errores de dominio y HTTP en respuestas JSON estándar RFC 7807. |
+| **Threaded Subprocess Fallback** | Concurrencia / Resiliencia | `src/infrastructure/external/llm/cli_process_client.py` | Mitiga `NotImplementedError` en `SelectorEventLoop` de Windows mediante `subprocess.Popen` + `asyncio.Queue` + `call_soon_threadsafe`. |
 
 ---
 
 ## 3. Flujos de Datos Extremo a Extremo (Data Flows)
 
-### 3.1 Flujo 1: Sincronización y Carga de Datos en el Tablero
-```text
-1. Agente o Desarrollador modifica specs, reglas o feature_list.json
-2. Ejecución de `node project-docs/sync-data.js`
-3. `sync-data.js` lee archivos markdown, extrae metadatos, tiempo de lectura y diagramas Mermaid
-4. Genera `project-docs/data-fallback.js` y actualiza `project-docs/dist/app.bundle.js`
-5. Al abrir `index.html`:
-   - Si es HTTP: `api.js` realiza fetch con cache-buster hacia los JSON
-   - Si es file:///: `api.js` lee instantáneamente `window.__FALLBACK_DATA__` sin red
-6. `store.js` recibe el payload, actualiza su estado interno y dispara re-render en las vistas activas
-```
+### 3.1 Flujo de Lectura RAG Streaming (SSE)
+1. El usuario envía una consulta desde `chat.html` (`GET /chat/stream?q=...&project=...`).
+2. `rag_chat/routes.py` resuelve `AskRagQueryHandler` mediante FastAPI DI (`get_ask_rag_handler`), que inyecta el `ILLMClient` activo desde `SqlLLMConfigRepository.get_active()`.
+3. `HybridSearchService.search()` ejecuta en paralelo búsqueda vectorial (`ChromaVectorRepository`) y léxica (`BM25LexicalRepository`) estrictamente sobre `project_slug`, combinando resultados con **RRF ($k=60$)**.
+4. `PromptBuilder` ensambla el contexto con citas exactas (`file_path`, `header`) y emite primero el evento SSE `event: citations`.
+5. El cliente activo (`OllamaHttpClient`, `GeminiHttpClient`, `CLIProcessClient`, etc.) transmite tokens progresivamente vía `event: token` con decodificación UTF-8 incremental hasta emitir `event: done`.
 
-### 3.2 Flujo 2: Ciclo de Vida SDD Multi-Agente
-```text
-1. Usuario solicita nueva feature o bugfix
-2. Subagente `leader` valida entorno y crea rama `{type}/INT-{id}/{name}` (≤80c)
-3. Subagente `spec-author` redacta requirements.md, design.md y tasks.md
-4. Puerta Humana obligatoria: `ask_question` congela ejecución hasta aprobación 100%
-5. Subagente `implementer` escribe código de producción y tests automatizados
-6. Subagente `reviewer` audita build, tests, cobertura y trazabilidad (sin editar código)
-7. Puerta Humana de cierre: `ask_question` consulta si fusionar a rama base
-```
-
-### 3.3 Flujo 3: Cálculo de Métricas Editoriales (PageService & Reading Time)
-En `PageService` (`page.service.js`), utilidades compartidas (`dates.js`) y sincronización SQLite (`sqlite-sync.js`), el cálculo de telemetría de lectura se rige por:
-- **Conteo de Palabras**: `words = text.trim().split(/\s+/).filter(Boolean).length`.
-- **Tiempo de Lectura**: `readingTimeMin = Math.max(1, Math.ceil(words / 200))` (velocidad canónica de 200 palabras por minuto con piso mínimo de 1 min).
-- **Conteo de Caracteres y Párrafos**: `charCount = text.length`, `paragraphCount = text.split(/\n\s*\n/).filter(Boolean).length`.
+### 3.2 Flujo de Escritura Docs-as-Code + Auto-Reindexación
+1. El usuario guarda desde el Editor Dual (`POST /api/v1/books/save` o `POST /docs/new`).
+2. `LocalFilesystemRepository` escribe el archivo `.md` con frontmatter YAML en `./docs/{project_slug}/{module}/{slug}.md` (única fuente de verdad).
+3. `IngestDocsCommandHandler` (y en segundo plano `BackgroundDocsWatcher`) trocea el documento por encabezados `h1`–`h6`, extrae anexos vinculados (PDF/DOCX/XLSX) y actualiza atómicamente ChromaDB (`cf_project_{slug}`) y BM25Plus.
+4. `SqlBookRepository` actualiza los metadatos de catálogo en SQLite (`books`).

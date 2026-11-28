@@ -1,0 +1,30 @@
+<!-- Scoped Document AI Assistant Slide-Over Drawer -->
+<div id="cf-scoped-chat-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md translate-x-full transition-transform duration-200 bg-white dark:bg-[#11131a] border-l border-slate-200 dark:border-[#232738] shadow-2xl flex flex-col">
+  <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-[#1e2235] bg-slate-50 dark:bg-[#0d0f15]">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+      </span>
+      <div class="min-w-0">
+        <h3 class="text-xs font-bold text-slate-900 dark:text-white truncate">Asistente sobre este Documento</h3>
+        <p id="cf-scoped-doc-title" class="text-[11px] text-slate-500 dark:text-zinc-400 font-mono truncate">Documento</p>
+      </div>
+    </div>
+    <button type="button" onclick="window.closeScopedChat()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" aria-label="Cerrar asistente">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div id="cf-scoped-messages" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar text-xs">
+    <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 text-slate-700 dark:text-zinc-300">
+      Pregunta cualquier duda sobre este documento o pídeme redactar nuevas secciones, tablas o diagramas Mermaid.
+    </div>
+  </div>
+
+  <form id="cf-scoped-form" onsubmit="window.submitScopedChat(event)" class="p-3 border-t border-slate-200 dark:border-[#1e2235] bg-slate-50 dark:bg-[#0d0f15] flex items-center gap-2">
+    <input id="cf-scoped-input" type="text" required placeholder="Pregunta sobre este documento..." class="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-[#161922] border border-slate-200 dark:border-[#232738] text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+    <button type="submit" id="cf-scoped-send" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer">
+      <i class="fa-solid fa-paper-plane text-[11px]"></i>
+    </button>
+  </form>
+</div>

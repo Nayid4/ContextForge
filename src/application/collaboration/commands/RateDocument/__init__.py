@@ -1,0 +1,5 @@
+from application.collaboration.commands.RateDocument.RateDocumentCommand import RateDocumentCommand
+from application.collaboration.commands.RateDocument.RateDocumentCommandValidation import RateDocumentCommandValidation
+from application.collaboration.commands.RateDocument.RateDocumentCommandHandler import RateDocumentCommandHandler
+
+__all__ = ["RateDocumentCommand", "RateDocumentCommandValidation", "RateDocumentCommandHandler"]

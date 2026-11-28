@@ -1,0 +1,262 @@
+{% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
+{% from "shared/components/pagination.html" import pagination %}
+{% from "shared/components/search_input.html" import debounced_search %}
+
+{% block title %}Documentos | ContextForge{% endblock %}
+{% block page_crumb %}Documentos{% endblock %}
+
+{% block content %}
+<div id="docs-browser-container" class="space-y-6">
+
+  {% call page_header(
+    'fa-solid fa-book-bookmark',
+    'Documentos',
+    'Base de conocimiento Markdown indexada para búsquedas, chat y agentes IA.',
+    active_project
+  ) %}
+    <div id="reindex-badge" class="text-xs"></div>
+    <button
+      type="button"
+      hx-post="/docs/reindex?project={{ active_project }}"
+      hx-target="#reindex-badge"
+      hx-swap="innerHTML"
+      hx-indicator="#reindex-spinner"
+      hx-disabled-elt="this"
+      class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-60"
+      title="Actualizar índice de búsqueda para los documentos actuales"
+    >
+      <i id="reindex-spinner" class="fa-solid fa-rotate text-indigo-500 dark:text-indigo-400"></i>
+      <span>Actualizar índice</span>
+    </button>
+  {% endcall %}
+
+  <!-- Filter & Live Search Bar -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 backdrop-blur shadow-xs">
+    <div class="flex items-center gap-2 flex-wrap">
+      <input type="hidden" id="module-filter-input" name="module" value="{{ selected_module or 'all' }}">
+
+      <!-- Searchable Module Combobox -->
+      <div
+        class="relative"
+        x-data="cfComboboxApp()"
+        @click.outside="open = false"
+        @keydown.escape.window="open = false"
+      >
+        <script type="application/json" data-cf-combo-config>
+          {
+            "mode": "navigate",
+            "selected": {{ (selected_module or 'all') | tojson }},
+            "urlTemplate": "/docs/browser?module={value}&per_page={per_page}&q={search}",
+            "options": [
+              {"value": "all", "label": {{ ('Todos los módulos (' ~ total_docs ~ ')') | tojson }}}{% if available_modules %},{% endif %}
+              {% for mod in available_modules %}
+              {"value": {{ mod | tojson }}, "label": {{ mod | tojson }}}{% if not loop.last %},{% endif %}
+              {% endfor %}
+            ]
+          }
+        </script>
+        <button
+          type="button"
+          @click="toggle()"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer transition"
+        >
+          <i class="fa-solid fa-layer-group text-indigo-500 text-[10px]"></i>
+          <span class="capitalize" x-text="activeLabel"></span>
+          <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
+        </button>
+
+        <div x-show="open" x-transition style="display: none;" class="absolute left-0 z-40 mt-1.5 w-60 rounded-xl bg-white dark:bg-[#0d0f17] border border-slate-200 dark:border-[#232738] shadow-xl p-2 space-y-1.5">
+          <div class="relative">
+            <input type="text" x-ref="comboSearch" x-model="search" placeholder="Filtrar módulo..." class="w-full pl-7 pr-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161922] border border-slate-200 dark:border-[#232738] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-slate-400 pointer-events-none"></i>
+          </div>
+          <div class="max-h-44 overflow-y-auto space-y-0.5 custom-scrollbar">
+            <template x-for="opt in filteredOptions" :key="opt.value">
+              <button type="button" @click="pick(opt.value)" :class="selected === opt.value ? 'bg-indigo-50 dark:bg-indigo-600/25 text-indigo-700 dark:text-indigo-200 font-semibold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between capitalize cursor-pointer">
+                <span class="truncate" x-text="opt.label"></span>
+                <i x-show="selected === opt.value" class="fa-solid fa-check text-indigo-500 text-[10px] shrink-0"></i>
+              </button>
+            </template>
+            <template x-if="filteredOptions.length === 0">
+              <div class="px-2.5 py-2 text-[11px] text-slate-400 italic text-center">Sin coincidencias</div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Pills (first 5 modules) -->
+      <div class="hidden lg:flex items-center space-x-1.5 overflow-x-auto custom-scrollbar">
+        <a
+          href="/docs/browser?module=all&per_page={{ per_page }}&q={{ search_query }}"
+          hx-get="/docs/browser?module=all&per_page={{ per_page }}&q={{ search_query }}"
+          hx-target="#docs-browser-container"
+          hx-select="#docs-browser-container"
+          hx-push-url="true"
+          class="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer shrink-0 {% if not selected_module or selected_module == 'all' %}bg-indigo-600 text-white shadow-xs{% else %}bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800{% endif %}"
+        >
+          Todos ({{ total_docs }})
+        </a>
+        {% for mod in available_modules[:5] %}
+        <a
+          href="/docs/browser?module={{ mod }}&per_page={{ per_page }}&q={{ search_query }}"
+          hx-get="/docs/browser?module={{ mod }}&per_page={{ per_page }}&q={{ search_query }}"
+          hx-target="#docs-browser-container"
+          hx-select="#docs-browser-container"
+          hx-push-url="true"
+          class="px-2.5 py-1.5 rounded-lg text-xs font-semibold capitalize transition cursor-pointer shrink-0 {% if selected_module == mod %}bg-indigo-600 text-white shadow-xs{% else %}bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800{% endif %}"
+        >
+          {{ mod }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2.5 w-full md:w-auto">
+      <div class="md:w-72 flex-1">
+        {{ debounced_search(
+          "search-input",
+          "q",
+          search_query,
+          "Buscar por título, módulo o etiqueta...",
+          "/docs/browser",
+          "#docs-browser-container",
+          "#module-filter-input, #per-page-input",
+          "/docs/browser?module=" ~ (selected_module or 'all') ~ "&per_page=" ~ per_page ~ "&q="
+        ) }}
+      </div>
+
+      <select
+        id="per-page-input"
+        name="per_page"
+        aria-label="Documentos por página"
+        hx-get="/docs/browser"
+        hx-trigger="change"
+        hx-target="#docs-browser-container"
+        hx-select="#docs-browser-container"
+        hx-push-url="true"
+        hx-include="#search-input, #module-filter-input"
+        class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono cursor-pointer shrink-0"
+      >
+        <option value="9" {% if per_page == 9 %}selected{% endif %}>9 / pág</option>
+        <option value="18" {% if per_page == 18 %}selected{% endif %}>18 / pág</option>
+        <option value="27" {% if per_page == 27 %}selected{% endif %}>27 / pág</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Documents Grid -->
+  {% if docs | length > 0 %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for doc in docs %}
+    <article class="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      <div class="space-y-3">
+        <div class="flex items-center justify-between text-xs gap-2">
+          <div class="flex items-center gap-1.5">
+            <span class="px-2.5 py-0.5 rounded-md font-semibold capitalize bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-[10px] font-mono">
+              {{ doc.module_name or 'general' }}
+            </span>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold {% if doc.status.value == 'published' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20{% elif doc.status.value == 'draft' %}bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20{% elif doc.status.value == 'in_review' %}bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20{% else %}bg-slate-200 dark:bg-slate-800 text-slate-500{% endif %}">
+              {{ doc.status.value }} · v{{ doc.current_version }}
+            </span>
+          </div>
+          <span class="font-mono text-slate-400 dark:text-slate-500 text-[11px] truncate max-w-[125px]" title="{{ doc.path }}">
+            {{ doc.path.split('/')[-1] }}
+          </span>
+        </div>
+
+        <h2 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition line-clamp-2 leading-snug">
+          <a href="/docs/view/{{ doc.path }}?project={{ doc.project_slug }}" class="after:absolute after:inset-0 focus:outline-none">
+            {{ doc.title }}
+          </a>
+        </h2>
+
+        {% if doc.tags and doc.tags | length > 0 %}
+        <div class="flex flex-wrap gap-1.5">
+          {% for tag in doc.tags[:3] %}
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
+            #{{ tag }}
+          </span>
+          {% endfor %}
+          {% if doc.tags | length > 3 %}
+          <span class="text-[10px] font-mono text-slate-400 px-1">+{{ (doc.tags | length) - 3 }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div class="flex items-center space-x-2 min-w-0">
+          <span class="truncate max-w-[110px]" title="Autor">{{ doc.author or 'Equipo' }}</span>
+          <span class="text-slate-300 dark:text-slate-700">·</span>
+          <span class="font-mono text-[11px] text-slate-400">{{ doc.word_count }} pal.</span>
+        </div>
+        <div class="relative z-10 flex items-center space-x-3">
+          <a
+            href="/books/editor?path={{ doc.path }}&project={{ doc.project_slug or active_project }}"
+            class="inline-flex items-center space-x-1 font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition"
+            title="Editar documento"
+          >
+            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+            <span>Editar</span>
+          </a>
+          <span class="inline-flex items-center space-x-1 font-semibold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition">
+            <span>Abrir</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-12 text-center space-y-3 shadow-xs">
+    <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-xl">
+      <i class="fa-solid fa-folder-open"></i>
+    </div>
+    <h3 class="text-base font-bold text-slate-900 dark:text-white">No se encontraron documentos</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+      {% if search_query %}
+      No hay resultados para "<span class="text-indigo-600 dark:text-indigo-300 font-mono">{{ search_query }}</span>".
+      {% else %}
+      Esta vista aún no tiene documentos. Crea el primero para comenzar a consultar con agentes IA.
+      {% endif %}
+    </p>
+    <div class="pt-2 flex items-center justify-center gap-3">
+      {% if search_query or (selected_module and selected_module != 'all') %}
+      <a
+        href="/docs/browser"
+        hx-get="/docs/browser"
+        hx-target="#docs-browser-container"
+        hx-select="#docs-browser-container"
+        hx-push-url="true"
+        class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
+      >
+        Limpiar filtros
+      </a>
+      {% endif %}
+      <a
+        href="/books/editor"
+        class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm shadow-indigo-600/20"
+      >
+        Crear documento
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  {{ pagination(
+      current_page,
+      total_pages,
+      total_docs,
+      per_page,
+      has_prev,
+      has_next,
+      "/docs/browser",
+      "#docs-browser-container",
+      "&module=" ~ (selected_module or 'all') ~ "&q=" ~ (search_query or ''),
+      "documentos"
+  ) }}
+
+</div>
+{% endblock %}

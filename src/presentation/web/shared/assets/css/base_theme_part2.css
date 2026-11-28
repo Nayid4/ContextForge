@@ -1,0 +1,75 @@
+/* Markdown Prose, GFM Tables, Callouts, Code Copy Header & WYSIWYG Canvas (Light & Dark) */
+.prose-dark h1, .chat-markdown h1, .cf-wysiwyg-surface h1 { font-size: 1.75rem; font-weight: 800; margin: 1.2rem 0 0.7rem; letter-spacing: -0.02em; }
+.prose-dark h2, .chat-markdown h2, .cf-wysiwyg-surface h2 { font-size: 1.38rem; font-weight: 700; margin: 1.15rem 0 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid rgba(148,163,184,0.22); }
+.prose-dark h3, .chat-markdown h3, .cf-wysiwyg-surface h3 { font-size: 1.12rem; font-weight: 700; margin: 0.95rem 0 0.4rem; }
+.prose-dark h4, .chat-markdown h4, .cf-wysiwyg-surface h4 { font-size: 0.98rem; font-weight: 600; margin: 0.8rem 0 0.35rem; color: #4f46e5; }
+.dark .prose-dark h4, .dark .chat-markdown h4, .dark .cf-wysiwyg-surface h4 { color: #818cf8; }
+.prose-dark p, .chat-markdown p, .cf-wysiwyg-surface p { margin: 0.6rem 0; line-height: 1.72; font-size: 0.92rem; }
+.prose-dark ul, .prose-dark ol, .chat-markdown ul, .chat-markdown ol, .cf-wysiwyg-surface ul, .cf-wysiwyg-surface ol { margin: 0.6rem 0 0.6rem 1.4rem; list-style: disc; }
+.prose-dark ol, .chat-markdown ol, .cf-wysiwyg-surface ol { list-style: decimal; }
+.prose-dark li, .chat-markdown li, .cf-wysiwyg-surface li { margin: 0.25rem 0; font-size: 0.89rem; }
+.prose-dark li input[type="checkbox"], .chat-markdown li input[type="checkbox"] { margin-right: 0.45rem; accent-color: #6366f1; }
+.prose-dark a, .chat-markdown a, .cf-wysiwyg-surface a { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; }
+.dark .prose-dark a, .dark .chat-markdown a, .dark .cf-wysiwyg-surface a { color: #818cf8; }
+.prose-dark hr, .chat-markdown hr { margin: 1.25rem 0; border-color: rgba(148,163,184,0.25); }
+.prose-dark code, .chat-markdown code, .cf-wysiwyg-surface code { font-family: 'JetBrains Mono', monospace; font-size: 0.8em; padding: 0.15rem 0.35rem; border-radius: 0.375rem; background: rgba(99, 102, 241, 0.12); color: #4f46e5; }
+.dark .prose-dark code, .dark .chat-markdown code, .dark .cf-wysiwyg-surface code { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
+.prose-dark pre, .chat-markdown pre, .cf-wysiwyg-surface pre { margin: 0.9rem 0; padding: 1rem; border-radius: 0.85rem; overflow-x: auto; background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; }
+.prose-dark pre code, .chat-markdown pre code, .cf-wysiwyg-surface pre code { background: transparent; color: inherit; padding: 0; font-size: 0.78rem; }
+.prose-dark blockquote, .chat-markdown blockquote, .cf-wysiwyg-surface blockquote { border-left: 3px solid #6366f1; padding: 0.5rem 1rem; margin: 0.85rem 0; background: rgba(99, 102, 241, 0.06); border-radius: 0 0.65rem 0.65rem 0; }
+
+/* Enhanced Code Block with Language Label & Copy Action */
+.cf-code-block { margin: 0.9rem 0; border-radius: 0.85rem; overflow: hidden; border: 1px solid #1e293b; background: #0f172a; }
+.cf-code-block pre { margin: 0 !important; border: none !important; border-radius: 0 !important; }
+.cf-code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.85rem; background: #1e293b; color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.cf-code-copy-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.18rem 0.55rem; border-radius: 0.4rem; background: rgba(148,163,184,0.12); color: #e2e8f0; cursor: pointer; font-size: 0.68rem; text-transform: none; transition: background 0.15s; }
+.cf-code-copy-btn:hover { background: rgba(99,102,241,0.35); }
+
+/* Responsive GFM Tables */
+.cf-table-wrap { width: 100%; overflow-x: auto; margin: 1rem 0; border-radius: 0.8rem; border: 1px solid rgba(148,163,184,0.28); }
+.cf-table-wrap table, .cf-wysiwyg-surface table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.cf-table-wrap th, .cf-table-wrap td, .cf-wysiwyg-surface th, .cf-wysiwyg-surface td { padding: 0.55rem 0.8rem; border-bottom: 1px solid rgba(148,163,184,0.2); border-right: 1px solid rgba(148,163,184,0.14); text-align: left; }
+.cf-table-wrap th, .cf-wysiwyg-surface th { font-weight: 700; background: rgba(99,102,241,0.08); }
+.dark .cf-table-wrap th, .dark .cf-wysiwyg-surface th { background: rgba(99,102,241,0.16); color: #e2e8f0; }
+.cf-table-wrap tr:nth-child(even) td { background: rgba(148,163,184,0.04); }
+
+/* GitHub Alert Callouts */
+.cf-callout { margin: 1rem 0; padding: 0.75rem 1rem; border-radius: 0.75rem; border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); }
+.cf-callout-title { font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem; color: #4f46e5; }
+.dark .cf-callout-title { color: #a5b4fc; }
+.cf-callout-tip { border-left-color: #10b981; background: rgba(16,185,129,0.08); }
+.cf-callout-tip .cf-callout-title { color: #059669; }
+.dark .cf-callout-tip .cf-callout-title { color: #34d399; }
+.cf-callout-important { border-left-color: #8b5cf6; background: rgba(139,92,246,0.08); }
+.cf-callout-important .cf-callout-title { color: #7c3aed; }
+.dark .cf-callout-important .cf-callout-title { color: #c4b5fd; }
+.cf-callout-warning { border-left-color: #f59e0b; background: rgba(245,158,11,0.09); }
+.cf-callout-warning .cf-callout-title { color: #d97706; }
+.dark .cf-callout-warning .cf-callout-title { color: #fbbf24; }
+.cf-callout-caution { border-left-color: #f43f5e; background: rgba(244,63,94,0.09); }
+.cf-callout-caution .cf-callout-title { color: #e11d48; }
+.dark .cf-callout-caution .cf-callout-title { color: #fb7185; }
+
+/* 3rd Editor Mode: Visual WYSIWYG Paper Sheet Canvas */
+.cf-wysiwyg-surface { min-height: 520px; outline: none; }
+.cf-wysiwyg-surface:empty::before,
+.cf-wysiwyg-surface[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  font-style: italic;
+  pointer-events: none;
+}
+.cf-wysiwyg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.cf-wysiwyg-btn:hover { background: rgba(99, 102, 241, 0.12); color: #4f46e5; }
+.dark .cf-wysiwyg-btn:hover { background: rgba(99, 102, 241, 0.22); color: #a5b4fc; }

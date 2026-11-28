@@ -1,43 +1,99 @@
-# ─── Node / npm ────────────────────────────────────────────────────
+# ==========================================
+# Python & Virtual Environments
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==========================================
+# Node / npm / Testing Reports
+# ==========================================
 node_modules/
 bun.lock
+coverage/
+test-results/
+playwright-report/
+*.log
 
-# ─── Secrets y config local ────────────────────────────────────────
+# ==========================================
+# Testing, Coverage & Type Checking Caches
+# ==========================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
 .env
 .env.*
 !.env.example
 
-# ─── Build / salida ────────────────────────────────────────────────
-dist/
-!project-docs/dist/
-build/
-coverage/
-test-results/
-project-docs/test-results/
-playwright-report/
-project-docs/playwright-report/
-*.log
-
-# ─── IDE ───────────────────────────────────────────────────────────
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# ─── OS ────────────────────────────────────────────────────────────
-.DS_Store
-Thumbs.db
-
-# ─── Harness local config ──────────────────────────────────────────
-kickstart.json
-project-docs/kickstart.json
-
-# ─── SQLite temporary files ────────────────────────────────────────
+# ==========================================
+# Local Runtime Data, Databases & Bundles
+# ==========================================
+data/
+bundles/
+*.db
 *.db-journal
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite3
 *.bak
+infrastructure_configs.json
 
-# ─── Scratch / Temporary ──────────────────────────────────────────
-project-docs/scratch/
+# ==========================================
+# AI Engineering Harness (Local Only)
+# ==========================================
+.agents/
+.agents copia/
+.github/instructions/
+.github/skills/
+.opencode/
+AGENTS.md
+opencode.json
+project-docs/
+project-spec.yaml
+verify.sh
+kickstart.json
+
+# ==========================================
+# IDE & OS Files
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

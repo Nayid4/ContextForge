@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
+  <diagram id="uml_cls" name="Clases de Dominio UML - ContextForge">
+    <mxGraphModel dx="1820" dy="1140" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1820" pageHeight="1140" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n_2" value="&lt;b&gt;Diagrama de Clases UML 2.5 — Dominio y Componente Reutilizable ContextForge&lt;/b&gt;&lt;br&gt;Entidades, Objetos de Valor Inmutables, Puntos de Extensión Abiertos (OCP/DIP) y Patrones GoF (Facade, Builder, Strategy, Chain, Decorator, Observer)" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1760" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="n_3" value="&lt;b&gt;&amp;lt;&amp;lt;Builder&amp;gt;&amp;gt;&lt;br&gt;ContextForgeBuilder&lt;/b&gt;&lt;hr&gt;- _config: EngineConfig&lt;br&gt;- _lexical_store: ILexicalStore | None&lt;br&gt;- _vector_store: IVectorStore | None&lt;br&gt;- _llm_provider: ILLMProvider | None&lt;hr&gt;+ with_config(cfg: EngineConfig): Self&lt;br&gt;+ with_stores(lex, vec): Self&lt;br&gt;+ with_exporter(exp: IBundleExporter): Self&lt;br&gt;+ with_ranking_strategy(s): Self&lt;br&gt;+ with_rule(rule: IDocumentRule): Self&lt;br&gt;+ build(): ContextForge" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="115" width="390" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_4" value="&lt;b&gt;&amp;lt;&amp;lt;Facade&amp;gt;&amp;gt;&lt;br&gt;ContextForge&lt;/b&gt;&lt;hr&gt;- _rule_chain: DocumentRuleChain&lt;br&gt;- _strategy_factory: StrategyFactory&lt;br&gt;- _retriever: RetrieverFactory&lt;br&gt;- _exporters: BundleExporterRegistry&lt;br&gt;- _event_bus: KnowledgeEventBus&lt;hr&gt;+ ingest(docs, strategy): IngestionReport&lt;br&gt;+ ingest_directory(dir, pattern): IngestionReport&lt;br&gt;+ search(query, top_k, mode, ranking): list[SearchHit]&lt;br&gt;+ ask(question, top_k, sys_prompt): RagResponse&lt;br&gt;+ compile_bundle(name, query, max_tokens, fmt): ContextBundle&lt;br&gt;+ subscribe(obs: IKnowledgeObserver): None" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="495" y="115" width="430" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="n_5" value="&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;Project&lt;/b&gt;&lt;hr&gt;+ slug: str  {PK, BR-01}&lt;br&gt;+ name: str&lt;br&gt;+ path: str  {BR-03}&lt;br&gt;+ sovereign_only: bool  {BR-13}&lt;br&gt;+ max_quota_mb: int&lt;br&gt;+ is_active: bool&lt;hr&gt;+ validate_path_confinement(target: Path): bool&lt;br&gt;+ allows_external_llm(): bool&lt;br&gt;+ activate(): None" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="985" y="115" width="365" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_6" value="&lt;b&gt;&amp;lt;&amp;lt;AggregateRoot&amp;gt;&amp;gt;&lt;br&gt;KnowledgeDocument&lt;/b&gt;&lt;hr&gt;+ doc_id: str  {PK}&lt;br&gt;+ project_slug: str  {FK}&lt;br&gt;+ title: str&lt;br&gt;+ collection: str&lt;br&gt;+ status: EditorialStatus  {BR-04, BR-05}&lt;br&gt;+ current_version: int&lt;br&gt;+ content_hash: str  {SHA-256}&lt;hr&gt;+ submit_review(): None&lt;br&gt;+ publish(approver_id: str): DocumentVersion&lt;br&gt;+ deprecate(): None&lt;br&gt;+ rollback_to(ver: int): DocumentVersion" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1405" y="115" width="375" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="n_7" value="&lt;b&gt;&amp;lt;&amp;lt;Decorator / Observer&amp;gt;&amp;gt;&lt;br&gt;AuditingDecorator &amp; EventBus&lt;/b&gt;&lt;hr&gt;+ audit_records: tuple[AuditRecord, ...]&lt;br&gt;- _observers: list[IKnowledgeObserver]&lt;br&gt;+ prev_hash: str  {SHA-256 chain}&lt;hr&gt;+ execute(op_name: str, fn: Callable): T&lt;br&gt;+ publish(event_type: str, payload: dict): KnowledgeEvent&lt;br&gt;+ subscribe(observer: IKnowledgeObserver): None" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="435" width="390" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="n_8" value="&lt;b&gt;&amp;lt;&amp;lt;ValueObject&amp;gt;&amp;gt;&lt;br&gt;RagResponse &amp; SourceCitation&lt;/b&gt;&lt;hr&gt;+ question: str&lt;br&gt;+ answer: str&lt;br&gt;+ citations: tuple[SourceCitation, ...]  {BR-08}&lt;br&gt;+ provider_name: str&lt;br&gt;+ grounded: bool&lt;br&gt;+ latency_ms: float&lt;hr&gt;+ has_verified_evidence(): bool&lt;br&gt;+ format_citations_markdown(): str" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#334155;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="495" y="435" width="430" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="n_9" value="&lt;b&gt;&amp;lt;&amp;lt;ValueObject&amp;gt;&amp;gt;&lt;br&gt;ContextBundle&lt;/b&gt;&lt;hr&gt;+ bundle_id: str  {UUID}&lt;br&gt;+ name: str&lt;br&gt;+ export_format: str&lt;br&gt;+ included_doc_ids: tuple[str, ...]&lt;br&gt;+ omitted_doc_ids: tuple[str, ...]&lt;br&gt;+ estimated_tokens: int  {&lt;= max_tokens}&lt;br&gt;+ bundle_hash: str&lt;hr&gt;+ utilization_ratio(): float" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#334155;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="985" y="435" width="365" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="n_10" value="&lt;b&gt;&amp;lt;&amp;lt;ValueObject&amp;gt;&amp;gt;&lt;br&gt;DocumentVersion &amp; DocumentChunk&lt;/b&gt;&lt;hr&gt;+ version_number: int  {BR-06}&lt;br&gt;+ chunk_id: str&lt;br&gt;+ headers: tuple[str, ...]&lt;br&gt;+ content_hash: str&lt;br&gt;+ author_id: str&lt;br&gt;+ created_at: datetime&lt;hr&gt;+ compute_diff(other: DocumentVersion): str&lt;br&gt;+ estimate_tokens(): int" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#334155;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1405" y="435" width="375" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="n_11" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;IDocumentRule&lt;/b&gt;&lt;hr&gt;+ rule_name: str  {abstract}&lt;hr&gt;+ validate(doc: KnowledgeDocument): None&lt;br&gt;--- Implementaciones ---&lt;br&gt;• NonEmptyId / TitleRequired&lt;br&gt;• MaxContentLengthRule" style="whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B45309;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="765" width="320" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_12" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;IChunkingStrategy&lt;/b&gt;&lt;hr&gt;+ name: str  {abstract}&lt;hr&gt;+ chunk(doc: KnowledgeDocument): list[Chunk]&lt;br&gt;--- Implementaciones ---&lt;br&gt;• HeadingAwareChunkingStrategy&lt;br&gt;• SlidingWindowChunkingStrategy" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="400" y="765" width="325" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_13" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;IHybridRankingStrategy&lt;/b&gt;&lt;hr&gt;+ name: str  {abstract}&lt;hr&gt;+ fuse(lex, vec, top_k): list[SearchHit]&lt;br&gt;--- Implementaciones ---&lt;br&gt;• ReciprocalRankFusionStrategy&lt;br&gt;• WeightedLinearRankingStrategy" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="760" y="765" width="335" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_14" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;IBundleExporter&lt;/b&gt;&lt;hr&gt;+ format_name: str  {abstract}&lt;hr&gt;+ export(name, docs, est, max): str&lt;br&gt;--- Implementaciones ---&lt;br&gt;• Markdown / Json / XmlExporter" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="765" width="315" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_15" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;ILLMProvider &amp; Stores&lt;/b&gt;&lt;hr&gt;+ provider_name: str  {abstract}&lt;hr&gt;+ generate(prompt, sys): str&lt;br&gt;• Ollama / Cloud / Extractive&lt;br&gt;• ILexicalStore &amp; IVectorStore" style="whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="765" width="300" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="e_16" value="&lt;&lt;builds&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_3" target="n_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_17" value="aísla (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_18" value="compone (1..1..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_6" target="n_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_19" value="envuelve / emite" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="395" />
+              <mxPoint x="240" y="395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_20" value="produce" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_21" value="compila" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="395" />
+              <mxPoint x="1167" y="395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_22" value="valida cadena" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="290" />
+              <mxPoint x="465" y="695" />
+              <mxPoint x="205" y="695" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_23" value="segmenta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="290" />
+              <mxPoint x="465" y="695" />
+              <mxPoint x="562" y="695" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_24" value="fusiona RRF" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="290" />
+              <mxPoint x="465" y="695" />
+              <mxPoint x="927" y="695" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_25" value="serializa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="290" />
+              <mxPoint x="465" y="695" />
+              <mxPoint x="1287" y="695" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_26" value="delega síntesis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="290" />
+              <mxPoint x="465" y="695" />
+              <mxPoint x="1630" y="695" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

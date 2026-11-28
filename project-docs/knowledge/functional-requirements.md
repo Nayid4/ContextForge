@@ -1,76 +1,76 @@
 ---
 id: "DOC-FUNCTIONAL-REQUIREMENTS_MD"
-title: "functional requirements"
+title: "Especificación de Requisitos de Software (SRS IEEE 830 Sección 3) — ContextForge"
 collection: "product"
-parent: null
-owner: "leader"
+parent: "03-capabilities-and-features.md"
+owner: "spec-author"
 status: "Publicado"
 version: "4.0.0"
 access: "public"
-is_locked: true
+is_locked: false
 is_favorite: false
 full_width: false
-last_updated: "2026-11-09"
+last_updated: "2026-11-25"
 tags: []
-labels: ["product"]
+labels: ["ieee-830","srs","functional-requirements","furps","gherkin","product"]
+icon: "clipboard"
 ---
 
-# Especificación de Requerimientos del Sistema (SRS IEEE 830 / ISO 29148)
+# Especificación de Requisitos Funcionales y No Funcionales (SRS IEEE 830)
 
 > [!NOTE]
-> Requerimientos Funcionales (`RF-*`) y Requerimientos No Funcionales (`RNF-*`) bajo clasificación FURPS+ para el Arnés de Ingeniería SDD.
+> Requisitos funcionales (`RF-*`) con criterios verificables Gherkin, interfaces externas y requisitos no funcionales (`RNF-*` bajo FURPS+) extraídos forensicamente de **ContextForge**.
 
 ---
 
-## 1. Requerimientos Funcionales (`RF-*`)
+## 1. Requisitos Funcionales (`RF-*`)
 
-### Módulo: agent-orchestrator
-- **RF-ORCH-001**: El orquestador DEBE validar que toda rama de trabajo cumpla con la expresión regular `^(feature|bugfix)/INT-\d{3,4}/[a-z0-9_]+$` y una longitud menor o igual a 80 caracteres.
-- **RF-ORCH-002**: El orquestador DEBE invocar de manera aislada al subagente `spec-author` con workspace heredado (`Workspace: "inherit"`) para redactar la especificación formal antes de escribir código.
-- **RF-ORCH-003**: El orquestador DEBE pausar la ejecución mediante `ask_question` para solicitar aprobación humana del spec generado antes de permitir el inicio de la fase de implementación.
-- **RF-ORCH-004**: Al concluir la implementación, el orquestador DEBE invocar de forma independiente al subagente `reviewer` para emitir veredicto formal de calidad y trazabilidad.
+### `RF-PROJ-001`: Gestión y Aislamiento Multi-Proyecto
+- **Descripción**: El sistema debe permitir crear, listar y alternar proyectos aislados por `ProjectSlug`, particionando documentos en `./docs/{slug}/`, vectores en `cf_project_{slug}` e índices BM25.
+- **Escenario Gherkin**:
+  ```gherkin
+  Given existen dos proyectos "iuristrack" y "fintech-core" con documentos propios
+  When un usuario ejecuta una búsqueda híbrida sobre "fintech-core"
+  Then los resultados contienen únicamente fragmentos de "fintech-core" sin fuga de "iuristrack"
+  ```
 
-### Módulo: triple-sync-engine
-- **RF-SYNC-001**: El motor DEBE comparar el árbol de skills en `.opencode/skills/` contra `.github/skills/` y `.agents/skills/` para identificar diferencias de contenido o metadatos.
-- **RF-SYNC-002**: La skill `/sync-skills` DEBE replicar archivos de forma no destructiva preservando el frontmatter YAML y el formato Markdown.
+### `RF-DOC-001`: Autoría Dual Docs-as-Code y Anexos Multiformato
+- **Descripción**: El sistema debe permitir redactar documentos en Markdown Pro o Constructor de Bloques, adjuntar archivos (PDF, DOCX, XLSX/CSV, imágenes y audio `.ogg`/`.mp3`), extraer su texto para RAG y previsualizarlos inline sin descarga forzada.
+- **Escenario Gherkin**:
+  ```gherkin
+  Given un documento con anexos ".docx" y ".ogg" cuyos nombres contienen espacios
+  When el usuario visualiza el detalle del documento
+  Then los enlaces se compilan como tarjetas interactivas con visor Mammoth.js y reproductor de audio nativo
+  ```
 
-### Módulo: knowledge-engine
-- **RF-KNOW-001**: La skill `/project-knowledge` DEBE realizar el descubrimiento en 2 fases para evitar desbordamiento de contexto (escaneo topológico previo a inspección de código).
-- **RF-KNOW-002**: El generador de diagramas DEBE sanitizar identificadores y textos en sintaxis Mermaid estricta con comillas dobles para evitar fallos del parser en tiempo de ejecución.
+### `RF-RAG-001`: Recuperación Híbrida RRF y Streaming SSE con Citas
+- **Descripción**: El sistema debe combinar resultados de ChromaDB y BM25Plus mediante RRF ($k=60$) y transmitir la respuesta vía SSE emitiendo las fuentes (`citations`) antes de los tokens generados.
 
-### Módulo: dashboard-visualizer
-- **RF-DASH-001**: El tablero DEBE presentar una biblioteca organizada en 6 estantes temáticos con tarjeta Hero destacada y filtros rápidos por categoría.
-- **RF-DASH-002**: El lector de artículos DEBE renderizar el documento con columna centrada a 780px, interlineado de 1.75em, anclas de encabezados y barra lateral flotante con la Tabla de Contenidos (TOC).
-- **RF-DASH-003**: El editor dual DEBE permitir alternar instantáneamente entre modo Markdown split-pane y modo Bloques Visuales ContextForge con scroll sincronizado proporcional y reordenamiento de tarjetas.
-- **RF-DASH-004**: El buscador Omnibox DEBE responder al atajo `Ctrl+K` o `Cmd+K` y permitir búsqueda en tiempo real sobre tareas, documentos, reglas e índices.
-- **RF-DASH-005**: La vista 3D DEBE estructurar los nodos en 4 niveles piramidales en Three.js con anillos translúcidos y distribución armónica radial sin solapamiento de etiquetas.
+### `RF-RAG-002`: Chat Focalizado con Zero-RAG Bypass
+- **Descripción**: El sistema debe inyectar el documento íntegro al LLM cuando su extensión sea $\le 32.000$ caracteres y conmutar automáticamente a búsqueda vectorial focalizada cuando supere dicho umbral.
 
-### Módulo: testing-qa-suite
-- **RF-TEST-001**: La suite DEBE ejecutar pruebas unitarias automatizadas mediante el ejecutor nativo `node --test` reportando resultados en menos de 500ms.
-- **RF-TEST-002**: La suite DEBE incluir pruebas de aceptación tipo smoke para validar la integridad del bundle web y la compatibilidad con el protocolo `file:///`.
+### `RF-LLM-001`: Orquestación Multi-LLM Universal y Persistencia Activa
+- **Descripción**: El sistema debe permitir configurar, probar conectividad/embeddings y activar cualquiera de los 15 proveedores LLM (Local HTTP, Cloud API, Local CLI) persistiendo la selección en SQLite tras reinicios.
+
+### `RF-MCP-001`: Exposición Universal de Contexto vía Bundler y MCP
+- **Descripción**: El sistema debe compilar Context Bundles (`.cursorrules`/`.md`) y exponer `search_project_context`, `get_document_full` y `list_project_structure` mediante `FastMCP` en SSE (`/mcp/sse`) y STDIO (`run_mcp.py`).
 
 ---
 
-## 2. Requerimientos No Funcionales (`RNF-*`) bajo FURPS+
+## 2. Requisitos de Interfaces Externas (IEEE 830 Sección 3.1)
 
-### Functionality (Seguridad e Integridad)
-- **RNF-SEC-001**: Prohibición estricta de credenciales, tokens de API o connection strings hardcodeados en los archivos de especificación o base de conocimiento.
-- **RNF-SEC-002**: Aislamiento estricto de subagentes impidiendo que el subagente `reviewer` modifique código de producción o pruebas.
+- **Interfaces de Usuario (UI)**: Interfaz web responsiva SSR con Jinja2, HTMX, Alpine.js y TailwindCSS v4; tema claro/oscuro sincronizado; paleta de comandos `Ctrl+K`; notificaciones toast (`window.$toast`).
+- **Interfaces de Software**: SQLite vía `SQLAlchemy 2.0 Async + aiosqlite`, ChromaDB persistente, Ollama HTTP API, APIs REST de Gemini/OpenAI/Anthropic/DeepSeek y subprocesos CLI sin `shell=True`.
+- **Interfaces de Comunicaciones**: HTTP/1.1 REST JSON (puerto `8000`), Server-Sent Events (`text/event-stream`) para RAG y MCP, JSON-RPC 2.0 sobre STDIO (`run_mcp.py`).
 
-### Usability (Experiencia Editorial & Heurísticas)
-- **RNF-USAB-001**: Cumplimiento de WCAG AAA en contraste de texto y soporte nativo de modo claro y oscuro sin parpadeo (FOUC).
-- **RNF-USAB-002**: Búsqueda con debouncing para no bloquear la digitación del usuario en inputs de búsqueda (180ms - 260ms).
+---
 
-### Reliability (Confiabilidad & Cero-Server)
-- **RNF-RELI-001**: Disponibilidad offline del 100% de la documentación y tablero interactivo mediante `data-fallback.js` sin requerir servidor HTTP ni sufrir bloqueos CORS.
-- **RNF-RELI-002**: Gestión adecuada del ciclo de vida en Three.js con limpieza completa de memoria (`mount`/`unmount`) al cambiar de pestaña para prevenir fugas de memoria.
+## 3. Requisitos No Funcionales (`RNF-*` — FURPS+)
 
-### Performance (Rendimiento)
-- **RNF-PERF-001**: Tiempo de carga inicial del tablero web inferior a 800ms en modo local.
-- **RNF-PERF-002**: Ejecución de la suite completa de pruebas unitarias en menos de 500ms.
-
-### Supportability (Mantenibilidad & Extensibilidad)
-- **RNF-SUPP-001**: Arquitectura modular Screaming Architecture en Vanilla JS sin dependencias de frameworks pesados de frontend (React, Vue, Angular) en tiempo de ejecución.
-- **RNF-SUPP-002**: Agnóstico al lenguaje: el arnés debe poder auditar e interactuar con proyectos en Node.js, .NET, Python, Go y Rust.
-
-
+| ID | Categoría FURPS+ | Requisito Verificado | Métrica / Evidencia |
+|---|---|---|---|
+| `RNF-001` | **Confiabilidad / Tipado** | Todo el código fuente en `src/` debe compilar bajo tipado estricto sin errores. | `mypy --strict src`: 0 errores en 302 archivos. |
+| `RNF-002` | **Mantenibilidad / QA** | Cobertura automatizada multinivel (unit, integration, e2e). | `pytest`: 158 pruebas pasando al 100%. |
+| `RNF-003` | **Seguridad / Soberanía** | Cero exposición de API Keys en respuestas HTTP; prohibido `shell=True` en llamadas CLI; operación 100% offline con Ollama/SQLite/ChromaDB. | `mask_api_key()`, `CLIProcessClient._build_command()`. |
+| `RNF-004` | **Rendimiento** | Cabecera `X-Response-Time-Ms` en todas las respuestas HTTP; debounce de `1.5s` en `BackgroundDocsWatcher` para evitar reindexaciones redundantes. | `src/main.py`, `fs_watcher.py`. |
+| `RNF-005` | **Portabilidad** | Ejecución nativa en Windows, Linux y macOS con resolución automática de binarios CLI y política Proactor/fallback multihilo en Windows. | `cli_process_client.py`, `verify.sh`. |

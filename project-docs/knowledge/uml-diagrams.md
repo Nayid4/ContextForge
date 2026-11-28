@@ -1,192 +1,211 @@
 ---
 id: "DOC-UML-DIAGRAMS_MD"
-title: "uml diagrams"
+title: "Atlas UML 2.5: Clases, Secuencias, Estados, Casos de Uso y Actividades"
 collection: "engineering"
 parent: "c4-model.md"
-owner: "leader"
+owner: "spec-author"
 status: "Publicado"
 version: "4.0.0"
 access: "public"
 is_locked: false
 is_favorite: false
 full_width: true
-last_updated: "2026-11-09"
+last_updated: "2026-11-25"
 tags: []
-labels: ["engineering"]
+labels: ["uml-2.5","class-diagram","sequence-diagram","state-diagram","engineering"]
+icon: "layers"
 ---
 
-# Diagramas UML — AI Agentic SDD Engineering Harness
+# Atlas UML 2.5 — ContextForge (IntegrationLibrary)
+
+> [!NOTE]
+> Modelado conductual y estructural UML 2.5 verificado directamente contra las entidades en `src/domain/`, los handlers CQRS en `src/application/` y los adaptadores en `src/infrastructure/`.
 
 ---
 
-## 1. Diagrama de Clases del Dominio SDD
-
-Muestra las entidades, value objects y relaciones del modelo conceptual del arnés:
+## 1. Diagrama de Clases del Dominio ContextForge
 
 ```mermaid
 classDiagram
-  class Feature {
-    +int id
-    +string type
+  class Project {
+    +ProjectSlug slug
     +string name
-    +string title
     +string description
-    +string module
-    +string priority
-    +string branch
-    +string status
-    +List~string~ acceptance
-    +markCompleted()
+    +string path
+    +bool is_active
+    +datetime created_at
+    +to_dict() dict
   }
 
-  class Subagent {
-    +string name
-    +string role
-    +List~string~ tools
-    +executeTask(Task task)
-  }
-
-  class KnowledgeDocument {
-    +string key
-    +string filename
-    +string title
-    +string shelf
-    +int readingTime
-    +int wordCount
-    +int ruleCount
-    +extractTOC() List~Heading~
-  }
-
-  class BusinessRule {
-    +string id
+  class Document {
+    +string path
     +string title
     +string module
-    +string severity
-    +string description
-    +validate() bool
+    +string project_slug
+    +string content_markdown
+    +List~string~ tags
+    +List~DocumentChunk~ chunks
   }
 
-  class ArchitecturalDecisionRecord {
-    +string id
-    +string title
-    +string status
-    +string context
-    +string decision
-    +string consequences
+  class DocumentChunk {
+    +string chunk_id
+    +string doc_path
+    +string project_slug
+    +string header
+    +string header_level
+    +string content
   }
 
-  Feature "1" --> "*" BusinessRule : "satisface"
-  Feature "1" --> "1" Subagent : "asignada a"
-  KnowledgeDocument "*" --> "*" BusinessRule : "documenta"
-  KnowledgeDocument "*" --> "*" ArchitecturalDecisionRecord : "registra"
+  class LLMConfiguration {
+    +LLMProvider provider
+    +EngineType engine_type
+    +string name
+    +string api_key
+    +string base_url
+    +string default_model
+    +string cli_command
+    +string cli_args
+    +bool is_active
+    +float temperature
+    +int max_tokens
+    +mask_api_key() string
+  }
+
+  class ILLMClient {
+    <<interface>>
+    +generate(prompt, system, model) string
+    +stream_generate(prompt, system, model) AsyncGenerator
+    +stream_chat(model, messages, system_prompt) AsyncGenerator
+    +test_connection() tuple
+  }
+
+  class ScopedChatSession {
+    +string session_id
+    +string book_id
+    +string library_id
+    +List~ChatMessage~ messages
+  }
+
+  class ContextBundle {
+    +string bundle_id
+    +string project_slug
+    +string format
+    +string file_path
+    +int token_count
+  }
+
+  Project "1" --> "*" Document : "aisla"
+  Document "1" *-- "*" DocumentChunk : "compone"
+  Document "1" --> "*" ScopedChatSession : "contextualiza"
+  Project "1" --> "*" ContextBundle : "compila"
+  LLMConfiguration "1" ..> "1" ILLMClient : "instancia via LLMFactory"
 ```
 
 ---
 
-## 2. Diagrama de Secuencia: Ciclo de Vida Completo SDD
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor User as "Usuario (Humano)"
-  participant Leader as "Leader Agent"
-  participant Git as "Git System"
-  participant SpecAuthor as "Spec-Author"
-  participant Implementer as "Implementer"
-  participant Reviewer as "Reviewer"
-
-  User->>Leader: "Iniciar tarea INT-001"
-  Leader->>Git: "git checkout -b feature/INT-001/{name}"
-  Leader->>SpecAuthor: "Redactar requerimientos y tasks"
-  SpecAuthor-->>Leader: "specs/001/ completado (spec_ready)"
-  Leader->>User: "ask_question: Aprobar spec al 100%?"
-  alt Spec Aprobado
-    User-->>Leader: "Aprobado (in_progress)"
-    Leader->>Implementer: "Implementar código y tests"
-    Implementer->>Implementer: "Ejecutar checks.test y checks.build"
-    Implementer-->>Leader: "Trazabilidad R<->Tests completa"
-    Leader->>Reviewer: "Auditar calidad y consistencia"
-    alt Reviewer Aprueba
-      Reviewer-->>Leader: "APROBADO (0 errores)"
-      Leader->>User: "ask_question: Integrar a rama base?"
-    else Reviewer Rechaza
-      Reviewer-->>Leader: "RECHAZADO (hallazgos)"
-      Leader->>Implementer: "Corregir observaciones"
-    end
-  else Spec Rechazado
-    User-->>Leader: "Rechazar o solicitar cambios"
-    Leader->>SpecAuthor: "Ajustar especificación"
-  end
-```
-
----
-
-## 3. Diagrama de Secuencia: Editor Dual ContextForge con Scroll Sincronizado
+## 2. Diagrama de Secuencia: Ciclo de Consulta RAG Híbrido y Streaming SSE
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor User as "Desarrollador"
-  participant UI as "Tablero Web (main.js)"
-  participant Textarea as "Panel Editor Markdown"
-  participant Preview as "Panel Live Preview"
-  participant Blocks as "Panel Bloques Visuales"
-  participant Storage as "sync-data.js / data-fallback.js"
+  participant ChatUI as "chat.html (EventSource)"
+  participant Route as "rag_chat/routes.py"
+  participant Handler as "AskRagQueryHandler"
+  participant Hybrid as "HybridSearchService"
+  participant Chroma as "ChromaDB (cf_project_{slug})"
+  participant BM25 as "BM25LexicalRepository"
+  participant Client as "ILLMClient Activo"
 
-  User->>UI: "Pulsar [ Modo Editor ]"
-  UI->>Textarea: "Cargar markdown actual"
-  UI->>Preview: "renderMarkdown(content)"
-  
-  alt Usuario edita en Textarea (Markdown)
-    User->>Textarea: "Escribir texto y hacer scroll"
-    Textarea->>Preview: "Sincronizar scroll proporcionalmente (isScrollingFromEditor)"
-    Textarea->>Preview: "Actualizar HTML en vivo"
-  else Usuario conmuta a [ Modo Bloques ]
-    User->>UI: "Pulsar [ Modo Bloques Visuales ]"
-    UI->>Blocks: "parseMarkdownToBlocks(markdown)"
-    Blocks-->>User: "Renderizar tarjetas interactivas (H1, BR, Callouts)"
-    User->>Blocks: "Reordenar bloques o añadir bloque"
-    Blocks->>Textarea: "blocksToMarkdown(blocks)"
-    Blocks->>Preview: "Actualizar previsualización en vivo"
+  User->>ChatUI: "Envía pregunta técnica"
+  ChatUI->>Route: "GET /chat/stream?q=...&project={slug}"
+  Route->>Handler: "prepare_context(AskRagQuery)"
+  Handler->>Hybrid: "search(query, project_slug, top_k)"
+  par Recuperación Vectorial y Léxica
+    Hybrid->>Chroma: "query_similar(project_slug)"
+    Hybrid->>BM25: "search_lexical(project_slug)"
   end
-
-  User->>UI: "Pulsar [ Guardar Cambios ]"
-  UI->>Storage: "store.saveDoc(key, content) + sync-data.js"
-  Storage-->>User: "Documento persistido local y offline"
+  Chroma-->>Hybrid: "Top-K semánticos"
+  BM25-->>Hybrid: "Top-K léxicos"
+  Hybrid-->>Handler: "Chunks fusionados con RRF (k=60)"
+  Route-->>ChatUI: "event: citations (pills de archivos fuente)"
+  Route->>Client: "stream_chat(model, messages, SYSTEM_PROMPT)"
+  loop Por cada chunk UTF-8
+    Client-->>Route: "token decodificado incrementalmente"
+    Route-->>ChatUI: "event: token"
+  end
+  Route-->>ChatUI: "event: done"
 ```
 
 ---
 
-## 4. Diagrama de Casos de Uso del Arnés SDD
+## 3. Diagrama de Secuencia: Scoped Chat con Zero-RAG Bypass
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User as "Desarrollador"
+  participant API as "chat_router.py (/api/v1/chat/scoped)"
+  participant Service as "ScopedChatService"
+  participant Vector as "ChromaVectorRepository"
+  participant LLM as "ILLMClient Activo"
+
+  User->>API: "POST /api/v1/chat/scoped (raw_markdown, query, history)"
+  API->>Service: "answer_question(library_id, book_id, raw_markdown, query)"
+  alt len(raw_markdown) <= 32000 y no vacío
+    Service->>LLM: "generate(documento completo + historial + query)"
+    LLM-->>Service: "Respuesta con fuente Documento Completo"
+  else Documento extenso (>32000) o vacío
+    Service->>Vector: "search_scoped(library_id, book_id, query, limit=5)"
+    Vector-->>Service: "Chunks del documento y anexos PDF/DOCX/XLSX"
+    Service->>LLM: "generate(chunks focalizados + query)"
+    LLM-->>Service: "Respuesta con citas de página/sección"
+  end
+  Service-->>API: "answer + sources[]"
+  API-->>User: "200 OK JSON"
+```
+
+---
+
+## 4. Diagrama de Máquina de Estados: Ciclo de Vida de un Documento (`Book`)
+
+```mermaid
+stateDiagram-v2
+  [*] --> Draft : "Crear en Editor Dual / Scaffold IA"
+  Draft --> Draft : "Guardar borrador / Adjuntar anexos"
+  Draft --> Published : "[PATCH /api/v1/catalog/books/{id}/status]"
+  Published --> Published : "Editar Markdown + Auto-reindexación watchdog"
+  Published --> Archived : "[Archivar documento obsoleto]"
+  Archived --> Draft : "[Restaurar para revisión]"
+```
+
+---
+
+## 5. Diagrama de Casos de Uso UML
 
 ```mermaid
 flowchart TD
-  actorDev["Desarrollador"]
-  actorAgent["Agente de IA"]
+  actorDev(["Desarrollador / Arquitecto"])
+  actorIde(["Agente IA / IDE MCP"])
+  actorQa(["Ingeniero QA"])
 
-  subgraph UseCases["Casos de Uso del Arnés de Ingeniería"]
-    ucAudit["Auditar Stack Técnico (/technical-audit)"]
-    ucKnowledge["Extraer Base de Conocimiento (/project-knowledge)"]
-    ucSpec["Redactar Requerimientos EARS (/generate-spec)"]
-    ucHumanGate["Aprobar Puerta Humana (ask_question)"]
-    ucImplement["Implementar Código & Tests (/implement)"]
-    ucReview["Auditar Calidad & Trazabilidad (/review)"]
-    ucViewDash["Navegar Tablero & Constelación 3D"]
-    ucOmnibox["Búsqueda Global Omnibox (Ctrl+K)"]
-    ucEditDual["Edición Dual Markdown / Bloques"]
+  subgraph ContextForgeUseCases["Casos de Uso de ContextForge"]
+    ucAuthDoc(["Autoría Dual Markdown / Bloques"])
+    ucAttach(["Adjuntar y Previsualizar PDF/DOCX/XLSX/Audio"])
+    ucRag(["Consultar Chat RAG Híbrido con Citas"])
+    ucScoped(["Consultar Copiloto Focalizado Zero-RAG"])
+    ucConfigLlm(["Configurar y Activar Motor LLM (15 proveedores)"])
+    ucBundle(["Compilar Context Bundle .cursorrules"])
+    ucMcp(["Invocar Herramientas MCP (SSE / STDIO)"])
+    ucPostman(["Descargar Colección Postman y Widget JS"])
   end
 
-  actorDev --> ucAudit
-  actorDev --> ucKnowledge
-  actorDev --> ucHumanGate
-  actorDev --> ucViewDash
-  actorDev --> ucOmnibox
-  actorDev --> ucEditDual
-
-  actorAgent --> ucSpec
-  actorAgent --> ucImplement
-  actorAgent --> ucReview
-  actorAgent --> ucKnowledge
+  actorDev --> ucAuthDoc
+  actorDev --> ucAttach
+  actorDev --> ucRag
+  actorDev --> ucScoped
+  actorDev --> ucConfigLlm
+  actorDev --> ucBundle
+  actorIde --> ucMcp
+  actorQa --> ucPostman
 ```
-
-

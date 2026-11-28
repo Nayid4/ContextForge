@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
+  <diagram id="erd_3nf" name="Modelo Entidad-Relacion Normalizado - ContextForge">
+    <mxGraphModel dx="1860" dy="1220" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1860" pageHeight="1220" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n_2" value="&lt;b&gt;Modelo Entidad-Relación (ERD) Normalizado en 3FN — Persistencia ContextForge&lt;/b&gt;&lt;br&gt;Esquema relacional consolidado (SQLite WAL / PostgreSQL) con claves primarias (PK), foráneas (FK), únicas (UK) y tipos SQL" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1800" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="n_3" value="&lt;b&gt;users (TO-BE RBAC)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; user_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[UK]&lt;/b&gt; email: &lt;i&gt;VARCHAR(150)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;full_name: &lt;i&gt;VARCHAR(120)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;password_hash: &lt;i&gt;VARCHAR(255)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;global_role: &lt;i&gt;VARCHAR(30)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;is_active: &lt;i&gt;BOOLEAN&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;created_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="120" width="385" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_4" value="&lt;b&gt;projects (AS-IS + TO-BE)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; owner_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;name: &lt;i&gt;VARCHAR(100)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[UK]&lt;/b&gt; path: &lt;i&gt;VARCHAR(255)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;sovereign_only: &lt;i&gt;BOOLEAN&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;max_quota_mb: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;is_active: &lt;i&gt;BOOLEAN&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;created_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="505" y="120" width="385" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="n_5" value="&lt;b&gt;modules_and_tags (AS-IS Taxonomía)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; project_slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[UK]&lt;/b&gt; slug: &lt;i&gt;VARCHAR(100)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;kind: &lt;i&gt;VARCHAR(16)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;name: &lt;i&gt;VARCHAR(150)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;color: &lt;i&gt;VARCHAR(30)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;created_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="965" y="120" width="385" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_6" value="&lt;b&gt;api_keys (TO-BE Agentes MCP)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; key_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; user_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; project_slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[UK]&lt;/b&gt; key_sha256: &lt;i&gt;CHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;role_scope: &lt;i&gt;VARCHAR(30)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;expires_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;revoked_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="120" width="390" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="n_7" value="&lt;b&gt;audit_logs (TO-BE Append-Only)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; log_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; actor_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; project_slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;operation: &lt;i&gt;VARCHAR(80)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;resource_id: &lt;i&gt;VARCHAR(120)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;succeeded: &lt;i&gt;BOOLEAN&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;latency_ms: &lt;i&gt;FLOAT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;prev_hash: &lt;i&gt;CHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[UK]&lt;/b&gt; entry_hash: &lt;i&gt;CHAR(64)&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#334155;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="455" width="385" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_8" value="&lt;b&gt;books (AS-IS + TO-BE Core)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; library_slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; module_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;slug: &lt;i&gt;VARCHAR(100)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;title: &lt;i&gt;VARCHAR(200)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;path: &lt;i&gt;VARCHAR(300)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;status: &lt;i&gt;VARCHAR(20)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;current_version: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;content_hash: &lt;i&gt;CHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;updated_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="505" y="455" width="385" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="n_9" value="&lt;b&gt;document_versions (TO-BE Historial)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; version_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; book_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; author_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;version_number: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;content_markdown: &lt;i&gt;TEXT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;content_hash: &lt;i&gt;CHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;status_snapshot: &lt;i&gt;VARCHAR(20)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;change_summary: &lt;i&gt;VARCHAR(250)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;created_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="965" y="455" width="385" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_10" value="&lt;b&gt;attachments_and_jobs (AS-IS + DLQ)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; book_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;file_name: &lt;i&gt;VARCHAR(255)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;mime_type: &lt;i&gt;VARCHAR(100)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;size_bytes: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;sha256_checksum: &lt;i&gt;CHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;index_job_status: &lt;i&gt;VARCHAR(20)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;retry_attempts: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;uploaded_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="455" width="390" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_11" value="&lt;b&gt;llm_configurations (AS-IS + AES-GCM)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; provider: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;engine_type: &lt;i&gt;VARCHAR(40)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;base_url: &lt;i&gt;VARCHAR(255)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;api_key_cipher: &lt;i&gt;BYTEA / TEXT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;default_model: &lt;i&gt;VARCHAR(100)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;temperature: &lt;i&gt;FLOAT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;max_tokens: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;is_active: &lt;i&gt;BOOLEAN&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;updated_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="835" width="385" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_12" value="&lt;b&gt;chat_sessions_messages (AS-IS RAG Chat)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; message_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; session_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; project_slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; book_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; user_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;role: &lt;i&gt;VARCHAR(20)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;content: &lt;i&gt;TEXT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;sources_json: &lt;i&gt;JSONB / TEXT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;created_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="505" y="835" width="385" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_13" value="&lt;b&gt;context_bundles_items (TO-BE Manifiesto)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; bundle_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; project_slug: &lt;i&gt;VARCHAR(50)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; book_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;name: &lt;i&gt;VARCHAR(150)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;export_format: &lt;i&gt;VARCHAR(20)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;max_tokens: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;estimated_tokens: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;version_included: &lt;i&gt;INTEGER&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;bundle_hash: &lt;i&gt;CHAR(64)&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="965" y="835" width="385" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="n_14" value="&lt;b&gt;threads_comments_ratings (3FN Consolidado)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;[PK]&lt;/b&gt; comment_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; thread_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; book_id: &lt;i&gt;VARCHAR(64)&lt;/i&gt;&lt;br&gt;&lt;b&gt;[FK]&lt;/b&gt; author_id: &lt;i&gt;UUID&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;section_anchor: &lt;i&gt;VARCHAR(150)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;content: &lt;i&gt;TEXT&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;resolved: &lt;i&gt;BOOLEAN&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;rating_score: &lt;i&gt;SMALLINT (1..5)&lt;/i&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;created_at: &lt;i&gt;TIMESTAMPTZ&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=left;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="835" width="390" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="e_15" value="posee (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_16" value="ejecuta (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_17" value="emite (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="237" y="98" />
+              <mxPoint x="1620" y="98" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_18" value="clasifica (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_19" value="acota (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="375" />
+              <mxPoint x="1620" y="375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_20" value="contiene (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_21" value="agrupa (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1157" y="395" />
+              <mxPoint x="760" y="395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_22" value="versiona (1..1..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_8" target="n_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_23" value="adjunta / indexa (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_8" target="n_10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="745" />
+              <mxPoint x="1620" y="745" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_24" value="contextualiza (0..1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_8" target="n_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_25" value="empaqueta (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_8" target="n_13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="775" />
+              <mxPoint x="1157" y="775" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_26" value="discute / califica (1..0..*)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_8" target="n_14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="795" />
+              <mxPoint x="1620" y="795" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,5 +1,5 @@
 (() => {
-  // project-docs/src/core/store.js
+  // src/core/store.js
   var getInitialTheme = () => {
     if (typeof localStorage !== "undefined") {
       const saved = localStorage.getItem("harness_theme");
@@ -388,7 +388,7 @@
     };
   }
 
-  // project-docs/src/core/api.js
+  // src/core/api.js
   async function fetchProjectData(options = {}) {
     const { bypassCache = false } = options;
     if (typeof window !== "undefined" && window.location?.protocol === "file:") {
@@ -708,7 +708,7 @@
     startPolling: startAutoSync
   };
 
-  // project-docs/src/core/router.js
+  // src/core/router.js
   var Router = class {
     constructor() {
       this.currentRoute = "issues";
@@ -872,7 +872,7 @@
   };
   var router = new Router();
 
-  // project-docs/src/core/detector.js
+  // src/core/detector.js
   async function detectEnvironment(projectData = {}) {
     const agents = [];
     const agentChecks = [
@@ -1002,7 +1002,7 @@
     };
   }
 
-  // project-docs/src/shared/ui/Icons.js
+  // src/shared/ui/Icons.js
   function createIcon(svgInner, defaultCls = "w-4 h-4") {
     const fn = (cls = defaultCls) => `
     <svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1136,7 +1136,7 @@
     strikethrough: createIcon('<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/>')
   };
 
-  // project-docs/src/shared/utils/renderList.js
+  // src/shared/utils/renderList.js
   function renderList(items = [], renderItemFn, emptyMessageOrFn = "") {
     if (!items || !Array.isArray(items) || items.length === 0) {
       if (typeof emptyMessageOrFn === "function") {
@@ -1154,7 +1154,7 @@
     return items.map((item, index) => renderItemFn(item, index, items)).join("");
   }
 
-  // project-docs/src/shared/ui/PlaneSidebar.js
+  // src/shared/ui/PlaneSidebar.js
   function renderPlaneSidebar({
     currentView = "issues",
     activeWorkspace = "Harness Engineering",
@@ -1596,7 +1596,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/PlaneTopBar.js
+  // src/shared/ui/PlaneTopBar.js
   function renderPlaneTopBar({
     currentView = "issues",
     viewTitle = "Work items",
@@ -1717,7 +1717,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/OmniboxModal.js
+  // src/shared/ui/OmniboxModal.js
   function renderOmniboxModal({
     isOpen = false,
     query = "",
@@ -1801,7 +1801,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/MasterLayout.js
+  // src/shared/ui/MasterLayout.js
   function renderMasterLayout({
     sidebarProps = {},
     topBarProps = {},
@@ -1834,7 +1834,7 @@
   `;
   }
 
-  // project-docs/src/shared/ui/PlaneControlsBar.js
+  // src/shared/ui/PlaneControlsBar.js
   function renderPlaneControlsBar({
     currentViewMode = "list",
     filterState = "all",
@@ -1917,7 +1917,7 @@
   `;
   }
 
-  // project-docs/src/core/api-client.js
+  // src/core/api-client.js
   var ApiClient = class {
     constructor(baseUrl = "") {
       this.baseUrl = baseUrl;
@@ -2143,7 +2143,7 @@
   };
   var apiClient = new ApiClient();
 
-  // project-docs/src/modules/Projects/services/project.service.js
+  // src/modules/Projects/services/project.service.js
   var ProjectService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -2217,7 +2217,7 @@
   };
   var projectService = new ProjectService();
 
-  // project-docs/src/modules/Projects/store/project.store.js
+  // src/modules/Projects/store/project.store.js
   var initialProjectState = {
     workspace: null,
     project: null,
@@ -2271,7 +2271,7 @@
   };
   var projectStore = new ProjectStore();
 
-  // project-docs/src/modules/Issues/services/issue.service.js
+  // src/modules/Issues/services/issue.service.js
   var CANONICAL_STATES = [
     { id: "state-backlog", name: "Backlog", color: "bg-zinc-500", group: "backlog", sequence: 1 },
     { id: "state-todo", name: "Por Hacer", color: "bg-sky-500", group: "unstarted", sequence: 2 },
@@ -2441,7 +2441,7 @@
   };
   var issueService = new IssueService();
 
-  // project-docs/src/modules/Issues/store/issue.store.js
+  // src/modules/Issues/store/issue.store.js
   var initialIssueState = {
     viewMode: "board",
     // 'board' | 'list' | 'calendar' | 'spreadsheet'
@@ -2601,7 +2601,7 @@
   };
   var issueStore = new IssueStore();
 
-  // project-docs/src/modules/Issues/components/IssueCard.js
+  // src/modules/Issues/components/IssueCard.js
   function IssueCard(issue) {
     if (!issue) return "";
     const priorityIcons = {
@@ -2685,7 +2685,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueRow.js
+  // src/modules/Issues/components/IssueRow.js
   function IssueRow(issue) {
     if (!issue) return "";
     const priorityIcons = {
@@ -2767,7 +2767,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueBoard.js
+  // src/modules/Issues/components/IssueBoard.js
   function IssueBoard({
     issues = [],
     states = []
@@ -2811,7 +2811,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueList.js
+  // src/modules/Issues/components/IssueList.js
   function IssueList({
     issues = [],
     states = [],
@@ -2892,7 +2892,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/components/IssueDetailModal.js
+  // src/modules/Issues/components/IssueDetailModal.js
   function IssueDetailModal({
     issue = null,
     states = [],
@@ -3273,7 +3273,7 @@
   `;
   }
 
-  // project-docs/src/modules/Issues/index.js
+  // src/modules/Issues/index.js
   function renderIssueListView(props = {}) {
     return IssueList(props);
   }
@@ -3287,7 +3287,7 @@
     return IssueList({ ...props, groupBy: "none" });
   }
 
-  // project-docs/src/modules/Cycles/services/cycle.service.js
+  // src/modules/Cycles/services/cycle.service.js
   var CycleService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -3355,7 +3355,7 @@
   };
   var cycleService = new CycleService();
 
-  // project-docs/src/modules/Cycles/store/cycle.store.js
+  // src/modules/Cycles/store/cycle.store.js
   var initialCycleState = {
     cycles: [],
     selectedCycleId: null,
@@ -3409,7 +3409,7 @@
   };
   var cycleStore = new CycleStore();
 
-  // project-docs/src/modules/Cycles/components/BurnDownChart.js
+  // src/modules/Cycles/components/BurnDownChart.js
   function BurnDownChart({
     points = [],
     svgWidth = 600,
@@ -3467,7 +3467,7 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/components/CycleCard.js
+  // src/modules/Cycles/components/CycleCard.js
   function CycleCard({
     cycle = {},
     metrics = {},
@@ -3508,7 +3508,7 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/components/CycleList.js
+  // src/modules/Cycles/components/CycleList.js
   function CycleList({
     cycles = [],
     issues = [],
@@ -3536,7 +3536,7 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/pages/CyclesPage.js
+  // src/modules/Cycles/pages/CyclesPage.js
   function CyclesPage({
     cycles = [],
     issues = []
@@ -3623,12 +3623,12 @@
   `;
   }
 
-  // project-docs/src/modules/Cycles/index.js
+  // src/modules/Cycles/index.js
   function renderCyclesView(props = {}) {
     return CyclesPage(props);
   }
 
-  // project-docs/src/modules/Modules/services/module.service.js
+  // src/modules/Modules/services/module.service.js
   var ModuleService = class {
     getModules() {
       const state = store.getState();
@@ -3641,13 +3641,13 @@
   };
   var moduleService = new ModuleService();
 
-  // project-docs/src/modules/Modules/store/module.store.js
+  // src/modules/Modules/store/module.store.js
   var moduleStore = createStore({
     selectedModuleId: null,
     filterStatus: "all"
   });
 
-  // project-docs/src/modules/Modules/components/ModuleCard.js
+  // src/modules/Modules/components/ModuleCard.js
   function ModuleCard({ module, issues = [] }) {
     const modIssues = issues.filter((i) => i.module_id === module.id || i.module_name === module.name);
     const total = modIssues.length;
@@ -3703,7 +3703,7 @@
   `;
   }
 
-  // project-docs/src/modules/Modules/pages/ModulesPage.js
+  // src/modules/Modules/pages/ModulesPage.js
   function renderModulesView({
     modules = [],
     issues = [],
@@ -3735,7 +3735,7 @@
   `;
   }
 
-  // project-docs/src/modules/Pages/services/page.service.js
+  // src/modules/Pages/services/page.service.js
   var PageService = class {
     constructor(client = apiClient) {
       this.client = client;
@@ -3871,7 +3871,7 @@
   };
   var pageService = new PageService();
 
-  // project-docs/src/modules/Pages/store/page.store.js
+  // src/modules/Pages/store/page.store.js
   var initialPageState = {
     pages: [],
     activePageId: null,
@@ -4076,7 +4076,7 @@
   };
   var pageStore = new PageStore();
 
-  // project-docs/src/modules/Pages/components/PageNavigationPane.js
+  // src/modules/Pages/components/PageNavigationPane.js
   function renderFloatingOutlineBars(toc = []) {
     if (!toc || toc.length === 0) return "";
     return `
@@ -4486,7 +4486,7 @@
   `;
   }
 
-  // project-docs/src/shared/utils/dates.js
+  // src/shared/utils/dates.js
   function formatTimeAgo(input) {
     if (!input) return "";
     const date = input instanceof Date ? input : new Date(input);
@@ -4506,7 +4506,7 @@
     return `hace ${Math.floor(diffDays / 365)} a`;
   }
 
-  // project-docs/src/modules/Pages/components/PageReader.js
+  // src/modules/Pages/components/PageReader.js
   function enrichMarkdownWithSmartChips(html = "", issues = []) {
     if (!html || typeof html !== "string") return "";
     const issueMap = /* @__PURE__ */ new Map();
@@ -4542,7 +4542,7 @@
     return result;
   }
 
-  // project-docs/src/shared/MarkdownViewer.js
+  // src/shared/MarkdownViewer.js
   function stripFrontmatter(md = "") {
     if (!md || typeof md !== "string") return "";
     let clean = md.trimStart();
@@ -5129,7 +5129,7 @@ ${children}
     return rawMd.replace(/\n{3,}/g, "\n\n").trim();
   }
 
-  // project-docs/src/modules/Pages/pages/PagesPage.js
+  // src/modules/Pages/pages/PagesPage.js
   function renderPageHeaderActions({
     activePage = {},
     isFullWidth = false,
@@ -5352,7 +5352,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PageReaderCanvas.js
+  // src/modules/Pages/components/PageReaderCanvas.js
   function escapeHtml3(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -5874,7 +5874,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PageModals.js
+  // src/modules/Pages/components/PageModals.js
   function escapeHtml4(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -6108,7 +6108,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PageCard.js
+  // src/modules/Pages/components/PageCard.js
   function getPageName(title = "") {
     return !title || !String(title).trim() ? "Untitled" : String(title).trim();
   }
@@ -6239,7 +6239,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/PagesHeader.js
+  // src/modules/Pages/components/PagesHeader.js
   function renderPagesHeader({
     allCount = 0,
     createdByMeCount = 0,
@@ -6531,7 +6531,7 @@ ${children}
   `;
   }
 
-  // project-docs/src/modules/Pages/components/KnowledgeBase.js
+  // src/modules/Pages/components/KnowledgeBase.js
   function escapeHtml6(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -7236,7 +7236,7 @@ ${guardrailsText || "- No inventar librer\xEDas redundantes.\n- Respetar convenc
     };
   }
 
-  // project-docs/src/modules/Pages/controllers/PagesController.js
+  // src/modules/Pages/controllers/PagesController.js
   function escapeHtml7(text = "") {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -8829,7 +8829,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     }
   };
 
-  // project-docs/src/modules/Harness/services/harness.service.js
+  // src/modules/Harness/services/harness.service.js
   var CANONICAL_AGENTS = [
     {
       id: "leader",
@@ -8938,7 +8938,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var harnessService = new HarnessService();
 
-  // project-docs/src/modules/Harness/store/harness.store.js
+  // src/modules/Harness/store/harness.store.js
   var initialHarnessState = {
     agents: [...CANONICAL_AGENTS],
     skills: [...CANONICAL_SKILLS],
@@ -8985,7 +8985,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var harnessStore = new HarnessStore();
 
-  // project-docs/src/modules/Harness/components/AgentCard.js
+  // src/modules/Harness/components/AgentCard.js
   function AgentCard({
     agent = {},
     isSelected = false
@@ -9040,7 +9040,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/AgentList.js
+  // src/modules/Harness/components/AgentList.js
   function AgentList({
     agents = [],
     selectedAgentId = "leader"
@@ -9055,7 +9055,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/SkillSyncStatus.js
+  // src/modules/Harness/components/SkillSyncStatus.js
   function SkillSyncStatus({
     skills = []
   } = {}) {
@@ -9105,7 +9105,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/HarnessOverview.js
+  // src/modules/Harness/components/HarnessOverview.js
   function HarnessOverview({
     governance = {}
   } = {}) {
@@ -9143,7 +9143,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/components/AiEngineMonitor.js
+  // src/modules/Harness/components/AiEngineMonitor.js
   function AiEngineMonitor({
     aiConfigs = [],
     aiRuns = [],
@@ -9259,7 +9259,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/pages/HarnessPage.js
+  // src/modules/Harness/pages/HarnessPage.js
   function HarnessPage({
     agents = [],
     skills = [],
@@ -9312,12 +9312,12 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Harness/index.js
+  // src/modules/Harness/index.js
   function renderHarnessView(props = {}) {
     return HarnessPage(props);
   }
 
-  // project-docs/src/modules/Architecture/services/architecture.service.js
+  // src/modules/Architecture/services/architecture.service.js
   var ArchitectureService = class {
     getProjectSpec() {
       const state = store.getState();
@@ -9346,7 +9346,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var architectureService = new ArchitectureService();
 
-  // project-docs/src/modules/Architecture/store/architecture.store.js
+  // src/modules/Architecture/store/architecture.store.js
   var architectureStore = createStore({
     activeTab: "c4",
     // 'c4' | 'stack' | 'layers' | 'goals'
@@ -9354,7 +9354,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     zoomLevel: 100
   });
 
-  // project-docs/src/shared/MermaidViewer.js
+  // src/shared/MermaidViewer.js
   function renderMermaidViewer(diagram) {
     const { id, title, type, level, description, mermaid: code } = diagram;
     return `
@@ -9458,7 +9458,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/"/g, "&quot;");
   }
 
-  // project-docs/src/modules/Architecture/pages/ArchitecturePage.js
+  // src/modules/Architecture/pages/ArchitecturePage.js
   function renderArchitectureDocs({ projectSpec, knowledgeIndex, features = [] }) {
     const spec = projectSpec || {};
     const kData = knowledgeIndex || {};
@@ -10077,7 +10077,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // project-docs/src/modules/Graph/services/graph.service.js
+  // src/modules/Graph/services/graph.service.js
   var GraphService = class {
     getFeatures() {
       const state = store.getState();
@@ -10098,7 +10098,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var graphService = new GraphService();
 
-  // project-docs/src/modules/Graph/store/graph.store.js
+  // src/modules/Graph/store/graph.store.js
   var graphStore = createStore({
     graphMode: "graph",
     // 'graph' | 'tree'
@@ -10106,7 +10106,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     zoomLevel: 100
   });
 
-  // project-docs/src/modules/Graph/components/DependencyGraph.js
+  // src/modules/Graph/components/DependencyGraph.js
   function renderDependencyGraph({ features }) {
     if (!features || features.length === 0) {
       return `<div class="p-12 text-center text-slate-500 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">No hay datos de dependencias disponibles.</div>`;
@@ -10418,7 +10418,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Graph/components/DependencyTree.js
+  // src/modules/Graph/components/DependencyTree.js
   var DependencyTreeComponent = class {
     constructor(containerEl, { features, currentSpec, onSelect }) {
       this.container = containerEl;
@@ -10735,7 +10735,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
 
-  // project-docs/src/modules/Graph/pages/GraphPage.js
+  // src/modules/Graph/pages/GraphPage.js
   function renderDependencyGraphView({
     features = [],
     graphMode = "graph",
@@ -10776,7 +10776,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Constellation/services/constellation.service.js
+  // src/modules/Constellation/services/constellation.service.js
   var ConstellationService = class {
     getFeatures() {
       const state = store.getState();
@@ -10785,14 +10785,14 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var constellationService = new ConstellationService();
 
-  // project-docs/src/modules/Constellation/store/constellation.store.js
+  // src/modules/Constellation/store/constellation.store.js
   var constellationStore = createStore({
     selectedNodeId: null,
     isRotating: true,
     cameraDistance: 600
   });
 
-  // project-docs/src/modules/Constellation/components/SpaceView3D.js
+  // src/modules/Constellation/components/SpaceView3D.js
   var SpaceView3D = class {
     constructor() {
       this.container = null;
@@ -11376,7 +11376,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
     }
   };
 
-  // project-docs/src/modules/Constellation/pages/ConstellationPage.js
+  // src/modules/Constellation/pages/ConstellationPage.js
   function renderConstellation3DView() {
     return `
     <div class="p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-120px)] flex flex-col">
@@ -11405,7 +11405,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/modules/Analytics/services/analytics.service.js
+  // src/modules/Analytics/services/analytics.service.js
   var AnalyticsService = class {
     getIssues() {
       const state = store.getState();
@@ -11422,14 +11422,14 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   };
   var analyticsService = new AnalyticsService();
 
-  // project-docs/src/modules/Analytics/store/analytics.store.js
+  // src/modules/Analytics/store/analytics.store.js
   var analyticsStore = createStore({
     timeRange: "all",
     // 'sprint' | 'month' | 'all'
     selectedAgent: "all"
   });
 
-  // project-docs/src/modules/Analytics/pages/AnalyticsPage.js
+  // src/modules/Analytics/pages/AnalyticsPage.js
   function renderAnalyticsView({
     issues = [],
     states = [],
@@ -11560,7 +11560,7 @@ Describe el prop\xF3sito y contexto de la funcionalidad...
   `;
   }
 
-  // project-docs/src/main.js
+  // src/main.js
   var App = class {
     constructor() {
       this.root = document.getElementById("app");

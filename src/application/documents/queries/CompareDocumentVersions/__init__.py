@@ -1,0 +1,5 @@
+from application.documents.queries.CompareDocumentVersions.CompareDocumentVersionsQuery import CompareDocumentVersionsQuery
+from application.documents.queries.CompareDocumentVersions.CompareDocumentVersionsQueryValidation import CompareDocumentVersionsQueryValidation
+from application.documents.queries.CompareDocumentVersions.CompareDocumentVersionsQueryHandler import CompareDocumentVersionsQueryHandler
+
+__all__ = ["CompareDocumentVersionsQuery", "CompareDocumentVersionsQueryValidation", "CompareDocumentVersionsQueryHandler"]

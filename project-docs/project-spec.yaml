@@ -1,208 +1,30 @@
-# project-spec.yaml — Auditoría Técnica y Especificación de Arquitectura
-# Generado por skill: technical-audit (Harness SDD)
-# Fecha: 2026-11-07
-
 project:
-  name: "AI Agentic SDD Engineering Harness"
-  description: "Arnés universal y agnóstico de ingeniería de software dirigida por especificaciones (Spec Driven Development). Provee orquestación multi-agente, sincronización de skills triple, base de conocimiento anti-sesgo y tablero de seguimiento interactivo en Screaming Architecture."
-  version: "2.5.0"
+  name: contextforge
+  description: ContextForge - Local Knowledge RAG, Sovereign Docs-as-Code & Reusable SDD Governance Engine
+  version: 1.0.0
   type: fullstack
 
 runtime:
-  language: "node"
-  version: "v18.0.0+"
-  packageManager: "npm"
-
-environment:
-  required: []
-  optional:
-    - name: PORT
-      description: "Puerto para el servidor HTTP local de visualización (8080 en dev, 3333 en test)"
-      defaultValue: "8080"
-    - name: HOST
-      description: "Dirección de host local para el servidor web"
-      defaultValue: "127.0.0.1"
-    - name: CI
-      description: "Indicador de ejecución en entorno de integración continua"
-      defaultValue: "false"
-    - name: NO_OPEN
-      description: "Suprime la apertura automática del navegador al iniciar el servidor"
-      defaultValue: "0"
-
-services: []
-
-dependencies:
-  system:
-    - name: node
-      version: ">=18.0.0"
-      required: true
-    - name: npm
-      version: ">=9.0.0"
-      required: true
-    - name: git
-      version: ">=2.30.0"
-      required: true
-  packages:
-    - name: esbuild
-      version: "^0.25.0"
-      required: true
-      dev: true
-    - name: "@playwright/test"
-      version: "^1.64.1"
-      required: true
-      dev: true
-
-structure:
-  entryPoint: "project-docs/src/main.js"
-  srcDir: "project-docs/src"
-  testDir: "tests"
-  buildDir: "project-docs/dist"
-  configFiles:
-    - filename: "opencode.json"
-      required: true
-      description: "Configuración principal para OpenCode"
-    - filename: "AGENTS.md"
-      required: true
-      description: "Reglas de branching, commits semánticos y arquitectura de agentes"
-    - filename: "project-docs/project-spec.yaml"
-      required: true
-      description: "Especificación técnica canónica y auditoría del arnés encapsulada en project-docs/"
-    - filename: "project-docs/verify.sh"
-      required: true
-      description: "Script de verificación integral de 9 pasos autónomo en project-docs/"
-    - filename: ".agents/ANTIGRAVITY.md"
-      required: true
-      description: "Guía de orquestación nativa para Google Antigravity 2.0"
-    - filename: "project-docs/package.json"
-      required: true
-      description: "Manifiesto de dependencias, scripts de prueba y build encapsulados en project-docs/"
-    - filename: "project-docs/playwright.config.js"
-      required: true
-      description: "Configuración de Playwright encapsulada para pruebas E2E de aceptación"
-    - filename: "project-docs/kickstart.json"
-      required: false
-      description: "Parámetros y metadatos de inicialización de proyectos cliente"
-
-architecture:
-  style: "Multi-Agent System (MAS) + Screaming Architecture (Modular)"
-  patterns:
-    - name: "Spec Driven Development (SDD)"
-      type: "Metodología"
-      description: "Ciclo de especificación rigurosa previa a la codificación con gates humanos y trazabilidad R-to-Tests."
-    - name: "Triple-Mirror Skills Synchronization"
-      type: "Sincronización"
-      description: "Garantía de paridad exacta entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/."
-    - name: "Docs-as-Code (Markdown + Mermaid C4/UML)"
-      type: "Documentación"
-      description: "Modelado técnico versionado con C4 Context/Container/Component, diagramas UML y diagramas ERD."
-    - name: "Proportional Synchronized Dual Editor"
-      type: "UI / UX"
-      description: "Editor ContextForge con renderizado reactivo y scroll proporcionalmente sincronizado."
-    - name: "Pyramidal 3D Constellation"
-      type: "Visualización 3D"
-      description: "Constelación interactiva basada en Three.js con rotación orbital, nodos navegables y ciclo de vida mount/unmount."
-    - name: "Offline-First Fallback Architecture"
-      type: "Resiliencia"
-      description: "Compatibilidad 100% offline nativa para protocolo file:/// sin requerir servidor HTTP activo."
-  layers:
-    - name: "Platform Rules & Instructions"
-      description: "Reglas canónicas de branching ({type}/INT-{id}/{name} <=80c) y commits semánticos en .agents/, .opencode/ y .github/."
-    - name: "Multi-Agent Orchestrator"
-      description: "Roles especializados: leader, spec-author, implementer y reviewer con puertas de decisión humana (ask_question)."
-    - name: "Tri-Platform Skills Registry"
-      description: "Catálogo de 18 skills homologadas con fuente de verdad en .opencode/skills/ y espejos automáticos en .github/ y .agents/."
-    - name: "Anti-Bias Sovereign Knowledge Base"
-      description: "Directorio project-docs/knowledge/ con modelo C4, diagramas UML, ERD, diccionario de datos, reglas BR-* y ADRs."
-    - name: "Interactive Tracking Dashboard"
-      description: "Tablero web interactivo en project-docs/ con Tailwind CSS v4, Three.js 3D, Editorial Library Hub y Editor Dual ContextForge."
-
-tech_stack:
-  orchestration: "Google Antigravity 2.0 / OpenCode / GitHub Copilot"
-  tooling: "Node.js (ES Modules), esbuild"
-  frontend: "Vanilla JS, Tailwind CSS v4 (@tailwindcss/browser@4), Three.js r128"
-  documentation: "Docs-as-Code, Mermaid.js 10.9+, GitHub Flavored Markdown"
-  testing: "Node.js Test Runner, Playwright E2E"
-
-modules:
-  - id: agent-orchestrator
-    name: "Orquestador Multi-Agente & Reglas de Plataforma"
-    tech: "Google Antigravity Roles, OpenCode Rules, Copilot Instructions"
-    description: "Coordina roles especializados (leader, spec-author, implementer, reviewer) con guardrails de ramas y commits."
-    responsibilities:
-      - "Orquestación multi-agente con guardrails de ramas y commits semánticos"
-      - "Gestión de puertas de decisión humana mediante ask_question"
-      - "Garantía de trazabilidad estricta R-to-Tests y cierre con subtareas Scrum Jira DEV/QA"
-    features: ["INT-001", "INT-009"]
-
-  - id: triple-sync-engine
-    name: "Motor de Sincronización Triple de Skills"
-    tech: "Node.js, FileSystem Mirroring"
-    description: "Mantiene paridad estricta entre .opencode/skills/ (fuente de verdad), .github/skills/ y .agents/skills/."
-    responsibilities:
-      - "Validación de hashes y diferencias de contenido en skills"
-      - "Propagación unidireccional desde .opencode/skills/ hacia espejos Copilot y Antigravity"
-      - "Reporte de divergencias y auditoría de sincronización"
-    features: ["INT-002"]
-
-  - id: knowledge-engine
-    name: "Motor de Base de Conocimiento Anti-Sesgo"
-    tech: "Docs-as-Code, Mermaid C4/UML, Markdown"
-    description: "Genera y audita modelos C4, diagramas UML, ERD, diccionario de datos, reglas de negocio BR-* y decisiones ADR."
-    responsibilities:
-      - "Extracción forense de arquitectura y diagramas Mermaid (C4, UML, ERD)"
-      - "Documentación de reglas invariantes de negocio (BR-*) y decisiones arquitectónicas (ADR)"
-      - "Indexación JSON viva y categorización en estantes editoriales"
-    features: ["INT-003"]
-
-  - id: dashboard-visualizer
-    name: "Tablero de Seguimiento Visual & Editor Dual"
-    tech: "Vanilla JS (ES Modules), Tailwind CSS v4, Three.js, ContextForge Dual Block Editor"
-    description: "Interfaz interactiva con métricas KPI, biblioteca por estantes, constelación 3D piramidal y buscador Omnibox (Ctrl+K)."
-    responsibilities:
-      - "Renderizado de métricas KPI, avance de features y detalles de subtareas Scrum"
-      - "Visualización de constelación 3D interactiva en Three.js con órbitas y nodos"
-      - "Editor dual ContextForge con sincronización de scroll y vista de lectura editorial"
-      - "Búsqueda reactiva global tipo Omnibox (Ctrl+K)"
-    features: ["INT-004", "INT-005", "INT-006"]
-
-  - id: testing-qa-suite
-    name: "Suite de Pruebas & Calidad"
-    tech: "Node.js Test Runner, Playwright E2E, Static Analysis"
-    description: "Batería de tests unitarios, caja blanca/negra, aceptación end-to-end y auditoría de código."
-    responsibilities:
-      - "Ejecución de pruebas unitarias sin dependencias externas pesadas"
-      - "Pruebas de caja blanca (branch coverage) y caja negra (BVA, resiliencia)"
-      - "Pruebas de aceptación E2E con Playwright en Chrome headless"
-      - "Auditorías estáticas de anti-emojis y zero-mocks"
-    features: ["INT-007", "INT-008"]
+  language: python
+  version: ">=3.11"
+  packageManager: uv
 
 checks:
   build:
-    command: "npm run build"
+    command: .\.venv\Scripts\python.exe -m mypy --strict src
     timeout: 60
   test:
-    command: "npm test"
-    timeout: 120
+    command: .\.venv\Scripts\python.exe -m pytest
+    timeout: 180
     hasTests: true
   lint:
-    command: "npm run test:unit"
+    command: .\.venv\Scripts\python.exe -m mypy --strict src
     hasLint: true
-  verify:
-    command: "node project-docs/sync-data.js"
-    timeout: 60
 
 docker:
-  hasDockerfile: false
-  hasCompose: false
-  composePath: ""
-  services: []
-
-scripts:
-  dev: "node project-docs/serve.js"
-  build: "npm run build"
-  start: "npm start"
-  test: "npm test"
-  lint: "npm run test:unit"
-  verify: "npm run sync"
-  test:acceptance: "npm run test:acceptance"
-  test:all: "npm run test:all"
+  hasDockerfile: true
+  hasCompose: true
+  composePath: docker-compose.yml
+  services:
+    - name: contextforge
+      port: 8000

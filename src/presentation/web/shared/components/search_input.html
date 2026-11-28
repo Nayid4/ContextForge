@@ -1,0 +1,42 @@
+{# Reusable Debounced Search Input Component with Clear & Loading Indicator (Nielsen H#1) #}
+{% macro debounced_search(id, name, value, placeholder, hx_get_url, hx_target, hx_include, clear_url) %}
+<div class="relative flex-1">
+  <form method="GET" action="{{ hx_get_url }}" onsubmit="event.preventDefault();">
+    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none text-xs">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </span>
+    <input
+      type="text"
+      id="{{ id }}"
+      name="{{ name }}"
+      value="{{ value }}"
+      placeholder="{{ placeholder }}"
+      hx-get="{{ hx_get_url }}"
+      hx-trigger="input changed delay:300ms, search"
+      hx-target="{{ hx_target }}"
+      hx-select="{{ hx_target }}"
+      hx-push-url="true"
+      hx-indicator="#{{ id }}-spinner"
+      {% if hx_include %}hx-include="{{ hx_include }}"{% endif %}
+      class="w-full pl-9 pr-10 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 font-medium shadow-xs transition"
+    >
+    <span id="{{ id }}-spinner" class="htmx-indicator absolute inset-y-0 right-7 flex items-center text-indigo-500 text-xs pointer-events-none">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+    </span>
+    {% if value %}
+    <a
+      href="{{ clear_url }}"
+      hx-get="{{ clear_url }}"
+      hx-target="{{ hx_target }}"
+      hx-select="{{ hx_target }}"
+      hx-push-url="true"
+      class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs cursor-pointer"
+      title="Limpiar búsqueda"
+      aria-label="Limpiar búsqueda"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </a>
+    {% endif %}
+  </form>
+</div>
+{% endmacro %}

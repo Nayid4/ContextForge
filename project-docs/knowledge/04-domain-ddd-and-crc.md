@@ -1,100 +1,79 @@
 ---
-id: "DOC-DDD-CRC"
-title: "Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC"
+id: "DOC-04-DOMAIN-DDD-AND-CRC_MD"
+title: "Modelo de Dominio DDD, Bounded Contexts y Tarjetas CRC — ContextForge"
 collection: "general"
-parent: null
-owner: "leader"
-module: "global"
+parent: "01-project-overview-and-business.md"
+owner: "spec-author"
 status: "Publicado"
 version: "4.0.0"
 access: "public"
 is_locked: false
 is_favorite: false
 full_width: false
-last_updated: "2026-11-03"
-tags: ["ddd","ubiquitous-language","context-map","crc-cards","strategic-ddd"]
-labels: ["ddd","ubiquitous-language","context-map","crc-cards","strategic-ddd","general"]
+last_updated: "2026-11-25"
+tags: []
+labels: ["ddd","bounded-contexts","crc-cards","ubiquitous-language","general"]
+icon: "book"
 ---
 
-# Modelo de Dominio DDD, Lenguaje Ubicuo y Tarjetas CRC
+# Modelo de Dominio DDD, Subdominios, Context Map y Tarjetas CRC
 
 > [!NOTE]
-> Especificación formal del diseño guiado por el dominio (DDD Estratégico y Táctico), mapa de contextos y catálogo de Tarjetas CRC (*Class-Responsibility-Collaborator*).
+> Análisis estratégico y táctico basado en **Domain-Driven Design (DDD)** sobre los 12 contextos de dominio definidos en `src/domain/` y `src/core/domain/`.
 
 ---
 
-## 1. Clasificación de Subdominios (DDD Estratégico)
+## 1. Clasificación de Subdominios
 
-1. **Core Domain (Dominio Central)**:
-   - **`agent-orchestrator`**: Orquestación del ciclo de vida SDD, ciclo de subagentes especializados, cumplimiento estricto de convenciones de branching y puertas humanas con `ask_question`.
-2. **Supporting Subdomains (Subdominios de Soporte)**:
-   - **`triple-sync-engine`**: Motor de sincronización triple y garantía de paridad entre OpenCode, Copilot y Antigravity.
-   - **`knowledge-engine`**: Motor de ingesta y preservación de contexto soberano Docs-as-Code anti-sesgo.
-   - **`dashboard-visualizer`**: Tablero interactivo, lector editorial, editor dual ContextForge y visualizador 3D.
-   - **`testing-qa-suite`**: Automatización del arnés de verificación en 8 niveles y runner de `project-docs/verify.sh`.
-3. **Generic Subdomains (Subdominios Genéricos)**:
-   - Control de versiones (Git), motor de renderizado Markdown y Three.js.
-
----
-
-## 2. Diccionario de Lenguaje Ubicuo (Ubiquitous Language)
-
-| Término Ubicuo | Definición Funcional y Técnica | Equivalente en Código / Artefactos |
-|---|---|---|
-| **Harness (Arnés)** | Conjunto de reglas, scripts, skills y roles que guían y restringen a los agentes de IA. | `.agents/`, `.opencode/`, `.github/`, `project-docs/verify.sh` |
-| **Spec-Driven Development (SDD)** | Metodología donde ninguna línea de código se escribe antes de aprobar formalmente su spec. | `project-docs/specs/{NNN}_{name}/`, `generate-spec` |
-| **Human Gate (Puerta Humana)** | Pausa obligatoria del flujo que bloquea la ejecución del agente hasta confirmación del humano. | Herramienta nativa `ask_question` |
-| **Rama INT-*** | Rama de trabajo dedicada que cumple `{feature\|bugfix}/INT-{numero}/{nombre}` $\le 80$ caracteres. | Convención en `AGENTS.md` y `branches.md` |
-| **Docs-as-Code** | Práctica de gestionar la documentación en Markdown versionado junto al código fuente. | `project-docs/knowledge/**` |
-| **Triple Sincronización** | Replicación unidireccional obligatoria desde `.opencode/` hacia Copilot y Antigravity. | `sync-skills` y `skills-sync.md` |
-| **Fallback Data** | Objeto embebido en JS que permite abrir el tablero vía `file:///` sin servidores ni CORS. | `project-docs/data-fallback.js` |
+| Subdominio | Tipo DDD | Contextos en `src/domain/` | Valor Estratégico |
+|---|---|---|---|
+| **Gestión Documental Docs-as-Code** | *Core Domain* | `knowledge_docs`, `book_registry` | Núcleo diferenciador: Markdown plano como fuente de verdad + edición dual + extractores multiformato. |
+| **Recuperación Híbrida & Chat RAG** | *Core Domain* | `rag_engine`, `chat` | Inteligencia contextual soberana con RRF $k=60$ y Zero-RAG Bypass ($\le 32\text{k}$). |
+| **Orquestación Multi-LLM & MCP** | *Core Domain* | `llm`, `context_builder` | Portabilidad total entre 15 motores de IA y consumo nativo desde IDEs vía MCP. |
+| **Catálogo, Proyectos y Taxonomía** | *Supporting Domain* | `catalog`, `taxonomy`, `core/domain/project` | Aislamiento multi-proyecto, clasificación por módulos/etiquetas y ciclo de vida editorial. |
+| **Capa Social Colaborativa** | *Supporting Domain* | `social` | Discusión técnica, comentarios y calificaciones sobre documentos vivos. |
+| **Configuración e Infraestructura** | *Generic Subdomain* | `settings`, `infrastructure_config`, `shared_kernel` | Persistencia de preferencias, selección de motores de BD/Storage y primitivos compartidos. |
 
 ---
 
-## 3. Catálogo Maestro de Tarjetas CRC (Class-Responsibility-Collaborator)
+## 2. Context Map (Relaciones entre Bounded Contexts)
 
-### Tarjeta CRC 1: `LeaderAgent`
-- **Estereotipo DDD**: `<<AgentOrchestrator>>`
-- **Responsabilidades**:
-  1. Validar entorno de trabajo y rama base (`main`, `master`, `dev`).
-  2. Crear la rama de trabajo `{feature|bugfix}/INT-{numero}/{nombre_rama}` ($\le 80$ caracteres).
-  3. Delegar tareas secuenciales en subagentes (`spec-author`, `implementer`, `reviewer`).
-  4. Detener el flujo y solicitar aprobación humana mediante `ask_question`.
-- **Colaboradores**: `GitCLI`, `SpecAuthorAgent`, `ImplementerAgent`, `ReviewerAgent`, `AskQuestionModal`.
+```mermaid
+flowchart LR
+  bcProjects["Catalog & Projects<br/>(Upstream / OHS)"] -->|"ProjectSlug"| bcDocs["Knowledge Docs & Registry<br/>(Core)"]
+  bcDocs -->|"DocumentChunks + Attachments"| bcRag["RAG Engine & Scoped Chat<br/>(Core)"]
+  bcDocs -->|"Markdown Source"| bcBundler["Context Bundler & MCP<br/>(Core)"]
+  bcLlm["Multi-LLM Orchestrator<br/>(Published Language: ILLMClient)"] -->|"Inferencia y Embeddings"| bcRag
+  bcLlm -->|"Scaffolding IA"| bcDocs
+  bcTaxonomy["Taxonomy (Modules & Tags)"] -->|"Clasificación"| bcDocs
+  bcSocial["Social (Comments & Ratings)"] -->|"doc_path"| bcDocs
+  bcInfra["Settings & Infra Config"] -->|"Active Engine / Storage"| bcLlm
+```
 
-### Tarjeta CRC 2: `SpecAuthorAgent`
-- **Estereotipo DDD**: `<<RequirementsEngineer>>`
-- **Responsabilidades**:
-  1. Redactar especificaciones técnicas (`requirements.md`, `design.md`, `tasks.md`).
-  2. Aplicar sintaxis formal de requerimientos EARS e IEEE 830.
-  3. Recomendar técnica de implementación (TDD, SDD o FTD).
-  4. Marcar la tarea como `spec_ready` sin tocar código fuente ni tests.
-- **Colaboradores**: `KnowledgeIndex`, `FeatureList`, `LeaderAgent`.
+---
 
-### Tarjeta CRC 3: `ImplementerAgent`
-- **Estereotipo DDD**: `<<SoftwareDeveloper>>`
-- **Responsabilidades**:
-  1. Implementar código de producción siguiendo la técnica aprobada.
-  2. Escribir tests unitarios y de integración según la convención del stack.
-  3. Ejecutar verificaciones automatizadas (`npm test`, `project-docs/verify.sh`).
-  4. Registrar la trazabilidad bidireccional $R \leftrightarrow Tests$ en `progress/impl_{name}.md`.
-- **Colaboradores**: `ProjectSpec`, `TestRunner`, `LeaderAgent`, `ReviewerAgent`.
+## 3. Tarjetas CRC (Class-Responsibility-Collaborator)
 
-### Tarjeta CRC 4: `ReviewerAgent`
-- **Estereotipo DDD**: `<<QualityAuditor>>`
-- **Responsabilidades**:
-  1. Auditar de forma imparcial el cumplimiento del 100% de los criterios del spec.
-  2. Verificar cobertura de código, compilación y ausencia de errores de arquitectura.
-  3. Emitir reporte de aprobación o hallazgos sin editar código bajo ninguna circunstancia.
-- **Colaboradores**: `ProjectSpec`, `TasksList`, `LeaderAgent`.
+### CRC-01: `ProjectSlug` (`src/core/domain/project.py`)
+- **Responsabilidades**: Normalizar identificadores de proyecto a minúsculas, validar expresión regular estricta `^[a-z0-9][a-z0-9-_]*[a-z0-9]$` y longitud máxima de 50 caracteres.
+- **Colaboradores**: `Project`, `SqliteProjectRepository`, `ChromaVectorRepository`, `BM25LexicalRepository`.
 
-### Tarjeta CRC 5: `KnowledgeEngine`
-- **Estereotipo DDD**: `<<KnowledgeRepository>>`
-- **Responsabilidades**:
-  1. Escanear el código fuente y extraer modelos C4, UML, ERD y reglas `BR-*`.
-  2. Generar y mantener la base de conocimiento en `project-docs/knowledge/`.
-  3. Compilar el archivo maestro unificado `MASTER-PROJECT-KNOWLEDGE.md`.
-  4. Actualizar el grafo de relaciones en `knowledge-index.json`.
-- **Colaboradores**: `SyncDataScript`, `DashboardStore`, `MarkdownParser`.
+### CRC-02: `LLMConfiguration` (`src/domain/llm/entities.py`)
+- **Responsabilidades**: Modelar parámetros de un proveedor de IA (tipo de motor, modelo por defecto, temperatura, tokens, comando/args CLI), enmascarar claves API (`mask_api_key`) y sanitizar entradas.
+- **Colaboradores**: `LLMFactory`, `SqlLLMConfigRepository`, `ActivateLLMProviderCommandHandler`.
 
+### CRC-03: `HybridSearchService` (`src/application/rag_engine/services/hybrid_searcher.py`)
+- **Responsabilidades**: Ejecutar recuperación semántica y léxica aislada por `project_slug` y fusionar resultados mediante *Reciprocal Rank Fusion* ($k=60$).
+- **Colaboradores**: `IVectorRepository` (`ChromaVectorRepository`), `ILexicalIndexRepository` (`BM25LexicalRepository`).
 
+### CRC-04: `ScopedChatService` (`src/application/chat/services/scoped_chat_service.py`)
+- **Responsabilidades**: Evaluar tamaño de documento para aplicar *Zero-RAG Bypass* ($\le 32.000$ chars) o búsqueda vectorial focalizada, inyectar historial conversacional y devolver respuesta con fuentes.
+- **Colaboradores**: `IVectorRepository`, `ILLMClient`.
+
+### CRC-05: `CLIProcessClient` (`src/infrastructure/external/llm/cli_process_client.py`)
+- **Responsabilidades**: Resolver binarios CLI en Windows/Linux/macOS, construir argumentos sin `shell=True` respetando orden de flags (`--dangerously-skip-permissions` antes de `-p=...` para `agy`), ejecutar streaming UTF-8 incremental con fallback multihilo ante `NotImplementedError`.
+- **Colaboradores**: `ILLMClient`, `LLMFactory`, `subprocess.Popen`, `asyncio.Queue`.
+
+### CRC-06: `FastMCP` (`src/presentation/mcp/server.py`)
+- **Responsabilidades**: Registrar herramientas MCP (`search_project_context`, `get_document_full`, `list_project_structure`), procesar JSON-RPC 2.0 (`initialize`, `ping`, `tools/list`, `tools/call`) y servir transporte dual SSE (`/mcp/sse`) y STDIO (`run_mcp.py`).
+- **Colaboradores**: `MCPQueryContextQueryHandler`, `HybridSearchService`, `IDocumentRepository`.

@@ -1,0 +1,327 @@
+{% extends "layouts/base.html" %}
+{% from "shared/components/pagination.html" import pagination %}
+
+{% block title %}{{ doc.title }} | ContextForge{% endblock %}
+{% block page_crumb %}{{ doc.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto">
+
+  <!-- Unified Compact Action & Context Bar -->
+  <div class="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white/95 dark:bg-[#12151e]/95 backdrop-blur border border-slate-200 dark:border-[#232738] rounded-2xl shadow-xs">
+    <div class="flex items-center space-x-2 text-xs text-slate-500 dark:text-zinc-400 min-w-0">
+      <a href="/docs/browser" class="hover:text-slate-900 dark:hover:text-white transition inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#161922] hover:bg-slate-200 dark:hover:bg-[#1c202d] text-slate-700 dark:text-zinc-300 shrink-0">
+        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+        <span>Documentos</span>
+      </a>
+      <span class="text-slate-300 dark:text-zinc-700">/</span>
+      <span class="font-mono text-[11px] text-slate-600 dark:text-zinc-300 truncate max-w-[240px]" title="{{ doc.path }}">
+        {{ doc.path }}
+      </span>
+      <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        {{ doc.status.value }} · v{{ doc.current_version }}
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <button
+        type="button"
+        onclick="openVersionsModal()"
+        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#161922] hover:bg-slate-200 dark:hover:bg-[#1c202d] border border-slate-200 dark:border-[#232738] text-slate-700 dark:text-zinc-300 text-xs font-medium transition cursor-pointer"
+        title="Ver historial inmutable de versiones, diff y rollback"
+      >
+        <i class="fa-solid fa-clock-rotate-left text-[11px] text-indigo-500"></i>
+        <span>Historial ({{ version_count }})</span>
+      </button>
+
+      <button
+        type="button"
+        onclick="copyCitation('{{ doc.path }}')"
+        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#161922] hover:bg-slate-200 dark:hover:bg-[#1c202d] border border-slate-200 dark:border-[#232738] text-slate-700 dark:text-zinc-300 text-xs font-medium transition cursor-pointer"
+        title="Copiar referencia para usar en prompts"
+      >
+        <i class="fa-regular fa-copy text-[11px] text-indigo-500"></i>
+        <span>Copiar cita</span>
+      </button>
+
+      <button
+        type="button"
+        id="btn-open-scoped-chat"
+        onclick="handleOpenScopedChat()"
+        class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-sm shadow-indigo-600/25 transition cursor-pointer"
+        title="Consultar a la IA usando este documento como contexto"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+        <span>Preguntar a la IA</span>
+      </button>
+
+      <a
+        href="/books/editor?path={{ doc.path }}&project={{ doc.project_slug }}"
+        class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm shadow-emerald-600/25 transition cursor-pointer"
+        title="Abrir en el editor"
+      >
+        <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+        <span>Editar</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Layout: Article + Auto TOC Sidebar -->
+  <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_220px] gap-8 items-start">
+    <div class="space-y-6 min-w-0">
+
+      <!-- Document Header -->
+      <header class="border-b border-slate-200 dark:border-slate-800 pb-5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold capitalize bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              {{ doc.module_name }}
+            </span>
+            {% for tag in doc.tags %}
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
+              #{{ tag }}
+            </span>
+            {% endfor %}
+          </div>
+
+          <!-- Editorial State Workflow Controls (BR-04, BR-05) -->
+          <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="text-slate-400">Estado:</span>
+            <select onchange="transitionDocState(this.value)" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-slate-700 dark:text-slate-200 cursor-pointer">
+              <option value="draft" {% if doc.status.value == 'draft' %}selected{% endif %}>draft</option>
+              <option value="in_review" {% if doc.status.value == 'in_review' %}selected{% endif %}>in_review</option>
+              <option value="published" {% if doc.status.value == 'published' %}selected{% endif %}>published</option>
+              <option value="deprecated" {% if doc.status.value == 'deprecated' %}selected{% endif %}>deprecated</option>
+            </select>
+          </div>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">{{ doc.title }}</h1>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+          <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <span class="inline-flex items-center gap-1.5"><i class="fa-regular fa-user text-slate-400"></i>{{ doc.author }}</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-regular fa-clock text-slate-400"></i>{{ doc.reading_time_minutes }} min lectura</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-regular fa-file-lines text-slate-400"></i>{{ doc.word_count }} palabras</span>
+            <span class="inline-flex items-center gap-1.5 font-mono text-[11px]">ETag: {{ doc.etag }}</span>
+          </div>
+
+          <!-- Idempotent 1-5 Utility Rating Widget (RF-COL-003) -->
+          <div class="inline-flex items-center gap-1">
+            {% for star in range(1, 6) %}
+            <button type="button" onclick="rateCurrentDoc({{ star }})" class="text-xs cursor-pointer transition {% if rating.average_score >= star %}text-amber-400{% else %}text-slate-300 dark:text-slate-600 hover:text-amber-400{% endif %}" title="Calificar {{ star }}/5">
+              <i class="fa-solid fa-star"></i>
+            </button>
+            {% endfor %}
+            <span id="cf-rating-label" class="ml-1 font-mono text-[11px] text-slate-500">{{ rating.average_score }} ({{ rating.total_ratings }})</span>
+          </div>
+        </div>
+      </header>
+
+      {% if attachments %}
+      <section class="rounded-2xl border border-indigo-500/20 bg-indigo-50/40 dark:bg-[#121522] p-5 space-y-3 shadow-xs">
+        <div class="flex items-center justify-between border-b border-indigo-100 dark:border-[#232738] pb-2.5">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+            <i class="fa-solid fa-paperclip text-indigo-500"></i>
+            <span>Archivos adjuntos ({{ attachments|length }})</span>
+          </h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {% for att in attachments %}
+            {% include "features/documents/components/attachment_card.html" %}
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Rendered Markdown Content -->
+      <article id="cf-doc-article" class="prose-dark bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-9 shadow-xs">
+        {{ html_content|safe }}
+      </article>
+
+      <!-- Team Annotations -->
+      <section id="comments" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-5 shadow-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
+            <i class="fa-regular fa-comments text-indigo-500 dark:text-indigo-400"></i>
+            <span>Notas y comentarios</span>
+          </h2>
+          <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            {{ comments|length }}
+          </span>
+        </div>
+
+        {% if comments %}
+        <div class="space-y-3">
+          {% for comment in comments %}
+          <div class="rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 font-bold flex items-center justify-center text-[10px]">
+                  {{ comment.author_name[:1]|upper }}
+                </span>
+                <span class="font-semibold text-slate-900 dark:text-white">{{ comment.author_name }}</span>
+              </div>
+              <span class="text-slate-500 dark:text-slate-400 text-[11px] font-mono">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <p class="text-sm text-slate-700 dark:text-slate-300 pl-8 whitespace-pre-line">{{ comment.content }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {{ pagination(
+            comments_page or 1,
+            comments_total_pages or 1,
+            comments_total or 0,
+            comments_per_page or 10,
+            comments_has_prev or false,
+            comments_has_next or false,
+            "/docs/view/" ~ doc.path,
+            "#comments",
+            "&project=" ~ doc.project_slug,
+            "hilos"
+        ) }}
+        {% else %}
+        <p class="text-xs text-slate-500 italic">Aún no hay comentarios en este documento.</p>
+        {% endif %}
+
+        <form id="cf-comment-form" action="/docs/view/{{ doc.path }}/comments?project={{ doc.project_slug }}" method="POST" class="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="cf-comment-author" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Tu nombre</label>
+              <input id="cf-comment-author" type="text" name="user_name" placeholder="ej. Nayid" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+          </div>
+          <div>
+            <label for="cf-comment-content" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Comentario</label>
+            <textarea id="cf-comment-content" name="content" rows="2" placeholder="Agrega una nota o aclaración sobre este documento..." required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer">
+              Publicar comentario
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- Auto-Generated Table of Contents Sidebar (Desktop) -->
+    <aside id="cf-toc-aside" class="hidden xl:block sticky top-16 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-4 space-y-2.5">
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
+        <i class="fa-solid fa-list-ul text-indigo-500 text-[10px]"></i>
+        <span>En esta página</span>
+      </div>
+      <nav id="cf-toc-list" class="space-y-1 text-xs max-h-[65vh] overflow-y-auto custom-scrollbar"></nav>
+    </aside>
+  </div>
+</div>
+
+{% include "features/documents/components/version_history_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const docMetadata = {
+    title: {{ doc.title | tojson }},
+    projectSlug: {{ doc.project_slug | tojson }},
+    path: {{ doc.path | tojson }},
+    currentVersion: {{ doc.current_version }},
+    contentMarkdown: {{ doc.content_markdown | tojson }}
+  };
+
+  function copyCitation(path) {
+    const text = `[${path}]`;
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => window.$toast.success(`Cita copiada: ${text}`, 'Listo'));
+  }
+
+  function handleOpenScopedChat() {
+    if (typeof window.openScopedChat === 'function') {
+      window.openScopedChat(docMetadata.title, docMetadata.projectSlug, docMetadata.path, docMetadata.contentMarkdown);
+    }
+  }
+
+  async function transitionDocState(targetStatus) {
+    const res = await fetch('/api/v1/documents/state', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: docMetadata.path, project_slug: docMetadata.projectSlug, target_status: targetStatus })
+    });
+    const data = await res.json();
+    if (res.ok) { window.$toast.success(`Estado actualizado a ${data.status}`, 'Flujo Editorial'); setTimeout(() => location.reload(), 400); }
+    else { window.$toast.error(data.detail || 'Transición no permitida.'); }
+  }
+
+  async function rateCurrentDoc(score) {
+    const res = await fetch('/api/v1/collaboration/ratings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc_path: docMetadata.path, project_slug: docMetadata.projectSlug, score })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const lbl = document.getElementById('cf-rating-label');
+      if (lbl) lbl.textContent = `${data.average_score} (${data.total_ratings})`;
+      window.$toast.success(`Calificación registrada: ${score}/5`, 'Gracias');
+    }
+  }
+
+  async function openVersionsModal() {
+    document.getElementById('cf-versions-modal').classList.remove('hidden');
+    const list = document.getElementById('cf-versions-list');
+    list.innerHTML = '<div class="text-slate-400">Cargando revisiones...</div>';
+    const res = await fetch(`/api/v1/documents/versions?path=${encodeURIComponent(docMetadata.path)}&project=${encodeURIComponent(docMetadata.projectSlug)}`);
+    const data = await res.json();
+    list.innerHTML = (data.versions || []).map(v => `
+      <div class="p-3 rounded-xl border border-slate-200 dark:border-[#232738] bg-slate-50 dark:bg-[#0d0f15] flex items-center justify-between gap-2">
+        <div>
+          <div class="font-mono font-bold text-slate-900 dark:text-white">v${v.version_number} <span class="text-indigo-500 font-normal">(${v.status_snapshot})</span></div>
+          <div class="text-[11px] text-slate-500">${v.change_summary || 'Revisión'} · ${v.author_id}</div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="loadDiff(${v.version_number}, ${docMetadata.currentVersion})" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-[10px] font-semibold cursor-pointer">Diff</button>
+          ${v.version_number !== docMetadata.currentVersion ? `<button type="button" onclick="rollbackDoc(${v.version_number})" class="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-semibold cursor-pointer">Restaurar</button>` : ''}
+        </div>
+      </div>`).join('') || '<div class="text-slate-400">Sin versiones previas.</div>';
+  }
+
+  async function loadDiff(fromV, toV) {
+    const viewer = document.getElementById('cf-diff-viewer');
+    const res = await fetch(`/api/v1/documents/diff?path=${encodeURIComponent(docMetadata.path)}&from_version=${fromV}&to_version=${toV}&project=${encodeURIComponent(docMetadata.projectSlug)}`);
+    const data = await res.json();
+    viewer.textContent = data.unified_diff || '(Sin diferencias entre estas versiones)';
+  }
+
+  async function rollbackDoc(targetV) {
+    const res = await fetch('/api/v1/documents/rollback', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: docMetadata.path, target_version: targetV, reason: 'Restauración desde visor', project_slug: docMetadata.projectSlug })
+    });
+    if (res.ok) { window.$toast.success(`Restaurado a v${targetV}`, 'Rollback'); setTimeout(() => location.reload(), 450); }
+    else { const d = await res.json(); window.$toast.error(d.detail || 'Error al restaurar.'); }
+  }
+
+  function buildDynamicToc() {
+    const article = document.getElementById('cf-doc-article');
+    const tocList = document.getElementById('cf-toc-list');
+    const tocAside = document.getElementById('cf-toc-aside');
+    if (!article || !tocList || !tocAside) return;
+    const headings = Array.from(article.querySelectorAll('h1, h2, h3'));
+    if (headings.length < 2) { tocAside.classList.add('xl:hidden'); return; }
+    tocList.innerHTML = '';
+    headings.forEach((h, i) => {
+      if (!h.id) h.id = 'sec-' + i + '-' + h.textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 32);
+      const a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      a.className = `block py-1 rounded-lg transition truncate hover:text-indigo-600 dark:hover:text-indigo-300 ${h.tagName === 'H3' ? 'pl-4 text-[11px] text-slate-400 dark:text-zinc-500' : 'pl-1 text-slate-600 dark:text-zinc-300 font-medium'}`;
+      a.addEventListener('click', (e) => { e.preventDefault(); h.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      tocList.appendChild(a);
+    });
+  }
+
+  function initDocDetailPage() {
+    const article = document.getElementById('cf-doc-article');
+    if (article && window.enhanceRenderedMarkdown) window.enhanceRenderedMarkdown(article);
+    if (article && window.enhanceDocumentAttachments) window.enhanceDocumentAttachments(article);
+    buildDynamicToc();
+  }
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', initDocDetailPage) : initDocDetailPage();
+</script>
+{% endblock %}

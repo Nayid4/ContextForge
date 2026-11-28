@@ -1,0 +1,59 @@
+{# Reusable HTMX Pagination Bar — Always shows range, total count, and visibly enabled/disabled Prev & Next #}
+{% macro pagination(current_page, total_pages, total_items, per_page, has_prev, has_next, base_url, hx_target, extra_params="", item_label="elementos") %}
+{% if total_items > 0 %}
+{% set start_idx = ((current_page - 1) * per_page) + 1 %}
+{% set end_idx = current_page * per_page %}
+{% if end_idx > total_items %}{% set end_idx = total_items %}{% endif %}
+<div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+  <span class="font-mono text-[11px]">
+    Mostrando <strong class="text-slate-800 dark:text-white">{{ start_idx }}–{{ end_idx }}</strong> de <strong class="text-slate-800 dark:text-white">{{ total_items }}</strong> {{ item_label }}
+    · Página <strong class="text-slate-800 dark:text-white">{{ current_page }}</strong> de <strong class="text-slate-800 dark:text-white">{{ total_pages }}</strong>
+  </span>
+  <div class="flex items-center gap-1.5">
+    {% if has_prev %}
+    <a
+      href="{{ base_url }}?page={{ current_page - 1 }}&per_page={{ per_page }}{{ extra_params }}"
+      hx-get="{{ base_url }}?page={{ current_page - 1 }}&per_page={{ per_page }}{{ extra_params }}"
+      hx-target="{{ hx_target }}"
+      hx-select="{{ hx_target }}"
+      hx-push-url="true"
+      class="inline-flex items-center px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium transition cursor-pointer"
+    >
+      <i class="fa-solid fa-chevron-left text-[10px] mr-1.5"></i>Anterior
+    </a>
+    {% else %}
+    <button
+      type="button"
+      disabled
+      aria-disabled="true"
+      class="inline-flex items-center px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 text-slate-400 dark:text-slate-600 font-medium opacity-55 cursor-not-allowed"
+    >
+      <i class="fa-solid fa-chevron-left text-[10px] mr-1.5"></i>Anterior
+    </button>
+    {% endif %}
+
+    {% if has_next %}
+    <a
+      href="{{ base_url }}?page={{ current_page + 1 }}&per_page={{ per_page }}{{ extra_params }}"
+      hx-get="{{ base_url }}?page={{ current_page + 1 }}&per_page={{ per_page }}{{ extra_params }}"
+      hx-target="{{ hx_target }}"
+      hx-select="{{ hx_target }}"
+      hx-push-url="true"
+      class="inline-flex items-center px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium transition cursor-pointer"
+    >
+      Siguiente<i class="fa-solid fa-chevron-right text-[10px] ml-1.5"></i>
+    </a>
+    {% else %}
+    <button
+      type="button"
+      disabled
+      aria-disabled="true"
+      class="inline-flex items-center px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 text-slate-400 dark:text-slate-600 font-medium opacity-55 cursor-not-allowed"
+    >
+      Siguiente<i class="fa-solid fa-chevron-right text-[10px] ml-1.5"></i>
+    </button>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

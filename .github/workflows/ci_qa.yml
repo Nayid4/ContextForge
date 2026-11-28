@@ -1,0 +1,26 @@
+name: ContextForge CI & QA Verification
+
+on:
+  push:
+    branches: ["main", "dev", "feature/**", "bugfix/**"]
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  qa-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install package and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e . --no-deps
+      - name: Strict Type Check (Reusable Component)
+        run: mypy --strict src/contextforge
+      - name: Run Automated Test Suite & Coverage (RNF-17)
+        run: pytest --cov=contextforge --cov-fail-under=85

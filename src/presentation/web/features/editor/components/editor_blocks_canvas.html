@@ -1,0 +1,57 @@
+<!-- MAIN CANVAS: MODE 2 (STRUCTURED VISUAL BLOCKS BUILDER) -->
+<div x-show="mode === 'blocks'" style="display: none;" class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl border border-slate-200 dark:border-[#232738] bg-white dark:bg-[#12151e]">
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" @click="addBlock('heading')" class="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 text-xs font-semibold cursor-pointer"><i class="fa-solid fa-heading mr-1.5"></i>Encabezado</button>
+      <button type="button" @click="addBlock('paragraph')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#161922] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#232738] text-xs font-semibold cursor-pointer"><i class="fa-solid fa-paragraph mr-1.5"></i>Párrafo</button>
+      <button type="button" @click="addBlock('code')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#161922] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#232738] text-xs font-semibold cursor-pointer"><i class="fa-solid fa-code mr-1.5"></i>Código</button>
+      <button type="button" @click="addBlock('mermaid')" class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-semibold cursor-pointer"><i class="fa-solid fa-diagram-project mr-1.5"></i>Diagrama Mermaid</button>
+    </div>
+    <label class="px-3 py-1.5 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5">
+      <i class="fa-solid fa-paperclip"></i><span>Subir anexo</span>
+      <input type="file" class="hidden" @change="uploadAttachmentFile($event)">
+    </label>
+  </div>
+
+  <div class="space-y-3">
+    <template x-for="(block, idx) in doc.blocks" :key="idx">
+      <div class="p-4 rounded-2xl border border-slate-200 dark:border-[#232738] bg-white dark:bg-[#12151e] space-y-2.5 shadow-xs">
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <span class="font-mono uppercase font-semibold text-indigo-500" x-text="block.type"></span>
+          <div class="flex items-center gap-1.5">
+            <button type="button" @click="moveBlockUp(idx)" class="p-1 hover:text-indigo-500 cursor-pointer" title="Subir"><i class="fa-solid fa-arrow-up"></i></button>
+            <button type="button" @click="moveBlockDown(idx)" class="p-1 hover:text-indigo-500 cursor-pointer" title="Bajar"><i class="fa-solid fa-arrow-down"></i></button>
+            <button type="button" @click="removeBlock(idx)" class="p-1 hover:text-rose-500 cursor-pointer" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+
+        <template x-if="block.type === 'heading'">
+          <div class="flex items-center gap-2">
+            <select x-model.number="block.level" class="px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] text-xs font-mono">
+              <option value="1">H1</option><option value="2">H2</option><option value="3">H3</option>
+            </select>
+            <input type="text" x-model="block.text" @input="markDirty()" placeholder="Título de la sección..." class="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] text-sm font-bold text-slate-900 dark:text-white">
+          </div>
+        </template>
+
+        <template x-if="block.type === 'paragraph'">
+          <textarea x-model="block.text" @input="markDirty()" rows="3" placeholder="Texto del párrafo..." class="w-full p-3 rounded-xl bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] text-xs text-slate-800 dark:text-zinc-200"></textarea>
+        </template>
+
+        <template x-if="block.type === 'code' || block.type === 'mermaid'">
+          <div class="space-y-1.5">
+            <input x-show="block.type === 'code'" type="text" x-model="block.language" placeholder="python, json, bash..." class="w-40 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] text-xs font-mono">
+            <textarea x-model="block.code" @input="markDirty()" rows="5" class="w-full p-3 rounded-xl bg-slate-950 text-emerald-300 font-mono text-xs border border-slate-800"></textarea>
+          </div>
+        </template>
+
+        <template x-if="block.type === 'attachment'">
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] text-xs">
+            <span class="font-mono" x-text="block.file_name"></span>
+            <button type="button" @click="openPreviewForBlock(block)" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-semibold cursor-pointer">Vista previa</button>
+          </div>
+        </template>
+      </div>
+    </template>
+  </div>
+</div>

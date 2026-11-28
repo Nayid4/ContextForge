@@ -1,1 +1,11 @@
-{}
+{
+  "featureId": 1,
+  "featureName": "nielsen_ux_realtime_and_reusable_engine",
+  "module": "screaming-ui-and-persistence",
+  "directory": "project-docs/specs/001_nielsen_ux_realtime_and_reusable_engine",
+  "branch": "feature/INT-001/nielsen_ux_realtime_and_reusable_engine",
+  "responsable": "implementer",
+  "technique": "sdd",
+  "status": "in_progress",
+  "startedAt": "2026-11-24T21:54:00Z"
+}

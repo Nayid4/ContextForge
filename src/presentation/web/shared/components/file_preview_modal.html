@@ -1,0 +1,20 @@
+<!-- Multimodal File Preview Modal (PDF, DOCX Mammoth, XLSX SheetJS, Images, Markdown) -->
+<div id="cf-file-preview-modal" onclick="if (event.target === this) window.closeFilePreview()" class="fixed inset-0 z-50 hidden bg-slate-900/75 dark:bg-[#0a0b10]/85 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#232738] rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-[#1e2235] bg-slate-50 dark:bg-[#0c0d13]">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <i class="fa-regular fa-file-lines text-indigo-500"></i>
+        <span id="cf-preview-title" class="text-sm font-bold text-slate-900 dark:text-white truncate">Archivo</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <a id="cf-preview-download" href="#" download class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-download text-[10px]"></i><span>Descargar</span>
+        </a>
+        <button type="button" onclick="window.closeFilePreview()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer" aria-label="Cerrar vista previa">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <div id="cf-preview-body" class="flex-1 overflow-auto p-5 bg-white dark:bg-[#0e1017] text-sm"></div>
+  </div>
+</div>

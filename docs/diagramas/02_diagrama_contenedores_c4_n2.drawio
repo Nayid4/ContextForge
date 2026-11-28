@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
+  <diagram id="c4_n2" name="C4 Nivel 2 - Contenedores ContextForge">
+    <mxGraphModel dx="1680" dy="1040" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1040" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_5" value="Frontera del Sistema: ContextForge Ecosystem (v2.0)" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#DBEAFE;swimlaneFillColor=#F8FAFC;strokeColor=#1B365D;fontColor=#1B365D;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+          <mxGeometry x="50" y="245" width="1270" height="745" as="geometry" />
+        </mxCell>
+        <mxCell id="n_2" value="&lt;b&gt;Diagrama de Contenedores — Plataforma y Componente ContextForge (Modelo C4 - Nivel 2)&lt;/b&gt;&lt;br&gt;Descomposición en contenedores ejecutables, núcleo reutilizable sin dependencias, almacenes persistentes y canales de integración" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1620" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="n_3" value="&lt;b&gt;Usuarios Humanos (Curador / Desarrollador / Admin)&lt;/b&gt;&lt;br&gt;&lt;i&gt;Navegador Web Moderno (HTTPS / SSE / WSS)&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="90" y="110" width="420" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="n_4" value="&lt;b&gt;Agentes de IA, IDEs (Cursor/Copilot/Claude) y Aplicaciones Python Anfitrionas&lt;/b&gt;&lt;br&gt;&lt;i&gt;Clientes MCP JSON-RPC 2.0 y Consumidores directos del Paquete Python contextforge&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="110" width="560" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="n_6" value="&lt;b&gt;Aplicación Web Screaming Architecture&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Jinja2 + HTMX + Tailwind CSS v4]&lt;/i&gt;&lt;br&gt;Explorador, Editor dividido con ETag, Chat RAG SSE, Compilador de Bundles y Panel Settings." style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="305" width="360" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="n_7" value="&lt;b&gt;Hub Colaborativo en Tiempo Real&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: FastAPI WebSockets]&lt;/i&gt;&lt;br&gt;Salas por proyecto y documento, presencia en vivo, alertas de edición e hilos de comentarios." style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="485" y="305" width="350" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="n_8" value="&lt;b&gt;Servidor Universal MCP (/mcp)&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: FastMCP / JSON-RPC 2.0 + Stdio]&lt;/i&gt;&lt;br&gt;Expone search_project_context, get_document_full y list_project_structure a agentes IA." style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="875" y="305" width="395" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="n_9" value="&lt;b&gt;Servidor API REST/SSE &amp;amp; Bus CQRS&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Python 3.11+ / FastAPI]&lt;/i&gt;&lt;br&gt;Casos de uso granulares (Commands/Queries), Auth OAuth2/JWT + API-Key RBAC, errores RFC 7807, política sovereign_only y bóveda AES-256-GCM." style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="525" width="395" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="n_10" value="&lt;b&gt;Componente Reutilizable contextforge&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Paquete Python Instalable — 0 Dependencias]&lt;/i&gt;&lt;br&gt;API pública (ContextForge, Builder, 8 Contratos OCP) + motor privado _internal (RuleChain, Chunkers, BM25/Vector, RRF, Exporters, AuditDecorator)." style="whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#0F766E;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="585" y="525" width="395" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="n_11" value="&lt;b&gt;Worker Asíncrono de Indexación&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Cola + DLQ]&lt;/i&gt;&lt;br&gt;Reindexación incremental SHA-256, extracción PDF/DOCX y backoff exponencial." style="whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B45309;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="525" width="265" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="n_12" value="&lt;b&gt;Base de Datos Relacional&lt;/b&gt;&lt;br&gt;&lt;i&gt;[SQLite 3 WAL / PostgreSQL 15+]&lt;/i&gt;&lt;br&gt;Proyectos, libros, versiones inmutables, sesiones RAG, manifiestos de bundles, usuarios RBAC y audit_logs." style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="785" width="380" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="n_13" value="&lt;b&gt;Almacén Híbrido Léxico-Vectorial&lt;/b&gt;&lt;br&gt;&lt;i&gt;[ChromaDB HNSW + Índice BM25]&lt;/i&gt;&lt;br&gt;Fragmentos publicados (PUBLISHED), embeddings semánticos y pesos léxicos aislados por project_slug." style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="515" y="785" width="385" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="n_14" value="&lt;b&gt;Almacén Docs-as-Code&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Filesystem Confinado UTF-8]&lt;/i&gt;&lt;br&gt;Árbol de archivos .md sincronizados y anexos validados con suma SHA-256." style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#334155;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="950" y="785" width="335" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="n_15" value="&lt;b&gt;Proveedores Multi-LLM&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Externos / Local]&lt;/i&gt;&lt;br&gt;• Ollama Local (:11434)&lt;br&gt;• OpenAI / Gemini / Claude&lt;br&gt;• Fallback Extractivo Determinista" style="whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#334155;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1355" y="480" width="285" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="n_16" value="&lt;b&gt;Proveedor OIDC / JWKS&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Identidad Empresarial]&lt;/i&gt;&lt;br&gt;Validación federada de identidades humanas y claves públicas RS256." style="whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1355" y="740" width="285" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="e_17" value="Navega y edita [HTTPS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="265" y="215" />
+              <mxPoint x="265" y="232" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_18" value="Presencia en vivo [WSS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="222" />
+              <mxPoint x="660" y="222" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_19" value="JSON-RPC 2.0 [HTTP/Stdio]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1072" y="215" />
+              <mxPoint x="1072" y="232" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_20" value="Importa API pública Python" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1300" y="222" />
+              <mxPoint x="1300" y="472" />
+              <mxPoint x="782" y="472" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_21" value="Comandos/Queries + SSE" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_6" target="n_9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="265" y="480" />
+              <mxPoint x="265" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_22" value="Sincroniza eventos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_7" target="n_9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="480" />
+              <mxPoint x="390" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_23" value="Búsqueda y bundles" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_8" target="n_10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1050" y="448" />
+              <mxPoint x="850" y="448" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_24" value="Facade" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_9" target="n_10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_25" value="Encola IndexingJob" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_9" target="n_11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="705" />
+              <mxPoint x="1150" y="705" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_26" value="SQLAlchemy Async UoW" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_9" target="n_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_27" value="RRF: BM25 + Vectores" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_10" target="n_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_28" value="Actualiza chunks" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_11" target="n_13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="740" />
+              <mxPoint x="790" y="740" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_29" value="Lee .md y anexos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_11" target="n_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_30" value="ILLMProvider [HTTP]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_10" target="n_15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="782" y="498" />
+              <mxPoint x="1495" y="498" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_31" value="Verifica JWT [HTTPS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_9" target="n_16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="762" />
+              <mxPoint x="1330" y="762" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

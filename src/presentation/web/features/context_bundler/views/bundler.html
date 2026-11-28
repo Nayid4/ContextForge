@@ -1,0 +1,350 @@
+{% extends "layouts/base.html" %}
+{% from "shared/components/page_header.html" import page_header %}
+{% from "shared/components/pagination.html" import pagination %}
+
+{% block title %}Context Bundler | ContextForge{% endblock %}
+{% block page_crumb %}Context Bundler{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ activeTab: '{{ 'compile' if compiled_bundle else 'compile' }}' }">
+
+  {{ page_header(
+    'fa-solid fa-box-archive',
+    'Context Bundler',
+    'Empaqueta tu documentación para agentes IA o sincroniza archivos de reglas directamente en tu proyecto.',
+    active_project
+  ) }}
+
+  <!-- Clean 2-Tab Workflow Switcher -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+    <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <button
+        type="button"
+        @click="activeTab = 'compile'"
+        :class="activeTab === 'compile' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+        class="px-4 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-2 cursor-pointer"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+        <span>Compilar Context Bundle</span>
+      </button>
+      <button
+        type="button"
+        @click="activeTab = 'sync'"
+        :class="activeTab === 'sync' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+        class="px-4 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center gap-2 cursor-pointer"
+      >
+        <i class="fa-solid fa-terminal text-[11px]"></i>
+        <span>Sincronizar Agentes CLI</span>
+      </button>
+    </div>
+
+    <div
+      class="relative flex items-center gap-2 text-xs"
+      x-data="cfComboboxApp()"
+      @click.outside="open = false"
+      @keydown.escape.window="open = false"
+    >
+      <script type="application/json" data-cf-combo-config>
+        {
+          "mode": "navigate",
+          "selected": {{ active_project | tojson }},
+          "urlTemplate": "/bundles?project={value}",
+          "options": [
+            {% for p in projects %}
+            {"value": {{ p.slug | tojson }}, "label": {{ (p.name ~ ' (' ~ p.slug ~ ')') | tojson }}}{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }
+      </script>
+      <span class="text-slate-500 dark:text-slate-400">Proyecto:</span>
+      <button
+        type="button"
+        @click="toggle()"
+        class="inline-flex items-center justify-between gap-2 min-w-[210px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium rounded-xl px-3 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-indigo-500/50 cursor-pointer transition"
+      >
+        <span class="truncate" x-text="activeLabel"></span>
+        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
+      </button>
+      <div x-show="open" x-transition style="display: none;" class="absolute right-0 top-9 z-40 w-64 rounded-xl bg-white dark:bg-[#0d0f17] border border-slate-200 dark:border-[#232738] shadow-xl p-2 space-y-1.5">
+        <div class="relative">
+          <input type="text" x-ref="comboSearch" x-model="search" placeholder="Buscar proyecto..." class="w-full pl-7 pr-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161922] border border-slate-200 dark:border-[#232738] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-[10px] text-slate-400 pointer-events-none"></i>
+        </div>
+        <div class="max-h-44 overflow-y-auto space-y-0.5 custom-scrollbar">
+          <template x-for="opt in filteredOptions" :key="opt.value">
+            <button type="button" @click="pick(opt.value)" :class="opt.value === selected ? 'bg-indigo-50 dark:bg-indigo-600/25 text-indigo-700 dark:text-indigo-200 font-semibold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between cursor-pointer">
+              <span class="truncate" x-text="opt.label"></span>
+              <i x-show="opt.value === selected" class="fa-solid fa-check text-indigo-500 text-[10px] shrink-0"></i>
+            </button>
+          </template>
+          <template x-if="filteredOptions.length === 0">
+            <div class="px-2.5 py-2 text-[11px] text-slate-400 italic text-center">Sin coincidencias</div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if success_message %}
+  <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-700 dark:text-emerald-300 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center space-x-2.5">
+      <i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
+      <span class="font-medium">{{ success_message }}</span>
+    </div>
+    {% if compiled_bundle %}
+    <a href="/bundles/{{ compiled_bundle.id }}/download" class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-xs transition">
+      <i class="fa-solid fa-download"></i>
+      <span>Descargar {% if export_format == 'cursorrules' %}.cursorrules{% else %}.md{% endif %}</span>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- TAB 1: CLI AGENT RULES SYNC -->
+  <div x-show="activeTab === 'sync'" x-transition style="display: none;">
+    {% include "features/context_bundler/components/agent_sync_panel.html" %}
+  </div>
+
+  <!-- TAB 2: CUSTOM CONTEXT BUNDLE COMPILER -->
+  <div x-show="activeTab === 'compile'" x-transition class="space-y-6">
+
+    <!-- Compact IDE Presets -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <button type="button" onclick="setPreset('cursor', 16000, this)" class="preset-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-indigo-400 transition text-left space-y-0.5 cursor-pointer shadow-xs">
+        <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+          <i class="fa-solid fa-terminal"></i><span>Cursor IDE</span>
+        </div>
+        <p class="text-[11px] text-slate-500 font-mono">.cursorrules · 16k</p>
+      </button>
+      <button type="button" onclick="setPreset('copilot', 12000, this)" class="preset-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-indigo-400 transition text-left space-y-0.5 cursor-pointer shadow-xs">
+        <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+          <i class="fa-brands fa-github"></i><span>GitHub Copilot</span>
+        </div>
+        <p class="text-[11px] text-slate-500 font-mono">instructions · 12k</p>
+      </button>
+      <button type="button" onclick="setPreset('windsurf', 24000, this)" class="preset-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-indigo-400 transition text-left space-y-0.5 cursor-pointer shadow-xs">
+        <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+          <i class="fa-solid fa-wind"></i><span>Windsurf</span>
+        </div>
+        <p class="text-[11px] text-slate-500 font-mono">.windsurfrules · 24k</p>
+      </button>
+      <button type="button" onclick="setPreset('aider', 32000, this)" class="preset-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-indigo-400 transition text-left space-y-0.5 cursor-pointer shadow-xs">
+        <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+          <i class="fa-solid fa-code-merge"></i><span>Claude / Aider</span>
+        </div>
+        <p class="text-[11px] text-slate-500 font-mono">Contexto amplio · 32k</p>
+      </button>
+    </div>
+
+    <form action="/bundles/compile" method="POST" id="bundle-compile-form" class="space-y-6">
+      <input type="hidden" name="project_slug" value="{{ active_project }}">
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Module Selection Tree -->
+        <div class="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 space-y-4 shadow-xs">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
+                <i class="fa-solid fa-folder-tree text-indigo-500"></i>
+                <span>1. Selecciona los módulos a incluir</span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Marca los módulos relevantes para mantener el contexto enfocado.</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+              <button type="button" onclick="toggleAllModules(true)" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium cursor-pointer">Todos</button>
+              <span class="text-slate-300 dark:text-slate-700">|</span>
+              <button type="button" onclick="toggleAllModules(false)" class="text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer">Ninguno</button>
+            </div>
+          </div>
+
+          {% if tree %}
+          <div class="space-y-2.5">
+            {% for mod, docs in tree.items() %}
+            {% set mod_tokens = namespace(total=0) %}
+            {% for d in docs %}{% set mod_tokens.total = mod_tokens.total + ((d.word_count * 2)) %}{% endfor %}
+            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-3.5 space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <label class="flex items-center space-x-3 cursor-pointer select-none flex-1 min-w-0">
+                  <input
+                    type="checkbox"
+                    name="modules"
+                    value="{{ mod }}"
+                    data-tokens="{{ mod_tokens.total }}"
+                    onchange="updateTokenEstimate()"
+                    class="module-checkbox h-4 w-4 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+                    {% if mod in selected_modules %}checked{% endif %}
+                  >
+                  <span class="text-sm font-semibold text-slate-900 dark:text-white capitalize truncate">{{ mod }}</span>
+                </label>
+                <div class="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 shrink-0">
+                  <span>{{ docs|length }} doc(s)</span>
+                  <span class="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">~{{ "{:,}".format(mod_tokens.total) }} tok</span>
+                </div>
+              </div>
+
+              <div class="ml-7 pl-3 border-l border-slate-200 dark:border-slate-800 space-y-1 text-xs">
+                {% for doc in docs %}
+                <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                  <span class="truncate">{{ doc.title }}</span>
+                  <span class="text-[10px] font-mono text-slate-400 shrink-0 ml-2">~{{ (doc.word_count * 2) }}</span>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="p-8 text-center text-slate-400 text-xs">
+            No hay documentos en este proyecto. <a href="/books/editor" class="text-indigo-500 hover:underline">Crea el primero</a>.
+          </div>
+          {% endif %}
+        </div>
+
+        {% include "features/context_bundler/components/bundler_options_panel.html" %}
+      </div>
+    </form>
+
+    {% if compiled_bundle %}
+    <div class="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-white dark:bg-slate-900/60 p-5 space-y-4 shadow-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ compiled_bundle.title }}</h2>
+          <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
+            {{ "{:,}".format(compiled_bundle.token_count) }} tokens
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="copyBundleText()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium transition cursor-pointer">
+            <i class="fa-regular fa-copy"></i>
+            <span id="copy-btn-text">Copiar</span>
+          </button>
+          <a href="/bundles/{{ compiled_bundle.id }}/download" class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-xs transition">
+            <i class="fa-solid fa-download"></i>
+            <span>Descargar</span>
+          </a>
+        </div>
+      </div>
+      <textarea id="bundle-preview-text" rows="14" readonly class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-800 dark:text-slate-300 leading-relaxed resize-y focus:outline-none">{{ compiled_bundle.compiled_markdown }}</textarea>
+    </div>
+    {% endif %}
+
+    <!-- Paginated History of Compiled Bundles (DB-level SQL pagination) -->
+    <section id="bundles-history-container" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 space-y-4 shadow-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>
+            <span>Historial de Bundles guardados</span>
+            <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-mono text-[11px] text-slate-600 dark:text-slate-300">{{ bundles_total or 0 }}</span>
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Paquetes reproducibles con hash criptográfico SHA-256 listos para descargar.</p>
+        </div>
+        <select
+          name="per_page"
+          aria-label="Bundles por página"
+          hx-get="/bundles?project={{ active_project }}&page=1"
+          hx-trigger="change"
+          hx-target="#bundles-history-container"
+          hx-select="#bundles-history-container"
+          hx-push-url="true"
+          class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 cursor-pointer"
+        >
+          <option value="5" {% if (bundles_per_page or 5) == 5 %}selected{% endif %}>5 / pág</option>
+          <option value="10" {% if (bundles_per_page or 5) == 10 %}selected{% endif %}>10 / pág</option>
+          <option value="20" {% if (bundles_per_page or 5) == 20 %}selected{% endif %}>20 / pág</option>
+        </select>
+      </div>
+
+      {% if saved_bundles and saved_bundles | length > 0 %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-[11px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th class="py-2 pr-3">Nombre</th>
+              <th class="py-2 pr-3">Formato</th>
+              <th class="py-2 pr-3">Tokens</th>
+              <th class="py-2 pr-3">SHA-256</th>
+              <th class="py-2 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
+            {% for b in saved_bundles %}
+            <tr>
+              <td class="py-2.5 pr-3 font-semibold text-slate-800 dark:text-slate-200">{{ b.name }}</td>
+              <td class="py-2.5 pr-3 font-mono text-indigo-600 dark:text-indigo-400">{{ b.export_format }}</td>
+              <td class="py-2.5 pr-3 font-mono text-slate-500">{{ "{:,}".format(b.estimated_tokens) }}</td>
+              <td class="py-2.5 pr-3 font-mono text-[11px] text-slate-400">{{ b.bundle_hash[:12] }}</td>
+              <td class="py-2.5 text-right">
+                <a href="/bundles/{{ b.id }}/download" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 hover:text-white text-[11px] font-semibold transition">
+                  <i class="fa-solid fa-download text-[10px]"></i>Descargar
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {{ pagination(
+          bundles_page or 1,
+          bundles_total_pages or 1,
+          bundles_total or 0,
+          bundles_per_page or 5,
+          bundles_has_prev or false,
+          bundles_has_next or false,
+          "/bundles",
+          "#bundles-history-container",
+          "&project=" ~ active_project,
+          "bundles"
+      ) }}
+      {% else %}
+      <p class="text-xs text-slate-400 italic py-4 text-center">Aún no hay bundles compilados para este proyecto.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<script>
+  function updateTokenEstimate() {
+    const boxes = Array.from(document.querySelectorAll('.module-checkbox'));
+    const checked = boxes.filter(cb => cb.checked);
+    const est = checked.reduce((acc, cb) => acc + (parseInt(cb.dataset.tokens || '0', 10) || 0), 0);
+    const slider = document.getElementById('token-slider');
+    const maxTok = slider ? parseInt(slider.value, 10) : 16000;
+    const estLabel = document.getElementById('cf-selected-tokens-label');
+    const bar = document.getElementById('cf-token-progress-bar');
+    const submitBtn = document.getElementById('cf-compile-submit');
+    if (estLabel) estLabel.textContent = `~${est.toLocaleString()} / ${maxTok.toLocaleString()} tokens (${checked.length} mód.)`;
+    if (bar) {
+      const pct = Math.min(100, Math.round((est / Math.max(1, maxTok)) * 100));
+      bar.style.width = pct + '%';
+      bar.className = 'h-full rounded-full transition-all duration-200 ' + (est > maxTok ? 'bg-rose-500' : pct > 80 ? 'bg-amber-500' : 'bg-emerald-500');
+    }
+    if (submitBtn) submitBtn.disabled = checked.length === 0;
+  }
+
+  function setPreset(name, tokens, btnEl) {
+    const slider = document.getElementById('token-slider');
+    if (slider) slider.value = tokens;
+    const disp = document.getElementById('token-display');
+    if (disp) disp.innerText = Number(tokens).toLocaleString() + ' tokens';
+    document.querySelectorAll('.preset-card').forEach(el => el.classList.remove('border-indigo-500', 'ring-1', 'ring-indigo-500'));
+    if (btnEl) btnEl.classList.add('border-indigo-500', 'ring-1', 'ring-indigo-500');
+    updateTokenEstimate();
+  }
+
+  function toggleAllModules(state) {
+    document.querySelectorAll('.module-checkbox').forEach(cb => cb.checked = state);
+    updateTokenEstimate();
+  }
+
+  function copyBundleText() {
+    const textarea = document.getElementById('bundle-preview-text');
+    if (!textarea) return;
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      window.$toast?.success?.('Context Bundle copiado al portapapeles.', 'Copiado');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', updateTokenEstimate);
+</script>
+{% endblock %}

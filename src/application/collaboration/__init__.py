@@ -1,0 +1,1 @@
+"""Collaboration CQRS use cases."""

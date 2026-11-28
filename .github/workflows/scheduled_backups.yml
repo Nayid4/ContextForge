@@ -1,0 +1,14 @@
+name: ContextForge Scheduled Database Backups (RPO/RTO)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute Backup Script (RNF-09)
+        run: bash deploy/scripts/backup_database.sh

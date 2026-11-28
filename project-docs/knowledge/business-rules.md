@@ -1,144 +1,73 @@
 ---
 id: "DOC-BUSINESS-RULES_MD"
-title: "business rules"
+title: "Catálogo Formal de Reglas de Negocio e Invariantes (BR-*) — ContextForge"
 collection: "engineering"
 parent: null
-owner: "leader"
+owner: "spec-author"
 status: "Publicado"
 version: "4.0.0"
 access: "public"
-is_locked: true
-is_favorite: false
+is_locked: false
+is_favorite: true
 full_width: false
-last_updated: "2026-11-09"
+last_updated: "2026-11-25"
 tags: []
-labels: ["product"]
+labels: ["business-rules","invariants","domain-rules","engineering"]
+icon: "shield"
 ---
 
-# Catálogo Canónico de Reglas de Negocio (Invariantes del Arnés)
+# Catálogo Maestro de Reglas de Negocio e Invariantes (`BR-*`)
 
 > [!IMPORTANT]
-> Invariantes de cumplimiento estricto para desarrolladores y agentes de IA. Ninguna implementación, spec o refactorización puede violar estas reglas.
+> Toda nueva funcionalidad, refactorización o corrección en **ContextForge** DEBE respetar estrictamente estas invariantes verificadas en el código fuente y respaldadas por la suite de 158 pruebas automatizadas.
 
 ---
 
-## Módulo: agent-orchestrator
+## 1. Reglas de Proyectos y Aislamiento Multi-Tenant (`BR-PROJ-*`)
 
-### BR-ORCH-001: Formato y Longitud Estricta de Ramas Git
-- **Severidad**: Crítica
-- **Fórmula**: `length({type}/INT-{numero}/{nombre_rama}) <= 80`
-- **Valores permitidos de type**: Exclusivamente `feature` o `bugfix`.
-- **Descripción**: Toda rama de trabajo debe crearse desde la rama base, tener un prefijo `INT-` con número de ticket y no superar 80 caracteres.
-- **Comportamiento ante Violación**: La rama es rechazada y el agente debe solicitar corrección al humano.
-
-### BR-ORCH-002: Puerta Humana Obligatoria para Aprobación de Spec
-- **Severidad**: Crítica
-- **Descripción**: Queda estrictamente prohibido pasar una tarea a `in_progress` o iniciar implementación sin aprobación explícita del humano mediante la herramienta `ask_question`.
-- **Comportamiento ante Violación**: Detención inmediata del ciclo SDD.
-
-### BR-ORCH-003: Subagente Revisor No Modifica Código
-- **Severidad**: Crítica
-- **Descripción**: El subagente `reviewer` evalúa de forma independiente e imparcial la trazabilidad, build y tests. Bajo ninguna circunstancia edita código de producción o pruebas.
-- **Comportamiento ante Violación**: Se anula el veredicto y se reasigna al `implementer`.
+| ID | Severidad | Regla / Invariante | Implementación Verificada |
+|---|---|---|---|
+| `BR-PROJ-001` | Crítica | **Normalización y Validación Estricta de `ProjectSlug`**: Todo identificador de proyecto se normaliza a minúsculas, debe cumplir `^[a-z0-9][a-z0-9-_]*[a-z0-9]$` y tener máximo 50 caracteres. | `src/core/domain/project.py` |
+| `BR-PROJ-002` | Crítica | **Aislamiento Zero-Leakage entre Proyectos**: Ninguna búsqueda vectorial (ChromaDB `cf_project_{slug}`), léxica (BM25Plus) ni documental (`./docs/{slug}/`) puede retornar contenido perteneciente a otro proyecto. | `chroma_vector_repo.py`, `bm25_lexical_repo.py`, `tests/integration/test_multi_project_rag.py` |
 
 ---
 
-## Módulo: triple-sync-engine
+## 2. Reglas de Documentación Docs-as-Code y Anexos (`BR-DOC-*`)
 
-### BR-SYNC-001: Fuente de Verdad Inviolable en .opencode/
-- **Severidad**: Crítica
-- **Descripción**: La carpeta `.opencode/skills/` es la única fuente de verdad para las 18 skills del arnés. Los cambios se propagan de forma unidireccional a `.github/skills/` y `.agents/skills/`.
-- **Comportamiento ante Violación**: Cualquier cambio aislado en espejos se sobrescribe al sincronizar.
-
-### BR-SYNC-002: Paridad Estricta de Frontmatter
-- **Severidad**: Alta
-- **Descripción**: Todo archivo `SKILL.md` debe contener exactamente el mismo bloque YAML `name` y `description` en las tres plataformas.
-- **Comportamiento ante Violación**: Reporte de inconsistencia en `/sync-skills`.
+| ID | Severidad | Regla / Invariante | Implementación Verificada |
+|---|---|---|---|
+| `BR-DOC-001` | Crítica | **Markdown como Única Fuente de Verdad**: El contenido autoritativo reside en `./docs/{project_slug}/{module}/*.md`. SQLite únicamente mantiene metadatos de catálogo e índices auxiliares. | `local_filesystem_repo.py`, `src/main.py` |
+| `BR-DOC-002` | Alta | **Fidelidad Bidireccional del Editor Dual**: La conversión Markdown $\leftrightarrow$ Bloques Visuales debe preservar encabezados, listas, bloques de código, diagramas Mermaid y enlaces de anexos. | `registry_api.py`, `doc_editor.html` |
+| `BR-DOC-003` | Alta | **Soporte de Rutas con Espacios y Previsualización Inline**: Los enlaces Markdown con espacios en anexos (`.docx`, `.ogg`, `.pdf`, `.xlsx`) deben envolverse conforme a CommonMark (`<path>`) y servirse con `content_disposition_type="inline"` para previsualización/reproducción en navegador. | `markdown_parser.py`, `registry_api.py`, `attachment_card.html` |
 
 ---
 
-## Módulo: knowledge-engine
+## 3. Reglas del Motor RAG Híbrido y Chat (`BR-RAG-*`)
 
-### BR-KNOW-001: Sintaxis Mermaid Ultra-Estricta
-- **Severidad**: Crítica
-- **Descripción**: Para garantizar que los diagramas se rendericen sin errores en cualquier parser web o visor markdown, todo ID de nodo debe ser estrictamente alfanumérico sin guiones (`nodeAuth`) y todo texto descriptivo debe estar entre comillas dobles (`["Texto seguro"]`).
-- **Comportamiento ante Violación**: Diagrama marcado como inválido en tiempo de validación.
-
-### BR-KNOW-002: Consulta Obligatoria Anti-Sesgo de la Base de Conocimiento
-- **Severidad**: Crítica
-- **Descripción**: Antes de proponer nuevas historias, redactar requerimientos o implementar código, los agentes DEBEN consultar `project-docs/knowledge/` para evitar reinventar capacidades o violar directrices.
-- **Comportamiento ante Violación**: Prohibición estricta de alucinar librerías externas o duplicar endpoints.
+| ID | Severidad | Regla / Invariante | Implementación Verificada |
+|---|---|---|---|
+| `BR-RAG-001` | Crítica | **Fusión Determinista RRF ($k=60$)**: La recuperación híbrida combina rankings de ChromaDB y BM25Plus mediante $\text{score} = \sum \frac{1}{60 + \text{rank}}$. | `hybrid_searcher.py` |
+| `BR-RAG-002` | Crítica | **Atribución Obligatoria de Fuentes**: Toda respuesta RAG debe incluir referencias exactas (`file_path`, `header` o `attachment_name` + `location`). En SSE, `event: citations` se emite antes del primer `event: token`. | `rag_chat/routes.py`, `prompt_builder.py` |
+| `BR-RAG-003` | Alta | **Decodificación Incremental UTF-8 en Streaming**: El streaming de tokens CLI/HTTP debe usar `codecs.getincrementaldecoder("utf-8")` para no corromper caracteres multibyte (`¿`, `é`, `ñ`). | `cli_process_client.py` |
+| `BR-RAG-004` | Crítica | **Zero-RAG Bypass ($\le 32.000$ caracteres)**: En `ScopedChatService`, si `raw_markdown` no está vacío y `len(raw_markdown) <= 32000`, se inyecta el documento completo sin invocar búsqueda vectorial; solo si excede 32.000 chars o está vacío se ejecuta `search_scoped`. | `scoped_chat_service.py`, `tests/unit/test_scoped_chat_service.py` |
 
 ---
 
-## Módulo: dashboard-visualizer
+## 4. Reglas de Orquestación Multi-LLM y CLI (`BR-LLM-*`)
 
-### BR-DASH-001: Compatibilidad Offline Total (Protocolo file:///)
-- **Severidad**: Crítica
-- **Descripción**: El visor en `project-docs/index.html` debe ser 100% navegable con doble clic directo sin servidor local mediante la carga inmediata de `data-fallback.js`.
-- **Comportamiento ante Violación**: El script `sync-data.js` actualiza automáticamente el fallback tras cada compilación.
-
-### BR-DASH-002: Scroll Sincronizado Proporcional Anti-Bloqueo
-- **Severidad**: Alta
-- **Descripción**: La sincronización de scroll entre el editor Markdown y la vista previa utiliza flags de exclusión mutua para impedir bucles infinitos de eventos de scroll.
-- **Comportamiento ante Violación**: Desactivación temporal del listener para restaurar fluidez.
+| ID | Severidad | Regla / Invariante | Implementación Verificada |
+|---|---|---|---|
+| `BR-LLM-001` | Crítica | **Conmutación Atómica y Persistencia Permanente**: Al activar un proveedor LLM (`set_active_provider`), exactamente un registro en `llm_configurations` queda con `is_active = True`, se sincroniza `settings.active_llm_model` y se persiste entre reinicios del servidor. | `sql_llm_config_repo.py`, `handlers.py` |
+| `BR-LLM-002` | Crítica | **Enmascaramiento y Preservación de API Keys**: Las claves API nunca se retornan en texto claro hacia la UI (`mask_api_key()`). Al guardar una configuración con clave enmascarada (`•••`), se conserva la clave real existente en SQLite. | `domain/llm/entities.py`, `sql_llm_config_repo.py` |
+| `BR-LLM-003` | Crítica | **Seguridad de Subprocesos y Orden de Flags CLI (`agy`)**: Prohibido usar `shell=True`. En `CLIProcessClient._build_command`, los flags de prompt (`-p`, `--prompt`, `--print`) se depuran de `base_args`; para `agy`, `--dangerously-skip-permissions` y `--model` preceden siempre a `-p={full_prompt}`. | `cli_process_client.py`, `tests/unit/test_multi_llm_subsystem.py` |
+| `BR-LLM-004` | Alta | **Resiliencia Async en Windows**: En `win32`, `main.py` configura `WindowsProactorEventLoopPolicy` y `CLIProcessClient` provee fallback multihilo `subprocess.Popen` + `asyncio.Queue` ante `NotImplementedError`. | `src/main.py`, `cli_process_client.py` |
 
 ---
 
-## Módulo: testing-qa-suite
+## 5. Reglas de MCP, Bundler y UX (`BR-MCP-*`, `BR-UI-*`)
 
-### BR-TEST-001: 100% de Tests en Verde para Cierre de Spec
-- **Severidad**: Crítica
-- **Descripción**: Ninguna feature o bugfix puede cerrarse como `done` si existe un solo test fallando en la suite de pruebas del proyecto.
-- **Comportamiento ante Violación**: `verify-spec` rechaza el cierre y exige corrección.
-
-### BR-TEST-002: Ejecutor de Pruebas Nativo sin Bloat
-- **Severidad**: Alta
-- **Descripción**: Las pruebas unitarias del arnés se ejecutan mediante `node --test` para asegurar tiempos de respuesta inferiores a 500ms y cero dependencias externas en testing.
-- **Comportamiento ante Violación**: Se rechaza la inclusión de dependencias redundantes.
-
----
-
-## Módulo: knowledge-engine & plane-wiki (Reglas BR-PAGE-*)
-
-### BR-PAGE-01: Visibilidad Dual de Páginas
-- **Severidad**: Media
-- **Descripción**: Todo documento en la biblioteca de Plane Wiki clasifica su visibilidad en `access = 0` (Public, visible en toda la organización) o `access = 1` (Private, borrador personal).
-- **Comportamiento ante Violación**: Por defecto toda página no explícita se indexa como pública (`access: 0`).
-
-### BR-PAGE-02: Bloqueo Normativo e Inmutabilidad de Archivo (Lock Guard)
-- **Severidad**: Crítica
-- **Descripción**: Ninguna página con `is_locked = 1` o con `archived_at IS NOT NULL` permite editar su título o su contenido Markdown sin una operación previa y explícita de desbloqueo (`unlockPageInSQLite`) o restauración.
-- **Comportamiento ante Violación**: SQLite rechaza la mutación lanzando una excepción `BR-PAGE-02 Violation`.
-
-### BR-PAGE-03: Desmarcado Automático de Favoritos al Archivar
-- **Severidad**: Media
-- **Descripción**: Cuando una página es archivada (`archived_at` asignado), el sistema desmarca forzosamente `is_favorite = 0` para eliminarla de accesos directos.
-- **Comportamiento ante Violación**: El motor de persistencia resetea `is_favorite = 0` automáticamente.
-
-### BR-PAGE-04: Inmutabilidad de Visibilidad en Documentos Archivados
-- **Severidad**: Alta
-- **Descripción**: No está permitido alternar la visibilidad (`access`) de una página mientras se encuentre archivada.
-- **Comportamiento ante Violación**: SQLite rechaza la actualización con `BR-PAGE-04 Violation: Cannot change access visibility of archived page`.
-
-### BR-PAGE-07: Herencia de Colección en Páginas Hijas
-- **Severidad**: Alta
-- **Descripción**: Toda subpágina asignada a un `parent_id` hereda obligatoriamente el `collection_id` de su página padre. Al mover un padre a otra colección, la colección se propaga recursivamente a todos sus descendientes.
-- **Comportamiento ante Violación**: La función `movePageInSQLite` sobrescribe el `collection_id` de los hijos para mantener coherencia espacial.
-
-### BR-PAGE-08: Límite Jerárquico de Profundidad (Depth <= 4) y Prevención de Ciclos
-- **Severidad**: Crítica
-- **Descripción**: La jerarquía de anidación de páginas en una colección permite un máximo de 4 niveles de profundidad (`depth <= 4`, donde la raíz de la colección es nivel 0). Está estrictamente prohibido crear referencias circulares directas o indirectas (`A -> B -> A`).
-- **Comportamiento ante Violación**: Si se intenta crear un ciclo, se lanza `Circular hierarchy detected: cannot set parent to self or descendant`. Si se excede el límite de 4 niveles, se lanza `Max page nesting depth exceeded (max 4 levels allowed)`.
-
-### BR-PAGE-09: Archivo en Cascada de Jerarquías
-- **Severidad**: Alta
-- **Descripción**: Archivar una página padre propaga de inmediato el timestamp de archivo (`archived_at`) y el desmarcado de favoritos (`is_favorite = 0`) a todos sus hijos y descendientes en cascada.
-- **Comportamiento ante Violación**: Ejecución automática de `archivePageCascadeInSQLite`.
-
-### BR-PAGE-10: Slugs Únicos por Colección y Backfill de Depth
-- **Severidad**: Alta
-- **Descripción**: Cada página cuenta con un `slug` alfanumérico único dentro de su colección (`idx_pages_collection_slug`). Ante títulos duplicados en la misma colección, el algoritmo aplica sufijos correlativos (`-2`, `-3`).
-- **Comportamiento ante Violación**: El cálculo determinista en `backfillSlugAndDepth` previene colisiones antes de escribir en disco o SQLite.
-
-
+| ID | Severidad | Regla / Invariante | Implementación Verificada |
+|---|---|---|---|
+| `BR-MCP-001` | Alta | **Paridad Dual SSE y STDIO en FastMCP**: Las herramientas `search_project_context`, `get_document_full` y `list_project_structure` deben operar idénticamente vía JSON-RPC 2.0 sobre `/mcp/sse` y `run_mcp.py`. | `src/presentation/mcp/server.py`, `run_mcp.py` |
+| `BR-UI-001` | Alta | **Cero `alert()` Nativos y Seguridad DOM**: Toda notificación de usuario se enruta por `window.$toast` y los botones dinámicos de chat usan `addEventListener` sin interpolación inline `onclick` vulnerable a fuga de HTML. | `base.html`, `chat.html`, `settings.html` |
+| `BR-UI-002` | Media | **Paridad Visual Modo Claro y Oscuro**: Todo componente UI, editor, visor multimedia y barra lateral debe adaptarse coherentemente a ambos temas persistidos en `localStorage.contextforge_theme`. | `base.html`, `main.css` |

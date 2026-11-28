@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
+  <diagram id="uml_seq" name="Secuencia Principal RAG Hibrido - ContextForge">
+    <mxGraphModel dx="1760" dy="1140" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1760" pageHeight="1140" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grp_10" value="opt [Proyecto sovereign_only == true o DLP activo]" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#F3E8FF;swimlaneFillColor=#FAF5FF;strokeColor=#6B21A8;fontColor=#6B21A8;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+          <mxGeometry x="285" y="250" width="480" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_11" value="alt [max_score &gt;= min_grounding_score (BR-08: Evidencia Suficiente)]" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#CCFBF1;swimlaneFillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F766E;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+          <mxGeometry x="45" y="520" width="1685" height="445" as="geometry" />
+        </mxCell>
+        <mxCell id="grp_12" value="alt [Proveedor Primario Disponible] / [else: Fallo o Timeout -&gt; Fallback Extractivo (BR-12)]" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#FEF3C7;swimlaneFillColor=#FFFBEB;strokeColor=#B45309;fontColor=#B45309;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+          <mxGeometry x="285" y="615" width="1220" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="n_2" value="&lt;b&gt;Diagrama de Secuencia UML 2.5 — Flujo Crítico: Consulta RAG Híbrida con Citas, Streaming SSE y Fallback&lt;/b&gt;&lt;br&gt;Interacción cronológica con verificación RBAC/Soberanía (opt) y manejo de evidencia / resiliencia Multi-LLM (alt)" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1700" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="n_3" value="&lt;b&gt;Usuario / Agente IA&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Cliente Web / MCP]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="n_4" value="&lt;b&gt;API SSE / Facade&lt;/b&gt;&lt;br&gt;&lt;i&gt;[ContextForge]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="305" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="n_5" value="&lt;b&gt;Auth &amp; SovereignGuard&lt;/b&gt;&lt;br&gt;&lt;i&gt;[RBAC + DLP]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="550" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="n_6" value="&lt;b&gt;RetrieverFactory&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Fusión RRF]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="805" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="n_7" value="&lt;b&gt;BM25 + ChromaDB&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Índices PUBLISHED]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1055" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="n_8" value="&lt;b&gt;ILLMProvider&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Ollama / Cloud / Fallback]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B45309;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="n_9" value="&lt;b&gt;AuditLog &amp; WS Hub&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Append-Only + Eventos]&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#334155;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1550" y="110" width="175" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="e_13" value="1: POST /api/v1/chat/stream (question, project_slug, token)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="147" y="205" />
+              <mxPoint x="392" y="205" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_14" value="2: authorize(JWT/API-Key, project_slug) [RF-CFG-003]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="235" />
+              <mxPoint x="637" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_15" value="4: Principal autorizado + prompt sanitizado" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_5" target="n_4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="637" y="335" />
+              <mxPoint x="392" y="335" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_16" value="5: retrieve(query, top_k=5, mode='hybrid', ranking='rrf')" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="380" />
+              <mxPoint x="892" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_17" value="6: search_bm25() + search_vectors(filter={status:'PUBLISHED', project_slug})" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_6" target="n_7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="892" y="415" />
+              <mxPoint x="1142" y="415" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_18" value="7: lexical_hits + vector_hits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_7" target="n_6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1142" y="455" />
+              <mxPoint x="892" y="455" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_19" value="8: fuse_rrf(k=60) -&gt; ranked_hits[] + SourceCitation[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_6" target="n_4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="892" y="490" />
+              <mxPoint x="392" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_20" value="9: SSE event: citations (SourceCitation[doc_id, headers, score])" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="575" />
+              <mxPoint x="147" y="575" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_21" value="10a: generate_stream(grounded_prompt) -&gt; Proveedor Primario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="665" />
+              <mxPoint x="1392" y="665" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_22" value="11a: SSE event: token (respuesta fundamentada con [doc_id])" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_8" target="n_3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1392" y="705" />
+              <mxPoint x="147" y="705" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_23" value="10b [Fallback BR-12]: ExtractiveFallbackLLMProvider.generate()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="765" />
+              <mxPoint x="1392" y="765" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_24" value="11b: SSE event: token (síntesis extractiva local + aviso modo degradado)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_8" target="n_3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1392" y="805" />
+              <mxPoint x="147" y="805" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_25" value="12 [else Evidencia &lt; umbral BR-08]: Abstención controlada (grounded=false, 0 alucinación)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B91C1C;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="915" />
+              <mxPoint x="147" y="915" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_26" value="13: save_chat_turn() + append_audit_log(SHA-256, latency_ms) + ws_notify()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="1005" />
+              <mxPoint x="1637" y="1005" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_27" value="14: Ack persistencia inmutable (AuditRecord confirmado)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_9" target="n_4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1637" y="1045" />
+              <mxPoint x="392" y="1045" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_28" value="15: SSE event: done (latency_ms, provider_name, trace_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="392" y="1080" />
+              <mxPoint x="147" y="1080" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,24 @@
+<!-- Immutable Version History, Unified Diff & Non-Destructive Rollback Modal (RF-DOC-004, BR-06) -->
+<div id="cf-versions-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 dark:bg-[#0a0b10]/85 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#232738] rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-[#1e2235] bg-slate-50 dark:bg-[#0c0d13]">
+      <div class="flex items-center gap-2.5">
+        <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Historial Inmutable de Versiones y Diff</h3>
+      </div>
+      <button type="button" onclick="document.getElementById('cf-versions-modal').classList.add('hidden')" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 overflow-y-auto flex-1 text-xs">
+      <div class="space-y-2">
+        <div class="font-semibold text-slate-700 dark:text-zinc-300">Revisiones registradas</div>
+        <div id="cf-versions-list" class="space-y-2"></div>
+      </div>
+      <div class="space-y-2">
+        <div class="font-semibold text-slate-700 dark:text-zinc-300">Comparación Unified Diff</div>
+        <pre id="cf-diff-viewer" class="p-3 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-auto max-h-[55vh] whitespace-pre-wrap">Selecciona dos versiones o pulsa "Diff vs actual" para inspeccionar cambios.</pre>
+      </div>
+    </div>
+  </div>
+</div>

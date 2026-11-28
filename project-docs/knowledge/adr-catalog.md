@@ -1,8 +1,8 @@
 ---
 id: "DOC-ADR-CATALOG_MD"
-title: "adr catalog"
-collection: "engineering"
-parent: null
+title: "Catálogo Histórico de Decisiones de Arquitectura (ADRs) — ContextForge"
+collection: "general"
+parent: "01-project-overview-and-business.md"
 owner: "leader"
 status: "Publicado"
 version: "4.0.0"
@@ -10,77 +10,20 @@ access: "public"
 is_locked: false
 is_favorite: false
 full_width: false
-last_updated: "2026-11-09"
+last_updated: "2026-11-25"
 tags: []
-labels: ["engineering"]
+labels: ["adr","architecture-decisions","governance","general"]
+icon: "fileText"
 ---
 
-# Catálogo de Decisiones de Arquitectura (ADR Catalog)
+# Catálogo Consolidado de Decisiones de Arquitectura (ADRs)
 
-> [!NOTE]
-> Registro canónico de Decisiones de Arquitectura (ADR) según el formato Michael Nygard. Documenta el qué, el por qué y las consecuencias técnicas asumidas para evitar refactorizaciones regresivas por parte de agentes de IA.
-
----
-
-## ADR-001: Desacoplamiento Universal de Subagentes (Multi-Stack Agnostic)
-- **Fecha**: 2026-11-02
-- **Estado**: Aceptado
-- **Contexto**: Anteriormente los subagentes `implementer` y `reviewer` ejecutaban comandos fijos de `.NET` (`dotnet build /warnaserror`), fallando en repositorios políglotas o basados en Node.js, Python o Go.
-- **Decisión**: Los subagentes inspeccionan dinámicamente el bloque `checks` de `project-docs/project-spec.yaml` para obtener los comandos específicos de compilación y pruebas del proyecto objetivo.
-- **Consecuencias**: El arnés opera de manera transparente sobre cualquier stack tecnológico preservando la misma disciplina SDD.
-
----
-
-## ADR-002: Sincronización Triple de Skills con Fuente de Verdad Única
-- **Fecha**: 2026-11-01
-- **Estado**: Aceptado
-- **Contexto**: El desarrollo asistido por IA ocurre a menudo en múltiples plataformas (Google Antigravity, OpenCode, GitHub Copilot). Mantener skills dispersas producía drift funcional.
-- **Decisión**: Establecer `.opencode/skills/` como la única fuente canónica y generar espejos automáticos en `.github/skills/` y `.agents/skills/` mediante la skill `/sync-skills`.
-- **Consecuencias**: Paridad total de capacidades en las tres herramientas sin duplicación manual.
-
----
-
-## ADR-003: Pruebas Automatizadas Nativas con Node.js Test Runner
-- **Fecha**: 2026-11-02
-- **Estado**: Aceptado
-- **Contexto**: El arnés requería pruebas automatizadas para sus serializadores y sincronizadores, pero añadir frameworks pesados como Jest o Mocha introducía sobrecarga de instalación y dependencias vulnerables.
-- **Decisión**: Utilizar el ejecutor nativo `node --test` integrado en Node.js v18+.
-- **Consecuencias**: Tiempos de ejecución inferiores a 200ms con cero dependencias externas en tiempo de ejecución.
-
----
-
-## ADR-004: Arquitectura Screaming & Tailwind CSS v4 en el Tablero Visual
-- **Fecha**: 2026-11-01
-- **Estado**: Aceptado
-- **Contexto**: La interfaz de seguimiento en `project-docs/` necesitaba ser modular, mantenible y liviana sin depender de frameworks de compilación SPA como React o Angular.
-- **Decisión**: Organizar el código bajo Screaming Architecture (`src/features/` por dominio) utilizando Vanilla JS moderno (ES Modules) y Tailwind CSS v4 en el navegador (`@tailwindcss/browser@4`).
-- **Consecuencias**: Modularidad limpia, código ligero y soporte nativo para temas claro/oscuro.
-
----
-
-## ADR-005: Editor Dual ContextForge con Scroll Sincronizado Proporcional
-- **Fecha**: 2026-11-02
-- **Estado**: Aceptado
-- **Contexto**: Los desarrolladores y arquitectos requerían tanto la velocidad del editor de texto Markdown como la comodidad estructurada de bloques visuales para manipular requerimientos y diagramas.
-- **Decisión**: Implementar un conmutador de modo dual (`Modo Markdown` / `Modo Bloques`) con serialización bidireccional instantánea y sincronización de scroll proporcional basada en el ratio de desplazamiento con flags de exclusión mutua.
-- **Consecuencias**: Edición fluida sin pérdida de formato ni bloqueos por loops de eventos.
-
----
-
-## ADR-006: Constelación 3D en Jerarquía Piramidal Three.js
-- **Fecha**: 2026-11-02
-- **Estado**: Aceptado
-- **Contexto**: La representación en grafo 3D anterior colocaba los nodos en un único plano caótico, provocando colisión de etiquetas e imposibilidad de comprender la jerarquía del sistema.
-- **Decisión**: Distribuir los nodos en 4 niveles arquitectónicos verticales ($Y=+165$ Ápice, $Y=+55$ Core, $Y=-55$ Features, $Y=-165$ Base) con distribución radial armónica y curvas cuadráticas de Bezier.
-- **Consecuencias**: Comprensión visual inmediata de la criticidad y dependencias del sistema.
-
----
-
-## ADR-007: Compatibilidad Offline Total (Zero-Server Fallback)
-- **Fecha**: 2026-11-01
-- **Estado**: Aceptado
-- **Contexto**: En entornos restringidos o sin conexión a internet, los navegadores bloquean peticiones `fetch()` locales bajo el protocolo `file:///` por políticas de CORS.
-- **Decisión**: Generar automáticamente `project-docs/data-fallback.js` antes de cada compilación para embeber los datos en `window.__FALLBACK_DATA__`.
-- **Consecuencias**: El tablero funciona al 100% abriendo directamente `index.html` con doble clic.
-
-
+| ID | Título | Estado | Decisión Clave | Consecuencia Principal |
+|---|---|---|---|---|
+| `ADR-001` | **Markdown Docs-as-Code como Única Fuente de Verdad** | Aceptado | Persistir todo documento en `./docs/{project_slug}/{module}/*.md` y usar SQLite únicamente para metadatos, catálogo, chat y configuración. | Portabilidad total con Git y cero vendor lock-in documental. |
+| `ADR-002` | **Clean Architecture + CQRS Granular + Screaming UI** | Aceptado | Separar estrictamente `domain/`, `application/`, `infrastructure/` y `presentation/` con SSR Jinja2 + HTMX + Alpine.js + Tailwind v4. | Alta testabilidad (`158` tests), `mypy --strict` con 0 errores y cero sobrecarga de SPA. |
+| `ADR-003` | **Motor RAG Híbrido (ChromaDB + BM25Plus) con RRF $k=60$** | Aceptado | Combinar búsqueda semántica y léxica particionadas por `project_slug` mediante *Reciprocal Rank Fusion*. | Alta precisión tanto en consultas conceptuales como en identificadores exactos (`BR-*`, códigos). |
+| `ADR-004` | **Zero-RAG Bypass ($\le 32.000$ caracteres) en Scoped Chat** | Aceptado | Inyectar el documento íntegro al LLM cuando su tamaño es $\le 32\text{k}$ caracteres y usar RAG focalizado solo cuando lo supera. | Elimina pérdida de coherencia por chunking en documentos técnicos cortos y medianos. |
+| `ADR-005` | **Hexagonal Multi-LLM Factory (Strategy + Options + Registry)** | Aceptado | Desacoplar 15 proveedores (Local HTTP, Cloud APIs y Local CLI) tras `ILLMClient` y `LLMFactory`, persistiendo el motor activo en SQLite. | Cambio en caliente entre Ollama, Gemini, Claude, OpenAI y `agy` sin reiniciar ni tocar casos de uso. |
+| `ADR-006` | **Servidor Universal `FastMCP` Dual (SSE + STDIO)** | Aceptado | Implementar protocolo MCP JSON-RPC 2.0 ligero sin dependencias externas sobre `/mcp/sse` y `run_mcp.py`. | Integración nativa inmediata con Cursor, Claude Code y Antigravity. |
+| `ADR-007` | **Resiliencia CLI Windows (`Proactor` + Threaded Fallback + Flag Ordering)** | Aceptado | Configurar `WindowsProactorEventLoopPolicy`, fallback multihilo `subprocess.Popen` ante `NotImplementedError` y orden estricto de flags (`--dangerously-skip-permissions` antes de `-p={prompt}` para `agy`). | Ejecución y streaming UTF-8 estable en Windows, Linux y macOS. |

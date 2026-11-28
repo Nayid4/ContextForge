@@ -1,0 +1,50 @@
+  <!-- Command Palette Modal (Ctrl+K) -->
+  <div id="command-palette-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 dark:bg-[#0a0b10]/80 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 p-4 transition-all">
+    <div class="bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#232738] rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border-t-indigo-500">
+      <div class="flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-[#1e2235] bg-slate-50 dark:bg-[#0c0d13]">
+        <i class="fa-solid fa-magnifying-glass text-indigo-500 dark:text-indigo-400 mr-3 text-sm"></i>
+        <input
+          id="command-palette-input"
+          type="text"
+          placeholder="Buscar especificaciones, reglas de negocio o acciones... (ej. retry, chat, rag)"
+          class="w-full bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 text-sm focus:outline-none"
+          autocomplete="off"
+        >
+        <kbd class="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono bg-slate-100 dark:bg-[#161922] text-slate-500 dark:text-zinc-400 border border-slate-300 dark:border-[#232738] rounded">ESC</kbd>
+      </div>
+      <div id="command-palette-results" class="p-4 overflow-y-auto space-y-2 flex-1">
+        <div id="cp-default-links" class="space-y-1">
+          <div class="text-[11px] font-semibold text-slate-400 dark:text-zinc-400 uppercase tracking-wider px-2 py-1">Navegación Rápida</div>
+          <a href="/docs/browser" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a1d29] text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5"><i class="fa-solid fa-book-open text-indigo-500 dark:text-indigo-400 w-4"></i><span>Explorador de Documentos</span></span>
+            <span class="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">/docs/browser</span>
+          </a>
+          <a href="/books/editor" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a1d29] text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5"><i class="fa-solid fa-pen-fancy text-violet-500 dark:text-violet-400 w-4"></i><span>Redactar Documento (Editor Markdown y Bloques)</span></span>
+            <span class="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">/books/editor</span>
+          </a>
+          <a href="/chat" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a1d29] text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5"><i class="fa-solid fa-comments text-sky-500 dark:text-sky-400 w-4"></i><span>Chat IA con Citas Verificables</span></span>
+            <span class="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">/chat</span>
+          </a>
+          <a href="/bundles" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a1d29] text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5"><i class="fa-solid fa-box-archive text-amber-500 dark:text-amber-400 w-4"></i><span>Context Bundler (.cursorrules y CLI Sync)</span></span>
+            <span class="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">/bundles</span>
+          </a>
+          <a href="/projects" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a1d29] text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5"><i class="fa-solid fa-layer-group text-emerald-500 dark:text-emerald-400 w-4"></i><span>Proyectos y Espacios Soberanos</span></span>
+            <span class="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">/projects</span>
+          </a>
+          <a href="/settings" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1a1d29] text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-white transition text-xs">
+            <span class="flex items-center space-x-2.5"><i class="fa-solid fa-sliders text-slate-500 dark:text-zinc-400 w-4"></i><span>Configuración, RBAC y Auditoría</span></span>
+            <span class="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">/settings</span>
+          </a>
+        </div>
+        <div id="cp-search-items" class="space-y-2 hidden"></div>
+      </div>
+      <div class="px-4 py-2 border-t border-slate-200 dark:border-[#1e2235] bg-slate-50 dark:bg-[#0d0f15] text-[11px] text-slate-500 dark:text-zinc-400 flex items-center justify-between">
+        <span>Búsqueda Híbrida RRF (BM25 + Vectorial)</span>
+        <span class="font-mono text-[10px] text-slate-400 dark:text-zinc-400">Esc para salir</span>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,172 @@
+<!-- MAIN CANVAS: MODE 2 (VISUAL WYSIWYG -> CANONICAL MARKDOWN) -->
+<div x-show="mode === 'visual'" class="space-y-4" style="display: none;">
+  <!-- Rich Formatting Toolbar (Spanish Text Styles, Visual Color Swatches + Custom Color Picker, Preserves Selection) -->
+  <div class="flex flex-wrap items-center gap-1.5 px-3 py-2 rounded-2xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#232738] shadow-xs text-slate-700 dark:text-zinc-200">
+
+    <!-- 1. Tipo de texto (Custom Dropdown in Spanish — NEVER steals selection) -->
+    <div class="relative" @click.outside="wysiwygHeadingOpen = false">
+      <button
+        type="button"
+        @mousedown.prevent
+        @click="wysiwygHeadingOpen = !wysiwygHeadingOpen; wysiwygColorOpen = false"
+        class="inline-flex items-center justify-between gap-2 min-w-[155px] px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] hover:border-indigo-500/50 text-xs font-medium text-slate-800 dark:text-zinc-100 cursor-pointer transition"
+        title="Estilo de texto o encabezado"
+      >
+        <span class="truncate" x-text="wysiwygActiveBlockLabel"></span>
+        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
+      </button>
+
+      <div
+        x-show="wysiwygHeadingOpen"
+        x-transition
+        style="display: none;"
+        class="absolute left-0 z-50 mt-1.5 w-52 rounded-xl bg-white dark:bg-[#0d0f17] border border-slate-200 dark:border-[#232738] shadow-xl p-1.5 space-y-0.5"
+      >
+        <template x-for="opt in wysiwygTextStyles" :key="opt.tag">
+          <button
+            type="button"
+            @mousedown.prevent
+            @click="wysiwygHeading(opt.tag, opt.label)"
+            :class="wysiwygActiveBlockTag === opt.tag ? 'bg-indigo-50 dark:bg-indigo-600/25 text-indigo-700 dark:text-indigo-200' : 'text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-[#1c202d]'"
+            class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 cursor-pointer transition"
+          >
+            <span :class="opt.previewClass" x-text="opt.label"></span>
+            <span class="font-mono text-[10px] text-slate-400" x-text="opt.badge"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <!-- 2. Color de texto (Visual Swatches + Custom Color Picker Palette) -->
+    <div class="relative" @click.outside="wysiwygColorOpen = false">
+      <button
+        type="button"
+        @mousedown.prevent
+        @click="wysiwygColorOpen = !wysiwygColorOpen; wysiwygHeadingOpen = false"
+        class="inline-flex items-center justify-between gap-2 min-w-[150px] px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#0d0f15] border border-slate-200 dark:border-[#232738] hover:border-indigo-500/50 text-xs font-medium text-slate-800 dark:text-zinc-100 cursor-pointer transition"
+        title="Color del texto"
+      >
+        <span class="inline-flex items-center gap-2 truncate">
+          <span
+            class="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-zinc-600 shrink-0"
+            :style="{ backgroundColor: wysiwygActiveColor || 'transparent', backgroundImage: wysiwygActiveColor ? 'none' : 'linear-gradient(135deg, #0f172a 50%, #f8fafc 50%)' }"
+          ></span>
+          <span class="truncate" x-text="`Color: ${wysiwygActiveColorLabel}`"></span>
+        </span>
+        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
+      </button>
+
+      <div
+        x-show="wysiwygColorOpen"
+        x-transition
+        style="display: none;"
+        class="absolute left-0 z-50 mt-1.5 w-60 rounded-xl bg-white dark:bg-[#0d0f17] border border-slate-200 dark:border-[#232738] shadow-xl p-2.5 space-y-2.5"
+      >
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 px-1">Colores rápidos</div>
+        <div class="grid grid-cols-1 gap-0.5 max-h-52 overflow-y-auto custom-scrollbar">
+          <template x-for="swatch in wysiwygColorSwatches" :key="swatch.label">
+            <button
+              type="button"
+              @mousedown.prevent
+              @click="wysiwygApplyColor(swatch.hex, swatch.label)"
+              :class="wysiwygActiveColor === swatch.hex ? 'bg-indigo-50 dark:bg-indigo-600/25 font-semibold text-indigo-700 dark:text-indigo-200' : 'text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-[#1c202d]'"
+              class="w-full text-left px-2 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 cursor-pointer transition"
+            >
+              <span class="inline-flex items-center gap-2">
+                <span
+                  class="w-4 h-4 rounded-full border border-slate-300 dark:border-zinc-600 shrink-0 shadow-2xs"
+                  :style="{ backgroundColor: swatch.hex || 'transparent', backgroundImage: swatch.hex ? 'none' : 'linear-gradient(135deg, #0f172a 50%, #f8fafc 50%)' }"
+                ></span>
+                <span x-text="swatch.label"></span>
+              </span>
+              <span class="font-mono text-[10px] text-slate-400" x-text="swatch.hex || 'auto'"></span>
+            </button>
+          </template>
+        </div>
+
+        <!-- Paleta de Color Personalizado -->
+        <div class="pt-2 border-t border-slate-200 dark:border-[#232738] space-y-1.5">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 px-1">Paleta personalizada</div>
+          <div class="flex items-center gap-2 px-1">
+            <input
+              type="color"
+              x-model="wysiwygCustomColor"
+              @input="wysiwygApplyColor(wysiwygCustomColor, wysiwygCustomColor, false)"
+              aria-label="Elegir color personalizado"
+              class="w-8 h-8 rounded-lg border border-slate-300 dark:border-zinc-600 bg-transparent cursor-pointer p-0.5"
+            >
+            <span class="font-mono text-[11px] text-slate-600 dark:text-zinc-300 flex-1" x-text="wysiwygCustomColor"></span>
+            <button
+              type="button"
+              @mousedown.prevent
+              @click="wysiwygApplyColor(wysiwygCustomColor, wysiwygCustomColor, true)"
+              class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold cursor-pointer"
+            >
+              Aplicar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <span class="h-5 w-px bg-slate-200 dark:bg-[#232738] mx-1"></span>
+
+    <!-- Inline Format: Bold, Italic, Underline, Strikethrough -->
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('bold')" :class="wysiwygFormatState.bold ? 'bg-indigo-600 text-white' : ''" class="cf-wysiwyg-btn font-bold" title="Negrita (Ctrl+B)">B</button>
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('italic')" :class="wysiwygFormatState.italic ? 'bg-indigo-600 text-white' : ''" class="cf-wysiwyg-btn italic font-serif" title="Cursiva (Ctrl+I)">I</button>
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('underline')" :class="wysiwygFormatState.underline ? 'bg-indigo-600 text-white' : ''" class="cf-wysiwyg-btn underline" title="Subrayado (Ctrl+U)">U</button>
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('strikeThrough')" :class="wysiwygFormatState.strike ? 'bg-indigo-600 text-white' : ''" class="cf-wysiwyg-btn line-through" title="Tachado">S</button>
+
+    <span class="h-5 w-px bg-slate-200 dark:bg-[#232738] mx-1"></span>
+
+    <!-- Alignment -->
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('justifyLeft')" class="cf-wysiwyg-btn" title="Alinear a la izquierda"><i class="fa-solid fa-align-left"></i></button>
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('justifyCenter')" class="cf-wysiwyg-btn" title="Centrar"><i class="fa-solid fa-align-center"></i></button>
+    <button type="button" @mousedown.prevent @click="wysiwygCmd('justifyRight')" class="cf-wysiwyg-btn" title="Alinear a la derecha"><i class="fa-solid fa-align-right"></i></button>
+
+    <span class="h-5 w-px bg-slate-200 dark:bg-[#232738] mx-1"></span>
+
+    <!-- Lists -->
+    <button type="button" @mousedown.prevent @click="wysiwygList('insertUnorderedList')" :class="wysiwygFormatState.ul ? 'bg-indigo-600 text-white' : ''" class="cf-wysiwyg-btn" title="Lista con viñetas"><i class="fa-solid fa-list-ul"></i></button>
+    <button type="button" @mousedown.prevent @click="wysiwygList('insertOrderedList')" :class="wysiwygFormatState.ol ? 'bg-indigo-600 text-white' : ''" class="cf-wysiwyg-btn" title="Lista numerada"><i class="fa-solid fa-list-ol"></i></button>
+
+    <span class="h-5 w-px bg-slate-200 dark:bg-[#232738] mx-1"></span>
+
+    <!-- Quote, Code, Mermaid Diagram, Table, Attach -->
+    <button type="button" @mousedown.prevent @click="wysiwygBlockquote()" class="cf-wysiwyg-btn" title="Cita / Callout"><i class="fa-solid fa-quote-right"></i></button>
+    <button type="button" @mousedown.prevent @click="wysiwygInsertCode()" class="cf-wysiwyg-btn" title="Insertar bloque de código"><i class="fa-solid fa-code"></i></button>
+    <button type="button" @mousedown.prevent @click="wysiwygInsertMermaid()" class="cf-wysiwyg-btn text-emerald-600 dark:text-emerald-400" title="Insertar diagrama Mermaid"><i class="fa-solid fa-diagram-project"></i></button>
+    <button type="button" @mousedown.prevent @click="wysiwygInsertTable()" class="cf-wysiwyg-btn" title="Insertar tabla GFM"><i class="fa-solid fa-table"></i></button>
+    <label class="cf-wysiwyg-btn text-violet-600 dark:text-violet-400" title="Adjuntar archivo">
+      <i class="fa-solid fa-paperclip"></i>
+      <input type="file" class="hidden" @change="uploadAttachmentFile($event)">
+    </label>
+
+    <span class="h-5 w-px bg-slate-200 dark:bg-[#232738] mx-1"></span>
+
+    <!-- Clear Formatting -->
+    <button type="button" @mousedown.prevent @click="wysiwygClearFormat()" class="cf-wysiwyg-btn font-mono text-[11px] px-2 text-slate-500 dark:text-zinc-400" title="Quitar formato">Limpiar</button>
+
+    <div class="ml-auto hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-400 dark:text-zinc-500 pr-1">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      <span>Sincronizado a Markdown</span>
+      <span>·</span>
+      <span x-text="`${wordCount()} pal.`"></span>
+    </div>
+  </div>
+
+  <!-- Centered Document Paper Sheet -->
+  <div class="rounded-2xl bg-slate-100/70 dark:bg-[#090b10] border border-slate-200/80 dark:border-[#1c2030] p-4 sm:p-8 flex justify-center">
+    <div
+      id="cf-wysiwyg-surface"
+      contenteditable="true"
+      data-placeholder="Documento vacío."
+      @input="onWysiwygInput()"
+      @keyup="wysiwygSaveSelection()"
+      @mouseup="wysiwygSaveSelection()"
+      @focus="wysiwygSaveSelection()"
+      @blur="syncWysiwygToMarkdown()"
+      class="cf-wysiwyg-surface w-full max-w-3xl bg-white dark:bg-[#11141d] text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-[#232738] rounded-2xl shadow-sm px-8 sm:px-12 py-10 leading-relaxed"
+    ></div>
+  </div>
+</div>

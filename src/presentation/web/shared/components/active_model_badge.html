@@ -1,0 +1,7 @@
+{# Reusable Active LLM Provider Badge #}
+{% macro active_model_badge(active_llm, fallback_model="llama3.1:8b") %}
+<a href="/settings" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono hover:border-emerald-400 transition" title="Configurar proveedor LLM activo">
+  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+  <span>{% if active_llm %}{{ active_llm.provider }} · {{ active_llm.default_model or fallback_model }}{% else %}{{ fallback_model }}{% endif %}</span>
+</a>
+{% endmacro %}

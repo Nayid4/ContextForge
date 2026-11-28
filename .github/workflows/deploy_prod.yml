@@ -1,0 +1,21 @@
+name: ContextForge Production Build & Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_os:
+        description: "Target deployment platform"
+        required: true
+        default: "linux-docker"
+        type: choice
+        options:
+          - linux-docker
+          - windows-iis
+
+jobs:
+  build-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Multi-Stage Non-Root Docker Image (RNF-18)
+        run: docker build -t contextforge:2.0.0 .

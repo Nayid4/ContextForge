@@ -1,0 +1,21 @@
+<div class="p-3 rounded-xl bg-white dark:bg-[#161922] border border-slate-200 dark:border-[#232738] hover:border-indigo-400 transition flex items-center justify-between gap-2 text-xs">
+  <div class="flex items-center gap-2.5 min-w-0">
+    <span class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+      <i class="fa-regular fa-file-lines"></i>
+    </span>
+    <div class="min-w-0">
+      <div class="font-semibold text-slate-900 dark:text-white truncate" title="{{ att.file_name }}">{{ att.file_name }}</div>
+      <div class="text-[10px] font-mono text-slate-400">{{ (att.size_bytes / 1024) | round(1) }} KB</div>
+    </div>
+  </div>
+  <button
+    type="button"
+    data-file-name="{{ att.file_name }}"
+    data-file-url="/api/v1/assets/{{ att.project_slug }}/{{ att.storage_key }}"
+    data-file-mime="{{ att.mime_type }}"
+    onclick="window.openFilePreview(this.dataset.fileName, this.dataset.fileUrl, this.dataset.fileMime)"
+    class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-700 hover:text-white dark:text-slate-300 text-[11px] font-semibold transition cursor-pointer shrink-0 inline-flex items-center gap-1"
+  >
+    <i class="fa-solid fa-eye text-[10px]"></i><span>Ver</span>
+  </button>
+</div>
