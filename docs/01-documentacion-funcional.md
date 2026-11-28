@@ -1,20 +1,28 @@
 # Documentación Funcional — ContextForge (`v1.0.0`)
 
-## 1. Descripción de la Problemática y Escenarios de Reutilización
+## 1. Problemática, Objetivos y Escenarios de Reutilización
 
 ### Problemática que resuelve
-Los equipos que integran **agentes de IA, copilotos técnicos o chats conversacionales** en proyectos de software enfrentan repetidamente cinco problemas estructurales:
-1. **Conocimiento disperso**: reglas de negocio, ADRs y documentación técnica viven en archivos Markdown desconectados del agente.
-2. **Búsqueda insuficiente**: la búsqueda solo por palabras clave pierde sinonimia, mientras que la búsqueda solo vectorial falla en identificadores exactos (códigos de error, nombres de clases o endpoints).
+Los equipos de software que trabajan con proyectos complejos e integran agentes de IA enfrentan cinco problemas recurrentes:
+1. **Dependencia del conocimiento entre integrantes (*silos / bus factor*)**: reglas de negocio, ADRs y decisiones técnicas quedan en la cabeza de pocos desarrolladores, generando interrupciones y frenando el *onboarding*.
+2. **Búsqueda lenta e insuficiente de información de los proyectos**: buscar manualmente en documentos dispersos consume tiempo; además, la búsqueda solo por palabras clave pierde sinonimia y la búsqueda solo vectorial falla en identificadores exactos (códigos de error, clases o endpoints).
 3. **Alucinaciones sin trazabilidad**: los modelos generativos producen respuestas plausibles pero sin citar exactamente de qué documento y sección proviene la información.
 4. **Desbordamiento de ventana de contexto**: pasar toda la documentación al prompt de un agente excede presupuestos de tokens y degrada la precisión.
-5. **Acoplamiento a proveedores**: atar la lógica del proyecto a un único proveedor LLM (OpenAI, Ollama, Gemini) o motor vectorial impide probar sin red o migrar de tecnología.
+5. **Falta de interoperabilidad para servicios externos y acoplamiento a proveedores**: otros sistemas o bots no pueden consumir fácilmente la base de conocimiento ni integrar agentes vía API o paquete reutilizable, y quedar atado a un solo LLM impide probar sin red.
+
+### Objetivos
+- **Objetivo General**: Proveer un componente Python reutilizable (`contextforge`) y una capa API opcional que centralicen la documentación Markdown de los proyectos para agilizar consultas con IA verificable, reducir la dependencia de conocimiento entre integrantes y habilitar que servicios externos consuman bases de conocimiento e integren agentes sin modificar el componente.
+- **Objetivos Específicos**:
+  1. Reducir la dependencia del conocimiento tácito mediante consultas RAG con citas exactas (`ask()`).
+  2. Agilizar la búsqueda sobre proyectos con recuperación híbrida BM25 + vectorial (`search()`) y compilación de *Context Bundles* (`compile_bundle()`).
+  3. Permitir consumo desde servicios externos mediante API pública Python (`0` dependencias) y endpoints opcionales (REST `/api/v1`, OpenAI `/v1/*`, MCP `/mcp` y Widget).
+  4. Garantizar extensibilidad (OCP/DIP), tipado estricto y cobertura de pruebas unitarias `>= 70%`.
 
 ### Escenarios de Reutilización
 **ContextForge** se instala como paquete Python (`pip install -e .`) y puede reutilizarse sin modificar su código fuente en:
-- **Chats con agentes IA embebidos en cualquier proyecto**: inyectar conocimiento del repositorio en tiempo real con citas verificables (`ask()`).
+- **Equipos de desarrollo**: consultar reglas, arquitectura y decisiones de los proyectos con IA sin depender de otros compañeros.
+- **Servicios externos y chats con agentes IA**: consumir la API (REST / OpenAI `/v1` / MCP) o importar `contextforge` para integrar agentes sobre las bases de conocimiento (`ask()`).
 - **Pipelines CI/CD y asistentes de Code Review**: compilar *Context Bundles* acotados en tokens (`compile_bundle()`) con las reglas del módulo afectado.
-- **Bots internos de soporte técnico o documentación de producto**: búsqueda híbrida local (`search()`) sobre manuales Markdown sin enviar datos sensibles a terceros.
 - **Entornos de pruebas automatizadas y evaluación de RAG**: sustituir stores y LLM por dobles de prueba (`ILexicalStore`, `IVectorStore`, `ILLMProvider`) para verificar determinismo sin acceso a red.
 
 ---

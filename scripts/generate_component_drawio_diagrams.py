@@ -1,5 +1,5 @@
 """Generates 6 native editable Draw.io (.drawio) XML diagrams and high-DPI (.png) exports
-for the ContextForge v1.0.0 Reusable Component (Use Cases, C4 N1-N3, UML Classes with GoF, UML Sequence).
+for ContextForge v1.0.0 using official C4 notation (Simon Brown) and focused UML + GoF.
 """
 
 from __future__ import annotations
@@ -37,243 +37,539 @@ ROOT = SCRIPT_DIR.parents[0]
 COMP_OUT_DIR = ROOT / "docs" / "diagramas" / "componente"
 base.OUT_DIR = COMP_OUT_DIR
 
+# Official C4 Model palette (Simon Brown)
+C4_PERSON_FILL = "#08427B"
+C4_PERSON_STROKE = "#073B6F"
+C4_SYSTEM_FILL = "#1168BD"
+C4_SYSTEM_STROKE = "#0B4884"
+C4_EXTERNAL_FILL = "#999999"
+C4_EXTERNAL_STROKE = "#6B6B6B"
+C4_CONTAINER_FILL = "#438DD5"
+C4_CONTAINER_STROKE = "#2E6295"
+C4_COMPONENT_FILL = "#85BBF0"
+C4_COMPONENT_STROKE = "#5D9AD4"
+C4_BOUNDARY_STROKE = "#666666"
+
+
+class C4DrawioBuilder(DrawioBuilder):
+    """Extends DrawioBuilder with authentic C4 shapes (Person, Software System, Container, Database, Component, Boundary)."""
+
+    def add_c4_person(
+        self,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        name: str,
+        desc: str,
+        external: bool = False,
+    ) -> str:
+        fill = C4_EXTERNAL_FILL if external else C4_PERSON_FILL
+        stroke = C4_EXTERNAL_STROKE if external else C4_PERSON_STROKE
+        cid = self._new_id("c4p")
+        label = f"<b>{name}</b><br>[Person]<br><br>{desc}"
+        style = (
+            f"shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];"
+            f"resizable=0;html=1;whiteSpace=wrap;fillColor={fill};strokeColor={stroke};fontColor=#FFFFFF;fontSize=12;"
+        )
+        self.nodes[cid] = {
+            "id": cid,
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "label": label,
+            "name": name,
+            "desc": desc,
+            "style": style,
+            "fill": fill,
+            "stroke": stroke,
+            "font_color": WHITE,
+            "kind": "c4_person",
+            "z": 12,
+        }
+        return cid
+
+    def add_c4_system(
+        self,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        name: str,
+        desc: str,
+        external: bool = False,
+    ) -> str:
+        fill = C4_EXTERNAL_FILL if external else C4_SYSTEM_FILL
+        stroke = C4_EXTERNAL_STROKE if external else C4_SYSTEM_STROKE
+        tag = "[External Software System]" if external else "[Software System]"
+        return self.add_box(
+            x=x,
+            y=y,
+            w=w,
+            h=h,
+            label=f"<b>{name}</b><br><i>{tag}</i><br><br>{desc}",
+            fill=fill,
+            stroke=stroke,
+            font_color=WHITE,
+            rounded=True,
+            font_size=12,
+        )
+
+    def add_c4_container(
+        self,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        name: str,
+        tech: str,
+        desc: str,
+        is_db: bool = False,
+    ) -> str:
+        return self.add_box(
+            x=x,
+            y=y,
+            w=w,
+            h=h,
+            label=f"<b>{name}</b><br><i>[Container: {tech}]</i><br><br>{desc}",
+            fill=C4_CONTAINER_FILL,
+            stroke=C4_CONTAINER_STROKE,
+            font_color=WHITE,
+            rounded=not is_db,
+            shape="cylinder" if is_db else "rect",
+            font_size=11,
+        )
+
+    def add_c4_component(
+        self,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        name: str,
+        tech: str,
+        desc: str,
+    ) -> str:
+        return self.add_box(
+            x=x,
+            y=y,
+            w=w,
+            h=h,
+            label=f"<b>{name}</b><br><i>[Component: {tech}]</i><br><br>{desc}",
+            fill=C4_COMPONENT_FILL,
+            stroke=C4_COMPONENT_STROKE,
+            font_color="#000000",
+            rounded=True,
+            font_size=11,
+        )
+
+    def add_c4_boundary(self, x: int, y: int, w: int, h: int, title: str, tag: str = "System Boundary") -> str:
+        return self.add_container(
+            x=x,
+            y=y,
+            w=w,
+            h=h,
+            title=f"{title}  [{tag}]",
+            fill="#F8FAFC",
+            stroke=C4_BOUNDARY_STROKE,
+            header_fill="#E2E8F0",
+            header_text="#1E293B",
+            dashed=True,
+        )
+
+    def add_c4_legend(self, x: int, y: int, items: list[tuple[str, str, str]]) -> None:
+        """Draws a compact C4 legend strip at the bottom."""
+        w = len(items) * 245 + 24
+        self.add_box(
+            x=x,
+            y=y,
+            w=w,
+            h=54,
+            label="<b>Leyenda C4 (Notación Simon Brown)</b>",
+            fill=WHITE,
+            stroke="#CBD5E1",
+            font_color=TEXT_DARK,
+            rounded=True,
+            font_size=10,
+            kind="c4_legend",
+        )
+        # Store items on the last node
+        last_id = list(self.nodes.keys())[-1]
+        self.nodes[last_id]["legend_items"] = items
+
+    def _draw_node(self, draw: ImageDraw.ImageDraw, node: dict[str, Any], s: int) -> None:
+        kind = node.get("kind")
+        if kind == "c4_person":
+            self._draw_c4_person(draw, node, s)
+            return
+        if kind == "c4_legend":
+            self._draw_c4_legend(draw, node, s)
+            return
+        super()._draw_node(draw, node, s)
+
+    def _draw_c4_person(self, draw: ImageDraw.ImageDraw, node: dict[str, Any], s: int) -> None:
+        x, y, w, h = node["x"] * s, node["y"] * s, node["w"] * s, node["h"] * s
+        fill, stroke = node["fill"], node["stroke"]
+
+        # Authentic C4 Person silhouette: circular head overlapping rounded torso card
+        head_r = int(26 * s)
+        head_cx = x + w // 2
+        head_cy = y + head_r + int(4 * s)
+        body_top = y + int(42 * s)
+
+        # Torso card with rounded shoulders
+        draw.rounded_rectangle(
+            [x, body_top, x + w, y + h],
+            radius=28 * s,
+            fill=fill,
+            outline=stroke,
+            width=max(2, int(2 * s)),
+        )
+        # Head circle on top
+        draw.ellipse(
+            [head_cx - head_r, head_cy - head_r, head_cx + head_r, head_cy + head_r],
+            fill=fill,
+            outline=stroke,
+            width=max(2, int(2 * s)),
+        )
+
+        # Text inside torso
+        f_title = _load_font(12 * s, bold=True)
+        f_tag = _load_font(10 * s, italic=True)
+        f_desc = _load_font(10 * s)
+
+        cy = body_top + int(24 * s)
+        max_w = w - int(24 * s)
+        for line in self._wrap_text(draw, node["name"], f_title, max_w):
+            bb = draw.textbbox((0, 0), line, font=f_title)
+            draw.text((head_cx - (bb[2] - bb[0]) / 2, cy), line, fill=WHITE, font=f_title)
+            cy += int(17 * s)
+
+        tag_txt = "[Person]"
+        bb = draw.textbbox((0, 0), tag_txt, font=f_tag)
+        draw.text((head_cx - (bb[2] - bb[0]) / 2, cy), tag_txt, fill="#DBEAFE", font=f_tag)
+        cy += int(20 * s)
+
+        for raw_line in node["desc"].split("<br>"):
+            for line in self._wrap_text(draw, raw_line.strip(), f_desc, max_w):
+                bb = draw.textbbox((0, 0), line, font=f_desc)
+                draw.text((head_cx - (bb[2] - bb[0]) / 2, cy), line, fill=WHITE, font=f_desc)
+                cy += int(14 * s)
+
+    def _draw_c4_legend(self, draw: ImageDraw.ImageDraw, node: dict[str, Any], s: int) -> None:
+        x, y, w, h = node["x"] * s, node["y"] * s, node["w"] * s, node["h"] * s
+        draw.rounded_rectangle([x, y, x + w, y + h], radius=8 * s, fill=WHITE, outline="#CBD5E1", width=2)
+        f_lbl = _load_font(10 * s, bold=True)
+        cx = x + 16 * s
+        cy = y + h // 2
+        for label, fill, stroke in node.get("legend_items", []):
+            box_w, box_h = 24 * s, 18 * s
+            draw.rounded_rectangle([cx, cy - box_h // 2, cx + box_w, cy + box_h // 2], radius=4 * s, fill=fill, outline=stroke, width=2)
+            draw.text((cx + box_w + 8 * s, cy - 7 * s), label, fill=TEXT_DARK, font=f_lbl)
+            cx += 245 * s
+
 
 # ============================================================================
 # 1. USE CASE DIAGRAM — PUBLIC API (RF-01 .. RF-05)
 # ============================================================================
 def build_01_use_cases() -> tuple[Path, Path]:
-    b = DrawioBuilder("comp_uc", "Casos de Uso API Publica - ContextForge v1.0.0", 1420, 760)
+    b = C4DrawioBuilder("comp_uc", "Casos de Uso API Publica - ContextForge v1.0.0", 1460, 780)
     b.add_banner(
         "Diagrama de Casos de Uso — API Pública de ContextForge (v1.0.0)",
-        "4 funcionalidades esenciales + extensión abierta sin modificar el componente (OCP)",
+        "Consulta ágil con IA, reducción de dependencia entre integrantes y consumo desde servicios externos",
     )
 
-    # Actors
-    a_app = b.add_actor(75, 220, 90, 110, "Aplicación Cliente", "Chat IA / CLI / Backend", stroke=NAVY)
-    a_dev = b.add_actor(75, 495, 90, 110, "Equipo Integrador", "Implementa contratos OCP", stroke=TEAL)
-    a_llm = b.add_actor(1235, 345, 100, 110, "ILLMProvider", "Ollama / Cloud / Fallback", stroke=AMBER)
+    a_team = b.add_actor(70, 175, 95, 110, "Integrante / App", "Consulta proyectos con IA", stroke=NAVY)
+    a_ext = b.add_actor(70, 395, 95, 110, "Servicio Externo", "Agentes / Bots vía API", stroke=INDIGO)
+    a_dev = b.add_actor(70, 585, 95, 110, "Equipo Integrador", "Extiende contratos OCP", stroke=TEAL)
+    a_llm = b.add_actor(1270, 345, 100, 110, "ILLMProvider", "Ollama / Cloud / Fallback", stroke=AMBER)
 
-    # System boundary
     b.add_container(
-        260, 115, 895, 600,
+        265, 115, 915, 625,
         "Paquete Python: contextforge v1.0.0  (Frontera Pública __all__)",
         fill="#F8FAFC", stroke=NAVY, header_fill="#DBEAFE", header_text=NAVY, dashed=False,
     )
 
-    # Use cases
-    uc1 = b.add_box(335, 175, 340, 76, "<b>RF-01: Ingestar e Indexar</b><br><i>ingest() / ingest_directory()</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
-    uc2 = b.add_box(335, 290, 340, 76, "<b>RF-02: Búsqueda Híbrida</b><br><i>search(mode, ranking, collection)</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
-    uc3 = b.add_box(335, 405, 340, 76, "<b>RF-03: Consulta RAG con Citas</b><br><i>ask(question, top_k)</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
-    uc4 = b.add_box(335, 520, 340, 76, "<b>RF-04: Compilar Context Bundle</b><br><i>compile_bundle(max_tokens, format)</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
+    uc1 = b.add_box(340, 175, 340, 76, "<b>RF-01: Ingestar e Indexar</b><br><i>ingest() / ingest_directory()</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
+    uc2 = b.add_box(340, 290, 340, 76, "<b>RF-02: Búsqueda Híbrida</b><br><i>search(mode, ranking, collection)</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
+    uc3 = b.add_box(340, 405, 340, 76, "<b>RF-03: Consulta RAG con Citas</b><br><i>ask(question, top_k)</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
+    uc4 = b.add_box(340, 520, 340, 76, "<b>RF-04: Compilar Context Bundle</b><br><i>compile_bundle(max_tokens, format)</i>", fill=NAVY_LIGHT, stroke=NAVY, shape="ellipse", font_size=12)
+    uc5 = b.add_box(795, 600, 340, 82, "<b>RF-05: Registrar Extensiones OCP</b><br><i>register_*() / ContextForgeBuilder</i>", fill=TEAL_LIGHT, stroke=TEAL, shape="ellipse", font_size=12)
 
-    uc5 = b.add_box(770, 560, 340, 82, "<b>RF-05: Registrar Extensiones OCP</b><br><i>register_*() / ContextForgeBuilder</i>", fill=TEAL_LIGHT, stroke=TEAL, shape="ellipse", font_size=12)
+    inc_val = b.add_box(795, 175, 330, 72, "<b>Validar Reglas Documentales</b><br><i>DocumentRuleChain (IDocumentRule)</i>", fill=AMBER_LIGHT, stroke=AMBER, shape="ellipse", font_size=11)
+    inc_ret = b.add_box(795, 350, 330, 72, "<b>Recuperar y Fusionar (RRF)</b><br><i>RetrieverFactory + IHybridRanking</i>", fill=INDIGO_LIGHT, stroke=INDIGO, shape="ellipse", font_size=11)
 
-    # Included internal use cases
-    inc_val = b.add_box(780, 175, 320, 72, "<b>Validar Reglas Documentales</b><br><i>DocumentRuleChain (IDocumentRule)</i>", fill=AMBER_LIGHT, stroke=AMBER, shape="ellipse", font_size=11)
-    inc_ret = b.add_box(780, 350, 320, 72, "<b>Recuperar y Fusionar (RRF)</b><br><i>RetrieverFactory + IHybridRanking</i>", fill=INDIGO_LIGHT, stroke=INDIGO, shape="ellipse", font_size=11)
-
-    # Actor -> Use Cases
-    b.add_edge(a_app, uc1, "", points=[(215, 275), (215, 213)], stroke=NAVY, arrow="none")
-    b.add_edge(a_app, uc2, "", points=[(215, 275), (215, 328)], stroke=NAVY, arrow="none")
-    b.add_edge(a_app, uc3, "", points=[(215, 275), (215, 443)], stroke=NAVY, arrow="none")
-    b.add_edge(a_app, uc4, "", points=[(215, 275), (215, 558)], stroke=NAVY, arrow="none")
-
-    b.add_edge(a_dev, uc5, "sin editar núcleo", points=[(165, 650), (940, 650)], label_pos_idx=1, stroke=TEAL, arrow="none")
-    b.add_edge(uc3, a_llm, "genera respuesta", points=[(725, 443), (725, 485), (1200, 485), (1200, 400)], label_pos_idx=2, stroke=AMBER, arrow="open")
+    # Actor links
+    b.add_edge(a_team, uc1, "", points=[(215, 230), (215, 213)], stroke=NAVY, arrow="none")
+    b.add_edge(a_team, uc2, "", points=[(215, 230), (215, 328)], stroke=NAVY, arrow="none")
+    b.add_edge(a_ext, uc3, "", points=[(225, 450), (225, 443)], stroke=INDIGO, arrow="none")
+    b.add_edge(a_ext, uc4, "", points=[(225, 450), (225, 558)], stroke=INDIGO, arrow="none")
+    b.add_edge(a_dev, uc5, "sin editar núcleo", points=[(165, 695), (965, 695)], label_pos_idx=1, stroke=TEAL, arrow="none")
+    b.add_edge(uc3, a_llm, "genera respuesta", points=[(730, 443), (730, 495), (1235, 495), (1235, 400)], label_pos_idx=2, stroke=AMBER, arrow="open")
 
     # <<include>>
     b.add_edge(uc1, inc_val, "<<include>>", dashed=True, stroke=AMBER, arrow="open")
-    b.add_edge(uc2, inc_ret, "<<include>>", points=[(725, 328), (725, 386)], dashed=True, stroke=INDIGO, arrow="open")
-    b.add_edge(uc3, inc_ret, "<<include>>", points=[(725, 443), (725, 386)], dashed=True, stroke=INDIGO, arrow="open")
+    b.add_edge(uc2, inc_ret, "<<include>>", points=[(730, 328), (730, 386)], dashed=True, stroke=INDIGO, arrow="open")
+    b.add_edge(uc3, inc_ret, "<<include>>", points=[(730, 443), (730, 386)], dashed=True, stroke=INDIGO, arrow="open")
 
     return b.save_all("01_casos_de_uso_api")
 
 
 # ============================================================================
-# 2. C4 LEVEL 1 — SYSTEM CONTEXT DIAGRAM
+# 2. C4 LEVEL 1 — SYSTEM CONTEXT DIAGRAM (AUTHENTIC C4 SHAPES)
 # ============================================================================
 def build_02_c4_context() -> tuple[Path, Path]:
-    b = DrawioBuilder("c4_comp_n1", "C4 Nivel 1 Contexto - ContextForge v1.0.0", 1420, 740)
+    b = C4DrawioBuilder("c4_comp_n1", "C4 Nivel 1 Contexto - ContextForge v1.0.0", 1560, 880)
     b.add_banner(
-        "Modelo C4 — Nivel 1: Contexto del Componente ContextForge (v1.0.0)",
-        "Relación entre aplicaciones consumidoras, equipos integradores y sistemas externos opcionales",
+        "Modelo C4 — Nivel 1: Diagrama de Contexto del Sistema (ContextForge)",
+        "Reduce la dependencia de conocimiento entre integrantes y permite a servicios externos consultar bases de conocimiento e integrar agentes con IA",
     )
 
-    app = b.add_box(
-        70, 185, 320, 145,
-        "<b>Aplicación Consumidora</b><br>[Software Externo]<br>Chat con agentes IA, CLI,<br>pipeline CI/CD o API FastAPI.",
-        fill=NAVY_LIGHT, stroke=NAVY, font_size=12,
+    # Top row: Persons (official C4 Person shapes)
+    p_team = b.add_c4_person(
+        180, 115, 290, 175,
+        "Integrantes del Equipo",
+        "Consultan reglas, arquitectura y docs<br>del proyecto con IA sin depender de<br>otros compañeros.",
     )
-    dev = b.add_box(
-        70, 445, 320, 145,
-        "<b>Equipo Integrador (Tercero)</b><br>[Persona / Desarrollador]<br>Extiende contratos OCP sin<br>modificar código del componente.",
-        fill=TEAL_LIGHT, stroke=TEAL, font_size=12,
-    )
-
-    cf = b.add_box(
-        525, 250, 370, 255,
-        "<b>ContextForge (v1.0.0)</b><br>[Componente Python Reutilizable]<br><br>• Ingesta y chunking Markdown<br>• Búsqueda híbrida (BM25 + Vector)<br>• RAG con citas verificables<br>• Compilador de Context Bundles<br><i>0 dependencias externas obligatorias</i>",
-        fill=NAVY, stroke="#0F172A", font_color=WHITE, font_size=12,
+    p_dev = b.add_c4_person(
+        1090, 115, 290, 175,
+        "Equipo Integrador",
+        "Reutiliza ContextForge y crea<br>extensiones OCP sin modificar<br>el código del componente.",
     )
 
-    fs = b.add_box(
-        1040, 185, 310, 145,
-        "<b>Archivos Markdown</b><br>[Sistema Externo · Opcional]<br>Repositorio Docs-as-Code<br>(ADRs, reglas, manuales .md).",
-        fill=SLATE_LIGHT, stroke=SLATE, font_size=12,
-    )
-    llm = b.add_box(
-        1040, 445, 310, 145,
-        "<b>Proveedor LLM Externo</b><br>[Sistema Externo · Opcional]<br>Ollama, Gemini, OpenAI, Claude<br>o Stub / Fallback extractivo local.",
-        fill=AMBER_LIGHT, stroke=AMBER, font_size=12,
+    # Center: Software System in focus
+    sys_cf = b.add_c4_system(
+        560, 355, 440, 210,
+        "ContextForge (v1.0.0)",
+        "Componente reutilizable Python y Hub de<br>Conocimiento con búsqueda híbrida (BM25 +<br>Vectorial), RAG con citas verificables y<br>compilación de Context Bundles.",
+        external=False,
     )
 
-    b.add_edge(app, cf, "Consume API Pública\n(from contextforge import ...)", points=[(455, 257), (455, 330)], stroke=NAVY)
-    b.add_edge(dev, cf, "Implementa contratos\n(IBundleExporter, IDocumentRule, ...)", points=[(455, 517), (455, 430)], dashed=True, stroke=TEAL)
-    b.add_edge(cf, fs, "Lee documentos\n(ingest_directory)", points=[(965, 330), (965, 257)], stroke=SLATE)
-    b.add_edge(cf, llm, "Delega síntesis\n(vía ILLMProvider)", points=[(965, 430), (965, 517)], stroke=AMBER)
+    # Left & Right & Bottom: External Software Systems
+    ext_svc = b.add_c4_system(
+        45, 375, 315, 170,
+        "Servicios Externos y Agentes",
+        "Apps, bots, portales o IDEs que<br>consumen la API (REST, OpenAI /v1,<br>MCP) o el paquete Python.",
+        external=True,
+    )
+    ext_fs = b.add_c4_system(
+        1200, 375, 315, 170,
+        "Repositorio Docs-as-Code",
+        "Archivos Markdown (.md), ADRs y<br>especificaciones técnicas de cada<br>proyecto.",
+        external=True,
+    )
+    ext_llm = b.add_c4_system(
+        590, 645, 380, 140,
+        "Proveedores LLM (Opcional)",
+        "Ollama, OpenAI, Gemini, Anthropic o<br>Fallback extractivo local sin red.",
+        external=True,
+    )
 
+    # Relationships (concise single-line labels)
+    b.add_edge(p_team, sys_cf, "Consulta proyectos con IA (RAG)", points=[(325, 325), (690, 325)], stroke=C4_PERSON_STROKE)
+    b.add_edge(p_dev, sys_cf, "Extiende contratos (OCP)", points=[(1235, 325), (870, 325)], stroke=C4_PERSON_STROKE)
+    b.add_edge(ext_svc, sys_cf, "Consume API / Agentes", stroke=C4_EXTERNAL_STROKE)
+    b.add_edge(sys_cf, ext_fs, "Ingesta docs .md", stroke=C4_SYSTEM_STROKE)
+    b.add_edge(sys_cf, ext_llm, "Síntesis (ILLMProvider)", stroke=C4_SYSTEM_STROKE)
+
+    b.add_c4_legend(
+        290, 805,
+        [
+            ("Person (Usuario)", C4_PERSON_FILL, C4_PERSON_STROKE),
+            ("Software System (En foco)", C4_SYSTEM_FILL, C4_SYSTEM_STROKE),
+            ("External System", C4_EXTERNAL_FILL, C4_EXTERNAL_STROKE),
+        ],
+    )
     return b.save_all("02_c4_contexto_n1")
 
 
 # ============================================================================
-# 3. C4 LEVEL 2 — CONTAINER DIAGRAM
+# 3. C4 LEVEL 2 — CONTAINER DIAGRAM (AUTHENTIC C4 SHAPES + CYLINDERS)
 # ============================================================================
 def build_03_c4_containers() -> tuple[Path, Path]:
-    b = DrawioBuilder("c4_comp_n2", "C4 Nivel 2 Contenedores - ContextForge v1.0.0", 1460, 740)
+    b = C4DrawioBuilder("c4_comp_n2", "C4 Nivel 2 Contenedores - ContextForge v1.0.0", 1620, 920)
     b.add_banner(
-        "Modelo C4 — Nivel 2: Contenedores del Paquete contextforge (v1.0.0)",
-        "Frontera estricta entre API Pública exportada (__all__) e Implementación Interna Privada (_internal/)",
+        "Modelo C4 — Nivel 2: Diagrama de Contenedores (ContextForge)",
+        "Separación entre el componente Python instalable (API Pública / _internal), la capa API/Web opcional y los almacenes",
     )
 
-    cli = b.add_box(
-        60, 185, 310, 145,
-        "<b>App de Ejemplo / Cliente</b><br>[Python >= 3.11]<br>examples/agent_knowledge_cli.py<br>Usa exclusivamente la API pública.",
-        fill=NAVY_LIGHT, stroke=NAVY, font_size=12,
+    # Left: Actors & External Consumers
+    p_user = b.add_c4_person(
+        55, 145, 250, 165,
+        "Integrante del Equipo",
+        "Consulta proyectos y<br>documentación con IA.",
     )
-    web = b.add_box(
-        60, 445, 310, 145,
-        "<b>Plataforma Web Opcional</b><br>[Extra .[web] · FastAPI + MCP]<br>src/presentation/web/ y /api/v1<br>Host self-hosted con UI y Docker.",
-        fill=SLATE_LIGHT, stroke=SLATE, dashed=True, font_size=12,
-    )
-
-    b.add_container(
-        470, 125, 930, 560,
-        "Paquete Distribuible Python: contextforge v1.0.0  (pyproject.toml · dependencies = [])",
-        fill="#F8FAFC", stroke=NAVY, header_fill="#DBEAFE", header_text=NAVY, dashed=False,
+    ext_app = b.add_c4_system(
+        55, 400, 250, 155,
+        "Servicios Externos",
+        "Microservicios, bots,<br>IDEs o scripts Python<br>que integran agentes.",
+        external=True,
     )
 
-    pub = b.add_box(
-        525, 200, 360, 415,
-        "<b>API Pública (Frontera __all__)</b><br>[src/contextforge/]<br><br>• <b>client.py</b>: Facade ContextForge<br>• <b>builder.py</b>: ContextForgeBuilder<br>• <b>contracts.py</b>: 8 interfaces ABC<br>• <b>models.py</b>: DTOs inmutables<br>• <b>exceptions.py</b>: Errores tipados<br><br><i>Contrato estable v1.x (mypy --strict)</i>",
-        fill=NAVY_LIGHT, stroke=NAVY, font_size=12,
+    # System Boundary
+    b.add_c4_boundary(385, 115, 850, 685, "ContextForge Ecosystem", "System Boundary")
+
+    # Optional API/Web Container (Top inside boundary)
+    c_api = b.add_c4_container(
+        420, 170, 780, 130,
+        "API REST / Gateway OpenAI / MCP & Web UI (Opcional · .[web])",
+        "FastAPI + Uvicorn + Jinja2",
+        "Expone /api/v1, /v1/chat/completions, /mcp y Widget para que servicios externos y equipos consuman agentes y bases de conocimiento.",
     )
 
-    internal = b.add_box(
-        985, 200, 360, 415,
-        "<b>Núcleo Privado Encapsulado</b><br>[src/contextforge/_internal/]<br><br>• <b>stores.py</b>: BM25 + Vector coseno<br>• <b>strategies.py</b>: Chunking y RRF/Weighted<br>• <b>factories.py</b>: Strategy & Retriever<br>• <b>exporters.py</b>: MD, JSON, XML + Registry<br>• <b>rules.py</b>: DocumentRuleChain<br>• <b>decorators.py</b>: Auditoría y latencia<br>• <b>events.py</b>: KnowledgeEventBus<br>• <b>pipelines.py</b>: RAG + Context Bundler",
-        fill=TEAL_LIGHT, stroke=TEAL, font_size=11,
+    # Core Reusable Package Containers (wider gap for clean label)
+    c_pub = b.add_c4_container(
+        420, 365, 330, 185,
+        "API Pública del Componente",
+        "Python >= 3.11 · src/contextforge/",
+        "Frontera __all__: Facade ContextForge, Builder, contratos ABC, DTOs y excepciones (0 deps).",
+    )
+    c_int = b.add_c4_container(
+        870, 365, 330, 185,
+        "Núcleo Interno Encapsulado",
+        "Python · src/contextforge/_internal/",
+        "Chunking, fusión RRF/Weighted, reglas, exportadores, auditoría y pipeline RAG.",
     )
 
-    b.add_edge(cli, pub, "Importa solo __all__", points=[(420, 257), (420, 340)], stroke=NAVY)
-    b.add_edge(web, pub, "Consume y adapta", points=[(420, 517), (420, 465)], dashed=True, stroke=SLATE)
-    b.add_edge(pub, internal, "Orquesta vía\ncontratos ABC", stroke=TEAL)
+    # Storage Containers (Cylinders!)
+    c_db = b.add_c4_container(
+        420, 615, 330, 145,
+        "Índices Léxico y Vectorial",
+        "InMemory BM25/Cosine o SQLite FTS5/Chroma",
+        "Almacena fragmentos indexados y embeddings por proyecto.",
+        is_db=True,
+    )
+    c_docs = b.add_c4_container(
+        870, 615, 330, 145,
+        "Base Documental Markdown",
+        "Filesystem Docs-as-Code",
+        "Archivos .md versionados con frontmatter YAML.",
+        is_db=True,
+    )
 
+    # Right: External LLM
+    ext_llm = b.add_c4_system(
+        1330, 395, 245, 160,
+        "Proveedor LLM",
+        "Ollama, OpenAI,<br>Gemini o Fallback<br>extractivo local.",
+        external=True,
+    )
+
+    # Edges (concise single-line labels)
+    b.add_edge(p_user, c_api, "Web UI / Chat", stroke=C4_PERSON_STROKE)
+    b.add_edge(ext_app, c_api, "REST / OpenAI / MCP", points=[(340, 445), (340, 255)], stroke=C4_EXTERNAL_STROKE)
+    b.add_edge(ext_app, c_pub, "Paquete Python", stroke=C4_EXTERNAL_STROKE)
+    b.add_edge(c_api, c_pub, "Consume API pública", points=[(585, 300), (585, 365)], stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_pub, c_int, "Delega (ABC)", stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_int, c_db, "Indexa y busca", points=[(1035, 580), (585, 580)], stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_int, c_docs, "Lee Markdown", stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_int, ext_llm, "ILLMProvider", stroke=C4_CONTAINER_STROKE)
+
+    b.add_c4_legend(
+        190, 835,
+        [
+            ("Person", C4_PERSON_FILL, C4_PERSON_STROKE),
+            ("Container (App / Paquete)", C4_CONTAINER_FILL, C4_CONTAINER_STROKE),
+            ("Container (Database / Store)", C4_CONTAINER_FILL, C4_CONTAINER_STROKE),
+            ("External System", C4_EXTERNAL_FILL, C4_EXTERNAL_STROKE),
+        ],
+    )
     return b.save_all("03_c4_contenedores_n2")
 
 
 # ============================================================================
-# 4. C4 LEVEL 3 — COMPONENT DIAGRAM
+# 4. C4 LEVEL 3 — COMPONENT DIAGRAM (AUTHENTIC C4 COMPONENT SHAPES)
 # ============================================================================
 def build_04_c4_components() -> tuple[Path, Path]:
-    b = DrawioBuilder("c4_comp_n3", "C4 Nivel 3 Componentes Internos - ContextForge v1.0.0", 1620, 920)
+    b = C4DrawioBuilder("c4_comp_n3", "C4 Nivel 3 Componentes Internos - ContextForge v1.0.0", 1620, 960)
     b.add_banner(
-        "Modelo C4 — Nivel 3: Componentes Internos de ContextForge (v1.0.0)",
-        "Colaboración entre Facade, Builder, Decorator, Fábricas, Cadena de Reglas, EventBus y Estrategias OCP",
+        "Modelo C4 — Nivel 3: Diagrama de Componentes Internos (Paquete contextforge v1.0.0)",
+        "Componentes dentro del paquete Python instalable y sus puntos de extensión abiertos (OCP / DIP)",
     )
 
-    # Top: Entry & Assembly
-    builder = b.add_box(
-        70, 130, 310, 120,
-        "<b>ContextForgeBuilder</b><br>[GoF: Builder]<br>Ensambla config, stores,<br>extensiones y proveedores.",
-        fill=INDIGO_LIGHT, stroke=INDIGO, font_size=12,
+    b.add_c4_boundary(45, 110, 1530, 745, "Paquete Python: contextforge (v1.0.0)", "Container Boundary")
+
+    # Top row: Entry points
+    c_builder = b.add_c4_component(
+        85, 165, 320, 130,
+        "ContextForgeBuilder",
+        "builder.py · GoF Builder",
+        "Ensambla configuración, stores, LLM y extensiones externas.",
     )
-    facade = b.add_box(
-        590, 120, 420, 140,
-        "<b>ContextForge</b><br>[GoF: Facade · API Pública]<br>ingest() · search() · ask() · compile_bundle()<br>register_*() · subscribe() · set_llm_provider()",
-        fill=NAVY, stroke="#0F172A", font_color=WHITE, font_size=12,
+    c_facade = b.add_c4_component(
+        595, 155, 430, 150,
+        "ContextForge",
+        "client.py · GoF Facade",
+        "Punto de entrada único: ingest(), search(), ask(), compile_bundle() y registro de extensiones.",
     )
-    audit = b.add_box(
-        1190, 130, 360, 120,
-        "<b>AuditingOperationDecorator</b><br>[GoF: Decorator]<br>Envuelve operaciones registrando<br>latency_ms, éxito y trazabilidad.",
-        fill=PURPLE_LIGHT, stroke=PURPLE, font_size=12,
+    c_audit = b.add_c4_component(
+        1215, 165, 320, 130,
+        "AuditingOperationDecorator",
+        "_internal/decorators.py",
+        "Mide latencia y registra trazabilidad de cada operación.",
     )
 
     # Middle row: Internal orchestrators
-    b.add_container(
-        50, 315, 1520, 225,
-        "Orquestadores y Fábricas Internas (src/contextforge/_internal/)",
-        fill="#F8FAFC", stroke=SLATE, header_fill="#E2E8F0", header_text=TEXT_DARK, dashed=True,
+    c_rules = b.add_c4_component(85, 380, 270, 135, "DocumentRuleChain", "_internal/rules.py", "Ejecuta reglas de validación (IDocumentRule) antes de indexar.")
+    c_sfac = b.add_c4_component(385, 380, 270, 135, "StrategyFactory", "_internal/factories.py", "Resuelve estrategias de chunking y ranking híbrido.")
+    c_rfac = b.add_c4_component(685, 380, 270, 135, "RetrieverFactory", "_internal/factories.py", "Ejecuta recuperación léxica, vectorial o híbrida (RRF).")
+    c_ereg = b.add_c4_component(985, 380, 270, 135, "BundleExporterRegistry", "_internal/exporters.py", "Resuelve exportadores Markdown, JSON, XML o custom.")
+    c_bus = b.add_c4_component(1285, 380, 255, 135, "KnowledgeEventBus", "_internal/events.py", "Emite eventos del ciclo de vida a observadores.")
+
+    # Bottom row: Pluggable contracts & Stores
+    c_p_rule = b.add_c4_component(85, 625, 270, 165, "Contratos de Reglas", "contracts.py · IDocumentRule", "NonEmpty, MaxLength, ValidMetadata + reglas de terceros.")
+    c_p_strat = b.add_c4_component(385, 625, 270, 165, "Estrategias (GoF Strategy)", "contracts.py · Chunk & Rank", "HeadingAware, SlidingWindow, RRF, Weighted + custom.")
+    c_p_store = b.add_c4_container(685, 625, 270, 165, "Almacenes de Índices", "ILexicalStore & IVectorStore", "BM25 + Cosine en memoria (reemplazables por FTS5/Chroma/Fakes).", is_db=True)
+    c_p_exp = b.add_c4_component(985, 625, 270, 165, "Exportadores (GoF Strategy)", "contracts.py · IBundleExporter", "Markdown, JSON, XML + formatos de terceros (YAML).")
+    c_p_llm = b.add_c4_system(1285, 625, 255, 165, "ILLMProvider", "ExtractiveFallback por defecto o Ollama / Cloud / Stub.", external=True)
+
+    # Edges
+    b.add_edge(c_builder, c_facade, "ensambla", stroke=C4_COMPONENT_STROKE)
+    b.add_edge(c_facade, c_audit, "envuelve ops", stroke=C4_COMPONENT_STROKE)
+
+    b.add_edge(c_facade, c_rules, "", points=[(810, 340), (220, 340)], stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_facade, c_sfac, "", points=[(810, 340), (520, 340)], stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_facade, c_rfac, "delega", points=[(810, 340), (820, 340)], stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_facade, c_ereg, "", points=[(810, 340), (1120, 340)], stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_facade, c_bus, "", points=[(810, 340), (1412, 340)], stroke=C4_CONTAINER_STROKE)
+
+    b.add_edge(c_rules, c_p_rule, "valida", dashed=True, arrow="open", stroke=C4_COMPONENT_STROKE)
+    b.add_edge(c_sfac, c_p_strat, "selecciona", dashed=True, arrow="open", stroke=C4_COMPONENT_STROKE)
+    b.add_edge(c_rfac, c_p_store, "consulta", stroke=C4_CONTAINER_STROKE)
+    b.add_edge(c_ereg, c_p_exp, "exporta", dashed=True, arrow="open", stroke=C4_COMPONENT_STROKE)
+    b.add_edge(c_bus, c_p_llm, "LLM / Eventos", dashed=True, arrow="open", stroke=C4_EXTERNAL_STROKE)
+
+    b.add_c4_legend(
+        335, 880,
+        [
+            ("Component (Módulo)", C4_COMPONENT_FILL, C4_COMPONENT_STROKE),
+            ("Container (Store / Índices)", C4_CONTAINER_FILL, C4_CONTAINER_STROKE),
+            ("External System (LLM)", C4_EXTERNAL_FILL, C4_EXTERNAL_STROKE),
+        ],
     )
-
-    rules = b.add_box(80, 375, 265, 135, "<b>DocumentRuleChain</b><br>[GoF: Chain of Resp.]<br>Ejecuta IDocumentRule[]<br>antes de indexar.", fill=AMBER_LIGHT, stroke=AMBER, font_size=11)
-    sfac = b.add_box(380, 375, 265, 135, "<b>StrategyFactory</b><br>[GoF: Factory]<br>Resuelve IChunkingStrategy<br>e IHybridRankingStrategy.", fill=INDIGO_LIGHT, stroke=INDIGO, font_size=11)
-    rfac = b.add_box(680, 375, 265, 135, "<b>RetrieverFactory</b><br>[GoF: Factory]<br>Ejecuta lexical, vector<br>o hybrid (RRF/Weighted).", fill=INDIGO_LIGHT, stroke=INDIGO, font_size=11)
-    ereg = b.add_box(980, 375, 265, 135, "<b>BundleExporterRegistry</b><br>[GoF: Factory / Registry]<br>Resuelve exportadores<br>Markdown, JSON, XML, etc.", fill=INDIGO_LIGHT, stroke=INDIGO, font_size=11)
-    bus = b.add_box(1280, 375, 265, 135, "<b>KnowledgeEventBus</b><br>[GoF: Observer]<br>Notifica eventos del ciclo<br>de vida a observadores.", fill=PURPLE_LIGHT, stroke=PURPLE, font_size=11)
-
-    # Bottom row: Pluggable contracts (OCP / DIP)
-    b.add_container(
-        50, 600, 1520, 275,
-        "Puntos de Extensión Abiertos — Contratos Públicos (src/contextforge/contracts.py · OCP / DIP)",
-        fill="#F0FDFA", stroke=TEAL, header_fill="#CCFBF1", header_text=TEAL, dashed=False,
-    )
-
-    p_rule = b.add_box(80, 665, 265, 175, "<b>IDocumentRule</b><br>[<<interface>>]<br>• NonEmptyContentRule<br>• MaxLengthRule<br>• ValidMetadataRule<br><i>+ Reglas de terceros</i>", fill=WHITE, stroke=AMBER, font_size=11)
-    p_strat = b.add_box(380, 665, 265, 175, "<b>IChunking & IHybridRanking</b><br>[<<interface>> · Strategy]<br>• HeadingAware / SlidingWindow<br>• RRF / WeightedLinear<br><i>+ Algoritmos de terceros</i>", fill=WHITE, stroke=TEAL, font_size=11)
-    p_store = b.add_box(680, 665, 265, 175, "<b>ILexicalStore & IVectorStore</b><br>[<<interface>> · DIP]<br>• InMemoryLexicalStore (BM25)<br>• InMemoryVectorStore (Cosine)<br><i>+ Fakes / ChromaDB / FTS5</i>", fill=WHITE, stroke=NAVY, font_size=11)
-    p_exp = b.add_box(980, 665, 265, 175, "<b>IBundleExporter</b><br>[<<interface>> · Strategy]<br>• MarkdownBundleExporter<br>• JsonBundleExporter<br>• XmlBundleExporter<br><i>+ YAML / Custom</i>", fill=WHITE, stroke=TEAL, font_size=11)
-    p_llm = b.add_box(1280, 665, 265, 175, "<b>ILLMProvider & IObserver</b><br>[<<interface>> · DIP]<br>• ExtractiveFallbackLLMProvider<br>• Observadores de auditoría<br><i>+ Ollama / OpenAI / Stubs</i>", fill=WHITE, stroke=PURPLE, font_size=11)
-
-    # Top edges
-    b.add_edge(builder, facade, "ensambla", stroke=INDIGO)
-    b.add_edge(facade, audit, "envuelve ops", stroke=PURPLE)
-
-    # Facade -> middle row via clean bus y=290
-    b.add_edge(facade, rules, "", points=[(800, 290), (212, 290)], stroke=AMBER)
-    b.add_edge(facade, sfac, "", points=[(800, 290), (512, 290)], stroke=INDIGO)
-    b.add_edge(facade, rfac, "delega", points=[(800, 290), (812, 290)], stroke=INDIGO)
-    b.add_edge(facade, ereg, "", points=[(800, 290), (1112, 290)], stroke=INDIGO)
-    b.add_edge(facade, bus, "", points=[(800, 290), (1412, 290)], stroke=PURPLE)
-
-    # Middle -> Bottom contracts
-    b.add_edge(rules, p_rule, "valida", dashed=True, arrow="open", stroke=AMBER)
-    b.add_edge(sfac, p_strat, "instancia", dashed=True, arrow="open", stroke=TEAL)
-    b.add_edge(rfac, p_store, "consulta", dashed=True, arrow="open", stroke=NAVY)
-    b.add_edge(ereg, p_exp, "exporta", dashed=True, arrow="open", stroke=TEAL)
-    b.add_edge(bus, p_llm, "notifica / LLM", dashed=True, arrow="open", stroke=PURPLE)
-
     return b.save_all("04_c4_componentes_n3")
 
 
 # ============================================================================
-# 5. UML CLASS DIAGRAM — EXPLICIT GoF PATTERNS (3 CATEGORIES)
+# 5. UML CLASS DIAGRAM — FOCUSED GoF PATTERNS (1 CORE PER CATEGORY + SUPPORT)
 # ============================================================================
 def build_05_uml_classes_gof() -> tuple[Path, Path]:
-    b = DrawioBuilder("uml_cls_gof", "Diagrama de Clases UML con Patrones GoF - ContextForge v1.0.0", 1920, 1280)
+    b = C4DrawioBuilder("uml_cls_gof", "Diagrama de Clases UML con Patrones GoF - ContextForge v1.0.0", 1900, 1220)
     b.add_banner(
-        "Diagrama de Clases UML — Componente ContextForge (v1.0.0) con Patrones GoF Explícitos",
-        "Evidencia visual de las 3 categorías GoF: Creacionales (Builder, Factory/Registry), Estructurales (Facade, Decorator) y Comportamiento (Strategy, Chain of Responsibility, Observer)",
+        "Diagrama de Clases UML — ContextForge (v1.0.0) con Patrones GoF Principales",
+        "Diseño pragmático (sin sobreingeniería): 1 patrón GoF principal por categoría — Builder (Creacional), Facade (Estructural) y Strategy (Comportamiento)",
     )
 
-    # ---- GROUP 1: CREATIONAL GoF (Top-Left) ----
+    # ---- CORE 1: CREATIONAL (Builder) ----
     b.add_container(
-        40, 110, 560, 495,
-        "PATRONES CREACIONALES (GoF: Builder + Factory / Registry)",
+        40, 110, 520, 445,
+        "1. GoF CREACIONAL — Builder",
         fill="#EEF2FF", stroke=INDIGO, header_fill="#C7D2FE", header_text=INDIGO, dashed=False,
     )
     c_builder = b.add_uml_class(
-        65, 160, 510, 195,
-        "GoF: Builder", "ContextForgeBuilder",
+        65, 160, 470, 210,
+        "GoF Creacional: Builder", "ContextForgeBuilder",
         ["- _config: ContextForgeConfig", "- _lexical_store: ILexicalStore | None", "- _llm_provider: ILLMProvider | None"],
         [
             "+ with_config(cfg): ContextForgeBuilder",
@@ -284,45 +580,28 @@ def build_05_uml_classes_gof() -> tuple[Path, Path]:
         ],
         header_fill=INDIGO, body_fill=WHITE,
     )
-    c_sfac = b.add_uml_class(
-        65, 385, 245, 195,
-        "GoF: Factory", "StrategyFactory",
-        ["- _chunkers: dict[str, IChunking]", "- _rankers: dict[str, IRanking]"],
-        [
-            "+ register_chunker(s)",
-            "+ register_ranker(s)",
-            "+ get_chunker(name)",
-            "+ get_ranker(name)",
-        ],
-        header_fill=INDIGO, body_fill=WHITE,
-    )
-    c_rfac = b.add_uml_class(
-        330, 385, 245, 195,
-        "GoF: Factory / Registry", "RetrieverFactory & ExporterRegistry",
-        ["- _lexical: ILexicalStore", "- _vector: IVectorStore", "- _exporters: dict[str, IExporter]"],
-        [
-            "+ retrieve(q, top_k, mode, rank)",
-            "+ register(exporter)",
-            "+ get(format_name): IBundleExporter",
-        ],
-        header_fill=INDIGO, body_fill=WHITE,
+    c_support_fac = b.add_uml_class(
+        65, 395, 470, 135,
+        "Soporte Interno (Resolución por nombre)", "StrategyFactory & ExporterRegistry",
+        ["- _chunkers / _rankers / _exporters"],
+        ["+ get_chunker(name) / get_ranker(name) / get(format)"],
+        header_fill=SLATE, body_fill=SLATE_LIGHT,
     )
 
-    # ---- GROUP 2: STRUCTURAL GoF (Top-Center & Top-Right) ----
+    # ---- CORE 2: STRUCTURAL (Facade) + DIP Contracts ----
     b.add_container(
-        645, 110, 1235, 495,
-        "PATRONES ESTRUCTURALES (GoF: Facade + Decorator) y Contratos DIP",
+        605, 110, 1255, 445,
+        "2. GoF ESTRUCTURAL — Facade  +  Contratos Inyectables (DIP)",
         fill="#EFF6FF", stroke=NAVY, header_fill="#BFDBFE", header_text=NAVY, dashed=False,
     )
     c_facade = b.add_uml_class(
-        675, 160, 480, 275,
-        "GoF: Facade · API Pública", "ContextForge",
+        635, 160, 520, 275,
+        "GoF Estructural: Facade · API Pública", "ContextForge",
         [
             "- _config: ContextForgeConfig",
-            "- _decorator: AuditingOperationDecorator",
+            "- _llm_provider: ILLMProvider",
             "- _rule_chain: DocumentRuleChain",
             "- _event_bus: KnowledgeEventBus",
-            "- _llm_provider: ILLMProvider",
         ],
         [
             "+ ingest(docs, chunking_strategy): IngestionReport",
@@ -335,156 +614,101 @@ def build_05_uml_classes_gof() -> tuple[Path, Path]:
         ],
         header_fill=NAVY, body_fill=WHITE,
     )
-    c_dec = b.add_uml_class(
-        1215, 160, 325, 185,
-        "GoF: Decorator", "AuditingOperationDecorator",
-        ["- _audit_trail: list[AuditRecord]"],
-        [
-            "+ execute(op, fn, *args): TResult",
-            "+ records(): list[AuditRecord]",
-            "• Mide latency_ms y éxitos/fallos",
-        ],
-        header_fill=PURPLE, body_fill=PURPLE_LIGHT,
-    )
     c_dip = b.add_uml_class(
-        1565, 160, 290, 185,
-        "interface · DIP", "ILLMProvider & Stores",
-        ["+ provider_name: str"],
+        1215, 160, 615, 170,
+        "interface · Dependency Inversion (DIP)", "ILLMProvider · ILexicalStore · IVectorStore",
+        ["+ provider_name: str  |  + index(chunks)  |  + clear()"],
         [
-            "+ generate(prompt, sys): str",
-            "+ ILexicalStore.search(q, k)",
-            "+ IVectorStore.search(q, k)",
+            "+ generate(prompt, system_prompt): str",
+            "+ search(query, top_k): list[SearchHit]",
         ],
         header_fill=SLATE, body_fill=WHITE,
     )
     c_dip_impl = b.add_uml_class(
-        1215, 415, 640, 160,
-        "Implementaciones por Defecto (0 deps · Biblioteca Estándar Python)", "Default Adapters",
-        ["• InMemoryLexicalStore  (BM25 puro)  ..|> ILexicalStore", "• InMemoryVectorStore   (Coseno n-gramas)  ..|> IVectorStore"],
-        ["• ExtractiveFallbackLLMProvider  (Síntesis local sin red)  ..|> ILLMProvider"],
+        1215, 365, 615, 165,
+        "Implementaciones por Defecto (0 deps) y Soporte", "Default Adapters & Utilities",
+        [
+            "• InMemoryLexicalStore (BM25)  ..|> ILexicalStore",
+            "• InMemoryVectorStore (Cosine) ..|> IVectorStore",
+            "• ExtractiveFallbackLLMProvider ..|> ILLMProvider",
+        ],
+        ["• Soporte: AuditingOperationDecorator, DocumentRuleChain, KnowledgeEventBus"],
         header_fill=SLATE, body_fill=SLATE_LIGHT,
     )
 
-    # ---- GROUP 3: BEHAVIORAL GoF (Bottom Full Width) ----
+    # ---- CORE 3: BEHAVIORAL (Strategy) ----
     b.add_container(
-        40, 665, 1840, 575,
-        "PATRONES DE COMPORTAMIENTO (GoF: Strategy + Chain of Responsibility + Observer) — Puntos de Extensión OCP",
+        40, 615, 1820, 565,
+        "3. GoF COMPORTAMIENTO — Strategy (Puntos de Extensión Abiertos · Principio OCP)",
         fill="#F0FDFA", stroke=TEAL, header_fill="#99F6E4", header_text=TEAL, dashed=False,
     )
 
-    # Strategy 1: Chunking
     i_chunk = b.add_uml_class(
-        65, 720, 330, 155,
-        "interface · GoF: Strategy", "IChunkingStrategy",
+        70, 670, 540, 155,
+        "interface · GoF Comportamiento: Strategy", "IChunkingStrategy",
         ["+ name: str  {abstract}"],
-        ["+ chunk(doc): list[DocumentChunk]"],
+        ["+ chunk(document: KnowledgeDocument): list[DocumentChunk]"],
         header_fill=TEAL, body_fill=WHITE,
     )
     impl_chunk = b.add_uml_class(
-        65, 955, 330, 130,
-        "ConcreteStrategy", "Chunkers Incorporados",
-        ["• HeadingAwareChunkingStrategy", "• SlidingWindowChunkingStrategy"],
-        ["+ chunk(doc): list[DocumentChunk]"],
+        70, 900, 540, 150,
+        "ConcreteStrategy", "Estrategias de Fragmentación",
+        ["• HeadingAwareChunkingStrategy  (por encabezados Markdown)", "• SlidingWindowChunkingStrategy (ventana deslizante)"],
+        ["+ chunk(document): list[DocumentChunk]   (+ extensibles por terceros)"],
         header_fill=TEAL, body_fill=TEAL_LIGHT,
     )
 
-    # Strategy 2: Hybrid Ranking
     i_rank = b.add_uml_class(
-        430, 720, 340, 155,
-        "interface · GoF: Strategy", "IHybridRankingStrategy",
+        680, 670, 540, 155,
+        "interface · GoF Comportamiento: Strategy", "IHybridRankingStrategy",
         ["+ name: str  {abstract}"],
-        ["+ fuse(lex, vec, top_k): list[SearchHit]"],
+        ["+ fuse(lexical_hits, vector_hits, top_k): list[SearchHit]"],
         header_fill=TEAL, body_fill=WHITE,
     )
     impl_rank = b.add_uml_class(
-        430, 955, 340, 130,
-        "ConcreteStrategy", "Rankers Incorporados",
-        ["• ReciprocalRankFusionStrategy", "• WeightedLinearRankingStrategy"],
-        ["+ fuse(lex, vec, top_k): list[SearchHit]"],
+        680, 900, 540, 150,
+        "ConcreteStrategy", "Estrategias de Fusión Híbrida",
+        ["• ReciprocalRankFusionStrategy  (RRF, k=60 por defecto)", "• WeightedLinearRankingStrategy (ponderación lineal)"],
+        ["+ fuse(...): list[SearchHit]   (+ extensibles por terceros)"],
         header_fill=TEAL, body_fill=TEAL_LIGHT,
     )
 
-    # Strategy 3: Bundle Exporter
     i_exp = b.add_uml_class(
-        805, 720, 335, 155,
-        "interface · GoF: Strategy", "IBundleExporter",
+        1290, 670, 540, 155,
+        "interface · GoF Comportamiento: Strategy", "IBundleExporter",
         ["+ format_name: str  {abstract}"],
-        ["+ export(name, docs, est, max): str"],
+        ["+ export(name, documents, estimated_tokens, max_tokens): str"],
         header_fill=TEAL, body_fill=WHITE,
     )
     impl_exp = b.add_uml_class(
-        805, 955, 335, 145,
-        "ConcreteStrategy", "Exporters Incorporados",
-        ["• MarkdownBundleExporter", "• JsonBundleExporter", "• XmlBundleExporter"],
-        ["+ export(...): str"],
+        1290, 900, 540, 150,
+        "ConcreteStrategy", "Estrategias de Exportación",
+        ["• MarkdownBundleExporter  |  • JsonBundleExporter", "• XmlBundleExporter  |  • Custom (ej. YamlBundleExporter)"],
+        ["+ export(...): str   (+ extensibles sin editar el núcleo)"],
         header_fill=TEAL, body_fill=TEAL_LIGHT,
     )
 
-    # Chain of Responsibility: Document Rules
-    c_chain = b.add_uml_class(
-        1175, 720, 325, 155,
-        "GoF: Chain of Responsibility", "DocumentRuleChain",
-        ["- _rules: list[IDocumentRule]"],
-        ["+ add_rule(rule: IDocumentRule)", "+ validate_all(doc): None"],
-        header_fill=AMBER, body_fill=WHITE,
-    )
-    i_rule = b.add_uml_class(
-        1175, 955, 325, 165,
-        "interface · Handler", "IDocumentRule",
-        ["+ rule_name: str  {abstract}"],
-        ["+ validate(doc): None", "• NonEmptyContentRule", "• MaxLengthRule / ValidMetadataRule"],
-        header_fill=AMBER, body_fill=AMBER_LIGHT,
-    )
-
-    # Observer: EventBus
-    c_bus = b.add_uml_class(
-        1535, 720, 320, 155,
-        "GoF: Observer (Subject)", "KnowledgeEventBus",
-        ["- _observers: list[IKnowledgeObserver]"],
-        ["+ subscribe(observer)", "+ publish(event_type, payload)"],
-        header_fill=PURPLE, body_fill=WHITE,
-    )
-    i_obs = b.add_uml_class(
-        1535, 955, 320, 150,
-        "interface · Observer", "IKnowledgeObserver",
-        ["• Eventos: knowledge.ingested", "• knowledge.searched / rag_answered"],
-        ["+ on_event(event: KnowledgeEvent)"],
-        header_fill=PURPLE, body_fill=PURPLE_LIGHT,
-    )
-
-    # Legend strip at bottom of Behavioral container
     b.add_box(
-        65, 1145, 1790, 70,
-        "<b>Leyenda UML &amp; GoF:</b>   --&gt; Asociación / Uso   |   - - &gt; Dependencia (&lt;&lt;builds&gt;&gt; / resuelve)   |   - - |&gt; Implementación de Interfaz (..|&gt;)   |   <b>Colores:</b> Índigo = Creacionales · Azul/Morado = Estructurales · Verde/Ámbar/Morado = Comportamiento (Extensibles sin editar src/contextforge/)",
+        70, 1085, 1760, 65,
+        "<b>Leyenda UML:</b>   --&gt; Asociación   |   - - &gt; Dependencia (&lt;&lt;builds&gt;&gt; / delega)   |   - - |&gt; Implementación (..|&gt;)   |   <b>Patrones GoF Núcleo:</b> Índigo = Creacional (Builder) · Azul = Estructural (Facade) · Verde = Comportamiento (Strategy)",
         fill=WHITE, stroke=SLATE, font_size=11,
     )
 
-    # ---- RELATIONSHIPS ----
-    # Builder -> Facade
+    # Relationships
     b.add_edge(c_builder, c_facade, "<<builds>>", dashed=True, arrow="open", stroke=INDIGO)
-    # Facade -> Decorator
-    b.add_edge(c_facade, c_dec, "wraps ops", stroke=PURPLE)
-    # Facade -> Factories (routed cleanly via corridor below ContextForge)
-    b.add_edge(c_facade, c_sfac, "usa", points=[(720, 592), (187, 592)], label_pos_idx=1, stroke=INDIGO)
-    b.add_edge(c_facade, c_rfac, "usa", points=[(780, 480)], stroke=INDIGO)
-    # Facade -> DIP
-    b.add_edge(c_facade, c_dip, "inyecta (DIP)", points=[(1155, 375), (1710, 375)], stroke=SLATE)
-    # Default Adapters ..|> DIP
-    b.add_edge(c_dip_impl, c_dip, "..|>", points=[(1710, 415), (1710, 345)], dashed=True, arrow="hollow", stroke=SLATE)
+    b.add_edge(c_facade, c_support_fac, "usa", points=[(720, 465)], stroke=SLATE)
+    b.add_edge(c_facade, c_dip, "inyecta (DIP)", stroke=SLATE)
+    b.add_edge(c_dip_impl, c_dip, "..|>", dashed=True, arrow="hollow", stroke=SLATE)
 
-    # Clean horizontal bus y=632 from Facade down to Behavioral GoF patterns
-    b.add_edge(c_facade, i_chunk, "", points=[(915, 632), (230, 632)], dashed=True, arrow="open", stroke=TEAL)
-    b.add_edge(c_facade, i_rank, "", points=[(915, 632), (600, 632)], dashed=True, arrow="open", stroke=TEAL)
-    b.add_edge(c_facade, i_exp, "estrategias", points=[(915, 632), (972, 632)], label_pos_idx=2, dashed=True, arrow="open", stroke=TEAL)
-    b.add_edge(c_facade, c_chain, "valida", points=[(915, 632), (1337, 632)], label_pos_idx=2, stroke=AMBER)
-    b.add_edge(c_facade, c_bus, "publica", points=[(915, 632), (1695, 632)], label_pos_idx=2, stroke=PURPLE)
+    # Facade -> 3 Strategy interfaces via bus y=585
+    b.add_edge(c_facade, i_chunk, "", points=[(895, 585), (340, 585)], dashed=True, arrow="open", stroke=TEAL)
+    b.add_edge(c_facade, i_rank, "delega estrategias", points=[(895, 585), (950, 585)], label_pos_idx=2, dashed=True, arrow="open", stroke=TEAL)
+    b.add_edge(c_facade, i_exp, "", points=[(895, 585), (1560, 585)], dashed=True, arrow="open", stroke=TEAL)
 
-    # Concrete implementations ..|> Interfaces
+    # ConcreteStrategy ..|> Strategy
     b.add_edge(impl_chunk, i_chunk, "..|>", dashed=True, arrow="hollow", stroke=TEAL)
     b.add_edge(impl_rank, i_rank, "..|>", dashed=True, arrow="hollow", stroke=TEAL)
     b.add_edge(impl_exp, i_exp, "..|>", dashed=True, arrow="hollow", stroke=TEAL)
-    b.add_edge(c_chain, i_rule, "encadena 1..*", stroke=AMBER)
-    b.add_edge(c_bus, i_obs, "notifica 0..*", stroke=PURPLE)
 
     return b.save_all("05_uml_clases_gof")
 
@@ -493,20 +717,20 @@ def build_05_uml_classes_gof() -> tuple[Path, Path]:
 # 6. UML SEQUENCE DIAGRAM — MAIN OPERATION ask()
 # ============================================================================
 def build_06_uml_sequence_ask() -> tuple[Path, Path]:
-    b = DrawioBuilder("uml_seq_ask", "Diagrama de Secuencia UML ask() - ContextForge v1.0.0", 1720, 980)
+    b = C4DrawioBuilder("uml_seq_ask", "Diagrama de Secuencia UML ask() - ContextForge v1.0.0", 1720, 960)
     b.add_banner(
-        "Diagrama de Secuencia UML — Funcionalidad Principal ask() (RAG Híbrido con Citas)",
-        "Flujo cronológico a través de Facade, AuditingOperationDecorator, RetrieverFactory, Stores, Ranker, LLM y EventBus",
+        "Diagrama de Secuencia UML — Funcionalidad Principal ask() (Consulta RAG con Citas)",
+        "Flujo cronológico desde el consumidor o servicio externo hasta la recuperación híbrida, ranking y generación con citas",
     )
 
     lifelines = [
-        ("L1", 55, "App / Agente IA", "[Cliente]", NAVY_LIGHT, NAVY),
+        ("L1", 55, "App / Servicio Externo", "[Cliente]", NAVY_LIGHT, NAVY),
         ("L2", 290, "ContextForge", "[GoF: Facade]", NAVY_LIGHT, NAVY),
-        ("L3", 525, "AuditingDecorator", "[GoF: Decorator]", PURPLE_LIGHT, PURPLE),
-        ("L4", 760, "RetrieverFactory", "[GoF: Factory]", INDIGO_LIGHT, INDIGO),
+        ("L3", 525, "AuditingDecorator", "[Trazabilidad]", PURPLE_LIGHT, PURPLE),
+        ("L4", 760, "RetrieverFactory", "[Recuperación]", INDIGO_LIGHT, INDIGO),
         ("L5", 995, "Lexical & Vector", "[BM25 + Cosine]", TEAL_LIGHT, TEAL),
         ("L6", 1230, "IHybridRanking", "[GoF: Strategy]", TEAL_LIGHT, TEAL),
-        ("L7", 1465, "ILLMProvider & Bus", "[LLM + Observer]", AMBER_LIGHT, AMBER),
+        ("L7", 1465, "ILLMProvider & Bus", "[LLM + Eventos]", AMBER_LIGHT, AMBER),
     ]
 
     centers: list[int] = []
@@ -517,8 +741,8 @@ def build_06_uml_sequence_ask() -> tuple[Path, Path]:
         centers.append(lx + 92)
 
     b.add_container(
-        265, 595, 1395, 225,
-        "alt [Evidencia encontrada -> Síntesis fundamentada con citas] / [else -> Error o Abstención]",
+        265, 590, 1395, 220,
+        "alt [Evidencia encontrada -> Síntesis fundamentada con citas] / [else -> EmptyKnowledgeBaseError]",
         fill="#FFFBEB", stroke=AMBER, header_fill="#FEF3C7", header_text=AMBER,
     )
 
@@ -531,12 +755,12 @@ def build_06_uml_sequence_ask() -> tuple[Path, Path]:
         (3, 5, 455, "6: fuse(lexical_hits, vector_hits, top_k=3)", False, TEAL),
         (5, 3, 505, "7: ranked_hits[] (ordenados por score RRF)", True, TEAL),
         (3, 1, 555, "8: ranked_hits[] + SourceCitation[]", True, INDIGO),
-        (1, 6, 675, "9: generate(grounded_prompt, system_prompt) [ILLMProvider]", False, AMBER),
-        (6, 1, 725, "10: answer (respuesta fundamentada con citas)", True, AMBER),
-        (1, 6, 780, "11: publish('knowledge.rag_answered', payload) [Observer]", False, PURPLE),
-        (1, 2, 855, "12: RagResponse(answer, citations, grounded=True)", True, PURPLE),
-        (2, 2, 895, "13: registrar AuditRecord(latency_ms, succeeded=True)", False, PURPLE),
-        (1, 0, 935, "14: RagResponse", True, NAVY),
+        (1, 6, 670, "9: generate(grounded_prompt, system_prompt) [ILLMProvider]", False, AMBER),
+        (6, 1, 720, "10: answer (respuesta fundamentada con citas)", True, AMBER),
+        (1, 6, 770, "11: publish('knowledge.rag_answered', payload)", False, PURPLE),
+        (1, 2, 845, "12: RagResponse(answer, citations, grounded=True)", True, PURPLE),
+        (2, 2, 885, "13: registrar AuditRecord(latency_ms, succeeded=True)", False, PURPLE),
+        (1, 0, 925, "14: RagResponse", True, NAVY),
     ]
 
     for s_idx, d_idx, my, mlabel, is_ret, mcol in messages:
@@ -554,8 +778,8 @@ def build_06_uml_sequence_ask() -> tuple[Path, Path]:
     def seq_hook(draw: ImageDraw.ImageDraw, s: int, phase: str) -> None:
         if phase == "under":
             for cx in centers:
-                b._draw_dashed_line(draw, (cx * s, 172 * s), (cx * s, 955 * s), "#94A3B8", 2, 10 * s, 7 * s)
-            for ay1, ay2 in ((205, 575), (655, 805), (845, 945)):
+                b._draw_dashed_line(draw, (cx * s, 172 * s), (cx * s, 945 * s), "#94A3B8", 2, 10 * s, 7 * s)
+            for ay1, ay2 in ((205, 575), (650, 795), (835, 935)):
                 draw.rectangle([(centers[1] - 5) * s, ay1 * s, (centers[1] + 5) * s, ay2 * s], fill="#DBEAFE", outline=NAVY, width=2)
         elif phase == "over":
             f_msg = _load_font(10 * s, bold=True)
@@ -596,15 +820,14 @@ def build_06_uml_sequence_ask() -> tuple[Path, Path]:
 
 def main() -> None:
     COMP_OUT_DIR.mkdir(parents=True, exist_ok=True)
-    builders = [
+    for fn in (
         build_01_use_cases,
         build_02_c4_context,
         build_03_c4_containers,
         build_04_c4_components,
         build_05_uml_classes_gof,
         build_06_uml_sequence_ask,
-    ]
-    for fn in builders:
+    ):
         drawio_path, png_path = fn()
         print(f"OK: {drawio_path.relative_to(ROOT)} | {png_path.relative_to(ROOT)}")
 

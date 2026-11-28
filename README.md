@@ -2,38 +2,46 @@
 
 **Componente de Software Reutilizable en Python para Base de Conocimiento Local, Búsqueda Híbrida (BM25 + Vectorial), RAG con Citas y Compilación de Context Bundles para Agentes IA.**
 
-ContextForge permite dotar a **cualquier proyecto en Python** (chats con agentes de IA, asistentes técnicos, pipelines CI/CD, backends o CLIs) de una base de conocimiento sobre Markdown (*Docs-as-Code*) sin acoplarse a un framework web, base de datos ni proveedor LLM específico.
+ContextForge centraliza el conocimiento técnico de los proyectos (*Docs-as-Code* en Markdown) y lo expone con IA verificable para que **cualquier integrante del equipo** o **servicio externo** pueda consultar información e integrar agentes sin depender de otras personas ni acoplarse a un framework o proveedor LLM concreto.
 
-> Adicionalmente, el repositorio incluye de forma opcional la **Plataforma Web Self-Hosted** (`v2.0.0`, FastAPI + Agent Studio + Gateway OpenAI `/v1/*` + Servidor MCP + Docker). El detalle completo del ecosistema está en [Context.md](Context.md).
+> Adicionalmente, el repositorio incluye de forma opcional la **Plataforma Web Self-Hosted** (`v2.0.0`, FastAPI + API REST `/api/v1` + Gateway OpenAI `/v1/chat/completions` + Servidor MCP `/mcp` + Widget embebible + Docker). El detalle integral del ecosistema está en [Context.md](Context.md).
 
 ---
 
-## 1. Propósito, Problemática y Escenarios de Reutilización
+## 1. Propósito, Problemática y Objetivos
 
 ### Problemática que resuelve
-Al integrar agentes de IA o chats técnicos en proyectos reales se repiten cinco problemas:
-1. **Documentación dispersa** en archivos Markdown desconectados de los agentes.
-2. **Búsqueda limitada**: solo palabras clave pierde sinonimia; solo vectores falla en códigos exactos o nombres de clase.
-3. **Alucinaciones sin trazabilidad**: respuestas sin citas verificables del documento fuente.
-4. **Desbordamiento de contexto**: enviar toda la documentación excede la ventana de tokens.
-5. **Acoplamiento a proveedores**: depender de un único LLM o base vectorial dificulta pruebas sin red y migraciones.
+1. **Dependencia del conocimiento entre integrantes del equipo (*silos / bus factor*)**: las reglas de negocio, decisiones de arquitectura y acuerdos técnicos suelen vivir en la memoria de unos pocos desarrolladores, generando cuellos de botella, interrupciones constantes y *onboarding* lento.
+2. **Búsqueda lenta e ineficiente de información de los proyectos**: revisar manualmente repositorios, wikis y archivos dispersos retrasa el desarrollo; además, la búsqueda solo léxica pierde sinonimia y la búsqueda solo vectorial falla en nombres exactos de endpoints o códigos de error.
+3. **Alucinaciones y falta de contexto acotado en IA**: consultar modelos sin contexto verificado produce respuestas inventadas sin citas y desborda la ventana de tokens.
+4. **Dificultad para que servicios externos consuman el conocimiento e integren agentes**: cada aplicación externa (chats, bots, portales, microservicios o IDEs) termina reimplementando la indexación, el RAG y la conexión a LLMs.
+
+### Objetivos
+
+**Objetivo General**  
+Proveer un componente Python reutilizable (`contextforge`) y una capa API opcional que centralicen la documentación de los proyectos y la hagan consultable con IA de forma rápida y verificable, reduciendo la dependencia de conocimiento entre integrantes del equipo y permitiendo que servicios externos consuman las bases de conocimiento o integren agentes sin modificar el código del componente.
+
+**Objetivos Específicos**
+1. **Reducir la dependencia entre integrantes**: convertir la documentación Markdown del proyecto en una base de conocimiento viva y consultable en lenguaje natural con citas exactas (`ask()`).
+2. **Agilizar la búsqueda y consulta de información con IA**: combinar recuperación léxica (BM25) y semántica (vectorial) con fusión configurable (`search()`) y compilación de *Context Bundles* ajustados a un presupuesto de tokens (`compile_bundle()`).
+3. **Habilitar consumo por servicios externos y agentes**: ofrecer una frontera pública Python (`from contextforge import ...`, `0` dependencias obligatorias) y una API opcional (REST `/api/v1`, Gateway OpenAI `/v1/*`, MCP `/mcp` y Widget) para que sistemas externos integren agentes o consulten bases de conocimiento.
+4. **Garantizar extensibilidad y calidad verificable**: separar la API pública de la implementación interna (`_internal/`), exponer contratos abiertos (OCP/DIP) y respaldar el componente con tipado estricto (`mypy --strict`) y pruebas unitarias (`>= 70%` de cobertura).
 
 ### Escenarios de reutilización
-El componente `contextforge` (`src/contextforge/`) tiene **0 dependencias externas obligatorias** y puede reutilizarse sin modificar su código en:
-- **Chats con agentes IA**: consultas RAG con citas exactas (`ask()`).
-- **Pipelines CI/CD y asistentes de código**: compilación de *Context Bundles* acotados en tokens (`compile_bundle()`).
-- **Buscadores técnicos locales**: recuperación híbrida BM25 + vectorial sin enviar datos a terceros (`search()`).
-- **Pruebas automatizadas de RAG**: inyección de fakes/stubs en `ILexicalStore`, `IVectorStore` e `ILLMProvider` sin red.
+- **Equipos de desarrollo**: resolver dudas de arquitectura, reglas y *onboarding* con IA en segundos sin interrumpir a otros compañeros.
+- **Servicios externos y bots**: consumir la API (REST / OpenAI `/v1` / MCP) o importar el paquete `contextforge` para incrustar agentes con conocimiento del proyecto.
+- **Pipelines CI/CD y asistentes de código**: compilar *Context Bundles* acotados en tokens (`compile_bundle()`).
+- **Pruebas automatizadas de RAG**: reemplazar almacenes y proveedor LLM por dobles de prueba sin acceso a red.
 
 ---
 
 ## 2. Requisitos e Instalación
 
 - **Python**: `>= 3.11`
-- **Dependencias del componente núcleo (`src/contextforge/`)**: Ninguna (100% biblioteca estándar de Python).
+- **Dependencias obligatorias del componente (`src/contextforge/`)**: Ninguna (100% biblioteca estándar de Python).
 - **Extras opcionales**:
   - `.[dev]`: `pytest`, `pytest-cov`, `pytest-asyncio`, `mypy`
-  - `.[web]`: FastAPI, Uvicorn, Jinja2, ChromaDB, SQLAlchemy, Ollama/Multi-LLM, MCP
+  - `.[web]`: FastAPI, Uvicorn, Jinja2, ChromaDB, SQLAlchemy, Multi-LLM, MCP
 
 ```bash
 # 1. Clonar repositorio
@@ -102,11 +110,11 @@ Demuestra las **4 funcionalidades esenciales** y **4 extensiones externas** (exp
 
 | ID | Operación API | Entradas principales | Salida | Errores posibles | Criterios de aceptación |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **RF-01** | `ingest()` / `ingest_directory()` | `documents`, `chunking_strategy` | `IngestionReport` | `DocumentValidationError`, `UnknownStrategyError`, `FileNotFoundError` | Valida con `DocumentRuleChain`, segmenta con `IChunkingStrategy`, indexa en ambos stores y emite `knowledge.ingested`. |
+| **RF-01** | `ingest()` / `ingest_directory()` | `documents`, `chunking_strategy` | `IngestionReport` | `DocumentValidationError`, `UnknownStrategyError`, `FileNotFoundError` | Valida reglas documentales, segmenta con `IChunkingStrategy`, indexa en ambos almacenes y emite `knowledge.ingested`. |
 | **RF-02** | `search()` | `query`, `top_k`, `mode`, `ranking`, `collection` | `list[SearchHit]` | `ValueError`, `UnknownStrategyError` | Soporta `lexical`, `vector`, `hybrid` (`rrf` / `weighted`), filtra por colección y ordena por `score` descendente. |
-| **RF-03** | `ask()` | `question`, `top_k`, `mode`, `ranking`, `system_prompt` | `RagResponse` | `ValueError`, `EmptyKnowledgeBaseError`, `ProviderUnavailableError` | Recupera contexto, construye prompt con citas (`SourceCitation`) y funciona sin LLM externo vía `ExtractiveFallbackLLMProvider`. |
+| **RF-03** | `ask()` | `question`, `top_k`, `mode`, `ranking`, `system_prompt` | `RagResponse` | `ValueError`, `EmptyKnowledgeBaseError`, `ProviderUnavailableError` | Recupera contexto relevante, retorna citas exactas (`SourceCitation`) y opera sin LLM externo vía `ExtractiveFallbackLLMProvider`. |
 | **RF-04** | `compile_bundle()` | `name`, `query`/`document_ids`, `max_tokens`, `export_format` | `ContextBundle` | `ValueError`, `TokenBudgetExceededError`, `UnknownExportFormatError` | Respeta `estimated_tokens <= max_tokens`, reporta incluidos/omitidos y exporta en `markdown`, `json`, `xml` o formato custom. |
-| **RF-05** | `register_*()` / `ContextForgeBuilder` | Subclases de `contextforge.contracts` | `ContextForge` | `TypeError` / `ValueError` | Permite agregar estrategias, reglas, exportadores, observadores, stores y LLMs sin editar `src/contextforge/`. |
+| **RF-05** | `register_*()` / `ContextForgeBuilder` | Subclases de `contextforge.contracts` | `ContextForge` | `TypeError` / `ValueError` | Permite registrar estrategias, reglas, exportadores, observadores, almacenes y LLMs sin editar `src/contextforge/`. |
 
 ### Cómo extender el componente (sin modificar su código)
 
@@ -144,39 +152,39 @@ engine = ContextForgeBuilder().with_exporter(YamlBundleExporter()).build()
 | **Reusabilidad** | Paquete Python independiente (`dependencies = []`, Python `>= 3.11`). | `pip install -e .` + `examples/agent_knowledge_cli.py` |
 | **Modularidad** | Frontera estricta `__all__` (`src/contextforge/`) separada de `src/contextforge/_internal/`. | Pruebas de frontera pública y módulos enfocados |
 | **Capacidad de prueba** | Stores, LLM y observadores inyectables mediante contratos ABC (DIP). | `pytest` con fakes/stubs y **96% de cobertura** |
-| **Facilidad de modificación** | 8 puntos de extensión abiertos (OCP) sin editar el núcleo. | Pruebas de extensión externa + `mypy --strict` |
+| **Facilidad de modificación** | Puntos de extensión abiertos (OCP) sin editar el núcleo. | Pruebas de extensión externa + `mypy --strict` |
 
-### 5.2 Modelo C4 (Diagramas Draw.io)
+### 5.2 Modelo C4 (Notación Oficial en Draw.io)
 
-#### Nivel 1 — Contexto
+#### Nivel 1 — Diagrama de Contexto
 ![C4 Nivel 1 Contexto](docs/diagramas/componente/02_c4_contexto_n1.png)
-*Justificación: Aísla las aplicaciones consumidoras de la indexación, el ranking híbrido y el proveedor LLM.* ([.drawio](docs/diagramas/componente/02_c4_contexto_n1.drawio))
+*Justificación: Muestra cómo los integrantes del equipo y los servicios externos interactúan con ContextForge para consultar proyectos con IA e integrar agentes, aislando la lógica del repositorio Markdown y del proveedor LLM.* ([.drawio](docs/diagramas/componente/02_c4_contexto_n1.drawio))
 
-#### Nivel 2 — Contenedores
+#### Nivel 2 — Diagrama de Contenedores
 ![C4 Nivel 2 Contenedores](docs/diagramas/componente/03_c4_contenedores_n2.png)
-*Justificación: Encapsula la implementación concreta en `_internal/` para evolucionar algoritmos sin romper contratos `v1.x`.* ([.drawio](docs/diagramas/componente/03_c4_contenedores_n2.drawio))
+*Justificación: Separa el paquete reutilizable (`API Pública` / `_internal/`), la capa opcional API/Web (para consumo externo vía REST, OpenAI `/v1` y MCP) y los almacenes de índices/documentos.* ([.drawio](docs/diagramas/componente/03_c4_contenedores_n2.drawio))
 
-#### Nivel 3 — Componentes Internos
+#### Nivel 3 — Diagrama de Componentes Internos
 ![C4 Nivel 3 Componentes](docs/diagramas/componente/04_c4_componentes_n3.png)
-*Justificación: Descompone responsabilidades en fábricas, cadena de reglas, decorador de auditoría y bus de eventos desacoplados por interfaces.* ([.drawio](docs/diagramas/componente/04_c4_componentes_n3.drawio))
+*Justificación: Descompone el paquete en componentes cohesivos conectados por interfaces para facilitar mantenimiento, pruebas unitarias y extensión.* ([.drawio](docs/diagramas/componente/04_c4_componentes_n3.drawio))
 
-### 5.3 Diagrama de Clases UML con Patrones GoF
+### 5.3 Diagrama de Clases UML y Patrones GoF
 
 ![Diagrama de Clases UML con Patrones GoF](docs/diagramas/componente/05_uml_clases_gof.png)
 
 > Editable en Draw.io: [docs/diagramas/componente/05_uml_clases_gof.drawio](docs/diagramas/componente/05_uml_clases_gof.drawio)
 
-#### Patrones GoF Aplicados (3 Categorías: Beneficios y Costos)
+#### Patrones GoF Principales (1 por categoría — Costo y Beneficio)
+
+Para evitar sobreingeniería, el diseño del componente se apoya en **3 patrones GoF principales** (uno por categoría) que resuelven problemas concretos del dominio:
 
 | Categoría | Patrón GoF | Evidencia en Código | Beneficio Técnico | Costo de Implementación |
 | :--- | :--- | :--- | :--- | :--- |
-| **Creacional** | **Builder** | `ContextForgeBuilder` (`builder.py`) | Ensamblaje fluido y legible de configuración, stores y extensiones sin constructores telescópicos. | Una clase adicional y validación duplicada frente a `ContextForge.__init__`. |
-| **Creacional** | **Factory / Registry** | `StrategyFactory`, `RetrieverFactory`, `BundleExporterRegistry` (`_internal/`) | Selección dinámica de estrategias/formatos por nombre y registro abierto en caliente. | Gestión de claves y errores explícitos (`UnknownStrategyError`, `UnknownExportFormatError`). |
-| **Estructural** | **Facade** | `ContextForge` (`client.py`) | Superficie pública pequeña (4 operaciones) fácil de aprender y reutilizar. | Riesgo de crecer si no delega en fábricas y pipelines internos. |
-| **Estructural** | **Decorator** | `AuditingOperationDecorator` (`_internal/decorators.py`) | Registra `latency_ms`, éxitos y errores sin contaminar la lógica de negocio. | Capa adicional en la pila de llamadas al depurar. |
-| **Comportamiento** | **Strategy** | `IChunkingStrategy`, `IHybridRankingStrategy`, `IBundleExporter` (`contracts.py`) | Intercambia algoritmos de chunking, fusión y exportación sin `if/elif` rígidos. | Mayor número de clases pequeñas para políticas simples. |
-| **Comportamiento** | **Chain of Responsibility** | `DocumentRuleChain` + `IDocumentRule` (`_internal/rules.py`) | Encadena validaciones independientes extensibles vía `register_rule()`. | El orden de registro importa y un fallo temprano detiene la cadena. |
-| **Comportamiento** | **Observer** | `KnowledgeEventBus` + `IKnowledgeObserver` (`_internal/events.py`) | Desacopla eventos del ciclo de vida (`knowledge.*`) de métricas, logs o notificaciones. | Observadores lentos o con fallos impactan la ejecución síncrona si no se aíslan. |
+| **Creacional** | **Builder** | `ContextForgeBuilder` (`src/contextforge/builder.py`) | Permite ensamblar configuración, almacenes, LLM y extensiones de forma legible sin constructores telescópicos. | Agrega una clase constructora y mantiene sincronía con los parámetros de `ContextForge`. |
+| **Estructural** | **Facade** | `ContextForge` (`src/contextforge/client.py`) | Oculta la complejidad interna tras 4 operaciones públicas simples (`ingest`, `search`, `ask`, `compile_bundle`), facilitando la adopción por otros equipos. | Puede acumular responsabilidades si no delega correctamente en los módulos de `_internal/`. |
+| **Comportamiento** | **Strategy** | `IChunkingStrategy`, `IHybridRankingStrategy`, `IBundleExporter` (`contracts.py`) | Permite intercambiar o extender algoritmos de fragmentación, fusión híbrida y exportación sin `if/elif` rígidos ni modificar el núcleo (OCP). | Incrementa la cantidad de clases pequeñas cuando un algoritmo es sencillo. |
+
+**Patrones complementarios de soporte:** de forma puntual dentro de `_internal/` también se emplean **Factory / Registry** (`StrategyFactory`, `RetrieverFactory`, `BundleExporterRegistry`) para resolver implementaciones por nombre (costo: mantener registro y errores explícitos), **Chain of Responsibility** (`DocumentRuleChain` + `IDocumentRule`) para encadenar validaciones documentales extensibles (costo: el orden de registro importa), **Decorator** (`AuditingOperationDecorator`) para medir latencia sin mezclar telemetría con negocio (costo: una capa extra en depuración) y **Observer** (`KnowledgeEventBus` + `IKnowledgeObserver`) para desacoplar eventos del ciclo de vida (costo: observadores lentos afectan la llamada síncrona).
 
 ### 5.4 Diagrama de Secuencia UML — Operación Principal `ask()`
 
@@ -186,9 +194,9 @@ engine = ContextForgeBuilder().with_exporter(YamlBundleExporter()).build()
 
 ### 5.5 Principios SOLID, GRASP y ADRs (Resumen)
 
-- **SOLID**: **S** (módulos dedicados en `_internal/`: `stores`, `strategies`, `exporters`, `rules`, `decorators`) · **O** (8 contratos en `contracts.py` + `register_*()`) · **L** (estrategias y exportadores intercambiables) · **I** (interfaces mínimas de 1–3 métodos) · **D** (`ContextForge` y `ContextForgeBuilder` dependen solo de abstracciones).
+- **SOLID**: **S** (módulos dedicados en `_internal/`: `stores`, `strategies`, `exporters`, `rules`, `decorators`) · **O** (contratos en `contracts.py` + `register_*()`) · **L** (estrategias y exportadores intercambiables) · **I** (interfaces mínimas de 1–3 métodos) · **D** (`ContextForge` y `ContextForgeBuilder` dependen solo de abstracciones).
 - **GRASP**: *Information Expert* (`KnowledgeDocument.word_count`, `InMemoryLexicalStore`), *Creator* (`StrategyFactory`, `ContextForgeBuilder`), *Controller* (`ContextForge`), *Polymorphism* (contratos ABC), *Low Coupling / High Cohesion* (`_internal/`), *Protected Variations* (`contracts.py`, `exceptions.py`).
-- **ADRs**: `ADR-001` Frontera pública `__all__` vs `_internal/` · `ADR-002` Cero dependencias externas en el núcleo · `ADR-003` Búsqueda híbrida pluggable (RRF/Weighted) · `ADR-004` Reglas con Chain of Responsibility · `ADR-005` Unificación del paquete `contextforge v1.0.0`.
+- **ADRs**: `ADR-001` Frontera pública `__all__` vs `_internal/` · `ADR-002` Cero dependencias externas en el núcleo · `ADR-003` Búsqueda híbrida pluggable (RRF/Weighted) · `ADR-004` Reglas extensibles (`IDocumentRule`) · `ADR-005` Unificación del paquete `contextforge v1.0.0`.
 
 > Matrices completas y ADRs detallados: [docs/02-arquitectura-y-diseno.md](docs/02-arquitectura-y-diseno.md) y [docs/03-adrs-y-pruebas.md](docs/03-adrs-y-pruebas.md).
 
@@ -210,9 +218,9 @@ python -m build
 
 ---
 
-## 7. Ejecutar la Plataforma Web Opcional (Local y Docker)
+## 7. Ejecutar la Plataforma Web y API Opcional (Local y Docker)
 
-Además del componente reutilizable, el repositorio incluye la aplicación web completa (SPA + API REST `/api/v1` + Gateway OpenAI `/v1/*` + servidor MCP `/mcp`).
+Además del componente Python reutilizable, el repositorio incluye la plataforma web y los endpoints para que servicios externos consuman bases de conocimiento e integren agentes (`REST /api/v1`, `OpenAI /v1/chat/completions`, `MCP /mcp` y Widget embebible).
 
 ### 7.1 En Local (sin Docker)
 
@@ -250,7 +258,7 @@ cp .env.example .env        # En PowerShell: Copy-Item .env.example .env
 docker compose up -d --build
 ```
 
-- Queda disponible en http://127.0.0.1:8000 (los datos persisten en el volumen `cf_data` y `./docs` se monta en `/app/docs`).
+- Disponible en http://127.0.0.1:8000 (datos persistidos en el volumen `cf_data` y `./docs` montado en `/app/docs`).
 - Por defecto usa `AUTH_MODE=enterprise_rbac`; para pruebas locales sin login define `AUTH_MODE=local` en `.env`.
 - **Perfiles opcionales**:
   - PostgreSQL: `docker compose --profile postgres up -d --build` (con `DB_PROVIDER=postgresql` y `DATABASE_URL=postgresql+asyncpg://cfadmin:cfsecret@postgres:5432/contextforge`).
@@ -271,11 +279,11 @@ docker compose up -d --build
 │   ├── contextforge/                      # COMPONENTE REUTILIZABLE (API Pública __all__)
 │   │   ├── __init__.py, client.py, builder.py, contracts.py, models.py, exceptions.py
 │   │   └── _internal/                     # Implementación privada encapsulada
-│   ├── domain/ · application/ · infrastructure/ · presentation/  # Plataforma web opcional
+│   ├── domain/ · application/ · infrastructure/ · presentation/  # Plataforma web/API opcional
 ├── examples/agent_knowledge_cli.py        # App de consola usando solo la API pública
 ├── tests/unit/test_contextforge_component.py  # Pruebas unitarias + dobles (96% cobertura)
 └── docs/
-    ├── 01-documentacion-funcional.md      # Problemática, RF, guía de uso y extensión
+    ├── 01-documentacion-funcional.md      # Problemática, objetivos, RF, guía de uso y extensión
     ├── 02-arquitectura-y-diseno.md        # ISO 25010, C4, UML, matriz SOLID/GRASP/GoF
     ├── 03-adrs-y-pruebas.md               # ADRs y guía de compilación/pruebas
     ├── 04-guia-sustentacion.md            # Guion de sustentación (10 min)

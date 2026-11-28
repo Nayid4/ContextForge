@@ -78,14 +78,21 @@
 | **Low Coupling & High Cohesion** | Paquete `src/contextforge/_internal/` dividido en 7 módulos enfocados conectados solo por DTOs e interfaces públicas. | Minimiza impacto de cambios y facilita la auditoría y reutilización. |
 | **Protected Variations** | Contratos en `src/contextforge/contracts.py` y excepciones en `src/contextforge/exceptions.py`. | Protege a los consumidores frente a cambios en motores LLM, almacenes vectoriales o formatos de exportación. |
 
-### 4.3 Patrones GoF (3 Categorías: Beneficios y Costos Técnicos)
+### 4.3 Patrones GoF Principales (1 por Categoría: Beneficios y Costos)
+
+Para evitar sobreingeniería, la arquitectura del componente adopta **3 patrones GoF principales** (uno por categoría):
 
 | Categoría | Patrón GoF | Implementación Exacta | Beneficio Técnico | Costo de Implementación |
 | :--- | :--- | :--- | :--- | :--- |
-| **Creacional** | **Builder** | `ContextForgeBuilder` (`src/contextforge/builder.py`) | Ensamblado legible y seguro de configuraciones complejas, dobles de prueba y extensiones sin constructores telescópicos. | Una clase adicional de configuración y leve duplicación de parámetros respecto a `ContextForge.__init__`. |
-| **Creacional** | **Factory / Registry** | `StrategyFactory`, `RetrieverFactory`, `BundleExporterRegistry` (`factories.py`, `exporters.py`) | Desacopla la selección dinámica de algoritmos/formatos por nombre y permite registrar extensiones en caliente. | Requiere gestionar claves de registro y validación explícita (`UnknownStrategyError`, `UnknownExportFormatError`). |
-| **Estructural** | **Facade** | `ContextForge` (`src/contextforge/client.py`) | API pública pequeña (4 operaciones principales) fácil de aprender y reutilizar en cualquier proyecto. | Puede crecer si se agregan responsabilidades no esenciales; se mitiga delegando en fábricas y servicios internos. |
-| **Estructural** | **Decorator** | `AuditingOperationDecorator` (`src/contextforge/_internal/decorators.py`) | Añade medición de latencia y trazabilidad de éxitos/fallos sin contaminar la lógica de negocio de cada operación. | Introduce una capa extra de indirección en la pila de llamadas durante la depuración. |
-| **Comportamiento** | **Strategy** | `IChunkingStrategy`, `IHybridRankingStrategy`, `IBundleExporter` (`contracts.py`, `strategies.py`) | Permite intercambiar algoritmos de chunking, fusión híbrida y serialización sin condicionales rígidos. | Incrementa el número de clases pequeñas para algoritmos simples. |
-| **Comportamiento** | **Chain of Responsibility** | `DocumentRuleChain` + `IDocumentRule` (`rules.py`) | Permite encadenar reglas de validación documental independientes y que terceros agreguen nuevas reglas con `register_rule()`. | El orden de registro importa y un fallo temprano detiene la evaluación de reglas posteriores. |
-| **Comportamiento** | **Observer** | `KnowledgeEventBus` + `IKnowledgeObserver` (`events.py`) | Desacopla la emisión de eventos del ciclo de vida (`knowledge.ingested`, `knowledge.searched`, etc.) de logging, métricas o WebSockets. | Si un observador lanza una excepción no controlada o realiza I/O lento, afecta la latencia síncrona de la operación. |
+| **Creacional** | **Builder** | `ContextForgeBuilder` (`src/contextforge/builder.py`) | Ensamblado legible y seguro de configuración, dobles de prueba y extensiones sin constructores telescópicos. | Una clase adicional de configuración y leve duplicación de parámetros respecto a `ContextForge.__init__`. |
+| **Estructural** | **Facade** | `ContextForge` (`src/contextforge/client.py`) | API pública pequeña (4 operaciones principales) fácil de aprender y reutilizar en cualquier proyecto o servicio externo. | Puede crecer si se agregan responsabilidades no esenciales; se mitiga delegando en módulos internos. |
+| **Comportamiento** | **Strategy** | `IChunkingStrategy`, `IHybridRankingStrategy`, `IBundleExporter` (`contracts.py`, `strategies.py`) | Permite intercambiar y extender algoritmos de chunking, fusión híbrida y exportación sin condicionales rígidos (OCP). | Incrementa el número de clases pequeñas para algoritmos simples. |
+
+#### Patrones Complementarios de Soporte (Uso Acotado en `_internal/`)
+
+| Patrón | Implementación | Beneficio Técnico | Costo de Implementación |
+| :--- | :--- | :--- | :--- |
+| **Factory / Registry** | `StrategyFactory`, `RetrieverFactory`, `BundleExporterRegistry` (`factories.py`, `exporters.py`) | Desacopla la selección dinámica de algoritmos/formatos por nombre y permite registrar extensiones en caliente. | Requiere gestionar claves de registro y validación explícita (`UnknownStrategyError`, `UnknownExportFormatError`). |
+| **Chain of Responsibility** | `DocumentRuleChain` + `IDocumentRule` (`rules.py`) | Permite encadenar reglas de validación documental independientes y que terceros agreguen nuevas reglas con `register_rule()`. | El orden de registro importa y un fallo temprano detiene la evaluación de reglas posteriores. |
+| **Decorator** | `AuditingOperationDecorator` (`decorators.py`) | Añade medición de latencia y trazabilidad de éxitos/fallos sin contaminar la lógica de negocio de cada operación. | Introduce una capa extra de indirección en la pila de llamadas durante la depuración. |
+| **Observer** | `KnowledgeEventBus` + `IKnowledgeObserver` (`events.py`) | Desacopla la emisión de eventos del ciclo de vida (`knowledge.ingested`, `knowledge.searched`, etc.) de logging, métricas o WebSockets. | Si un observador lanza una excepción no controlada o realiza I/O lento, afecta la latencia síncrona de la operación. |

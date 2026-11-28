@@ -1,59 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
   <diagram id="c4_comp_n1" name="C4 Nivel 1 Contexto - ContextForge v1.0.0">
-    <mxGraphModel dx="1420" dy="740" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="740" math="0" shadow="0">
+    <mxGraphModel dx="1560" dy="880" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1560" pageHeight="880" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="n_2" value="&lt;b&gt;Modelo C4 — Nivel 1: Contexto del Componente ContextForge (v1.0.0)&lt;/b&gt;&lt;br&gt;Relación entre aplicaciones consumidoras, equipos integradores y sistemas externos opcionales" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="30" y="20" width="1360" height="64" as="geometry" />
+        <mxCell id="n_2" value="&lt;b&gt;Modelo C4 — Nivel 1: Diagrama de Contexto del Sistema (ContextForge)&lt;/b&gt;&lt;br&gt;Reduce la dependencia de conocimiento entre integrantes y permite a servicios externos consultar bases de conocimiento e integrar agentes con IA" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1500" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="n_3" value="&lt;b&gt;Aplicación Consumidora&lt;/b&gt;&lt;br&gt;[Software Externo]&lt;br&gt;Chat con agentes IA, CLI,&lt;br&gt;pipeline CI/CD o API FastAPI." style="whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="70" y="185" width="320" height="145" as="geometry" />
+        <mxCell id="n_5" value="&lt;b&gt;ContextForge (v1.0.0)&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Software System]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Componente reutilizable Python y Hub de&lt;br&gt;Conocimiento con búsqueda híbrida (BM25 +&lt;br&gt;Vectorial), RAG con citas verificables y&lt;br&gt;compilación de Context Bundles." style="whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0B4884;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="560" y="355" width="440" height="210" as="geometry" />
         </mxCell>
-        <mxCell id="n_4" value="&lt;b&gt;Equipo Integrador (Tercero)&lt;/b&gt;&lt;br&gt;[Persona / Desarrollador]&lt;br&gt;Extiende contratos OCP sin&lt;br&gt;modificar código del componente." style="whiteSpace=wrap;html=1;fillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="70" y="445" width="320" height="145" as="geometry" />
+        <mxCell id="n_6" value="&lt;b&gt;Servicios Externos y Agentes&lt;/b&gt;&lt;br&gt;&lt;i&gt;[External Software System]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Apps, bots, portales o IDEs que&lt;br&gt;consumen la API (REST, OpenAI /v1,&lt;br&gt;MCP) o el paquete Python." style="whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="45" y="375" width="315" height="170" as="geometry" />
         </mxCell>
-        <mxCell id="n_5" value="&lt;b&gt;ContextForge (v1.0.0)&lt;/b&gt;&lt;br&gt;[Componente Python Reutilizable]&lt;br&gt;&lt;br&gt;• Ingesta y chunking Markdown&lt;br&gt;• Búsqueda híbrida (BM25 + Vector)&lt;br&gt;• RAG con citas verificables&lt;br&gt;• Compilador de Context Bundles&lt;br&gt;&lt;i&gt;0 dependencias externas obligatorias&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="525" y="250" width="370" height="255" as="geometry" />
+        <mxCell id="n_7" value="&lt;b&gt;Repositorio Docs-as-Code&lt;/b&gt;&lt;br&gt;&lt;i&gt;[External Software System]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Archivos Markdown (.md), ADRs y&lt;br&gt;especificaciones técnicas de cada&lt;br&gt;proyecto." style="whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="375" width="315" height="170" as="geometry" />
         </mxCell>
-        <mxCell id="n_6" value="&lt;b&gt;Archivos Markdown&lt;/b&gt;&lt;br&gt;[Sistema Externo · Opcional]&lt;br&gt;Repositorio Docs-as-Code&lt;br&gt;(ADRs, reglas, manuales .md)." style="whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#334155;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="185" width="310" height="145" as="geometry" />
+        <mxCell id="n_8" value="&lt;b&gt;Proveedores LLM (Opcional)&lt;/b&gt;&lt;br&gt;&lt;i&gt;[External Software System]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Ollama, OpenAI, Gemini, Anthropic o&lt;br&gt;Fallback extractivo local sin red." style="whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="590" y="645" width="380" height="140" as="geometry" />
         </mxCell>
-        <mxCell id="n_7" value="&lt;b&gt;Proveedor LLM Externo&lt;/b&gt;&lt;br&gt;[Sistema Externo · Opcional]&lt;br&gt;Ollama, Gemini, OpenAI, Claude&lt;br&gt;o Stub / Fallback extractivo local." style="whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B45309;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="445" width="310" height="145" as="geometry" />
+        <mxCell id="n_14" value="&lt;b&gt;Leyenda C4 (Notación Simon Brown)&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=10;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="290" y="805" width="759" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="e_8" value="Consume API Pública&#10;(from contextforge import ...)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_5">
+        <mxCell id="c4p_3" value="&lt;b&gt;Integrantes del Equipo&lt;/b&gt;&lt;br&gt;[Person]&lt;br&gt;&lt;br&gt;Consultan reglas, arquitectura y docs&lt;br&gt;del proyecto con IA sin depender de&lt;br&gt;otros compañeros." style="shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;html=1;whiteSpace=wrap;fillColor=#08427B;strokeColor=#073B6F;fontColor=#FFFFFF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="180" y="115" width="290" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="c4p_4" value="&lt;b&gt;Equipo Integrador&lt;/b&gt;&lt;br&gt;[Person]&lt;br&gt;&lt;br&gt;Reutiliza ContextForge y crea&lt;br&gt;extensiones OCP sin modificar&lt;br&gt;el código del componente." style="shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;html=1;whiteSpace=wrap;fillColor=#08427B;strokeColor=#073B6F;fontColor=#FFFFFF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="115" width="290" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="e_9" value="Consulta proyectos con IA (RAG)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#073B6F;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="c4p_3" target="n_5">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="455" y="257" />
-              <mxPoint x="455" y="330" />
+              <mxPoint x="325" y="325" />
+              <mxPoint x="690" y="325" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_9" value="Implementa contratos&#10;(IBundleExporter, IDocumentRule, ...)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_4" target="n_5">
+        <mxCell id="e_10" value="Extiende contratos (OCP)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#073B6F;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="c4p_4" target="n_5">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="455" y="517" />
-              <mxPoint x="455" y="430" />
+              <mxPoint x="1235" y="325" />
+              <mxPoint x="870" y="325" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_10" value="Lee documentos&#10;(ingest_directory)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_6">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="965" y="330" />
-              <mxPoint x="965" y="257" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="e_11" value="Consume API / Agentes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B6B6B;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_6" target="n_5">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_11" value="Delega síntesis&#10;(vía ILLMProvider)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_7">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="965" y="430" />
-              <mxPoint x="965" y="517" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="e_12" value="Ingesta docs .md" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0B4884;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_13" value="Síntesis (ILLMProvider)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0B4884;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_8">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

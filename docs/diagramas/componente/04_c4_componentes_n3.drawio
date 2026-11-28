@@ -1,117 +1,117 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="Electron" agent="ContextForge-ERS-Generator/2.0" version="24.7.17" type="device">
   <diagram id="c4_comp_n3" name="C4 Nivel 3 Componentes Internos - ContextForge v1.0.0">
-    <mxGraphModel dx="1620" dy="920" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1620" pageHeight="920" math="0" shadow="0">
+    <mxGraphModel dx="1620" dy="960" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1620" pageHeight="960" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="grp_6" value="Orquestadores y Fábricas Internas (src/contextforge/_internal/)" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#E2E8F0;swimlaneFillColor=#F8FAFC;strokeColor=#334155;fontColor=#0F172A;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
-          <mxGeometry x="50" y="315" width="1520" height="225" as="geometry" />
+        <mxCell id="grp_3" value="Paquete Python: contextforge (v1.0.0)  [Container Boundary]" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#E2E8F0;swimlaneFillColor=#F8FAFC;strokeColor=#666666;fontColor=#1E293B;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+          <mxGeometry x="45" y="110" width="1530" height="745" as="geometry" />
         </mxCell>
-        <mxCell id="grp_12" value="Puntos de Extensión Abiertos — Contratos Públicos (src/contextforge/contracts.py · OCP / DIP)" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#CCFBF1;swimlaneFillColor=#F0FDFA;strokeColor=#0F766E;fontColor=#0F766E;fontStyle=1;fontSize=13;rounded=1;arcSize=4;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="50" y="600" width="1520" height="275" as="geometry" />
-        </mxCell>
-        <mxCell id="n_2" value="&lt;b&gt;Modelo C4 — Nivel 3: Componentes Internos de ContextForge (v1.0.0)&lt;/b&gt;&lt;br&gt;Colaboración entre Facade, Builder, Decorator, Fábricas, Cadena de Reglas, EventBus y Estrategias OCP" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="n_2" value="&lt;b&gt;Modelo C4 — Nivel 3: Diagrama de Componentes Internos (Paquete contextforge v1.0.0)&lt;/b&gt;&lt;br&gt;Componentes dentro del paquete Python instalable y sus puntos de extensión abiertos (OCP / DIP)" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=15;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="20" width="1560" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="n_3" value="&lt;b&gt;ContextForgeBuilder&lt;/b&gt;&lt;br&gt;[GoF: Builder]&lt;br&gt;Ensambla config, stores,&lt;br&gt;extensiones y proveedores." style="whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="70" y="130" width="310" height="120" as="geometry" />
+        <mxCell id="n_4" value="&lt;b&gt;ContextForgeBuilder&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: builder.py · GoF Builder]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Ensambla configuración, stores, LLM y extensiones externas." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="165" width="320" height="130" as="geometry" />
         </mxCell>
-        <mxCell id="n_4" value="&lt;b&gt;ContextForge&lt;/b&gt;&lt;br&gt;[GoF: Facade · API Pública]&lt;br&gt;ingest() · search() · ask() · compile_bundle()&lt;br&gt;register_*() · subscribe() · set_llm_provider()" style="whiteSpace=wrap;html=1;fillColor=#1B365D;strokeColor=#0F172A;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="590" y="120" width="420" height="140" as="geometry" />
+        <mxCell id="n_5" value="&lt;b&gt;ContextForge&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: client.py · GoF Facade]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Punto de entrada único: ingest(), search(), ask(), compile_bundle() y registro de extensiones." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="595" y="155" width="430" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="n_5" value="&lt;b&gt;AuditingOperationDecorator&lt;/b&gt;&lt;br&gt;[GoF: Decorator]&lt;br&gt;Envuelve operaciones registrando&lt;br&gt;latency_ms, éxito y trazabilidad." style="whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1190" y="130" width="360" height="120" as="geometry" />
+        <mxCell id="n_6" value="&lt;b&gt;AuditingOperationDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: _internal/decorators.py]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Mide latencia y registra trazabilidad de cada operación." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1215" y="165" width="320" height="130" as="geometry" />
         </mxCell>
-        <mxCell id="n_7" value="&lt;b&gt;DocumentRuleChain&lt;/b&gt;&lt;br&gt;[GoF: Chain of Resp.]&lt;br&gt;Ejecuta IDocumentRule[]&lt;br&gt;antes de indexar." style="whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B45309;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="80" y="375" width="265" height="135" as="geometry" />
+        <mxCell id="n_7" value="&lt;b&gt;DocumentRuleChain&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: _internal/rules.py]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Ejecuta reglas de validación (IDocumentRule) antes de indexar." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="380" width="270" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="n_8" value="&lt;b&gt;StrategyFactory&lt;/b&gt;&lt;br&gt;[GoF: Factory]&lt;br&gt;Resuelve IChunkingStrategy&lt;br&gt;e IHybridRankingStrategy." style="whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="380" y="375" width="265" height="135" as="geometry" />
+        <mxCell id="n_8" value="&lt;b&gt;StrategyFactory&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: _internal/factories.py]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Resuelve estrategias de chunking y ranking híbrido." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="385" y="380" width="270" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="n_9" value="&lt;b&gt;RetrieverFactory&lt;/b&gt;&lt;br&gt;[GoF: Factory]&lt;br&gt;Ejecuta lexical, vector&lt;br&gt;o hybrid (RRF/Weighted)." style="whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="680" y="375" width="265" height="135" as="geometry" />
+        <mxCell id="n_9" value="&lt;b&gt;RetrieverFactory&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: _internal/factories.py]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Ejecuta recuperación léxica, vectorial o híbrida (RRF)." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="685" y="380" width="270" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="n_10" value="&lt;b&gt;BundleExporterRegistry&lt;/b&gt;&lt;br&gt;[GoF: Factory / Registry]&lt;br&gt;Resuelve exportadores&lt;br&gt;Markdown, JSON, XML, etc." style="whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="980" y="375" width="265" height="135" as="geometry" />
+        <mxCell id="n_10" value="&lt;b&gt;BundleExporterRegistry&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: _internal/exporters.py]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Resuelve exportadores Markdown, JSON, XML o custom." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="985" y="380" width="270" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="n_11" value="&lt;b&gt;KnowledgeEventBus&lt;/b&gt;&lt;br&gt;[GoF: Observer]&lt;br&gt;Notifica eventos del ciclo&lt;br&gt;de vida a observadores." style="whiteSpace=wrap;html=1;fillColor=#FAF5FF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="375" width="265" height="135" as="geometry" />
+        <mxCell id="n_11" value="&lt;b&gt;KnowledgeEventBus&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: _internal/events.py]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Emite eventos del ciclo de vida a observadores." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="380" width="255" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="n_13" value="&lt;b&gt;IDocumentRule&lt;/b&gt;&lt;br&gt;[&lt;&lt;interface&gt;&gt;]&lt;br&gt;• NonEmptyContentRule&lt;br&gt;• MaxLengthRule&lt;br&gt;• ValidMetadataRule&lt;br&gt;&lt;i&gt;+ Reglas de terceros&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="80" y="665" width="265" height="175" as="geometry" />
+        <mxCell id="n_12" value="&lt;b&gt;Contratos de Reglas&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: contracts.py · IDocumentRule]&lt;/i&gt;&lt;br&gt;&lt;br&gt;NonEmpty, MaxLength, ValidMetadata + reglas de terceros." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="625" width="270" height="165" as="geometry" />
         </mxCell>
-        <mxCell id="n_14" value="&lt;b&gt;IChunking &amp; IHybridRanking&lt;/b&gt;&lt;br&gt;[&lt;&lt;interface&gt;&gt; · Strategy]&lt;br&gt;• HeadingAware / SlidingWindow&lt;br&gt;• RRF / WeightedLinear&lt;br&gt;&lt;i&gt;+ Algoritmos de terceros&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="380" y="665" width="265" height="175" as="geometry" />
+        <mxCell id="n_13" value="&lt;b&gt;Estrategias (GoF Strategy)&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: contracts.py · Chunk &amp; Rank]&lt;/i&gt;&lt;br&gt;&lt;br&gt;HeadingAware, SlidingWindow, RRF, Weighted + custom." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="385" y="625" width="270" height="165" as="geometry" />
         </mxCell>
-        <mxCell id="n_15" value="&lt;b&gt;ILexicalStore &amp; IVectorStore&lt;/b&gt;&lt;br&gt;[&lt;&lt;interface&gt;&gt; · DIP]&lt;br&gt;• InMemoryLexicalStore (BM25)&lt;br&gt;• InMemoryVectorStore (Cosine)&lt;br&gt;&lt;i&gt;+ Fakes / ChromaDB / FTS5&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B365D;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="680" y="665" width="265" height="175" as="geometry" />
+        <mxCell id="n_14" value="&lt;b&gt;Almacenes de Índices&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Container: ILexicalStore &amp; IVectorStore]&lt;/i&gt;&lt;br&gt;&lt;br&gt;BM25 + Cosine en memoria (reemplazables por FTS5/Chroma/Fakes)." style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#FFFFFF;fontSize=11;strokeWidth=1.8;align=center;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="685" y="625" width="270" height="165" as="geometry" />
         </mxCell>
-        <mxCell id="n_16" value="&lt;b&gt;IBundleExporter&lt;/b&gt;&lt;br&gt;[&lt;&lt;interface&gt;&gt; · Strategy]&lt;br&gt;• MarkdownBundleExporter&lt;br&gt;• JsonBundleExporter&lt;br&gt;• XmlBundleExporter&lt;br&gt;&lt;i&gt;+ YAML / Custom&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="980" y="665" width="265" height="175" as="geometry" />
+        <mxCell id="n_15" value="&lt;b&gt;Exportadores (GoF Strategy)&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Component: contracts.py · IBundleExporter]&lt;/i&gt;&lt;br&gt;&lt;br&gt;Markdown, JSON, XML + formatos de terceros (YAML)." style="whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#5D9AD4;fontColor=#000000;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="985" y="625" width="270" height="165" as="geometry" />
         </mxCell>
-        <mxCell id="n_17" value="&lt;b&gt;ILLMProvider &amp; IObserver&lt;/b&gt;&lt;br&gt;[&lt;&lt;interface&gt;&gt; · DIP]&lt;br&gt;• ExtractiveFallbackLLMProvider&lt;br&gt;• Observadores de auditoría&lt;br&gt;&lt;i&gt;+ Ollama / OpenAI / Stubs&lt;/i&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6B21A8;fontColor=#0F172A;fontSize=11;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="665" width="265" height="175" as="geometry" />
+        <mxCell id="n_16" value="&lt;b&gt;ILLMProvider&lt;/b&gt;&lt;br&gt;&lt;i&gt;[External Software System]&lt;/i&gt;&lt;br&gt;&lt;br&gt;ExtractiveFallback por defecto o Ollama / Cloud / Stub." style="whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#FFFFFF;fontSize=12;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="625" width="255" height="165" as="geometry" />
         </mxCell>
-        <mxCell id="e_18" value="ensambla" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_3" target="n_4">
+        <mxCell id="n_29" value="&lt;b&gt;Leyenda C4 (Notación Simon Brown)&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#0F172A;fontSize=10;strokeWidth=1.8;align=center;spacing=8;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="335" y="880" width="759" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="e_17" value="ensambla" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5D9AD4;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_19" value="envuelve ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_5">
+        <mxCell id="e_18" value="envuelve ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5D9AD4;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_6">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_7">
+        <mxCell id="e_19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E6295;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_7">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="800" y="290" />
-              <mxPoint x="212" y="290" />
+              <mxPoint x="810" y="340" />
+              <mxPoint x="220" y="340" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_8">
+        <mxCell id="e_20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E6295;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_8">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="800" y="290" />
-              <mxPoint x="512" y="290" />
+              <mxPoint x="810" y="340" />
+              <mxPoint x="520" y="340" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_22" value="delega" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_9">
+        <mxCell id="e_21" value="delega" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E6295;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_9">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="800" y="290" />
-              <mxPoint x="812" y="290" />
+              <mxPoint x="810" y="340" />
+              <mxPoint x="820" y="340" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3730A3;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_10">
+        <mxCell id="e_22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E6295;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_10">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="800" y="290" />
-              <mxPoint x="1112" y="290" />
+              <mxPoint x="810" y="340" />
+              <mxPoint x="1120" y="340" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_4" target="n_11">
+        <mxCell id="e_23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E6295;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_5" target="n_11">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="800" y="290" />
-              <mxPoint x="1412" y="290" />
+              <mxPoint x="810" y="340" />
+              <mxPoint x="1412" y="340" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_25" value="valida" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B45309;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_7" target="n_13">
+        <mxCell id="e_24" value="valida" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5D9AD4;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_7" target="n_12">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_26" value="instancia" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_8" target="n_14">
+        <mxCell id="e_25" value="selecciona" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5D9AD4;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_8" target="n_13">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_27" value="consulta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1B365D;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_9" target="n_15">
+        <mxCell id="e_26" value="consulta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E6295;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="n_9" target="n_14">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_28" value="exporta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F766E;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_10" target="n_16">
+        <mxCell id="e_27" value="exporta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5D9AD4;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_10" target="n_15">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_29" value="notifica / LLM" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B21A8;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_11" target="n_17">
+        <mxCell id="e_28" value="LLM / Eventos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B6B6B;strokeWidth=1.8;fontColor=#0F172A;fontSize=11;endArrow=open;endFill=1;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_11" target="n_16">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
