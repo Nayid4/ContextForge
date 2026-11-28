@@ -19,6 +19,7 @@ class EnvironmentOptions:
     rate_limit_ai_per_minute: int = 30
     trusted_proxies: tuple[str, ...] = ()
     strict_bind_check: bool = True
+    allow_public_cli_agents: bool = False
 
     @classmethod
     def from_env(cls) -> EnvironmentOptions:
@@ -42,4 +43,5 @@ class EnvironmentOptions:
             rate_limit_ai_per_minute=int(os.getenv("RATE_LIMIT_AI_PER_MINUTE", "30")),
             trusted_proxies=trusted_proxies,
             strict_bind_check=os.getenv("CONTEXTFORGE_STRICT_BIND_CHECK", "true").lower() not in ("0", "false", "no"),
+            allow_public_cli_agents=os.getenv("ALLOW_PUBLIC_CLI_AGENTS", "false").lower() in ("1", "true", "yes"),
         )

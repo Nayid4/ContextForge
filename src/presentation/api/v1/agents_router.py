@@ -15,6 +15,7 @@ from domain.common import DomainError, DomainException, PageParams
 from domain.projects import ProjectMemberEntity
 from domain.rag import SovereignRoutingPolicy
 from domain.users import AuthPrincipal, PermissionAction, UserRole
+from infrastructure.config.env_file_loader import EnvFileLoader
 from infrastructure.di import DependencyContainer, get_container
 from infrastructure.integrations import AIStrategyFactory
 from presentation.api.dependencies import require_permission
@@ -90,6 +91,38 @@ async def _resolve_agent_egress(c: DependencyContainer, llm_provider: str) -> tu
     return cfg.engine_type, egress
 
 
+async def _validate_agent_provider_policy(
+    c: DependencyContainer,
+    *,
+    llm_provider: str,
+    visibility: str,
+) -> tuple[str, str]:
+    cfg = (await c.llm_config_repo.get_by_provider(llm_provider) if llm_provider else None) or await c.llm_config_repo.get_active()
+    egress = SovereignRoutingPolicy.classify_egress(
+        provider_engine_type=cfg.engine_type,
+        base_url=cfg.cli_command if cfg.engine_type == "local_cli" else cfg.base_url,
+        provider_name=cfg.provider,
+    )
+    if visibility == "public" and cfg.engine_type == "local_cli" and not c.settings.env.allow_public_cli_agents:
+        raise DomainException(
+            DomainError.forbidden(
+                "public_agent_cli_forbidden",
+                "Por seguridad (BR-17/BR-18), un agente con visibility='public' no puede usar motores CLI agénticos salvo que ALLOW_PUBLIC_CLI_AGENTS=true esté habilitado.",
+            )
+        )
+    if cfg.engine_type == "cloud_api":
+        decrypted = c.vault.decrypt(cfg.api_key_encrypted) if cfg.api_key_encrypted else ""
+        eff_key, _ = EnvFileLoader.resolve_provider_api_key(cfg.provider, decrypted)
+        if not eff_key:
+            raise DomainException(
+                DomainError.validation(
+                    "cloud_provider_api_key_missing",
+                    f"El proveedor '{cfg.name}' ({cfg.provider}) requiere una API Key configurada en Configuración (/settings) o en .env antes de asignarlo a un agente.",
+                )
+            )
+    return cfg.engine_type, egress
+
+
 async def build_agent_executor(c: DependencyContainer) -> AgentChatExecutor:
     async def _resolve_llm(agent: AgentEntity):
         cfg = (
@@ -97,7 +130,7 @@ async def build_agent_executor(c: DependencyContainer) -> AgentChatExecutor:
             if agent.llm_provider
             else None
         ) or await c.llm_config_repo.get_active()
-        timeout = max(c.settings.ai.timeout_seconds, 60.0) if cfg.engine_type == "local_cli" else max(c.settings.ai.timeout_seconds, 30.0)
+        timeout = max(c.settings.ai.timeout_seconds, 180.0) if cfg.engine_type == "local_cli" else max(c.settings.ai.timeout_seconds, 90.0)
         adapter = AIStrategyFactory.create(cfg, c.vault, timeout_sec=timeout)
         eff_model = agent.llm_model or cfg.default_model
         return adapter, eff_model
@@ -112,6 +145,7 @@ async def build_agent_executor(c: DependencyContainer) -> AgentChatExecutor:
         chat_repo=c.chat_repo,
         feedback_repo=c.feedback_repo,
         metrics_callback=lambda lat, grd: c.metrics.observe_rag(latency_ms=lat, grounded=grd),
+        allow_public_cli_agents=c.settings.env.allow_public_cli_agents,
     )
 
 
@@ -332,14 +366,9 @@ async def create_project_agent(
     if proj is None:
         raise DomainException(DomainError.not_found("project_not_found", f"Proyecto '{slug}' no existe."))
     norm_vis = AgentEntity.normalize_visibility(payload.visibility)
-    engine_type, egress = await _resolve_agent_egress(c, payload.llm_provider.strip())
-    if norm_vis == "public" and engine_type == "local_cli":
-        raise DomainException(
-            DomainError.forbidden(
-                "public_agent_cli_forbidden",
-                "Por seguridad (BR-17/BR-18), un agente con visibility='public' no puede usar motores CLI agénticos.",
-            )
-        )
+    _, egress = await _validate_agent_provider_policy(
+        c, llm_provider=payload.llm_provider.strip(), visibility=norm_vis
+    )
     agent = AgentEntity.create(
         project_slug=slug,
         name=payload.name,
@@ -395,14 +424,9 @@ async def update_project_agent(
     if existing is None:
         raise DomainException(DomainError.not_found("agent_not_found", f"Agente '{slug}/{agent_slug}' no encontrado."))
     norm_vis = AgentEntity.normalize_visibility(payload.visibility)
-    engine_type, egress = await _resolve_agent_egress(c, payload.llm_provider.strip())
-    if norm_vis == "public" and engine_type == "local_cli":
-        raise DomainException(
-            DomainError.forbidden(
-                "public_agent_cli_forbidden",
-                "Por seguridad (BR-17/BR-18), un agente con visibility='public' no puede usar motores CLI agénticos.",
-            )
-        )
+    _, egress = await _validate_agent_provider_policy(
+        c, llm_provider=payload.llm_provider.strip(), visibility=norm_vis
+    )
     max_tok_cap = 4096 if norm_vis == "public" else 16384
     eff_statuses = ("published",) if norm_vis == "public" else (tuple(s.strip().lower() for s in payload.allowed_statuses if s.strip()) or ("published",))
     updated = AgentEntity(

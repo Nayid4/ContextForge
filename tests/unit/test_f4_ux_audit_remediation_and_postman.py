@@ -150,3 +150,59 @@ async def test_scoped_document_handler_exposes_fallback_reason_and_cli_timeout_f
     )
     adapter = AIStrategyFactory.create(cli_cfg, get_container().vault, timeout_sec=30.0)
     assert getattr(adapter, "_timeout", 0.0) >= 120.0
+
+
+@pytest.mark.asyncio
+async def test_agent_greetings_cloud_key_validation_and_public_cli_opt_in() -> None:
+    from dataclasses import replace
+
+    c = get_container()
+    await c.initialize_runtime()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1) Cloud API provider without configured API key (e.g., anthropic) is rejected with 422
+        no_key = await client.post(
+            "/api/v1/projects/default/agents",
+            json={
+                "name": "Agente Sin Key",
+                "slug": "ag-sin-key-test",
+                "visibility": "public",
+                "llm_provider": "anthropic",
+                "llm_model": "claude-3-5-sonnet-latest",
+            },
+        )
+        assert no_key.status_code == 422
+        assert no_key.json()["code"] == "cloud_provider_api_key_missing"
+
+        # 2) Public CLI agent allowed when ALLOW_PUBLIC_CLI_AGENTS=true
+        old_settings = c.settings
+        try:
+            c.settings = replace(old_settings, env=replace(old_settings.env, allow_public_cli_agents=True))
+            ok_cli = await client.post(
+                "/api/v1/projects/default/agents",
+                json={
+                    "name": "Agente CLI OptIn",
+                    "slug": "ag-cli-optin-test",
+                    "visibility": "public",
+                    "llm_provider": "antigravity_cli",
+                    "llm_model": "default",
+                    "welcome_message": "Hola! Soy tu asistente de prueba.",
+                    "suggested_questions": ["¿Cómo funciona el SLA?"],
+                },
+            )
+            assert ok_cli.status_code == 201, ok_cli.text
+
+            # 3) Conversational greetings & typos ('hola, explicame', 'hols') return welcome + suggestions instead of abstention
+            for msg in ("hola, explicame", "hols"):
+                r = await client.post(
+                    "/api/v1/projects/default/agents/ag-cli-optin-test/chat",
+                    json={"question": msg},
+                )
+                assert r.status_code == 200
+                body = r.json()
+                assert body["grounded"] is True
+                assert "Abstención fundamentada" not in body["answer"]
+                assert "¿Cómo funciona el SLA?" in body["answer"]
+        finally:
+            await client.delete("/api/v1/projects/default/agents/ag-cli-optin-test")
+            c.settings = old_settings

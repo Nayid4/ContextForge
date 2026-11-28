@@ -139,9 +139,27 @@
           </div>
         </div>
 
-        <div x-show="form.visibility === 'public' && resolvedEngineType === 'local_cli'" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+        <div x-show="resolvedEngineType === 'cloud_api' && selectedProviderHasKey" class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+          <i class="fa-solid fa-key"></i>
+          <span>API Key verificada para <strong x-text="selectedProviderMeta?.name"></strong> (<span class="font-mono" x-text="selectedProviderKeySource"></span>).</span>
+        </div>
+
+        <div x-show="resolvedEngineType === 'cloud_api' && !selectedProviderHasKey" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Falta API Key para <strong x-text="selectedProviderMeta?.name"></strong>. Configúrala en <strong>/settings</strong> o en <code>.env</code> antes de guardar este agente.</span>
+          </div>
+          <a href="/settings" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-semibold">Ir a Configuración</a>
+        </div>
+
+        <div x-show="form.visibility === 'public' && resolvedEngineType === 'local_cli' && !allowPublicCliAgents" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
           <i class="fa-solid fa-ban"></i>
-          <span>Seguridad BR-17/BR-18: Los agentes <strong>public</strong> no pueden usar motores CLI agénticos. Elige un motor HTTP local (Ollama/LM Studio), API Cloud o Motor Extractivo.</span>
+          <span>Seguridad BR-17/BR-18: Los agentes <strong>public</strong> bloquean motores CLI por defecto. Activa <code>ALLOW_PUBLIC_CLI_AGENTS=true</code> en <code>.env</code> para pruebas locales o usa un motor HTTP/API Cloud.</span>
+        </div>
+
+        <div x-show="form.visibility === 'public' && resolvedEngineType === 'local_cli' && allowPublicCliAgents" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+          <i class="fa-solid fa-terminal"></i>
+          <span>CLI en sandbox habilitado para pruebas en agente <strong>public</strong> (<code>ALLOW_PUBLIC_CLI_AGENTS=true</code>). En producción multiusuario se recomienda motor HTTP/API Cloud.</span>
         </div>
 
         <div>
@@ -316,8 +334,9 @@ window.__CF_AGENTS_BOOT__ = {
   baseUrl: {{ base_url | tojson }},
   agents: {{ agents | tojson }},
   providers: {{ providers | tojson }},
-  templatesCatalog: {{ templates_catalog | tojson }}
+  templatesCatalog: {{ templates_catalog | tojson }},
+  allowPublicCliAgents: {{ allow_public_cli_agents | tojson }}
 };
 </script>
-<script src="/static/js/modules/agents_studio_app.js?v=10"></script>
+<script src="/static/js/modules/agents_studio_app.js?v=11"></script>
 {% endblock %}
